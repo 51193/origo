@@ -20,7 +20,7 @@ Before reading this page, understand the current baseline: [Architecture Overvie
 ## Maintenance Rules
 
 - A deferred direction is tracked only by its GitHub issue; this page keeps a one-line index and current state.
-- When an issue is implemented, cancelled, or split, update this page in the same change and keep both languages aligned.
+- When an issue is implemented, cancelled, or split, update this page in the same change.
 - The full trade-off lives in the issue body and the historical version at the frozen commit; do not copy long ideas back into module READMEs.
 
 ## Related Documents

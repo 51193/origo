@@ -158,12 +158,6 @@ public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = nul
         WriteLine($"  {divider}");
     }
 
-    private void PrintRow(string name, int iterations, TimeSpan elapsed, long alloc)
-    {
-        var opsPerSec = iterations / elapsed.TotalSeconds;
-        WriteLine($"  {name,-23} {iterations,-12:N0} {FormatTime(elapsed),-11}  {FormatRate(opsPerSec),-13} {FormatBytes(alloc),-12}");
-    }
-
     private static string FormatBytes(long bytes)
     {
         if (bytes < 0) return "~0 B";

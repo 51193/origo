@@ -18,7 +18,6 @@
 | `PrivateFieldNamingTests.cs` | Architecture guardrail: production assembly private fields follow `_camelCase` naming |
 | `ApiDocumentationGuardrailTests.cs` | Architecture guardrail: public/protected API declarations in production source must carry `<summary>` or `<inheritdoc />` (vendored FastNoiseLite exempt) |
 | `Benchmarks/TypedDataGeneratedBenchmarkTests.cs` | Generated artifact performance benchmarks: write/read/mixed dispatch for multiple value types + `string`, generated inline `TypedData` vs unoptimized boxing; fixed pool + large iterations + multi-round min noise reduction, relaxed thresholds + comparison tables, and per-side measured allocation (`GC.GetAllocatedBytesForCurrentThread`, placed in separate `NoInlining` methods to avoid polluting timing) |
-| `Origo.TestSupport/Reporting/PerfReporter.cs` | Performance comparison table output (writes to both console and xUnit test output) |
 
 ## TypedDataGeneratorTests Test Details
 
@@ -57,7 +56,7 @@
 | `Adapter_SystemPrimitive_ReportsORIGOSG001` | Adapter group registers system primitive type (`int`) | Reports `ORIGOSG001` (Error), excludes the primitive, does not produce inline accessors for it |
 | `Adapter_WithoutFriendAccess_ReportsORIGOSG007_AndEmitsNoSources` | Adapter assembly not listed in `Origo.Core.Contracts` `InternalsVisibleTo` | Reports `ORIGOSG007` (Error) and emits no generated sources, zero compile errors |
 | `Attribute_NullArrayElement_ReportsORIGOSG008_AndEmitsNoSources` | Type arguments contain a null element | Reports `ORIGOSG008` (Error) and emits no sources; a null placeholder would renumber the following types |
-| `KindPastByteRange_ReportsORIGOSG003_IncludingWrapToNonZero` | `StartKind` offset causes Kind to exceed byte range (256/257, 257 wraps to 1 causing collision) | Reports `ORIGOSG003` (Error), excludes out-of-range types, in-range type (`Byte=255`) still generated |
+| `KindPastByteRange_ReportsORIGOSG003_IncludingWrapToNonZero` | `StartKind` 254 with `byte`/`sbyte`/`short` assigns kinds 254/255/256: 255 is the reserved `UnregisteredKind` sentinel and 256 exceeds the byte range (wrapping to 0) | Reports `ORIGOSG003` (Error) for both out-of-range types, drops `AsSByte`/`AsInt16`, and still generates the in-range `Byte = 254` |
 | `OverlappingStartKindRanges_ReportORIGOSG004_AndDropCollidingTypes` | Two groups assign same Kind 1 to different types (`int`/`long`) | Reports `ORIGOSG004` (Error), excludes the two colliding types |
 | `HomeAndAdapterCoexistence_HomeWins_NonSystemTypesRejected` | Same compilation has both Home attribute (system primitive types) and Adapter attribute (non-system value types) | Home mode takes effect, system types generated normally, non-system value types report `ORIGOSG002` (Error) |
 | `GenericInstantiations_WithSameName_ReportORIGOSG005` | `List<int>` and `List<string>` share the name 'List' | Reports `ORIGOSG005` (Error), drops the colliding types, does not produce List identifiers |
@@ -97,13 +96,6 @@
 |------|------|------|
 | `GeneratorTestHarness` | Internal static class | Constructs in-memory `CSharpCompilation` (with trusted platform assemblies as references, excluding `Origo.*`), runs `TypedDataGenerator`, exposes generated sources, generator diagnostics, merged compilation errors; also provides `CreateTrackedDriver`/`RunIncremental` for incremental pipeline assertions |
 | `GeneratorOutput` | Internal record | Encapsulates generated sources array, generator diagnostics, merged compilation errors, provides `AllGeneratedText` and `HasGeneratorDiagnostic(id)` |
-| `PerfReporter` | Public class | Performance comparison table output (writes to both console and xUnit test output), injected by benchmark cases via `PerfReporter.ForTest` |
-
-## Known Coverage Gaps
-
-| Gap Description | Impact | Doc Basis |
-|---------|------|---------|
-| Performance benchmarks do not cover read/write throughput of adapter layer non-system value types (such as Godot types), only covering system primitives + `string` | Adapter layer `_ref` path performance characteristics are not benchmarked | Origo.SourceGeneration |
 
 ## Line Coverage Gate
 
@@ -122,16 +114,6 @@ The test compilation uses the current runtime's `TRUSTED_PLATFORM_ASSEMBLIES` as
 ### Why Adapter cases reference a separate host assembly and declare InternalsVisibleTo
 
 The generator determines Home/Adapter mode by the assembly that defines `TypedData`. Adapter cases place the `TypedData` definition in a referenced host assembly, making the current compilation recognized as an adapter layer; the host assembly declares `InternalsVisibleTo` so that generated adapter layer code can access `TypedData`'s internal fields, matching the real relationship between Origo.Core/Origo.GodotAdapter.
-
-### Why performance benchmarks use generated internal members, relaxed thresholds, and run independently
-
-Performance benchmarks reference the generated artifacts of the real `Origo.Core`, covering accessors such as explicit conversion operators, `TryGetXxx`, and `TryGetString`, and — via `InternalsVisibleTo` — the generator-produced internal members (`TypedData.KindMap`, the internal constructor, the `IsString` discriminator property) and the internal `TypedDataObjectConverter.ToObject`, to compare the generated path against an unoptimized boxing implementation precisely; `TypedDataFactory<T>` and other non-benchmark types are out of scope.
-
-Benchmarks are relaxed: they do not require the generated path to be faster than the unoptimized boxing baseline, only asserting it does not exceed a fixed multiple of the baseline (8×, skipping ratio for baselines below 1ms as unreliable) and that each single benchmark has a total elapsed upper limit. The goal is to guard against "severe performance regression / stalling" rather than pin down absolute performance numbers.
-
-To resist measurement noise from OS time slice rotation and GC, each benchmark uses a fixed-capacity pool (bitmask addressing, constant memory), large iteration counts (making single-round elapsed span multiple time slices), one round of warmup plus multiple timed rounds, taking each side's minimum elapsed time (excluding preempted/GC outlier rounds).
-
-Benchmarks are marked `[Trait("Category","Benchmark")]`, excluded from `test.sh`'s full test run via `--filter "Category!=Benchmark"`, and instead run once in a separate step `scripts/benchmark.sh` (with detailed logger): printing comparison tables while executing relaxed assertions, avoiding benchmarks being run twice. `scripts/benchmark.sh` also runs Core's [real-world simulation performance benchmarks](../Origo.Core.Tests/Benchmarks.en.md) (dictionary lookup/insertion, observer notification, heterogeneous dictionary iteration, and other use-case-close scenarios) in the same step.
 
 ---
 

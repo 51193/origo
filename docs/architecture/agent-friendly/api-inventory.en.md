@@ -2,7 +2,7 @@
 
 > [↑ Back to the Agent Friendly investigation](README.en.md)
 
-Investigation date: 2026-09-18; repository observation baseline: `cdba5e4`. This report proposes a machine-readable inventory and query tool. Its schema, commands, and generated-artifact gates are unimplemented examples, not current API promises.
+Investigation date: 2026-09-18; repository observation baseline: `cdba5e4`. This report proposes a machine-readable inventory and query tool. Its proposed `origo api query`/`diff` commands, capability schema, and phased acceptance remain unimplemented examples, not current API promises; the shell API inventory and baseline gate are implemented in `tools/ApiInventoryTool` and `scripts/api-inventory.sh` (baseline `tools/ApiInventoryTool/shell-api-baseline.json`), run by `scripts/ci.sh` and the CI/release workflows, and documented in [shell-api-baseline](../shell-api-baseline.en.md).
 
 ## 1. What Origo specifically lacks
 
@@ -75,7 +75,7 @@ origo api diff --base <inventory> --current <inventory> --json
 
 Pin SDK/Roslyn/Godot, package resolution, and configuration. Sort symbols, normalize separators and encoding, and exclude timestamps and machine-specific paths. Record input hashes, versions, and baseline; store commit/dirty state as execution metadata rather than mixing every commit change into canonical API signature diffs. Identical inputs must generate identical bytes. Compiler determinism is a foundation, while references, analyzers, and directories are also inputs; the inventory tool must implement JSON normalization itself. [C# deterministic compilation](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/compiler-options/code-generation)
 
-Proposed CI runs the existing format, test, and API inventory gates. Public-surface changes require aligned capability bindings, human design contracts, usage examples, and behavior tests. Breaking changes enter the existing release process with `BREAKING:` classification. API diffs prompt and enforce alignment; they do not justify compatibility layers. Consumer examples compile with their declared runners, maintainer templates use repository xUnit, and Godot examples use the corresponding SDK/headless environment.
+CI runs the existing format, test, and API inventory gates. Public-surface changes require aligned capability bindings, human design contracts, usage examples, and behavior tests. Breaking changes enter the existing release process with `BREAKING:` classification. API diffs prompt and enforce alignment; they do not justify compatibility layers. Consumer examples compile with their declared runners, maintainer templates use repository xUnit, and Godot examples use the corresponding SDK/headless environment.
 
 ## 6. Phased acceptance and product value
 

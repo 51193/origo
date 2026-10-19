@@ -17,7 +17,7 @@ The Origo framework follows these core design constraints; all module implementa
 | **Unidirectional dependency** | `Origo.GodotAdapter` → `Origo.Core` → `Origo.Core.Kernel` → `Origo.Core.Contracts`, with `Origo.ConsoleBridge` → `Origo.Core.Contracts`; reverse dependencies are strictly forbidden |
 | **public whitelist** | Do not expose interfaces preemptively for "maybe useful in the future"; every public interface must have a clear cross-assembly consumer |
 | **Explicit failure first** | Throw exceptions rather than silent degradation when interface contracts are violated; save/load strictly validate integrity |
-| **Strategy as first-class citizen** | Game logic is strategy-driven; `ISndContext` acts as a god object exposing all capabilities to strategies without restricting what framework features a strategy can access |
+| **Strategy as first-class citizen** | Game logic is strategy-driven; `ISndContext` is the full-capability facade whose 10 segregated companion properties expose every framework capability to strategies without restricting what a strategy can access |
 | **Single-threaded frame model** | One frame = one logical atomic boundary; deferred actions are executed sequentially via queues |
 | **Single access path** | Every capability must have exactly one external access path. Any object or method that can simulate a dedicated interface must be sealed `internal`. Callers must not hand-stitch low-level operations to bypass interface encapsulation (which would skip the orchestrated side effects within the interface, making bugs extremely hard to diagnose) |
 

@@ -16,7 +16,7 @@ Investigation date: 2026-09-18; implementation checked: 2026-09-27. This report 
 
 | Mode | Contents | What a successful result establishes |
 |---|---|---|
-| `quick` | Required formatting, target-project compilation, and a specified real-path regression; verify actual test execution count | Local feedback on the current hypothesis, without project coverage or complete-chain proof |
+| `quick` | One explicit test project and filter compiled and executed with coverage disabled; verify actual test execution count | Local feedback on the current hypothesis, without formatting, project coverage, or complete-chain proof |
 | `affected` | Complete non-Benchmark suites for affected projects with their existing coverage gates, plus relevant generator or Godot checks | The scope selected by explicit dependency contracts passes; selection can still miss impacts |
 | `full` | Current post-commit `ci.sh`, followed by commit-message lint; the CI OS matrix retains its role | The repository's required final completion gates pass |
 
