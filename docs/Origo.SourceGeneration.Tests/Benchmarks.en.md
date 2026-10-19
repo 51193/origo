@@ -7,9 +7,11 @@
 ## Behavior Under Test Overview
 
 Verifies the performance of `TypedData`'s generated inline storage model against
-an unoptimized boxing baseline. Benchmarks reference real `Origo.Core` but use
-only `TypedData`'s public API. Marked `[Trait("Category","Benchmark")]` and run
-independently of coverage gates.
+an unoptimized boxing baseline. Benchmarks reference real `Origo.Core` and use
+its public accessors plus the internal `KindMap`, internal constructor, and
+`IsString` through `InternalsVisibleTo`. `TypedDataFactory<T>` and other
+non-benchmark types are out of scope. Marked `[Trait("Category","Benchmark")]`
+and run independently of coverage gates.
 
 ## Test Files
 
@@ -39,9 +41,10 @@ independently of coverage gates.
 Each benchmark uses a fixed-capacity pool (bitmask addressing, constant memory),
 large iteration counts, one warmup round plus multiple timed rounds taking each
 side's minimum elapsed time (excluding preempted/GC outlier rounds). Relaxed
-thresholds (generated path ≤ 8× baseline, single benchmark total elapsed below
-upper cap) guard against "severe performance regression / stalling" rather than
-pinning absolute performance numbers.
+thresholds (generated path ≤ 8× baseline, skipping the ratio for baselines
+below 1 ms, and a 5 s per-benchmark total elapsed cap) guard against
+"severe performance regression / stalling" rather than pinning absolute
+performance numbers.
 
 ## Known Coverage Gaps
 

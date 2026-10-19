@@ -25,5 +25,5 @@ base classes.
 
 ## Usage
 
-All test projects gain access via `InternalsVisibleTo`.
+`Origo.Core.Tests` and `Origo.GodotAdapter.Tests` gain access to internal facilities via `InternalsVisibleTo`; public test-support types are consumed directly by every referencing test project.
 Core.Tests imports the namespace globally via `global using Origo.TestSupport;`.

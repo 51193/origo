@@ -51,6 +51,7 @@ IOrigoFrameDriver.DriveFrame(delta) → OrigoConsole.ProcessPending() (internal)
 - **Immediate exception propagation**: internal `ProcessPending()` does not catch handler exceptions; they propagate to the frame-driver caller.
 - **Unique command names**: duplicate registration throws `InvalidOperationException`.
 - **Output listener isolation**: `ConsoleOutputChannel.Publish()` isolates each subscriber, then rethrows the first failure after all subscribers ran, preserving fail-fast without silently losing output.
+- **Session replacement clears pending input**: load-type workflows that replace the active progress run (`RequestLoadGame`/continue, initial-save load, and main-menu entry load) call `Runtime.ResetConsoleState()` before teardown, so lines queued against the old session cannot execute against the new one; save and foreground-level switch keep the queue.
 
 ---
 [↑ Back to Runtime](../README.en.md)

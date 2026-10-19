@@ -10,7 +10,7 @@ The shortest path to integrating the Origo framework into a Godot 4 project.
 
 - Godot 4.7 project (.NET version)
 - .NET 10.0 SDK (or later)
-- Project already references Origo (via NuGet package or ProjectReference)
+- Project already references Origo: download the release's `.nupkg` files (`Origo.Core` + `Origo.GodotAdapter`, which pull Contracts/Kernel) from the [latest GitHub release](https://github.com/51193/origo/releases/latest), place them in a local folder such as `./packages/origo/`, and register that folder as a NuGet package source; packages are not published to nuget.org (see [root README § Add packages](../../README.md#1-add-packages))
 
 ## Steps
 

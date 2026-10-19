@@ -22,7 +22,7 @@ The tests for Origo.Core follow the "**behavior-oriented, documentation-contract
 
 ## Test Support Facilities
 
-The test project provides the following core support facilities via `TestSupport/` files:
+Test support comes from `Origo.TestSupport`, the test project's own `TestSupport/` files, and production console types used directly:
 
 | Facility | Type | Purpose |
 |----------|------|---------|
@@ -32,17 +32,17 @@ The test project provides the following core support facilities via `TestSupport
 | `TestNodeFactory` | `INodeFactory` implementation | Node factory capable of injecting failing resources |
 | `DummySndEntity` | `ISndEntity` implementation | In-memory entity implementation, provides SetData/GetData/TryGetData |
 | `NullSndContext` | `ISndContext` null object implementation | Null context for runtime-only unit tests; queries return empty objects, mutation operations (save/load/level switch, etc.) explicitly throw for fail-fast |
-| `StrategyStateTestsCollection` | xUnit `[CollectionDefinition]` | Defines `StrategyStateTests` serial collection (`DisableParallelization`), for strategy test classes with static mutable state to run serially, preventing cross-test pollution |
+| `StrategyStateTestsDefinition` | xUnit `[CollectionDefinition]` | Defines `StrategyStateTests` serial collection (`DisableParallelization`), for strategy test classes with static mutable state to run serially, preventing cross-test pollution |
 | `TestFactory` | Static factory class | Quickly creates commonly used compositions: OrigoRuntime / SndWorld / ProgressRun / ConverterRegistry, etc. |
 | `GameplaySimulationHarness` | Fluent Builder + Harness | One-click creation of complete frame-driven game simulation environment: OrigoRuntime + SndContext + background game session (syncProcess=true), supports DriveFrame/RunFrames/SpawnEntity/GetEntityData/SaveAndReload |
-| `TestStrategies` | Abstract base class collection | `SharedFrameCounterStrategy`, `SharedEchoActiveStrategy`, `SharedKillProbeStrategy`, `SharedNoopLifecycleStrategy`, `SharedNoopStateMachineStrategy` — referenced by integration test files via 1-line sealed subclass, eliminating duplicate strategy definitions |
-| `TestObserverEvents` | Structured event recording | `TestObserverEvent` record (EventType/TargetName/DataKey/OldValue/NewValue) + `EventCollector` static AsyncLocal collector + `SharedDataChangeObserverStrategy` abstract base class — observer test assertions upgrade from substring matching to typed field exact comparison |
+| `SharedTestStrategies.cs` | Abstract base class collection | `SharedFrameCounterStrategy`, `SharedEchoActiveStrategy`, `SharedKillProbeStrategy`, `SharedNoopLifecycleStrategy`, `SharedNoopStateMachineStrategy` — referenced by integration test files via 1-line sealed subclass, eliminating duplicate strategy definitions |
+| `TestObserverEvent` / `EventCollector` | Structured event recording | `TestObserverEvent` record (EventType/TargetName/DataKey/OldValue/NewValue) + `EventCollector` static AsyncLocal collector + `SharedDataChangeObserverStrategy` abstract base class — observer test assertions upgrade from substring matching to typed field exact comparison |
 | `PerfReporter` | Performance reporter | Performance test output formatting: `Report`, `CompareTable`, and `ReportTable` methods print time/throughput/allocation comparisons. Supports dual-channel output (`Console.Out` + `ITestOutputHelper`), ensuring results visible in both CI and local; duplicate metric keys within one process throw `InvalidOperationException` |
 | `ConsoleInputBuffer` | `IConsoleInputSource` implementation | Console input queue (Core production code, used directly in tests) |
 | `ConsoleOutputChannel` | `IConsoleOutputChannel` implementation | Console output channel (Core production code, used directly in tests) |
 | `PrivateFieldNamingConvention` | Architecture guardrail helper | Reflectively verifies production private fields follow `_camelCase` (dotnet format cannot verify fix-only naming rules) |
 
-All test support facilities are `internal`, exposed to the test project via `InternalsVisibleTo`.
+Test-support types are consumed directly by referencing test projects; the `internal` facilities (`LevelBuilder`, `StubSndSceneHost`, `StubSndEntity`, `TypedDataTestSupport`, `SndContextTestFrameDriver`) are exposed to `Origo.Core.Tests` and `Origo.GodotAdapter.Tests` via `InternalsVisibleTo`.
 
 ## Capability Document Index
 

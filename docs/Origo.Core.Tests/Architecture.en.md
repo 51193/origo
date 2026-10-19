@@ -15,7 +15,7 @@ as stateless via reflection at registration (rejects instance fields and writabl
 | File | Verification Focus |
 |------|-------------------|
 | `CoreArchitectureGuardrailTests.cs` | Layer isolation, interface composition, shell API classification completeness, Contracts/Kernel dependency direction, consumers can complete full workflow through pure interfaces |
-| `AutoInitializerGuardTests.cs` | Strategy statelessness validation: instance fields rejected, static fields allowed, missing StrategyIndex throws |
+| `AutoInitializerGuardTests.cs` | Strategy statelessness validation: mutable instance fields and writable instance properties rejected, static and readonly fields allowed; null-callback and meta-list guards. Missing `[StrategyIndex]` rejection is covered in [Snd-Strategy](Snd-Strategy.en.md) by `ActiveStrategyTests` / `ObserverStrategyTests` |
 | `BuildGateGuardTests.cs` | Build configuration that makes the dead-code analyzers real: `EnforceCodeStyleInBuild`, warnings as errors, and the `IDE0051`/`IDE0052` severities |
 
 ## CoreArchitectureGuardrailTests Test Details
