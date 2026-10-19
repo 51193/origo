@@ -77,13 +77,13 @@ The base class `sealed`s all 8 of `LifecycleStrategyBase`'s lifecycle hooks, aut
 
 Located in `Origo.Core.Snd.Strategy.EntityStrategyExtensions`.
 
-Ensures a certain resident strategy is mounted on the entity, supporting template-level overrides (`*_impl` pattern):
+Ensures a certain resident strategy is mounted on the entity when no implementation override is configured, supporting template-level overrides (`*_impl` pattern):
 
 ```csharp
 entity.EnsureReplaceableStrategy("character.path_impl", "character.pathfind.astar");
 ```
 
-- Reads the current value of `implKey` as a configuration override; falls back to `defaultStrategyIndex` when not set
+- Reads the current value of `implKey` as a configuration override; when it holds a non-blank value the index is preserved and nothing is mounted (the configurer mounts that strategy), otherwise `defaultStrategyIndex` is mounted
 - Uses `implKey` as a dedup marker; repeated calls have no side effects
 - Corresponds to the "Replaceable Implementation" pattern in the design patterns documentation
 

@@ -14,7 +14,7 @@
 | File | Responsibility |
 |------|------|
 | `GeneratorTestHarness.cs` | Constructs in-memory `CSharpCompilation`, runs `TypedDataGenerator`, exposes generated sources, generator diagnostics, merged compilation errors |
-| `TypedDataGeneratorTests.cs` | Generator behavior tests: Home/Adapter mode output, two storage models, `ORIGOSG001`–`ORIGOSG007` diagnostics, generation determinism and incremental pipeline |
+| `TypedDataGeneratorTests.cs` | Generator behavior tests: Home/Adapter mode output, two storage models, `ORIGOSG001`–`ORIGOSG008` diagnostics, generation determinism and incremental pipeline |
 | `PrivateFieldNamingTests.cs` | Architecture guardrail: production assembly private fields follow `_camelCase` naming |
 | `ApiDocumentationGuardrailTests.cs` | Architecture guardrail: public/protected API declarations in production source must carry `<summary>` or `<inheritdoc />` (vendored FastNoiseLite exempt) |
 | `Benchmarks/TypedDataGeneratedBenchmarkTests.cs` | Generated artifact performance benchmarks: write/read/mixed dispatch for multiple value types + `string`, generated inline `TypedData` vs unoptimized boxing; fixed pool + large iterations + multi-round min noise reduction, relaxed thresholds + comparison tables, and per-side measured allocation (`GC.GetAllocatedBytesForCurrentThread`, placed in separate `NoInlining` methods to avoid polluting timing) |
@@ -44,7 +44,6 @@
 | `Adapter_BCLTypeItself_WithReservedKindName_IsAllowed` | Registering BCL `string` itself at kind 128 emits `AsString` with no diagnostics or compile errors | Origo.SourceGeneration |
 | `Attribute_DefaultStartKind_StartsAtOne` | Without `StartKind`, numbering starts at 1 (Int32=1, String=2, matching `RegisterKind`) | Origo.SourceGeneration |
 | `Attribute_NoTypes_ProducesNoOutput` | Only `StartKind` (128) specified with no type arguments | Produces no sources, no diagnostics, no compile errors |
-| `Attribute_NullArrayElement_SkippedWithoutCrash` | Type arguments contain a null element | Null element skipped without crash, int/string generated normally (Int32=1, String=2) |
 | `Home_WithoutString_GeneratesCompilableCode` | Home mode without `string` registered (int/float only) | Zero compile errors, does not generate `KindMap.String`/`IsString`/`AsString`/`TryGetString` |
 | `Incremental_SameInputTwice_GenerationStepIsCached` | Two new Compilation instances with identical sources (modeling every editor keystroke) | Second run's SourceOutput steps all skip regeneration with Cached reason |
 | `Incremental_SameInputTwice_TrackedStepsPresent` | Same input run twice | Incremental pipeline retains TrackedSteps (non-empty), observable step execution/caching reasons |
@@ -56,6 +55,7 @@
 | `Home_UnsupportedValueType_ReportsORIGOSG002_ButStillGeneratesValidTypes` | Home group registers uninlinable value type (`decimal`) | Reports `ORIGOSG002` (Error), excludes only the unsupported type, `int` still generated normally with merged compilation zero errors |
 | `Adapter_SystemPrimitive_ReportsORIGOSG001` | Adapter group registers system primitive type (`int`) | Reports `ORIGOSG001` (Error), excludes the primitive, does not produce inline accessors for it |
 | `Adapter_WithoutFriendAccess_ReportsORIGOSG007_AndEmitsNoSources` | Adapter assembly not listed in `Origo.Core.Contracts` `InternalsVisibleTo` | Reports `ORIGOSG007` (Error) and emits no generated sources, zero compile errors |
+| `Attribute_NullArrayElement_ReportsORIGOSG008_AndEmitsNoSources` | Type arguments contain a null element | Reports `ORIGOSG008` (Error) and emits no sources; a null placeholder would renumber the following types |
 | `KindPastByteRange_ReportsORIGOSG003_IncludingWrapToNonZero` | `StartKind` 254 with `byte`/`sbyte`/`short` assigns kinds 254/255/256: 255 is the reserved `UnregisteredKind` sentinel and 256 exceeds the byte range (wrapping to 0) | Reports `ORIGOSG003` (Error) for both out-of-range types, drops `AsSByte`/`AsInt16`, and still generates the in-range `Byte = 254` |
 | `OverlappingStartKindRanges_ReportORIGOSG004_AndDropCollidingTypes` | Two groups assign same Kind 1 to different types (`int`/`long`) | Reports `ORIGOSG004` (Error), excludes the two colliding types |
 | `HomeAndAdapterCoexistence_HomeWins_NonSystemTypesRejected` | Same compilation has both Home attribute (system primitive types) and Adapter attribute (non-system value types) | Home mode takes effect, system types generated normally, non-system value types report `ORIGOSG002` (Error) |

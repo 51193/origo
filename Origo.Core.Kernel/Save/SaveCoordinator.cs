@@ -150,7 +150,10 @@ internal sealed class SaveCoordinator
         foreach (var kvp in bgSessions)
         {
             if (!bgPayloads.TryGetValue(kvp.Key, out var bgPayload))
-                continue;
+                throw new InvalidOperationException(
+                    $"Cannot persist background session '{kvp.Key}': it disappeared between the " +
+                    "session snapshot and payload serialization. Destroy sessions only through " +
+                    "the session manager, and do not mutate sessions during a save.");
 
             if (payload.Levels.ContainsKey(kvp.Value.LevelId))
                 throw new InvalidOperationException(

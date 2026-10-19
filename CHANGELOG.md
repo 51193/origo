@@ -68,6 +68,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   owners' control. The CI job now marks fork pull requests, and
   `scripts/work-identity.sh validate` skips the naming rule for them while
   same-repository pull request branches stay validated.
+- **`ORIGOSG008` for null `SndInlineTypes` elements** — a null placeholder in
+  the attribute now fails the build with an actionable error instead of
+  silently renumbering the types after it; the rule is tracked as unshipped
+  until the next release.
 
 ## [0.1.0] - 2026-10-10
 
@@ -77,7 +81,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **Shell-only package consumer smoke** — `scripts/package-consumer-smoke.sh` packs the shell/kernel packages into a fresh local feed, restores the tracked `Origo.Core` + `Origo.GodotAdapter` consumer fixture without project references, builds with warnings as errors, rejects kernel compile-asset leakage with a CS0246 negative probe, verifies the Contracts analyzer asset and kernel runtime assembly, and starts `OrigoDefaultEntry` headlessly. The smoke runs in the normal CI Godot job and local `scripts/ci.sh`; version pins and the launch flow are documented in `docs/usage/shell-package-consumer.en.md`.
 - **Shell API baseline gate** — `scripts/api-inventory.sh` builds the shell projects in Release, runs the tracked Roslyn inventory in `tools/ApiInventoryTool`, and verifies `shell-api-baseline.json`; unapproved shell API additions, removals, or signature changes fail through `scripts/ci.sh`, the normal CI matrix, and the Release workflow until the baseline is updated in the same reviewed change. Previous-package validation runs from `ORIGO_PREVIOUS_API_BASELINE` once a released baseline exists; the first 0.1.0 release states that behavior explicitly.
-- **Matt Pocock engineering skills integration** — GitHub Issues in `51193/origo` and local Markdown counterparts under `.scratch/issues/` share issue numbers; five default triage states and the existing English domain-documentation route are configured in `docs/agents/`, with `AGENTS.md` retaining authority.
+- **Matt Pocock engineering skills integration** — GitHub Issues in `51193/origo` and optional local Markdown counterparts under `.scratch/issues/` share issue numbers; five default triage states and the existing English domain-documentation route are configured in `docs/agents/`, with `AGENTS.md` retaining authority.
 - **Core shell/kernel package split** — `Origo.Core.Contracts` now carries the stable consumer surface (interfaces, pure data, metadata, strategy base classes, data-source contracts, logging abstractions, and shared pure helpers), `Origo.Core.Kernel` carries the runtime/SND/save/data-source/console implementations and internal `Origo.Core.Kernel.Ports`, and `Origo.Core` is the consumer shell package. The shell host facade `OrigoHost` / `OrigoHostOptions` and the stable `IOrigoRuntime` / `ISndWorldAccess` interfaces let a consumer compile and run a Core workflow while kernel compile assets stay out of the consumer restore graph.
 - **Save slot deletion** — `ISndSaveOperations.DeleteSave` and `ISaveStorageService.DeleteSave` remove an inactive save snapshot together with any interrupted-snapshot `.tmp`/`.bak` remnants; the active save, the continue target, and running or pending persistence workflows are rejected.
 - **Persistence console commands** — a Core `SndContext` registers `list_saves`, `save`, `load`, `delete_save`, and `switch_level` handlers on the runtime console. `save`/`load`/`switch_level` queue through the existing frame-driven `ISndSaveOperations` path; `list_saves` prints display metadata; `delete_save` completes synchronously after its safety guards pass.

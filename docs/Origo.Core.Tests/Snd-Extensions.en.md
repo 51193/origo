@@ -28,6 +28,7 @@ Validates extension method behavior on `ISndEntity`: lazy strategy mounting and 
 | `EnsureStrategy_DataKeyExistsButEmpty_StillSetsAndReturnsTrue` | When the data key exists but the value is an empty string, still overwrites and returns true | Snd README: ActiveStrategyExtensions |
 | `EnsureStrategy_RealRuntime_MountsAndRunsLifecycleStrategy` | In a real runtime with the strategy pool registered, the first EnsureStrategy actually mounts the LifecycleStrategy and fires AfterAdd; a second call does not mount again; Process runs after DriveFrame | Snd README: ActiveStrategyExtensions |
 | `EnsureReplaceableStrategy_RealRuntime_MountsDefaultStrategy` | In a real runtime with no configuration, EnsureReplaceableStrategy actually mounts defaultStrategyIndex and it executes | Snd README: EnsureReplaceableStrategy |
+| `EnsureReplaceableStrategy_RealRuntime_ConfiguredOverride_DoesNotMountDefault` | In a real runtime with a configured override, no strategy is mounted (AfterAdd never runs) and the configured index is preserved | Snd README: EnsureReplaceableStrategy |
 
 ### Error Paths
 
@@ -43,7 +44,7 @@ Validates extension method behavior on `ISndEntity`: lazy strategy mounting and 
 |-------------|------------------|---------------------|
 | `EnsureReplaceableStrategy_NoConfig_UsesDefault` | No configuration uses defaultStrategyIndex, returns true | Snd README: EnsureReplaceableStrategy |
 | `EnsureReplaceableStrategy_CalledAgain_ReturnsFalse` | Second call returns false (idempotent) | Snd README: EnsureReplaceableStrategy |
-| `EnsureReplaceableStrategy_ConfiguredOverride_UsesOverride` | When custom strategy index is configured, preserves it and returns false | Snd README: EnsureReplaceableStrategy |
+| `EnsureReplaceableStrategy_ConfiguredOverride_PreservesIndex` | A configured custom strategy index is preserved unchanged and the call returns false (mounting it is the configurer's responsibility) | Snd README: EnsureReplaceableStrategy |
 | `EnsureReplaceableStrategy_EmptyOverride_UsesDefault` | When configured value is empty string, overwrites with defaultStrategyIndex, returns true | Snd README: EnsureReplaceableStrategy |
 | `EnsureReplaceableStrategy_DifferentDefault_CalledAgain_ReturnsFalse` | First call mounted with A as default; second call with B as default still returns false and value stays A | Snd README: EnsureReplaceableStrategy |
 

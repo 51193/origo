@@ -140,7 +140,7 @@ Could it be squeezed to 16 bytes? That would require sacrificing `long`/`double`
 
 The framework applies `[assembly: SndInlineTypes(...)]` at the assembly level; the complete Core and adapter registration lists are held in [Origo.SourceGeneration README](README.en.md#registration-mechanism).
 
-Kind allocation rules and the complete `ORIGOSG001`–`ORIGOSG007` diagnostic table
+Kind allocation rules and the complete `ORIGOSG001`–`ORIGOSG008` diagnostic table
 live in [README.en.md](README.en.md#kind-value-segmentation) and
 [README.en.md](README.en.md#type-validation-and-diagnostics); they are maintained
 once there. The invariants this page relies on: each layer's starting Kind comes

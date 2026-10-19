@@ -41,6 +41,8 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
     {
         var isHome = IsHomeAssembly(compilation);
         var typeGroups = new List<TypeGroup>();
+        var hasNullInlineType = false;
+        Location? nullInlineTypeLocation = null;
 
         foreach (var attributeData in compilation.Assembly.GetAttributes())
         {
@@ -48,7 +50,13 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
                 continue;
 
             var startKind = ExtractStartKind(attributeData);
-            var types = ExtractTypes(attributeData, startKind);
+            var types = ExtractTypes(
+                attributeData, startKind, out var hasNullElement, out var nullElementLocation);
+            if (hasNullElement)
+            {
+                hasNullInlineType = true;
+                nullInlineTypeLocation ??= nullElementLocation;
+            }
 
             if (types.Count > 0)
                 typeGroups.Add(new TypeGroup { StartKind = startKind, Types = types });
@@ -63,6 +71,8 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
             HasTypedDataFriendAccess = hasTypedDataFriendAccess,
             AssemblyName = compilation.AssemblyName ?? "<unknown>",
             AdapterDiagnosticLocation = assemblyLocation,
+            HasNullInlineType = hasNullInlineType,
+            NullInlineTypeLocation = nullInlineTypeLocation,
             TypeGroups = typeGroups
         };
     }
@@ -110,10 +120,16 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
         return 1;
     }
 
-    private static List<InlineTypeInfo> ExtractTypes(AttributeData attr, int startKind)
+    private static List<InlineTypeInfo> ExtractTypes(
+        AttributeData attr,
+        int startKind,
+        out bool hasNullElement,
+        out Location? firstNullElementLocation)
     {
         var result = new List<InlineTypeInfo>();
         var kindOffset = 0;
+        hasNullElement = false;
+        firstNullElementLocation = null;
         var attrLocation = attr.ApplicationSyntaxReference?.GetSyntax().GetLocation() ?? Location.None;
 
         foreach (var ctorArg in attr.ConstructorArguments)
@@ -123,7 +139,14 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
                 foreach (var element in ctorArg.Values)
                 {
                     if (element.Value is ITypeSymbol typeSymbol)
+                    {
                         result.Add(CreateTypeInfo(typeSymbol, startKind + kindOffset++, attrLocation));
+                    }
+                    else if (!hasNullElement)
+                    {
+                        hasNullElement = true;
+                        firstNullElementLocation = attrLocation;
+                    }
                 }
             }
         }
@@ -200,6 +223,13 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
 
     private static void GenerateTypedDataExtensions(SourceProductionContext context, GenerationInput input)
     {
+        if (input.HasNullInlineType)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                _nullInlineType, input.NullInlineTypeLocation ?? Location.None));
+            return;
+        }
+
         var allTypes = input.TypeGroups.SelectMany(g => g.Types).ToList();
         if (allTypes.Count == 0) return;
 
@@ -486,6 +516,8 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
         public bool HasTypedDataFriendAccess { get; set; }
         public string AssemblyName { get; set; } = string.Empty;
         public Location? AdapterDiagnosticLocation { get; set; }
+        public bool HasNullInlineType { get; set; }
+        public Location? NullInlineTypeLocation { get; set; }
         public List<TypeGroup> TypeGroups { get; set; } = [];
     }
 
@@ -505,6 +537,7 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
             if (x is null || y is null) return false;
             if (x.IsHome != y.IsHome) return false;
             if (x.HasTypedDataFriendAccess != y.HasTypedDataFriendAccess) return false;
+            if (x.HasNullInlineType != y.HasNullInlineType) return false;
             if (!string.Equals(x.AssemblyName, y.AssemblyName, StringComparison.Ordinal)) return false;
             if (x.TypeGroups.Count != y.TypeGroups.Count) return false;
 
@@ -538,6 +571,7 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
             var hash = new HashCode();
             hash.Add(obj.IsHome);
             hash.Add(obj.HasTypedDataFriendAccess);
+            hash.Add(obj.HasNullInlineType);
             hash.Add(obj.AssemblyName);
             hash.Add(obj.TypeGroups.Count);
             foreach (var g in obj.TypeGroups)
