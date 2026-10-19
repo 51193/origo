@@ -28,6 +28,7 @@ Clear/GetKeys/SerializeAll/DeserializeAll full lifecycle.
 | `Blackboard_SetValue_NullString_RemainsSupported` | Registered reference kind `string` can store null; TryGet still returns found=true | Blackboard Abstraction |
 | `Blackboard_Clear_RemovesAll` | GetKeys is empty after Clear | Blackboard Abstraction |
 | `Blackboard_GetKeys_ReturnsAllKeys` | GetKeys returns all key names | Blackboard Abstraction |
+| `Blackboard_GetKeys_ReturnsSnapshot` | GetKeys returns a snapshot; adding a key afterwards does not change the returned collection | Blackboard Abstraction |
 | `Blackboard_SerializeAll_And_DeserializeAll_RoundTrip` | Data consistent after serialize then deserialize | Blackboard Abstraction |
 | `Blackboard_SetValue_OverwriteExisting` | Overwriting returns the latest value | Blackboard Abstraction |
 

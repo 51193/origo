@@ -104,7 +104,7 @@ collaboration contracts.
 
 - `global.json` is authoritative; never downgrade or edit it to match an already-installed SDK.
 - Branches use `<type>/<creator>/<MMDD>/<purpose>`; validate with `scripts/work-identity.sh`.
-- Run `bash scripts/install-dotnet.sh` to install the exact SDK (default `$HOME/.dotnet`, repository-local `.dotnet/` fallback). Scripts source `scripts/dotnet-env.sh`; use `./dotnet` only in local mode. Do not substitute per-session `PATH`/`DOTNET_ROOT`/`NUGET_PACKAGES` exports.
+- Run `bash scripts/install-dotnet.sh` to install the exact SDK (an explicit `DOTNET_INSTALL_DIR` wins; an existing repository-local `.dotnet/` is refreshed; otherwise `$HOME/.dotnet`, with the repository-local directory as the read-only-HOME fallback). Scripts source `scripts/dotnet-env.sh`, which validates the selected SDK against `global.json` and fails with the fix command; use `./dotnet` only in local mode. Do not substitute per-session `PATH`/`DOTNET_ROOT`/`NUGET_PACKAGES` exports.
 - Godot binaries are separate: `scripts/download-godot.sh` reads `Godot.NET.Sdk` from `Origo.GodotAdapter/Origo.GodotAdapter.csproj` and caches under `.godot_binary/`. Full rules: `docs/META.en.md` §Environment Bootstrap.
 
 ### 1.11 Local Agent Work Buffer — `_origo_local/` (Untracked, Producer/Consumer)

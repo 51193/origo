@@ -7,17 +7,13 @@ namespace Origo.Core.DataSource;
 
 /// <summary>
 ///     Parses line-based <c>key: value</c> text (ignoring blank lines and <c>#</c> comment lines).
+///     Malformed lines and empty keys throw; empty values are valid.
 /// </summary>
 internal static class KeyValueFileParser
 {
     private static readonly char[] _lineSeparators = ['\r', '\n'];
 
-    public static Dictionary<string, string> Parse(
-        string? content,
-        string sourceName,
-        bool strict,
-        ILogger logger,
-        bool allowEmptyValues = false)
+    public static Dictionary<string, string> Parse(string? content, string sourceName, ILogger logger)
     {
         ArgumentNullException.ThrowIfNull(logger);
         var result = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -30,7 +26,7 @@ internal static class KeyValueFileParser
             var line = rawLine.Trim();
             if (line.Length == 0 || line.StartsWith('#'))
                 continue;
-            ProcessLine(line, sourceName, strict, allowEmptyValues, logger, result);
+            ProcessLine(line, sourceName, logger, result);
         }
 
         return result;
@@ -39,40 +35,18 @@ internal static class KeyValueFileParser
     private static void ProcessLine(
         string line,
         string sourceName,
-        bool strict,
-        bool allowEmptyValues,
         ILogger logger,
         Dictionary<string, string> result)
     {
         var parts = line.Split(':', 2, StringSplitOptions.TrimEntries);
         if (parts.Length != 2)
-        {
-            if (strict)
-                throw new FormatException(
-                    $"Invalid line '{line}' in '{sourceName}'. Expected 'key: value'.");
-
-            logger.Log(LogLevel.Warning, nameof(KeyValueFileParser),
-                new LogMessageBuilder().AddContext("filePath", sourceName)
-                    .Build($"Invalid line '{line}'. Expected 'key: value'."));
-            return;
-        }
+            throw new FormatException(
+                $"Invalid line '{line}' in '{sourceName}'. Expected 'key: value'.");
 
         var key = parts[0];
         var value = parts[1];
-        var invalidEmptyKey = key.Length == 0;
-        var invalidEmptyValue = value.Length == 0 && !allowEmptyValues;
-
-        if (invalidEmptyKey || invalidEmptyValue)
-        {
-            if (strict)
-                throw new FormatException(
-                    $"Invalid line '{line}' in '{sourceName}'. Empty key or value.");
-
-            logger.Log(LogLevel.Warning, nameof(KeyValueFileParser),
-                new LogMessageBuilder().AddContext("filePath", sourceName)
-                    .Build($"Invalid line '{line}'. Empty key or value."));
-            return;
-        }
+        if (key.Length == 0)
+            throw new FormatException($"Invalid line '{line}' in '{sourceName}'. Empty key.");
 
         if (result.ContainsKey(key))
             logger.Log(LogLevel.Warning, nameof(KeyValueFileParser),

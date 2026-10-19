@@ -4,7 +4,7 @@
 
 This document is the issue #37 classification inventory for the stable 0.1.0 consumer surface. The initial inventory was captured for every exported type of `Origo.Core`, `Origo.GodotAdapter`, and `Origo.ConsoleBridge` at source commit `7405cf5`. Later #38 split commits update the Assembly and Package owner columns in place; the #41 member-level Roslyn JSON baseline and gate are documented in [shell-api-baseline](shell-api-baseline.en.md).
 
-The topology and compatibility policy remain defined by [shell-kernel-boundary](shell-kernel-boundary.en.md); this document only applies that decision to the current exports. A new exported type fails the architecture guard in each test project until it is added to both language tables with a classification, package owner, capability group, and rationale. Moved types fail until the same change updates the assembly column and the matching assembly guard.
+The topology and compatibility policy remain defined by [shell-kernel-boundary](shell-kernel-boundary.en.md); this document only applies that decision to the current exports. A new exported type fails the architecture guard in each test project until it is added to the English table with a classification, package owner, capability group, and rationale. Moved types fail until the same change updates the assembly column and the matching assembly guard.
 
 ## Reproduction
 

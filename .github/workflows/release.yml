@@ -142,50 +142,7 @@ jobs:
             exit 1
           fi
 
-          python3 - "$TAG_VERSION" <<'PY'
-          import re
-          import sys
-
-          version = sys.argv[1]
-
-          # AssemblyVersion/FileVersion are always four numeric parts and
-          # cannot carry the prerelease suffix used by nightly tags.
-          numeric = re.split(r"[-+]", version, maxsplit=1)[0]
-          parts = numeric.split(".")
-          if not parts or not all(part.isdigit() for part in parts) or len(parts) > 4:
-              raise SystemExit(
-                  f"ERROR: tag version '{version}' does not start with a usable numeric version."
-              )
-          parts = (parts + ["0"] * 4)[:4]
-          assembly_version = ".".join(parts)
-
-          path = "Directory.Build.props"
-          with open(path, encoding="utf-8") as handle:
-              content = handle.read()
-
-          for element, replacement in (
-              ("Version", version),
-              ("AssemblyVersion", assembly_version),
-              ("FileVersion", assembly_version),
-          ):
-              content, count = re.subn(
-                  rf"(<{element}>)[^<]+(</{element}>)",
-                  lambda match, value=replacement: f"{match.group(1)}{value}{match.group(2)}",
-                  content,
-              )
-              if count != 1:
-                  raise SystemExit(
-                      f"ERROR: expected exactly one <{element}> element in {path}, found {count}."
-                  )
-
-          with open(path, "w", encoding="utf-8") as handle:
-              handle.write(content)
-
-          print(
-              f"Synced {path}: <Version>={version}, "
-              f"<AssemblyVersion>=<FileVersion>={assembly_version}"
-          )
-          PY
+          python3 scripts/write-version-stamp.py "$TAG_VERSION"
 
           echo "::group::Version stamps after sync"
           grep -nE '<(Version|AssemblyVersion|FileVersion)>' Directory.Build.props

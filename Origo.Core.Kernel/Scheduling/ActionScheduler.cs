@@ -8,7 +8,7 @@ namespace Origo.Core.Scheduling;
 ///     The host environment is responsible for calling Tick to execute queued actions
 ///     at appropriate times.
 /// </summary>
-internal sealed class ActionScheduler(ILogger logger) : IScheduler
+internal sealed class ActionScheduler(ILogger logger)
 {
     private readonly ConcurrentActionQueue _queue = new(logger);
 

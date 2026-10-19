@@ -76,6 +76,17 @@ without reading through source code.
   must be listed in the "Test Support Strategies" table
 - Describe each support strategy's purpose and usage (not the specific implementation, but what behavior it simulates)
 
+### Dead-Code Gate
+
+The repository build fails on unused private members: `Directory.Build.props`
+sets `EnforceCodeStyleInBuild`, `.editorconfig` raises `IDE0051` and `IDE0052`
+to errors, and warnings are errors. A test double whose per-instance state is
+the premise of its test must therefore expose that state through a member the
+test actually asserts (for example a read-only property whose value the test
+checks after a lifecycle call). Do not suppress `IDE0051` / `IDE0052` to keep
+such a member: disabling rules to get past the gate is forbidden, so restructure
+the double instead.
+
 ### Writing Style
 
 - Mark the parent link (↑) at the beginning of every document

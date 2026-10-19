@@ -18,8 +18,6 @@ namespace Origo.Core.Snd;
 /// </summary>
 public sealed class SndWorld : ISndWorldAccess
 {
-    private readonly ILogger _logger;
-
     /// <summary>
     ///     Creates a world with the given type mapping, logger, converter
     ///     registry, and data-source I/O gateway.
@@ -35,7 +33,6 @@ public sealed class SndWorld : ISndWorldAccess
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(registry);
         ArgumentNullException.ThrowIfNull(dataSourceIo);
-        _logger = logger;
         StrategyPool = new SndStrategyPool(logger);
         TypeMapping = typeMapping;
         ConverterRegistry = registry;

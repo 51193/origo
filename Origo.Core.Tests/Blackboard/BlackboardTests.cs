@@ -67,6 +67,19 @@ public class BlackboardTests
     }
 
     [Fact]
+    public void Blackboard_GetKeys_ReturnsSnapshot()
+    {
+        var bb = new Blackboard.Blackboard();
+        bb.SetValue("a", 1);
+
+        var keys = bb.GetKeys();
+        bb.SetValue("b", 2);
+
+        Assert.Single(keys);
+        Assert.DoesNotContain("b", keys);
+    }
+
+    [Fact]
     public void Blackboard_SerializeAll_And_DeserializeAll_RoundTrip()
     {
         var bb = new Blackboard.Blackboard();

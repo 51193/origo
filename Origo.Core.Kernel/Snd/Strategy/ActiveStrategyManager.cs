@@ -77,7 +77,7 @@ internal sealed class ActiveStrategyManager
     }
 
     /// <summary>Serializes all currently held active strategy indices.</summary>
-    public IReadOnlyCollection<string> SerializeIndices() => _active.Keys;
+    public IReadOnlyCollection<string> SerializeIndices() => [.. _active.Keys];
 
     /// <summary>Releases all active strategies (called during Quit/Dead).</summary>
     public void ReleaseAll()

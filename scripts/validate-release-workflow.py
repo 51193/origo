@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Guard the release workflow's dispatch-safe tag and Boolean-input contract.
+"""Guard the release workflow's dispatch-safe tag, action, version-stamp,
+and Boolean contract.
 
 `workflow_dispatch` runs from `main`, so `github.ref_name` is the branch name
 rather than the requested release tag. The workflow resolves the real tag into
@@ -14,6 +15,13 @@ tested directly.
 
 Run from `scripts/lint-scripts.sh` so a release run cannot reach the package
 build before these invariants fail CI.
+
+The release-creation rule is a run-text tripwire, not a security boundary: it
+rejects literal /releases, release create, and createRelease occurrences in a
+release-job run step, with an exact "# guard: read-only" waiver on the
+immediately preceding line for genuinely read-only calls. Scripts, tag trees,
+env/with values, variables, heredocs, and quoted or dynamically constructed
+commands are outside its reach.
 """
 
 from __future__ import annotations
@@ -29,10 +37,82 @@ WORKFLOW = ROOT / ".github" / "workflows" / "release.yml"
 RELEASE_ACTION = "softprops/action-gh-release"
 RESOLVED_TAG = "${{ steps.resolve-tag.outputs.tag }}"
 RESOLVED_TAG_REF = f"refs/tags/{RESOLVED_TAG}"
+# Only these actions may run in the publishing job; a new action needs a
+# deliberate review and an entry here.
+RELEASE_JOB_ACTIONS = {
+    "actions/checkout",
+    "actions/setup-dotnet",
+    "actions/cache",
+    RELEASE_ACTION,
+}
 
 
 def fail(message: str) -> None:
     print(f"ERROR: {message}", file=sys.stderr)
+
+
+def _normalize_command(command: str) -> str:
+    """Collapse shell line continuations and whitespace for keyword scans."""
+    return " ".join(command.replace("\\\n", " ").replace("\\\r", " ").split())
+
+
+
+
+def _references_wrong_ref(text: str) -> bool:
+    return re.search(r"\$\{\{\s*github\.(?:ref_name|head_ref)\s*\}\}", text) is not None
+
+
+def _env_references_wrong_ref(env: object) -> bool:
+    if not isinstance(env, dict):
+        return False
+    return any(_references_wrong_ref(str(value)) for value in env.values())
+
+
+def _calls_version_helper(run: str) -> bool:
+    """True when a non-comment line really invokes the helper."""
+    pattern = re.compile(
+        r"^(?:sudo\s+(?:-\S+\s+)*)?(?:env\s+)?"
+        r"(?:[A-Za-z_][A-Za-z0-9_]*=\S+\s+)*"
+        r"python3\s+(?:-\S+\s+)*(?:\./|\"\$PWD/|\$PWD/)?"
+        r"scripts/write-version-stamp\.py(?:\"|\s|$)"
+    )
+    for line in run.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("#"):
+            continue
+        if pattern.match(stripped):
+            return True
+    return False
+
+
+def _release_creation_line_conflicts(run: str) -> list[int]:
+    """Return offending line numbers where a run step touches releases.
+
+    Only literal run text is scanned; a read-only call is waived by an exact
+    ``# guard: read-only`` line immediately above it. This intentionally avoids
+    parsing shell syntax.
+    """
+    offenders: list[int] = []
+    read_only = False
+    joined = run.replace("\\\n", "").replace("\\\r", "")
+    for number, raw_line in enumerate(joined.splitlines(), start=1):
+        stripped = raw_line.strip()
+        if stripped.startswith("#"):
+            read_only = stripped == "# guard: read-only"
+            continue
+        lowered = _normalize_command(stripped).lower()
+        is_creation = "release create" in lowered or "createrelease" in lowered
+        writes = bool(
+            re.search(
+                r"(?:^|\s)(?:-f|--raw-field|-F|--field|--input|-d|--data|--json|"
+                r"--post-data|-X\s+POST|--method\s+POST)\b",
+                lowered,
+            )
+        )
+        if is_creation or ("/releases" in lowered and not (read_only and not writes)):
+            offenders.append(number)
+        read_only = False
+    return offenders
 
 
 def event_mapping(workflow: dict) -> dict:
@@ -68,7 +148,19 @@ def main() -> int:
         for index, step in enumerate(job.get("steps") or []):
             if not isinstance(step, dict):
                 continue
-            action = str(step.get("uses") or "").split("@", 1)[0]
+            uses_value = step.get("uses")
+            uses_text = str(uses_value) if uses_value is not None else ""
+            if "${{" in uses_text:
+                errors.append(
+                    f"{job_name}.steps[{index}] uses a dynamic action reference "
+                    f"('{uses_text}'); pin the action so this guard can review it."
+                )
+            action = uses_text.split("@", 1)[0]
+            if job_name == "release" and action and action not in RELEASE_JOB_ACTIONS:
+                errors.append(
+                    f"{job_name}.steps[{index}] uses unapproved action '{action}'; "
+                    "add it to RELEASE_JOB_ACTIONS only after review."
+                )
             if action != RELEASE_ACTION:
                 continue
             with_section = step.get("with")
@@ -112,6 +204,47 @@ def main() -> int:
                     "release job must pass ORIGO_BRANCH_NAME as "
                     f"{RESOLVED_TAG_REF} when linting a detached release checkout."
                 )
+        version_step = next(
+            (
+                step
+                for step in release_steps
+                if isinstance(step, dict)
+                and _calls_version_helper(str(step.get("run") or ""))
+            ),
+            None,
+        )
+        if version_step is None:
+            errors.append(
+                "release job must call scripts/write-version-stamp.py so the "
+                "release and weekly workflows share one validated implementation."
+            )
+        else:
+            version_run = str(version_step.get("run") or "")
+            version_env = version_step.get("env")
+            if not isinstance(version_env, dict) or version_env.get("TAG") != RESOLVED_TAG:
+                errors.append(
+                    "the version-stamp step must receive "
+                    f"TAG={RESOLVED_TAG} so it rewrites the dispatched tag, "
+                    "not github.ref_name."
+                )
+            if _references_wrong_ref(version_run) or _env_references_wrong_ref(version_env):
+                errors.append(
+                    "the version-stamp step must not read github.ref_name or "
+                    "github.head_ref; use the resolved tag."
+                )
+
+        for index, step in enumerate(release_steps):
+            if not isinstance(step, dict):
+                continue
+            offenders = _release_creation_line_conflicts(str(step.get("run") or ""))
+            if offenders:
+                errors.append(
+                    f"release.steps[{index}] touches releases in a run step "
+                    f"(lines {offenders}); create the release through "
+                    f"{RELEASE_ACTION} and mark a genuinely read-only /releases "
+                    "call with a preceding '# guard: read-only' line."
+                )
+
         for dependency in ("shellcheck", "python3-yaml"):
             if not any(dependency in command for command in run_commands):
                 errors.append(

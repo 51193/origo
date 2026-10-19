@@ -747,15 +747,14 @@ public class TypedDataGeneratorTests
     }
 
     [Fact]
-    public void Attribute_NullArrayElement_SkippedWithoutCrash()
+    public void Attribute_NullArrayElement_ReportsORIGOSG008_AndEmitsNoSources()
     {
         var output = RunHome(
             "[assembly: Origo.Core.Snd.Metadata.SndInlineTypes(typeof(int), null, typeof(string))]");
 
-        Assert.Empty(output.GeneratorDiagnostics);
+        Assert.True(output.HasGeneratorDiagnostic("ORIGOSG008"));
         Assert.Empty(output.CompileErrors);
-        Assert.Contains("Int32 = 1;", output.AllGeneratedText);
-        Assert.Contains("String = 2;", output.AllGeneratedText);
+        Assert.DoesNotContain("RegisterKind", output.AllGeneratedText);
     }
 
     [Fact]

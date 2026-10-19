@@ -97,6 +97,41 @@ public class JsonAndMappingsTests
     }
 
     [Fact]
+    public void SndMappings_LoadSceneAliases_NullValue_Throws()
+    {
+        var fs = new TestMemoryFileSystem();
+        fs.SeedFile("maps/scenes.json", """{"hero": null}""");
+        var io = TestFactory.CreateIoGateway(fs);
+        var mappings = new SndMappings();
+        var logger = new TestLogger();
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => mappings.LoadSceneAliases(io, "maps/scenes.json", logger));
+
+        Assert.Contains("null value", ex.Message);
+        Assert.Contains("maps/scenes.json", ex.Message);
+        Assert.Contains("hero", ex.Message);
+    }
+
+    [Fact]
+    public void SndMappings_LoadTemplates_NullValue_Throws()
+    {
+        var fs = new TestMemoryFileSystem();
+        fs.SeedFile("maps/templates.json", """{"hero_template": null}""");
+        var io = TestFactory.CreateIoGateway(fs);
+        var registry = TestFactory.CreateRegistry(new TypeStringMapping());
+        var mappings = new SndMappings();
+        var logger = new TestLogger();
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => mappings.LoadTemplates(io, "maps/templates.json", registry, logger));
+
+        Assert.Contains("null value", ex.Message);
+        Assert.Contains("maps/templates.json", ex.Message);
+        Assert.Contains("hero_template", ex.Message);
+    }
+
+    [Fact]
     public void SndMappings_LoadSceneAliasesAndTemplates_ResolveExpectedValues()
     {
         var fs = new TestMemoryFileSystem();
@@ -191,8 +226,10 @@ public class JsonAndMappingsTests
         Assert.Equal(2, metas.Count);
         Assert.Equal("EnemyA", metas[0].Name);
         Assert.Equal(8, Assert.IsType<int>(TypedDataObjectConverter.ToObject(metas[0].DataMetaData!.Pairs["damage"])));
+        Assert.Equal(new[] { _strategyAi }, metas[0].StrategyMetaData!.LifecycleIndices);
         Assert.Equal("Npc", metas[1].Name);
         Assert.Equal("Calm", Assert.IsType<string>(TypedDataObjectConverter.ToObject(metas[1].DataMetaData!.Pairs["mood"])));
+        Assert.Equal(new[] { _strategyTalk }, metas[1].StrategyMetaData!.LifecycleIndices);
     }
 
     [Fact]

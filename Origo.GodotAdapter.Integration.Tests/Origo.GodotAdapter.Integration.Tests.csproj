@@ -1,5 +1,6 @@
 <!--
-  Godot.NET.Sdk version is managed by dependabot (NuGet ecosystem).
+  Godot.NET.Sdk is an MSBuild SDK reference; Dependabot's NuGet ecosystem
+  does not update it, so it must be bumped manually.
   It must match the version in ../Origo.GodotAdapter/Origo.GodotAdapter.csproj.
   The CI script (scripts/download-godot.sh) reads the authority version from
   the adapter .csproj and downloads the matching Godot engine binary.

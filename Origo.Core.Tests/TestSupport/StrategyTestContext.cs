@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Linq;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Entity;
-using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Abstractions.Node;
 using Origo.Core.Abstractions.Scene;
@@ -30,7 +29,6 @@ internal sealed class StrategyTestContext : ISndContext, ISndBlackboardAccess, I
     private readonly Dictionary<string, SndMetaData> _templates = new(StringComparer.Ordinal);
     private readonly IFileMetaAccess _metaAccess;
     private readonly IDataSourceIoGateway _dataSourceIo;
-    private readonly IPathResolver _pathResolver;
     private readonly DataSourceConverterRegistry _converterRegistry;
 
     public StrategyTestContext()
@@ -42,7 +40,6 @@ internal sealed class StrategyTestContext : ISndContext, ISndBlackboardAccess, I
         var fileSystem = new TestMemoryFileSystem();
         _metaAccess = DataSourceFactory.CreateFileMetaAccess(fileSystem);
         _dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fileSystem);
-        _pathResolver = DataSourceFactory.CreatePathResolver(fileSystem);
         _converterRegistry = DataSourceFactory.CreateDefaultRegistry(new TypeStringMapping());
 
         FileAccess = new StrategyFileAccess(_dataSourceIo, _metaAccess, _converterRegistry);
