@@ -221,8 +221,9 @@ Full details: `docs/release-process.en.md`. Pre-tag summary:
 
 ### Issue tracker
 
-GitHub `51193/origo` and local `.scratch/issues/`; see
-[issue-tracker.md](docs/agents/issue-tracker.md).
+GitHub `51193/origo` and local `.scratch/issues/`; issue bodies use
+English-only docs and current gates, and stale blockers are re-triaged before
+work starts. See [issue-tracker.md](docs/agents/issue-tracker.md).
 
 ### Triage labels
 
