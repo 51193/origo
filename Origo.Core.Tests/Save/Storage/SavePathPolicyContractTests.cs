@@ -154,11 +154,11 @@ public class SavePathPolicyContractTests
             SavePathPolicy = policy
         });
 
-        // Seed a save directory that looks like a valid save
-        fs.CreateDirectory("root/save_001");
-        fs.SeedFile("root/save_001/dummy.txt", "");
+        // Seed the policy's save directory, not a default-layout path.
+        fs.CreateDirectory($"root/{policy.GetSaveDirectory("001")}");
+        fs.SeedFile($"root/{policy.GetSaveDirectory("001")}/dummy.txt", "");
 
-        // EnumerateSaveIds should find the save via save_ prefix
+        // EnumerateSaveIds must use the policy's own slot layout.
         var ids = ctx.Save.ListSaves();
         Assert.Contains("001", ids);
     }
@@ -180,8 +180,8 @@ public class SavePathPolicyContractTests
         // EnumerateSaveIds discovers slots by the fixed save_ directory
         // prefix; the custom policy then assembles the per-slot meta.map
         // path. Seed both pieces and verify through the public facade.
-        fs.CreateDirectory("root/save_002");
         var saveRel = policy.GetSaveDirectory("002");
+        fs.CreateDirectory($"root/{saveRel}");
         var metaRel = policy.GetCustomMetaFile(saveRel);
         fs.SeedFile($"root/{metaRel}", "display_name: Test Save\n");
 
@@ -455,6 +455,20 @@ public class SavePathPolicyContractTests
         public string GetPayloadShaFile(string baseDirectory) => $"{baseDirectory}/{_prefix}.payload.sha";
 
         public string GetExtraDirectory(string baseDirectory) => $"{baseDirectory}/{_prefix}extra";
+
+        public IReadOnlyList<string> EnumerateSaveIds(IFileMetaAccess metaAccess, string saveRootPath)
+        {
+            var prefix = $"{_prefix}save_";
+            var ids = new List<string>();
+            foreach (var directory in metaAccess.EnumerateDirectories(saveRootPath))
+            {
+                var leaf = directory.Replace('\\', '/').TrimEnd('/');
+                leaf = leaf[(leaf.LastIndexOf('/') + 1)..];
+                if (leaf.StartsWith(prefix, StringComparison.Ordinal))
+                    ids.Add(leaf[prefix.Length..]);
+            }
+            return ids;
+        }
     }
 
     // ── Test strategies ────────────────────────────────────────────────

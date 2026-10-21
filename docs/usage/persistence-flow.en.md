@@ -30,6 +30,8 @@ Origo's save system follows **strict read, explicit failure, two-phase write** c
 └── save_.../
 ```
 
+Save IDs use ASCII letters, digits, `.`, `_`, and `-`, but they must not end in `.tmp` or `.bak`: those suffixes are reserved for the snapshot staging and backup directories, and allowing them would let one save slot name collide with another slot's atomic-write path. A process crash between the two rename steps is recovered when the slot is next listed or read: a complete `save_{id}.bak/` is restored as `save_{id}/`; incomplete staging/backup directories are not exposed as slots.
+
 ## Two-Phase Write
 
 ### Phase 1: Write to current/
@@ -58,7 +60,7 @@ Origo's save system follows **strict read, explicit failure, two-phase write** c
 6. Delete .write_in_progress marker
 ```
 
-If Phase 2 fails, `current/` data is intact but the marker remains. The next read of `current/` will be rejected due to the marker, and logs will indicate manual intervention or retry is needed.
+If Phase 2 fails, `current/` data is intact but the marker remains. The next read of `current/` will be rejected due to the marker, and logs will indicate manual intervention or retry is needed. If the process crashes between the two renames, the next enumeration/read restores the complete `.bak` snapshot as the real slot; the `.tmp` staging directory is never listed as a save.
 
 ## Strict Read Rules
 
@@ -160,7 +162,7 @@ SaveGamePayload {
 
 ```csharp
 // In a strategy:
-ctx.Save.RequestSaveGame("my_save_id");
+ctx.Save.RequestSaveGame("my_save_id"); // ASCII letters/digits/._-, no .tmp/.bak suffix
 ctx.Save.RequestSaveGameAuto();  // Auto-generate timestamp ID
 
 // ProgressRun handles these requests:
@@ -268,8 +270,11 @@ public interface ISavePathPolicy
     string GetWriteInProgressMarker(string baseDir);
     string GetPayloadShaFile(string baseDir);
     string GetExtraDirectory(string baseDir);
+    IReadOnlyList<string> EnumerateSaveIds(IFileMetaAccess metaAccess, string saveRootPath);
 }
 ```
+
+`EnumerateSaveIds` is the single enumeration hook for a custom layout. The default implementation recognizes the standard `save_` prefix; a custom policy overrides it so `ListSaves` and `ListSavesWithMetaData` see the same slots that writes created. `GetExtraDirectory` is also used by extra-file restore and the idempotency side hash, so a policy that renames `extra/` remains consistent across save and load.
 
 The default implementation `DefaultSavePathPolicy` → `SavePathLayout` provides the standard layout.
 

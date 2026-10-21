@@ -178,7 +178,7 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
-| `SaveStorageFacade_EnumerateSaveIds_NullFileSystem_Throws` | null IFileSystem | ArgumentNullException |
+| `SaveStorageFacade_EnumerateSaveIds_NullHandle_Throws` | null `SaveFileHandle` | ArgumentNullException |
 | `SaveStorageFacade_SnapshotCurrentToSave_MissingCurrentDirectory_Throws` | current/ directory missing | InvalidOperationException, no save directory written |
 | `SaveStorageFacade_SnapshotCurrentToSave_WhitespaceNewSaveId_Throws` | Whitespace save ID | ArgumentException |
 | `SaveStorageFacade_ReadSavePayloadFromSnapshot_WhitespaceSaveId_Throws` | Whitespace save ID | ArgumentException |
@@ -192,7 +192,7 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | `DefaultSaveStorageService_ResolveLevelPayload_WhenWriteMarkerExists_Throws` | .write_in_progress exists during ResolveLevelPayload | InvalidOperationException |
 | `WriteSavePayloadToCurrentThenSnapshot_NullLogger_Throws` | null logger | ArgumentNullException |
 | `WriteSavePayloadToCurrentThenSnapshot_WhenSnapshotFails_LogsError_LeavesMarkerAndUpdatedCurrent` | Copy fails during snapshot phase | InvalidOperationException, current/ remains in written state, marker residue |
-| `SnapshotCurrentToSave_TempToFinalRenameFailsTwice_PreservesPreviousBackup` | Backup-replace temp→final rename fails twice | InvalidOperationException; previous snapshot remains in the real slot and a successful rollback leaves no `.bak` |
+| `SnapshotCurrentToSave_TempToFinalRenameFailsTwice_PreservesPreviousBackup` | Backup-replace temp→final rename fails twice | IOException; previous snapshot remains in the real slot and a successful rollback leaves no `.bak` |
 | `SnapshotCurrentToSave_WhenRollbackRenameFails_PreservesBackupAndCanRecover` | Temp→final fails and the `.bak`→real-slot rollback also fails | InvalidOperationException (contains "previous snapshot could not be restored"); the previous snapshot remains only in `.bak`, `.tmp` remains; a later retry installs the new data and removes the backup |
 | `SaveStorageFacade_SnapshotCurrentToSave_CleansUpTempOnFailure` | Snapshot Copy fails | .tmp directory cleaned up |
 | `SaveStorageFacade_DeleteSave_MissingSlot_Throws` | Neither the target slot nor any remnant exists | InvalidOperationException |
@@ -205,8 +205,14 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | `SaveStorageFacade_ReadProgressNodeFromSnapshot_Missing_ReturnsNull` | Snapshot directory does not exist | Returns null |
 | `SavePayloadReader_TryReadLevelPayloadFromCurrent_AllFilesAbsent_ReturnsNull` | All level files missing | Returns null |
 | `SaveStorageFacade_WriteSavePayloadToCurrentThenSnapshot_WhenMarkerLeft_DoesNotIdempotentSkip` | Leftover write-in-progress marker with a matching snapshot hash (interrupted snapshot) | Retry rewrites and clears the marker, completing the snapshot |
-| `SaveStorageFacade_EnumerateSaveIds_SuffixNamedSlotWithoutRealSlot_IsEnumerated` | User-chosen id ending in `.tmp` without a real slot, alongside a real slot's `.tmp` remnant | The id `foo.tmp` is enumerated; the `bar.tmp` remnant is not |
-| `SaveStorageFacade_EnumerateSaveIds_SuffixOnlyId_DoesNotThrow` | Id equal to the `.tmp` suffix alone (`save_.tmp`) | Does not throw; `.tmp` is enumerated |
+| `SaveStorageFacade_EnumerateSaveIds_ReservedSuffixDirectories_AreNotSlots` | `.tmp`/`.bak` directories alongside a real `bar` slot | Only `bar` is enumerated; suffix directories are never user slots |
+| `SaveStorageFacade_EnumerateSaveIds_InvalidDirectory_IsSkipped` | A directory whose derived id contains a space | The invalid id is skipped; valid slots and metadata listing still work |
+| `SavePathLayout_ValidateSaveId_RejectsReservedSuffixes` | `foo.tmp`, `foo.bak`, `foo.TMP` | ArgumentException; `foo.tmpx` remains valid |
+| `SaveStorageFacade_RecoverInterruptedSnapshots_RestoresCompleteBackup` | Complete `save_recovered.bak` with no real slot | Backup restored as `save_recovered`; backup removed |
+| `SaveStorageFacade_RecoverInterruptedSnapshots_LeavesIncompleteBackup` | Incomplete `.bak` only | Not enumerated; backup left untouched |
+| `SaveStorageFacade_ReadProgressFromSnapshot_RecoversCompleteBackup` | Read a slot whose real directory is missing but complete `.bak` exists | Backup restored before read |
+| `SaveStorageFacade_SnapshotCurrentToSave_PreservesRootMarkerButCopiesArchiveMarker` | Root `.write_in_progress` plus `extra/.write_in_progress` | Root marker is not copied; archive file with the same name is preserved |
+| `WriteSavePayloadToCurrentThenSnapshot_WhenRenameFails_LogsErrorAndPreservesCurrent` | Adapter-style `IOException` during temp→final rename | Exception propagates, current/ remains, error is logged |
 
 ## SaveIdempotencyTests Details
 
@@ -378,6 +384,8 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | `ComputeSideDirectoryHash_SameContent_SameHash` | Same content computed twice yields same hash | SaveAtomicWriter |
 | `ComputeSideDirectoryHash_DifferentContent_DifferentHash` | Content change yields different hash | SaveAtomicWriter |
 | `ComputeSideDirectoryHash_CustomDirectoryName_Works` | Custom directory name also produces a 64-char hex hash | SaveAtomicWriter |
+| `ComputeCombinedHash_CustomExtraDirectory_IncludesExtraData` | A policy whose extra directory is `archive/` | Combined hash changes when `archive/` content changes |
+| `RestoreExtraFilesFromSnapshot_CustomExtraDirectory_UsesPolicy` | A policy whose extra directory is `archive/` | Snapshot `save_001/archive/` is restored to `current/archive/` |
 
 ### Boundary Path
 
@@ -423,8 +431,7 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 
 ### Why use TestMemoryFileSystem instead of the real file system
 
-Per the documentation: all file operations in the Core layer go through `IFileSystem`; direct `File.*` API is forbidden.
-Therefore tests should not depend on the real file system — this would break the Core layer's platform independence.
+Per the documented I/O boundary, Core file operations go through `IDataSourceIoGateway` + `IFileMetaAccess` + `IPathResolver` (`IFileSystem` is the adapter/host implementation). Therefore tests use the in-memory `TestMemoryFileSystem` rather than the real file system; this keeps the Core layer platform-independent.
 
 ### Why some tests construct DefaultSaveStorageService directly (whitelist exemption)
 

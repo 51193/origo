@@ -23,7 +23,9 @@ internal static class SaveAtomicWriter
     public static string ComputeCombinedHash(SaveFileHandle handle, SaveGamePayload payload)
     {
         var payloadHash = SavePayloadWriter.ComputePayloadHash(payload);
-        var sideHash = ComputeSideDirectoryHash(handle, SavePathLayout.ExtraDirectoryName);
+        var currentRel = handle.PathPolicy.GetCurrentDirectory();
+        var extraRel = handle.PathPolicy.GetExtraDirectory(currentRel);
+        var sideHash = ComputeSideDirectoryHashByRelativeDir(handle, extraRel);
         return CombineHashes(payloadHash, sideHash);
     }
 
@@ -167,12 +169,13 @@ internal static class SaveAtomicWriter
                 var relFromCurrent = SavePathLayout.StripPathPrefix(relFromRoot, currentRel);
 
                 // The write-in-progress marker is a transient synchronization
-                // file that only exists in current/ while a write is in flight;
-                // it must not be copied into snapshots, where it would falsely
-                // mark the completed snapshot as an interrupted write.
-                var fileName = SaveFileHandle.GetLeafDirectoryName(relFromCurrent);
-                if (string.Equals(fileName, SavePathLayout.WriteInProgressMarkerName,
-                        StringComparison.Ordinal))
+                // file that only exists at the root of current/ while a write is
+                // in flight; it must not be copied into snapshots, where it would
+                // falsely mark the completed snapshot as an interrupted write.
+                // A same-named file below extra/ is archive data and must survive.
+                var markerRel = SavePathLayout.StripPathPrefix(
+                    handle.PathPolicy.GetWriteInProgressMarker(currentRel), currentRel);
+                if (string.Equals(relFromCurrent, markerRel, StringComparison.Ordinal))
                     continue;
 
                 var destRel = $"{tempRel}/{relFromCurrent}";
@@ -224,7 +227,13 @@ internal static class SaveAtomicWriter
                 nameof(relativeDirName));
 
         var currentRel = handle.PathPolicy.GetCurrentDirectory();
-        var dirRel = SavePathLayout.Combine(currentRel, relativeDirName);
+        return ComputeSideDirectoryHashByRelativeDir(
+            handle, SavePathLayout.Combine(currentRel, relativeDirName));
+    }
+
+    private static string ComputeSideDirectoryHashByRelativeDir(
+        SaveFileHandle handle, string dirRel)
+    {
         var dirAbs = handle.GetAbsolutePath(dirRel);
 
         if (!handle.MetaAccess.DirectoryExists(dirAbs))

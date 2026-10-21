@@ -32,6 +32,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **BREAKING: save IDs reserve the atomic-write suffixes** — a save ID ending
+  in `.tmp` or `.bak` is now rejected during validation. Those names were
+  accepted before, but they collided with the `save_{id}.tmp` staging and
+  `save_{id}.bak` backup directories, so saving or deleting one slot could
+  destroy another (including the active slot). Rename any existing suffix-named
+  slot before upgrading. The default atomic-write layout is unchanged.
 - **Formal releases stamp a tag-only release commit** — the Release workflow no
   longer writes a version commit back to `main`. It rewrites
   `Directory.Build.props` from the tag, creates a metadata-only release commit,
@@ -49,6 +55,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **Save storage recovers interrupted snapshot swaps and ignores invalid slot
+  directories** — when the real slot is missing after a crash between the two
+  renames, a complete `.bak` snapshot is restored on the next list/read;
+  incomplete staging/backup directories are never exposed as slots, and a
+  stray directory with an invalid id no longer breaks metadata listing for
+  every valid save.
+- **Custom save path policies are honored consistently** — enumeration now goes
+  through `ISavePathPolicy.EnumerateSaveIds`, and extra-file restore plus the
+  idempotency side hash use `GetExtraDirectory`, so a custom layout can list,
+  load, and deduplicate the same files it writes.
+- **Archive data named `.write_in_progress` survives snapshots** — only the
+  write-in-progress marker at the root of `current/` is skipped; a same-named
+  file below `extra/` is copied and restored.
+- **Snapshot failures are logged for adapter `IOException`s** — the snapshot
+  wrapper now logs any failure before rethrowing, matching the documented
+  error-reporting contract for real adapter renames.
 - **Previous release baselines survive tag-only releases** — tag-only release
   commits are siblings of the next release commit, not its ancestors. The API
   baseline helper now selects the newest formal tag not newer than the current

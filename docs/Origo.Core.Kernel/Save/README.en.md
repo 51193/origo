@@ -62,6 +62,8 @@ DefaultSaveStorageService.WriteSavePayloadToCurrentThenSnapshot(...)
 
 > Note: `current/.payload.sha` is written after `WriteToCurrent` completes, before the snapshot marker is recreated, carrying the combined hash (payload + `extra/` directory); the snapshot's `.payload.sha` is used for idempotent dedup.
 
+> Save IDs must not end in `.tmp` or `.bak`: those suffixes are reserved for the staging and backup directories above. A crash between the two renames is recovered when the slot is next listed or read; a complete `.bak` is restored as the real slot, and incomplete staging/backup directories are never listed as saves.
+
 ## Strict Read Rules
 
 - **current/ has `.write_in_progress`** → throw exception (previous write interrupted; needs handling)

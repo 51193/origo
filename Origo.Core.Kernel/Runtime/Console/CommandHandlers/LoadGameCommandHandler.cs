@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Origo.Core.Abstractions.Console;
 using Origo.Core.Abstractions.Snd;
+using Origo.Core.Save.Storage;
 
 namespace Origo.Core.Runtime.Console.CommandHandlers;
 
@@ -27,6 +28,16 @@ internal sealed class LoadGameCommandHandler : ConsoleCommandHandlerBase
         out string? errorMessage)
     {
         var saveId = invocation.PositionalArgs[0].Trim();
+        try
+        {
+            SavePathLayout.ValidateSaveId(saveId, nameof(saveId));
+        }
+        catch (ArgumentException ex)
+        {
+            errorMessage = ex.Message;
+            return false;
+        }
+
         if (!_saveOperations.ListSaves().Contains(saveId, StringComparer.Ordinal))
         {
             errorMessage = $"Save '{saveId}' does not exist.";
