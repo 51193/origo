@@ -19,7 +19,7 @@ This document defines the 0.1.0 shell API baseline gate: a tracked Roslyn invent
 3. In `verify` mode, compares each API line with `tools/ApiInventoryTool/shell-api-baseline.json`; any addition, removal, or signature change exits non-zero with the diff and the regeneration command.
 4. `generate` mode is for approved changes: it rewrites the baseline JSON, which must be reviewed and committed with the implementation.
 
-The script runs in normal CI (Ubuntu/macOS/Windows), `scripts/ci.sh`, and the Release workflow, so an unapproved change cannot pass any of those gates.
+The script runs in normal CI (Ubuntu/macOS/Windows), `scripts/ci.sh`, and the Release workflow. The normal CI checkout fetches full history and tags, and a dedicated step fails if no formal release tag is visible; without that, a depth-1 checkout would silently skip the previous-package comparison. An unapproved change therefore cannot pass any of those gates.
 
 ## Baseline and Ownership
 

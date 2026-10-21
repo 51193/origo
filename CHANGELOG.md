@@ -109,6 +109,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   friend assembly exists** — the location is taken from the `SndInlineTypes`
   syntax, and the message/documentation refer to the actual
   `InternalsVisibleTo` allowlist.
+- **Normal CI actually enforces the previous-release API baseline** — the
+  build-and-test checkout now fetches full history and tags, and a dedicated
+  step fails before the shell API gate if no formal release tag is visible.
+  Previously a depth-1 checkout had no tags, so
+  `find-previous-api-baseline.sh` silently fell back to the first-release
+  message and the previous-package comparison never ran outside the Release
+  workflow.
 - **Previous release baselines survive tag-only releases** — tag-only release
   commits are siblings of the next release commit, not its ancestors. The API
   baseline helper now selects the newest formal tag not newer than the current
