@@ -40,6 +40,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          # The previous-release API baseline is selected from tags. The
+          # default depth-1 checkout has no tags, which would silently skip
+          # the previous-package comparison in the shell API gate.
+          fetch-depth: 0
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
@@ -54,6 +59,18 @@ jobs:
 
       - name: Format check
         run: bash scripts/format.sh
+
+      # A shallow checkout silently disables the previous-package comparison.
+      # Fail before the API gate if the formal release tags are unavailable.
+      - name: Verify release tags for the API baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! git tag --list 'v*' | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "ERROR: no formal release tag is available in this checkout." >&2
+            echo "Set fetch-depth: 0 so previous-package API validation can run." >&2
+            exit 1
+          fi
 
       # Shell API baseline gate: builds the shell projects in Release and
       # verifies the tracked Roslyn JSON inventory against the committed
