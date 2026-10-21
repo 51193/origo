@@ -140,7 +140,7 @@ Could it be squeezed to 16 bytes? That would require sacrificing `long`/`double`
 
 The framework applies `[assembly: SndInlineTypes(...)]` at the assembly level; the complete Core and adapter registration lists are held in [Origo.SourceGeneration README](README.en.md#registration-mechanism).
 
-Kind allocation rules and the complete `ORIGOSG001`–`ORIGOSG008` diagnostic table
+Kind allocation rules and the complete `ORIGOSG001`–`ORIGOSG009` diagnostic table
 live in [README.en.md](README.en.md#kind-value-segmentation) and
 [README.en.md](README.en.md#type-validation-and-diagnostics); they are maintained
 once there. The invariants this page relies on: each layer's starting Kind comes
@@ -560,7 +560,7 @@ If the framework needs to support a new type (e.g., C# `nint`, a future BCL ≤8
 
 ### 7.2 Adding Adapter Layer Types (Register in a New Adapter Assembly)
 
-0. Precondition: the new adapter assembly must be in Origo.Core.Contracts's `InternalsVisibleTo` whitelist (currently only `Origo.GodotAdapter`). Otherwise the generator reports `ORIGOSG007` and emits no source.
+0. Precondition: the new adapter assembly must be in Origo.Core.Contracts's `InternalsVisibleTo` allowlist. Otherwise the generator reports `ORIGOSG007` and emits no source.
 1. Add `[assembly: SndInlineTypes(startKind: <unoccupied range>, typeof(NewType), ...)]` to the new assembly
 2. Choose Kind range: check the validation range in `TypedDataGenerator.cs`'s `KindValue` (1-254), ensure no overlap with other adapters
 3. Source Generator will auto-detect this assembly is not Home → use Adapter mode → generate complete extension methods + ModuleInitializer registration chain

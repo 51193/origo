@@ -54,7 +54,9 @@ public sealed partial class TypedDataGenerator
         + "Generated accessor identifiers are derived from the type name, so every registered "
         + "type must have a distinct name: types of the same name from different namespaces, "
         + "generic instantiations with the same name, and the same type registered more than "
-        + "once (with the same or different kinds) are all rejected; register each type exactly once.",
+        + "once with different kind values are rejected. Re-registering the same type with the "
+        + "same kind is idempotent and silently deduplicated, matching the runtime RegisterKind "
+        + "semantics; register each distinct kind once.",
         category: "Origo.SourceGeneration",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -66,7 +68,7 @@ public sealed partial class TypedDataGenerator
         "Type '{0}' sanitizes to the kind name '{1}', which is not a valid C# identifier. "
         + "Generated accessor members derive their identifiers from the type name, so a "
         + "sanitized name must be a valid identifier; register a type whose name sanitizes "
-        + "to one (pointer and ref-like types never do).",
+        + "to one (pointer types never do).",
         category: "Origo.SourceGeneration",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -78,20 +80,30 @@ public sealed partial class TypedDataGenerator
         "Assembly '{0}' declares SndInlineTypes adapter registrations but is not a friend "
         + "assembly of Origo.Core.Contracts. Adapter-mode generated code reads TypedData internals "
         + "(_kind/_ref) and calls internal registration APIs, which are accessible only to "
-        + "assemblies in Origo.Core.Contracts's InternalsVisibleTo whitelist (currently only "
-        + "Origo.GodotAdapter). Contact the Origo maintainer before registering adapter "
-        + "inline types from this assembly.",
+        + "assemblies in Origo.Core.Contracts's InternalsVisibleTo allowlist. Contact the Origo "
+        + "maintainer before registering adapter inline types from a non-friend assembly.",
         category: "Origo.SourceGeneration",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
     private static readonly DiagnosticDescriptor _nullInlineType = new(
         id: "ORIGOSG008",
-        title: "Null element in SndInlineTypes",
+        title: "Null element or array in SndInlineTypes",
         messageFormat:
-        "The SndInlineTypes attribute contains a null element. List every inline type explicitly: "
-        + "a null placeholder does not reserve a kind value, so the types after it would be "
-        + "renumbered silently.",
+        "The SndInlineTypes attribute contains a null element or a null params array. List every "
+        + "inline type explicitly: a null placeholder does not reserve a kind value, so the types "
+        + "after it would be renumbered silently.",
+        category: "Origo.SourceGeneration",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor _unsupportedAdapterType = new(
+        id: "ORIGOSG009",
+        title: "Unsupported TypedData registration type",
+        messageFormat:
+        "Type '{0}' cannot appear in generated TypedData accessor signatures. Register a "
+        + "non-void, non-ref-like, non-static, bound reference type or a supported inline value "
+        + "type; unbound generic definitions and special runtime types are not storable.",
         category: "Origo.SourceGeneration",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);

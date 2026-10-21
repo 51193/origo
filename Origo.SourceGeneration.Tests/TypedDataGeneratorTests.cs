@@ -800,9 +800,97 @@ public class TypedDataGeneratorTests
         var runResult = driver3.GetRunResult();
         var sourceOutputSteps = runResult.Results[0].TrackedSteps
             .Single(kvp => kvp.Key == "SourceOutput").Value;
-        Assert.All(sourceOutputSteps,
-            step => Assert.All(step.Outputs,
-                o => Assert.Equal(IncrementalStepRunReason.Cached, o.Reason)));
+
+        // The source-generation output must be cached. A separate diagnostic
+        // output runs against the current compilation so diagnostics never
+        // replay stale locations; its own step reason is intentionally not
+        // required to be Cached.
+        Assert.Contains(sourceOutputSteps,
+            step => step.Outputs.All(
+                o => o.Reason == IncrementalStepRunReason.Cached));
+    }
+
+    [Fact]
+    public void Incremental_DiagnosticOnSecondRun_IsReportedWithCurrentLocation()
+    {
+        var source = _scaffoldHeader
+            + "\n[assembly: Origo.Core.Snd.Metadata.SndInlineTypes(typeof(decimal), typeof(int))]\n"
+            + _scaffoldBody;
+        var firstCompilation = GeneratorTestHarness.CreateCompilation("Origo.HomeUnderTest", source);
+        var secondCompilation = GeneratorTestHarness.CreateCompilation("Origo.HomeUnderTest", source);
+        var driver = GeneratorTestHarness.CreateTrackedDriver();
+        var (first, secondDriver) = GeneratorTestHarness.RunIncremental(driver, firstCompilation);
+        var (second, _) = GeneratorTestHarness.RunIncremental(secondDriver, secondCompilation);
+
+        Assert.True(first.HasGeneratorDiagnostic("ORIGOSG002"));
+        Assert.True(second.HasGeneratorDiagnostic("ORIGOSG002"));
+        Assert.False(second.HasGeneratorDiagnostic("CS8785"));
+        Assert.NotEmpty(second.GeneratorDiagnostics);
+    }
+
+    [Fact]
+    public void Home_NullArrayRegistration_ReportsORIGOSG008_WithoutCrash()
+    {
+        var output = RunHome(
+            "[assembly: Origo.Core.Snd.Metadata.SndInlineTypes(null)]");
+
+        Assert.True(output.HasGeneratorDiagnostic("ORIGOSG008"));
+        Assert.DoesNotContain(output.GeneratorDiagnostics, d => d.Id == "CS8785");
+        Assert.Empty(output.GeneratedSources);
+        Assert.Empty(output.CompileErrors);
+    }
+
+    [Theory]
+    [InlineData("void")]
+    [InlineData("System.Span<int>")]
+    [InlineData("System.Console")]
+    [InlineData("System.Collections.Generic.List<>")]
+    [InlineData("System.TypedReference")]
+    public void Adapter_UnsupportedType_ReportsORIGOSG009(string typeName)
+    {
+        var output = RunAdapter(
+            $"[assembly: Origo.Core.Snd.Metadata.SndInlineTypes(128, typeof({typeName}))]");
+
+        Assert.True(output.HasGeneratorDiagnostic("ORIGOSG009"));
+        Assert.Empty(output.GeneratedSources);
+    }
+
+    [Fact]
+    public void Home_TypeNamedKindMap_ReportsORIGOSG005_AndEmitsNoSources()
+    {
+        var output = RunHome(
+            "[assembly: Origo.Core.Snd.Metadata.SndInlineTypes(typeof(A.KindMap))]\n" +
+            "namespace A { public class KindMap { } }");
+
+        Assert.True(output.HasGeneratorDiagnostic("ORIGOSG005"));
+        Assert.DoesNotContain(output.GeneratorDiagnostics, d => d.Id == "CS0542");
+        Assert.Empty(output.GeneratedSources);
+    }
+
+    [Fact]
+    public void Adapter_WithoutFriendAccess_ReportsAtTheAttributeLine()
+    {
+        var homeCompilation = GeneratorTestHarness.CreateCompilation(
+            "Origo.CoreUnderTest", _scaffoldHeaderWithoutIvt + "\n" + _scaffoldBody);
+        var homeRef = homeCompilation.ToMetadataReference();
+        var adapterSource = "using System;\n[assembly: Origo.Core.Snd.Metadata.SndInlineTypes(128, typeof(Stub))]\npublic sealed class Stub { }";
+        var output = GeneratorTestHarness.Run(
+            "Origo.AdapterUnderTest", adapterSource, [homeRef]);
+
+        var diagnostic = Assert.Single(output.GeneratorDiagnostics, d => d.Id == "ORIGOSG007");
+        Assert.Equal(1, diagnostic.Location.GetLineSpan().StartLinePosition.Line);
+    }
+
+    [Fact]
+    public void SameKindDuplicate_IsSilentlyDeduplicated()
+    {
+        var output = RunHome(
+            "[assembly: Origo.Core.Snd.Metadata.SndInlineTypes(1, typeof(int))]\n" +
+            "[assembly: Origo.Core.Snd.Metadata.SndInlineTypes(1, typeof(int))]");
+
+        Assert.Empty(output.GeneratorDiagnostics);
+        Assert.Empty(output.CompileErrors);
+        Assert.Single(output.GeneratedSources);
     }
 
     [Fact]
