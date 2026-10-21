@@ -34,7 +34,19 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
             .Select((compilation, ct) => ExtractGenerationInput(compilation))
             .WithComparer(GenerationInputEqualityComparer.Instance);
 
+        // Diagnostics are reported through a separate output that includes
+        // the current Compilation. Caching a SourceOutput that contains
+        // Diagnostic objects is unsafe: a later compilation with equal
+        // declaration data replays locations from the previous SyntaxTree and
+        // Roslyn drops them with CS8785. Source generation remains cached; the
+        // diagnostic output always runs against the current compilation.
+        var diagnosticProvider = context.CompilationProvider.Select(
+            (compilation, ct) => (Compilation: compilation,
+                Input: ExtractGenerationInput(compilation)));
+
         context.RegisterSourceOutput(inputProvider, GenerateTypedDataExtensions);
+        context.RegisterSourceOutput(diagnosticProvider,
+            (spc, pair) => ReportDiagnostics(spc, pair.Input));
     }
 
     private static GenerationInput ExtractGenerationInput(Compilation compilation)
@@ -43,12 +55,15 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
         var typeGroups = new List<TypeGroup>();
         var hasNullInlineType = false;
         Location? nullInlineTypeLocation = null;
+        Location? attributeLocation = null;
 
         foreach (var attributeData in compilation.Assembly.GetAttributes())
         {
             if (attributeData.AttributeClass?.ToDisplayString() != _attributeFullName)
                 continue;
 
+            attributeLocation ??= attributeData.ApplicationSyntaxReference?
+                .GetSyntax().GetLocation();
             var startKind = ExtractStartKind(attributeData);
             var types = ExtractTypes(
                 attributeData, startKind, out var hasNullElement, out var nullElementLocation);
@@ -63,7 +78,9 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
         }
 
         var hasTypedDataFriendAccess = isHome || HasTypedDataFriendAccess(compilation);
-        var assemblyLocation = compilation.Assembly.Locations.FirstOrDefault() ?? Location.None;
+        var assemblyLocation = attributeLocation
+            ?? compilation.Assembly.Locations.FirstOrDefault()
+            ?? Location.None;
 
         return new GenerationInput
         {
@@ -134,8 +151,28 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
 
         foreach (var ctorArg in attr.ConstructorArguments)
         {
+            if (ctorArg.IsNull)
+            {
+                if (!hasNullElement)
+                {
+                    hasNullElement = true;
+                    firstNullElementLocation = attrLocation;
+                }
+                continue;
+            }
+
             if (ctorArg.Kind == TypedConstantKind.Array)
             {
+                if (ctorArg.Values.IsDefault)
+                {
+                    if (!hasNullElement)
+                    {
+                        hasNullElement = true;
+                        firstNullElementLocation = attrLocation;
+                    }
+                    continue;
+                }
+
                 foreach (var element in ctorArg.Values)
                 {
                     if (element.Value is ITypeSymbol typeSymbol)
@@ -166,6 +203,12 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
             KindValue = rawKind is > 0 and <= 254 ? (byte)rawKind : (byte)0,
             ClrTypeName = clrName,
             IsReferenceType = typeSymbol.IsReferenceType,
+            IsRefLikeType = typeSymbol.IsRefLikeType,
+            IsStatic = typeSymbol is INamedTypeSymbol { IsStatic: true },
+            IsUnboundGenericType = typeSymbol is INamedTypeSymbol { IsUnboundGenericType: true },
+            IsVoid = typeSymbol.SpecialType == SpecialType.System_Void,
+            IsTypedReference = typeSymbol.SpecialType == SpecialType.System_TypedReference,
+            TypeKind = typeSymbol.TypeKind,
             SpecialType = typeSymbol.SpecialType,
             FitsInline = IsInlineCandidate(typeSymbol),
             Location = location,
@@ -223,47 +266,75 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
 
     private static void GenerateTypedDataExtensions(SourceProductionContext context, GenerationInput input)
     {
+        var plan = BuildGenerationPlan(input);
+        if (plan.ValidTypes.Count == 0)
+            return;
+
+        if (input.IsHome)
+            GenerateHomeAssembly(context, plan.ValidTypes);
+        else
+            GenerateAdapterAssembly(context, plan.ValidTypes);
+    }
+
+    private static void ReportDiagnostics(SourceProductionContext context, GenerationInput input)
+    {
+        foreach (var diagnostic in BuildGenerationPlan(input).Diagnostics)
+            context.ReportDiagnostic(diagnostic);
+    }
+
+    /// <summary>
+    ///     Pure validation pass shared by source generation and the separate
+    ///     diagnostic output. Diagnostics are returned instead of reported so
+    ///     a cached source output never replays a Diagnostic whose Location
+    ///     belongs to an older compilation.
+    /// </summary>
+    private static GenerationPlan BuildGenerationPlan(GenerationInput input)
+    {
+        var diagnostics = new List<Diagnostic>();
         if (input.HasNullInlineType)
         {
-            context.ReportDiagnostic(Diagnostic.Create(
+            diagnostics.Add(Diagnostic.Create(
                 _nullInlineType, input.NullInlineTypeLocation ?? Location.None));
-            return;
+            return new GenerationPlan([], diagnostics);
         }
 
         var allTypes = input.TypeGroups.SelectMany(g => g.Types).ToList();
-        if (allTypes.Count == 0) return;
+        if (allTypes.Count == 0)
+            return new GenerationPlan([], diagnostics);
 
         if (!input.IsHome && !input.HasTypedDataFriendAccess)
         {
-            context.ReportDiagnostic(Diagnostic.Create(
+            diagnostics.Add(Diagnostic.Create(
                 _adapterFriendAccessRequired,
                 input.AdapterDiagnosticLocation ?? Location.None,
                 input.AssemblyName));
-            return;
+            return new GenerationPlan([], diagnostics);
         }
 
-        var validTypes = ValidateAndFilter(context, input.IsHome, allTypes);
-        validTypes = RejectKindCollisions(context, validTypes);
-        validTypes = RejectKindNameCollisions(context, validTypes);
-        validTypes = RejectInvalidKindNames(context, validTypes, input.IsHome);
-        if (validTypes.Count == 0) return;
-
-        if (input.IsHome)
-            GenerateHomeAssembly(context, validTypes);
-        else
-            GenerateAdapterAssembly(context, validTypes);
+        var validTypes = ValidateAndFilter(input.IsHome, allTypes, diagnostics);
+        validTypes = RejectKindCollisions(validTypes, diagnostics);
+        validTypes = RejectKindNameCollisions(validTypes, diagnostics);
+        validTypes = RejectInvalidKindNames(validTypes, input.IsHome, diagnostics);
+        return new GenerationPlan(validTypes, diagnostics);
     }
 
     private static List<InlineTypeInfo> ValidateAndFilter(
-        SourceProductionContext context, bool isHome, List<InlineTypeInfo> allTypes)
+        bool isHome, List<InlineTypeInfo> allTypes, List<Diagnostic> diagnostics)
     {
         var valid = new List<InlineTypeInfo>();
 
         foreach (var t in allTypes)
         {
+            if (IsUnsupportedGeneratedType(t))
+            {
+                diagnostics.Add(Diagnostic.Create(
+                    _unsupportedAdapterType, t.Location ?? Location.None, t.ClrTypeName));
+                continue;
+            }
+
             if (t.RawKind is <= 0 or > 254)
             {
-                context.ReportDiagnostic(
+                diagnostics.Add(
                     Diagnostic.Create(_kindOverflow, t.Location ?? Location.None, t.ClrTypeName, t.RawKind));
                 continue;
             }
@@ -279,13 +350,13 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
                 if (isHome)
                     valid.Add(t);
                 else
-                    context.ReportDiagnostic(
+                    diagnostics.Add(
                         Diagnostic.Create(_systemPrimitiveInAdapter, t.Location ?? Location.None, t.ClrTypeName));
             }
             else
             {
                 if (isHome)
-                    context.ReportDiagnostic(
+                    diagnostics.Add(
                         Diagnostic.Create(_unsupportedHomeValueType, t.Location ?? Location.None, t.ClrTypeName));
                 else
                     valid.Add(t);
@@ -295,8 +366,15 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
         return valid;
     }
 
+    private static bool IsUnsupportedGeneratedType(InlineTypeInfo type) =>
+        type.IsVoid
+        || type.IsTypedReference
+        || type.IsRefLikeType
+        || type.IsStatic
+        || type.IsUnboundGenericType;
+
     private static List<InlineTypeInfo> RejectKindCollisions(
-        SourceProductionContext context, List<InlineTypeInfo> types)
+        List<InlineTypeInfo> types, List<Diagnostic> diagnostics)
     {
         var firstTypeByKind = new Dictionary<byte, string>();
         var collidingKinds = new HashSet<byte>();
@@ -322,7 +400,7 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
             var names = colliding
                 .Select(t => t.ClrTypeName)
                 .Distinct();
-            context.ReportDiagnostic(Diagnostic.Create(
+            diagnostics.Add(Diagnostic.Create(
                 _kindCollision, colliding[0].Location ?? Location.None, kind, string.Join(", ", names)));
         }
 
@@ -353,21 +431,22 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
     ///     <c>Null</c>, so a registered type sanitizing to it is rejected too.
     /// </summary>
     private static List<InlineTypeInfo> RejectKindNameCollisions(
-        SourceProductionContext context, List<InlineTypeInfo> types)
+        List<InlineTypeInfo> types, List<Diagnostic> diagnostics)
     {
-        // KindMap always emits `public const byte Null = 0`, and TypedData
-        // declares a handwritten `IsNull` property; a registered type named
-        // Null would collide with the sentinel constant (and, for value
-        // types, with the property), producing CS0102. Treat the reserved
-        // identifier as an already-taken kind name.
-        const string reservedKindName = "Null";
+        // KindMap always emits `public const byte Null = 0` and is itself a
+        // generated class named KindMap; TypedData also declares a handwritten
+        // `IsNull` property. A registered type whose sanitized name equals any
+        // of these identifiers would emit a duplicate member or CS0542.
+        const string reservedNullKindName = "Null";
+        const string reservedKindMapClassName = "KindMap";
         var firstTypeByKindName = new Dictionary<string, InlineTypeInfo>(StringComparer.Ordinal);
         var collidingKindNames = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (var t in types)
         {
             if (t.KindIndex is null) continue;
-            if (string.Equals(t.KindIndex, reservedKindName, StringComparison.Ordinal)
+            if (string.Equals(t.KindIndex, reservedNullKindName, StringComparison.Ordinal)
+                || string.Equals(t.KindIndex, reservedKindMapClassName, StringComparison.Ordinal)
                 || firstTypeByKindName.ContainsKey(t.KindIndex))
                 collidingKindNames.Add(t.KindIndex);
             else
@@ -379,16 +458,23 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
             var colliding = types
                 .Where(t => string.Equals(t.KindIndex, kindName, StringComparison.Ordinal))
                 .ToArray();
-            if (string.Equals(kindName, reservedKindName, StringComparison.Ordinal))
+            if (string.Equals(kindName, reservedNullKindName, StringComparison.Ordinal))
             {
                 foreach (var t in colliding)
-                    context.ReportDiagnostic(Diagnostic.Create(
+                    diagnostics.Add(Diagnostic.Create(
                         _kindNameCollision, t.Location ?? Location.None,
                         t.ClrTypeName, "the reserved KindMap sentinel", kindName));
             }
+            else if (string.Equals(kindName, reservedKindMapClassName, StringComparison.Ordinal))
+            {
+                foreach (var t in colliding)
+                    diagnostics.Add(Diagnostic.Create(
+                        _kindNameCollision, t.Location ?? Location.None,
+                        t.ClrTypeName, "the generated KindMap container", kindName));
+            }
             else
             {
-                context.ReportDiagnostic(Diagnostic.Create(
+                diagnostics.Add(Diagnostic.Create(
                     _kindNameCollision,
                     colliding[0].Location ?? Location.None,
                     colliding[0].ClrTypeName,
@@ -450,7 +536,7 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
     ///     the Home accessor semantics; the BCL type itself does not).
     /// </summary>
     private static List<InlineTypeInfo> RejectInvalidKindNames(
-        SourceProductionContext context, List<InlineTypeInfo> types, bool isHome)
+        List<InlineTypeInfo> types, bool isHome, List<Diagnostic> diagnostics)
     {
         var result = new List<InlineTypeInfo>();
 
@@ -464,7 +550,7 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
 
             if (!SyntaxFacts.IsValidIdentifier(t.KindIndex))
             {
-                context.ReportDiagnostic(Diagnostic.Create(
+                diagnostics.Add(Diagnostic.Create(
                     _invalidKindName, t.Location ?? Location.None, t.ClrTypeName, t.KindIndex));
                 continue;
             }
@@ -473,7 +559,7 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
                 && _homeReservedKindNames.TryGetValue(t.KindIndex, out var bclSpecialType)
                 && t.SpecialType != bclSpecialType)
             {
-                context.ReportDiagnostic(Diagnostic.Create(
+                diagnostics.Add(Diagnostic.Create(
                     _kindNameCollision, t.Location ?? Location.None,
                     t.ClrTypeName, "the Home assembly's reserved kind name", t.KindIndex));
                 continue;
@@ -508,6 +594,12 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
         }
 
         public override string ToString() => _builder.ToString();
+    }
+
+    private sealed class GenerationPlan(List<InlineTypeInfo> validTypes, List<Diagnostic> diagnostics)
+    {
+        public List<InlineTypeInfo> ValidTypes { get; } = validTypes;
+        public List<Diagnostic> Diagnostics { get; } = diagnostics;
     }
 
     private sealed record GenerationInput
@@ -556,6 +648,12 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
                         || tx.KindValue != ty.KindValue
                         || !string.Equals(tx.ClrTypeName, ty.ClrTypeName, StringComparison.Ordinal)
                         || tx.IsReferenceType != ty.IsReferenceType
+                        || tx.IsRefLikeType != ty.IsRefLikeType
+                        || tx.IsStatic != ty.IsStatic
+                        || tx.IsUnboundGenericType != ty.IsUnboundGenericType
+                        || tx.IsVoid != ty.IsVoid
+                        || tx.IsTypedReference != ty.IsTypedReference
+                        || tx.TypeKind != ty.TypeKind
                         || tx.SpecialType != ty.SpecialType
                         || tx.FitsInline != ty.FitsInline
                         || !string.Equals(tx.LocationKey, ty.LocationKey, StringComparison.Ordinal))
@@ -584,6 +682,12 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
                     hash.Add(t.KindValue);
                     hash.Add(t.ClrTypeName);
                     hash.Add(t.IsReferenceType);
+                    hash.Add(t.IsRefLikeType);
+                    hash.Add(t.IsStatic);
+                    hash.Add(t.IsUnboundGenericType);
+                    hash.Add(t.IsVoid);
+                    hash.Add(t.IsTypedReference);
+                    hash.Add(t.TypeKind);
                     hash.Add(t.SpecialType);
                     hash.Add(t.FitsInline);
                     hash.Add(t.LocationKey);
@@ -607,6 +711,12 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
         public byte KindValue { get; set; }
         public string ClrTypeName { get; set; } = string.Empty;
         public bool IsReferenceType { get; set; }
+        public bool IsRefLikeType { get; set; }
+        public bool IsStatic { get; set; }
+        public bool IsUnboundGenericType { get; set; }
+        public bool IsVoid { get; set; }
+        public bool IsTypedReference { get; set; }
+        public TypeKind TypeKind { get; set; }
         public SpecialType SpecialType { get; set; }
         public bool FitsInline { get; set; }
         public Location? Location { get; set; }

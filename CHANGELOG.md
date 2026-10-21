@@ -12,6 +12,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **`ORIGOSG009` rejects types that cannot appear in generated TypedData
+  accessors** — `void`, ref-like types such as `Span<T>`, static classes,
+  unbound generic definitions, and special runtime types such as
+  `TypedReference` now produce an explicit compile diagnostic instead of
+  emitting uncompilable accessor code. The rule is tracked in
+  `AnalyzerReleases.Unshipped.md` until the next formal release.
 - **Validated release source archive** — the Release workflow builds
   `origo-source-<version>.tar.gz` from the stamped release commit and validates
   its `<Version>` / `AssemblyVersion` / `FileVersion` (plus the formal CHANGELOG
@@ -71,6 +77,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Snapshot failures are logged for adapter `IOException`s** — the snapshot
   wrapper now logs any failure before rethrowing, matching the documented
   error-reporting contract for real adapter renames.
+- **Incremental diagnostics no longer replay stale source locations** — the
+  generator reports diagnostics from a separate, non-cached output that always
+  runs against the current compilation. A second incremental run with a
+  diagnostic-producing input previously surfaced `CS8785` and dropped both the
+  diagnostic and the generated source.
+- **A null `SndInlineTypes` params array is reported instead of crashing** —
+  `[SndInlineTypes(null)]` now reports ORIGOSG008; it previously produced a
+  generator `NullReferenceException`/CS8785.
+- **ORIGOSG005 reserves the generated `KindMap` class name and reports the
+  actual duplicate semantics** — a type sanitizing to `KindMap` no longer emits
+  CS0542, and the diagnostic/message now distinguishes same-kind deduplication
+  from different-kind rejection.
+- **ORIGOSG007 points at the offending attribute and no longer claims only one
+  friend assembly exists** — the location is taken from the `SndInlineTypes`
+  syntax, and the message/documentation refer to the actual
+  `InternalsVisibleTo` allowlist.
 - **Previous release baselines survive tag-only releases** — tag-only release
   commits are siblings of the next release commit, not its ancestors. The API
   baseline helper now selects the newest formal tag not newer than the current
