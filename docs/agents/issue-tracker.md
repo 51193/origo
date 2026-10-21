@@ -59,6 +59,26 @@ report that publication remains outstanding.
 Read the GitHub issue and, when present, its local counterpart. Refresh the local copy
 if the remote changed and no local update is pending.
 
+## Issue body hygiene
+
+Issue acceptance text is executable guidance for future agents, so it must
+match the current repository rules rather than a superseded process:
+
+- Documentation is English-only. Do not require "bilingual docs" or DocSync in
+  acceptance criteria; name the relevant `docs/**/README.en.md` entry and the
+  current documentation gate instead.
+- Use current gate names (`scripts/test.sh`, post-commit `scripts/ci.sh`,
+  `scripts/lint-commits.sh`, and `scripts/validate-agent-docs.py` for
+  `AGENTS.md`/agent-doc changes). A removed script is not a valid acceptance
+  gate.
+- A `Blocked by` edge to a closed issue is stale. Re-triage the issue and
+  remove or replace the edge; do not leave a closed blocker in the body.
+- Keep evidence paths current. When a source tree moves, update the issue's
+  evidence links in the same hygiene pass.
+- Waiting-signal trackers must not claim an active milestone or unchecked
+  deliverables. Record the gate, the activation signal, and the re-triage
+  condition; do not start items without that signal.
+
 ## Wayfinding operations
 
 A map is one GitHub issue labelled `wayfinder:map`, with child issues
