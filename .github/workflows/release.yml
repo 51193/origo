@@ -99,8 +99,8 @@ jobs:
           else
             TAG="$REF_NAME"
           fi
-          if [[ -z "$TAG" || "$TAG" != v* ]]; then
-            echo "ERROR: release tag '${TAG}' must be a v* tag." >&2
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "ERROR: release tag '${TAG}' must be v<major>.<minor>.<patch> or v<major>.<minor>.<patch>-<suffix>." >&2
             exit 1
           fi
           if ! git ls-remote --exit-code --refs origin "refs/tags/${TAG}" >/dev/null 2>&1; then
@@ -315,7 +315,6 @@ jobs:
             "$PWD/.release-validators/verify-release.sh"
 
       - name: Publish release commit to the tag
-        if: steps.release-commit.outputs.changed == 'true'
         env:
           TAG: ${{ steps.resolve-tag.outputs.tag }}
           BASE_SHA: ${{ steps.tag-commit.outputs.base_sha }}
@@ -360,8 +359,10 @@ jobs:
 
       - name: Mark snapshot release as pre-release
         # A boolean workflow input is a Boolean in the inputs context;
-        # comparing it with the string 'true' is always false.
-        if: ${{ inputs.snapshot }}
+        # comparing it with the string 'true' is always false. Any
+        # hyphenated tag is a snapshot, including one dispatched without
+        # snapshot=true, so it must never become the repository's Latest.
+        if: ${{ inputs.snapshot || contains(steps.resolve-tag.outputs.tag, '-') }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.resolve-tag.outputs.tag }}

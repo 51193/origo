@@ -108,4 +108,29 @@ $OUTPUT"
 grep -q "<Version>0.1.1-dev</Version>" "$REPO/Directory.Build.props" \
     || FAIL "stale baseline check modified the caller checkout."
 
+# A target at or below an existing formal release tag is rejected before
+# stamping, so a local preflight cannot bless a duplicate re-release.
+python3 - "$REPO/Directory.Build.props" <<'PYEOF'
+import sys
+from pathlib import Path
+path = Path(sys.argv[1])
+text = path.read_text()
+text = text.replace('<Version>0.1.1-dev</Version>', '<Version>0.2.0-dev</Version>')
+text = text.replace('<AssemblyVersion>0.1.1.0</AssemblyVersion>', '<AssemblyVersion>0.2.0.0</AssemblyVersion>')
+text = text.replace('<FileVersion>0.1.1.0</FileVersion>', '<FileVersion>0.2.0.0</FileVersion>')
+Path(sys.argv[1]).write_text(text)
+PYEOF
+git -C "$REPO" add -A
+git -C "$REPO" commit -qm "advance baseline for latest-tag check"
+git -C "$REPO" tag v0.1.1
+set +e
+OUTPUT="$(cd "$REPO" && bash scripts/release-check.sh 0.1.1 2>&1)"
+EXIT_CODE=$?
+set -e
+[[ $EXIT_CODE -eq 1 ]] || FAIL "already-released target expected exit 1, got $EXIT_CODE:
+$OUTPUT"
+grep -q "not newer than the latest formal release 0.1.1" <<<"$OUTPUT" \
+    || FAIL "already-released target did not report the expected failure:
+$OUTPUT"
+
 echo "Release preflight helper: OK"

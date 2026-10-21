@@ -113,9 +113,10 @@ Complete these steps in order:
    baseline in `Directory.Build.props`, and all other documentation changes
    together.
 6. Run `bash scripts/release-check.sh x.y.z` on that commit and confirm it
+   rejects a target that is not newer than the latest formal `vx.y.z` tag,
    passes. The helper creates a temporary worktree, stamps `x.y.z` there, and
    runs `scripts/verify-release.sh`; the caller checkout is not modified. It
-   rejects a HEAD baseline that is not a newer `-dev` version, then requires the
+   also rejects a HEAD baseline that is not a newer `-dev` version, then requires the
    stamped `<Version>` and `AssemblyVersion` / `FileVersion`, the matching
    CHANGELOG version block, an empty `[Unreleased]`, the analyzer shipped block,
    and no unshipped rules in `AnalyzerReleases.Unshipped.md`. Documentation
@@ -137,8 +138,8 @@ The Release workflow starts from a pushed `v*` tag or from `workflow_dispatch`
 with the `tag` input, which is how weekly snapshots start it. The tag is resolved
 first; every step below then applies to that tag:
 
-- Before stamping, fetch the validators from `origin/main` and verify tag provenance with `scripts/verify-release-provenance.sh`: a formal tag must point at main history or the metadata-only release commit from an earlier run; a snapshot tag must point at main history or at a weekly/release version-stamp commit based on main. The metadata commit may change only the three version elements in `Directory.Build.props`, so a props-only commit cannot smuggle extra MSBuild logic. The validators are not executed from the tag tree. Tag creation remains a trusted operation: a tag-triggered workflow still uses the workflow file at the tag, so the gate prevents accidental unmerged tags rather than a malicious tag writer;
-- Rewrite `Directory.Build.props` from the tag through the shared `scripts/write-version-stamp.py` helper (also used by the weekly snapshot workflow): strip only the leading `v` for `<Version>`, and derive `AssemblyVersion` / `FileVersion` from its four-part numeric form (a `-nightly` / `-alpha` suffix stays only in `<Version>`). If anything changed, the pipeline creates a `chore(release): sync version stamps to <tag>` commit whose parent is the tagged main commit;
+- Before stamping, fetch the validators from `origin/main` and verify tag provenance with `scripts/verify-release-provenance.sh`: a formal tag must point at main history or the metadata-only release commit from an earlier run; a snapshot tag must point at main history or at a weekly/release version-stamp commit based on main. The metadata commit's subject must name the tag's exact version, may change only the three version elements in `Directory.Build.props`, and cannot smuggle extra MSBuild logic. The validators are not executed from the tag tree. Tag creation remains a trusted operation: a tag-triggered workflow still uses the workflow file at the tag, so the gate prevents accidental unmerged tags rather than a malicious tag writer;
+- Rewrite `Directory.Build.props` from the tag through the shared `scripts/write-version-stamp.py` helper (also used by the weekly snapshot workflow): accept exactly `x.y.z` or `x.y.z-<suffix>`, strip only the leading `v` for `<Version>`, and derive `AssemblyVersion` / `FileVersion` from `x.y.z.0` (a `-nightly` / `-alpha` suffix stays only in `<Version>`). If anything changed, the pipeline creates a `chore(release): sync version stamps to <tag>` commit whose parent is the tagged main commit. The tag-recheck step runs even when no rewrite was needed, so a stale tag can never survive a rerun; a hyphenated tag is always published as a pre-release;
 - Run `verify-release.sh`, `scripts/lint-scripts.sh`, and the full test suite. The automatic rewrite covers only the version stamps; the formal metadata (CHANGELOG version block, empty `[Unreleased]`, and analyzer shipped block) must still be present in the tagged commit;
 - Run all compatibility gates: `scripts/lint-scripts.sh` (script, workflow, and instruction guards),
   `scripts/api-inventory.sh` (shell API baseline; auto-extracts the previous formal tag's baseline when no explicit previous baseline is set, allowing compatible additions while rejecting removals/signature changes),

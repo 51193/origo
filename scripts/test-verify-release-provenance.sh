@@ -77,6 +77,9 @@ git -C "$REPO" commit -qm "chore(release): sync version stamps to v0.1.2"
 FORMAL_RELEASE_COMMIT="$(git -C "$REPO" rev-parse HEAD)"
 git -C "$REPO" tag v0.1.2
 expect_pass "formal metadata release commit" "v0.1.2" "$FORMAL_RELEASE_COMMIT"
+git -C "$REPO" tag v0.1.3 "$FORMAL_RELEASE_COMMIT"
+expect_fail "formal tag with a mismatched version subject" "v0.1.3" "$FORMAL_RELEASE_COMMIT" \
+    "points at a version-stamp commit for a different version"
 
 git -C "$REPO" checkout -q main
 git -C "$REPO" checkout -q --detach "$MAIN_COMMIT"
@@ -86,6 +89,9 @@ git -C "$REPO" commit -qm "chore: bump version to 0.1.1-nightly.20261021 for wee
 SNAPSHOT_COMMIT="$(git -C "$REPO" rev-parse HEAD)"
 git -C "$REPO" tag v0.1.1-nightly.20261021
 expect_pass "weekly snapshot commit" "v0.1.1-nightly.20261021" "$SNAPSHOT_COMMIT"
+git -C "$REPO" tag v0.1.3-nightly.20261021 "$SNAPSHOT_COMMIT"
+expect_fail "snapshot tag with a mismatched version subject" "v0.1.3-nightly.20261021" "$SNAPSHOT_COMMIT" \
+    "points at a version-stamp commit for a different version"
 expect_pass "historical snapshot tag on main" "v0.1.0-nightly.20261020" "$MAIN_COMMIT"
 
 git -C "$REPO" checkout -q main

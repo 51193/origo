@@ -80,6 +80,18 @@ $output"
 }
 
 write_valid_fixture
+for invalid in "0.1" "0.1.0.0" "0.1.0+build"; do
+    set +e
+    INVALID_OUTPUT="$(TAG_VERSION="$invalid" bash "$FIXTURE/scripts/verify-release.sh" 2>&1)"
+    INVALID_EXIT=$?
+    set -e
+    [[ $INVALID_EXIT -eq 2 ]] || FAIL "invalid version shape '$invalid': expected exit 2, got $INVALID_EXIT:
+$INVALID_OUTPUT"
+    grep -qF "TAG_VERSION must be x.y.z or x.y.z-<suffix>" <<<"$INVALID_OUTPUT" \
+        || FAIL "invalid version shape '$invalid' diagnostic missing:
+$INVALID_OUTPUT"
+done
+
 POSITIVE_OUTPUT="$(TAG_VERSION=0.1.0 bash "$FIXTURE/scripts/verify-release.sh")"
 grep -q "Release metadata verification PASSED for 0.1.0." <<<"$POSITIVE_OUTPUT" \
     || FAIL "formal release fixture did not pass:
