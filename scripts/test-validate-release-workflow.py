@@ -24,17 +24,35 @@ sys.modules["validate_release_workflow"] = guard
 _SPEC.loader.exec_module(guard)
 
 WORKFLOW = ROOT / ".github" / "workflows" / "release.yml"
+WEEKLY_WORKFLOW = ROOT / ".github" / "workflows" / "weekly-build.yml"
 
 
 class ReleaseWorkflowGuardTests(unittest.TestCase):
-    def run_guard(self, text: str) -> tuple[int, str, str]:
+    def run_guard(
+        self, text: str, weekly_text: str | None = None
+    ) -> tuple[int, str, str]:
+        weekly = (
+            weekly_text
+            if weekly_text is not None
+            else WEEKLY_WORKFLOW.read_text(encoding="utf-8")
+        )
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             workflow = root / ".github" / "workflows" / "release.yml"
+            weekly_workflow = root / ".github" / "workflows" / "weekly-build.yml"
             workflow.parent.mkdir(parents=True)
             workflow.write_text(text, encoding="utf-8")
-            old_root, old_workflow = guard.ROOT, guard.WORKFLOW
-            guard.ROOT, guard.WORKFLOW = root, workflow
+            weekly_workflow.write_text(weekly, encoding="utf-8")
+            old_root, old_workflow, old_weekly = (
+                guard.ROOT,
+                guard.WORKFLOW,
+                guard.WEEKLY_WORKFLOW,
+            )
+            guard.ROOT, guard.WORKFLOW, guard.WEEKLY_WORKFLOW = (
+                root,
+                workflow,
+                weekly_workflow,
+            )
             try:
                 stdout = io.StringIO()
                 stderr = io.StringIO()
@@ -42,11 +60,20 @@ class ReleaseWorkflowGuardTests(unittest.TestCase):
                     code = guard.main()
                 return code, stdout.getvalue(), stderr.getvalue()
             finally:
-                guard.ROOT, guard.WORKFLOW = old_root, old_workflow
+                guard.ROOT, guard.WORKFLOW, guard.WEEKLY_WORKFLOW = (
+                    old_root,
+                    old_workflow,
+                    old_weekly,
+                )
 
     def mutated(self, old: str, new: str) -> str:
         text = WORKFLOW.read_text(encoding="utf-8")
         self.assertIn(old, text, f"fixture anchor not found: {old!r}")
+        return text.replace(old, new, 1)
+
+    def mutated_weekly(self, old: str, new: str) -> str:
+        text = WEEKLY_WORKFLOW.read_text(encoding="utf-8")
+        self.assertIn(old, text, f"weekly fixture anchor not found: {old!r}")
         return text.replace(old, new, 1)
 
     def insert_before_release_action(self, block: str) -> str:
@@ -59,6 +86,112 @@ class ReleaseWorkflowGuardTests(unittest.TestCase):
         code, stdout, stderr = self.run_guard(WORKFLOW.read_text(encoding="utf-8"))
         self.assertEqual(code, 0, stderr)
         self.assertIn("Release-workflow guard: OK", stdout)
+        self.assertIn("Weekly-snapshot guard: OK", stdout)
+
+    def test_weekly_branch_push_is_rejected(self):
+        weekly = self.mutated_weekly(
+            '          git push origin "refs/tags/${TAG}"',
+            "          git push origin HEAD:main",
+        )
+        code, _, stderr = self.run_guard(
+            WORKFLOW.read_text(encoding="utf-8"), weekly
+        )
+        self.assertEqual(code, 1)
+        self.assertIn("exactly one tag push", stderr)
+
+    def test_weekly_tag_and_branch_push_is_rejected(self):
+        weekly = self.mutated_weekly(
+            '          git push origin "refs/tags/${TAG}"',
+            '          git push origin "refs/tags/${TAG}"\n'
+            "          git push origin refs/heads/main",
+        )
+        code, _, stderr = self.run_guard(
+            WORKFLOW.read_text(encoding="utf-8"), weekly
+        )
+        self.assertEqual(code, 1)
+        self.assertIn("not an allowed command", stderr)
+
+    def test_weekly_missing_tag_push_is_rejected(self):
+        weekly = self.mutated_weekly(
+            '          git push origin "refs/tags/${TAG}"',
+            "          echo snapshot tagged",
+        )
+        code, _, stderr = self.run_guard(
+            WORKFLOW.read_text(encoding="utf-8"), weekly
+        )
+        self.assertEqual(code, 1)
+        self.assertIn("exactly one tag push", stderr)
+
+    def test_weekly_command_builtin_push_is_rejected(self):
+        weekly = self.mutated_weekly(
+            '          git push origin "refs/tags/${TAG}"',
+            '          GIT=git; command "$GIT" push origin refs/heads/main',
+        )
+        code, _, stderr = self.run_guard(
+            WORKFLOW.read_text(encoding="utf-8"), weekly
+        )
+        self.assertEqual(code, 1)
+        self.assertIn("shell separator", stderr)
+
+    def test_weekly_command_substitution_push_is_rejected(self):
+        weekly = self.mutated_weekly(
+            '          git push origin "refs/tags/${TAG}"',
+            "          result=$(git push origin refs/heads/main)",
+        )
+        code, _, stderr = self.run_guard(
+            WORKFLOW.read_text(encoding="utf-8"), weekly
+        )
+        self.assertEqual(code, 1)
+        self.assertIn("substitution", stderr)
+
+    def test_weekly_extra_push_step_is_rejected(self):
+        weekly = self.mutated_weekly(
+            "      - name: Dispatch the release pipeline for the snapshot tag",
+            "      - name: Sneaky push\n"
+            "        shell: bash\n"
+            "        run: git push origin refs/heads/main\n\n"
+            "      - name: Dispatch the release pipeline for the snapshot tag",
+        )
+        code, _, stderr = self.run_guard(
+            WORKFLOW.read_text(encoding="utf-8"), weekly
+        )
+        self.assertEqual(code, 1)
+        self.assertIn("pushes outside the bump step", stderr)
+
+    def test_weekly_comment_push_is_ignored(self):
+        weekly = self.mutated_weekly(
+            '          git push origin "refs/tags/${TAG}"',
+            "          # git push origin HEAD:main\n"
+            '          git push origin "refs/tags/${TAG}"',
+        )
+        code, _, stderr = self.run_guard(
+            WORKFLOW.read_text(encoding="utf-8"), weekly
+        )
+        self.assertEqual(code, 0, stderr)
+
+    def test_weekly_unapproved_action_is_rejected(self):
+        weekly = self.mutated_weekly(
+            "      - name: Dispatch the release pipeline for the snapshot tag",
+            "      - name: Move a ref\n"
+            "        uses: some/ref-mover@v1\n\n"
+            "      - name: Dispatch the release pipeline for the snapshot tag",
+        )
+        code, _, stderr = self.run_guard(
+            WORKFLOW.read_text(encoding="utf-8"), weekly
+        )
+        self.assertEqual(code, 1)
+        self.assertIn("unapproved action", stderr)
+
+    def test_weekly_push_with_extra_flag_is_rejected(self):
+        weekly = self.mutated_weekly(
+            '          git push origin "refs/tags/${TAG}"',
+            '          git push --tags origin "refs/tags/${TAG}"',
+        )
+        code, _, stderr = self.run_guard(
+            WORKFLOW.read_text(encoding="utf-8"), weekly
+        )
+        self.assertEqual(code, 1)
+        self.assertIn("exactly one tag push", stderr)
 
     def test_dynamic_uses_reference_is_rejected(self):
         text = self.mutated(
