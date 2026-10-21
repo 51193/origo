@@ -301,10 +301,12 @@ when the buffer is present.
 
 ## Manual Version
 
-Documentation is maintained with the source in the repository. A formal
-release must also update the version text in `docs/README.en.md` as described
-in [release-process.en.md](release-process.en.md); `scripts/verify-release.sh`
-checks that file for the release version.
+Documentation is maintained with the source in the repository. The manual refers
+to `<Version>` in `Directory.Build.props` instead of copying the number, so it
+cannot drift from the build stamp. A release tag receives the exact version from
+the Release workflow as described in
+[release-process.en.md](release-process.en.md); `scripts/verify-release.sh`
+checks the stamped build properties, not a second documentation literal.
 
 ## Generation
 

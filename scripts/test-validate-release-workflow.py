@@ -306,6 +306,163 @@ class ReleaseWorkflowGuardTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("must set", stderr)
 
+    def test_release_checkout_ref_is_pinned(self):
+        text = self.mutated(
+            "          ref: ${{ inputs.tag || github.ref }}\n          fetch-depth: 0",
+            "          ref: main\n          fetch-depth: 0",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("release job checkout must set", stderr)
+
+    def test_release_job_rejects_main_push(self):
+        text = self.insert_before_release_action(
+            "      - name: Push main\n"
+            "        run: git push origin HEAD:main\n"
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("not the reviewed tag-only push command", stderr)
+
+    def test_release_job_requires_exactly_one_tag_push(self):
+        text = self.mutated(
+            "          git push \\\n"
+            '            --force-with-lease="refs/tags/${TAG}:${BASE_SHA}" \\\n'
+            '            origin "refs/tags/${TAG}"',
+            "          echo no tag push",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("exactly one reviewed tag-only push", stderr)
+
+    def test_release_action_target_commitish_is_checked(self):
+        text = self.mutated(
+            "          target_commitish: ${{ steps.release-commit.outputs.sha }}",
+            "          target_commitish: main",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("target_commitish", stderr)
+
+    def test_missing_source_archive_validation_is_rejected(self):
+        text = self.mutated(
+            "          bash .release-validators/validate-release-source.sh \\\n",
+            "          echo skipped source validation \\\n",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("validate-release-source.sh", stderr)
+
+    def test_release_job_rejects_extra_main_refspec(self):
+        text = self.mutated(
+            '          origin "refs/tags/${TAG}"',
+            '          origin "refs/tags/${TAG}" "${RELEASE_SHA}:main"',
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("not the reviewed tag-only push command", stderr)
+
+    def test_release_job_rejects_git_prefix_push(self):
+        text = self.mutated(
+            "          git push \\\n",
+            "          git -C . push \\\n",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("not the reviewed tag-only push command", stderr)
+
+    def test_release_job_requires_the_lease(self):
+        text = self.mutated(
+            '            --force-with-lease="refs/tags/${TAG}:${BASE_SHA}" \\\n',
+            "            --force \\\n",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("not the reviewed tag-only push command", stderr)
+
+    def test_release_job_rejects_a_different_tag(self):
+        text = self.mutated(
+            '            origin "refs/tags/${TAG}"',
+            '            origin "refs/tags/v9.9.9"',
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("not the reviewed tag-only push command", stderr)
+
+    def test_commented_source_validation_is_rejected(self):
+        text = self.mutated(
+            "          bash .release-validators/validate-release-source.sh \\\n",
+            "          # bash .release-validators/validate-release-source.sh \\\n",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("validate-release-source.sh", stderr)
+
+    def test_masked_source_validation_is_rejected(self):
+        text = self.mutated(
+            "          bash .release-validators/validate-release-source.sh \\\n",
+            "          bash .release-validators/validate-release-source.sh || true \\\n",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("validate-release-source.sh", stderr)
+
+    def test_source_validation_trusted_verifier_is_pinned(self):
+        text = self.mutated(
+            '            "$PWD/.release-validators/verify-release.sh"',
+            '            "scripts/verify-release.sh"',
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("trusted", stderr)
+
+    def test_missing_release_sha_output_is_rejected(self):
+        text = self.mutated(
+            '          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"',
+            '          echo "sha-missing" >> "$GITHUB_OUTPUT"',
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("must write its sha output", stderr)
+
+    def test_missing_docs_version_authority_is_rejected(self):
+        text = self.mutated(
+            '          cp Directory.Build.props "${DIRNAME}/"',
+            "          true",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("Directory.Build.props", stderr)
+
+    def test_missing_trusted_validator_fetch_is_rejected(self):
+        text = self.mutated(
+            "          git show refs/remotes/origin/main:scripts/verify-release.sh > .release-validators/verify-release.sh",
+            "          true",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("must fetch scripts/verify-release.sh", stderr)
+
+    def test_missing_provenance_step_is_rejected(self):
+        text = self.mutated(
+            '        run: bash .release-validators/verify-release-provenance.sh "$TAG" "$BASE_COMMIT_SHA"',
+            "        run: echo provenance skipped",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("verify-release-provenance.sh", stderr)
+
+    def test_weekly_missing_base_check_is_rejected(self):
+        weekly = self.mutated_weekly(
+            '            bash scripts/check-weekly-base.sh "$BASE_VERSION" "${LATEST_FORMAL#v}"',
+            "            echo base check skipped",
+        )
+        code, _, stderr = self.run_guard(
+            WORKFLOW.read_text(encoding="utf-8"), weekly
+        )
+        self.assertEqual(code, 1)
+        self.assertIn("check-weekly-base.sh", stderr)
+
     def test_marker_does_not_waive_creation(self):
         text = self.insert_before_release_action(
             "      - name: Sneaky\n"

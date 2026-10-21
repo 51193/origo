@@ -10,7 +10,50 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **Validated release source archive** — the Release workflow builds
+  `origo-source-<version>.tar.gz` from the stamped release commit and validates
+  its `<Version>` / `AssemblyVersion` / `FileVersion` (plus the formal CHANGELOG
+  and analyzer metadata) before moving the tag. The archive is attached to the
+  GitHub Release as the authoritative source snapshot.
+- **Local release preflight** — `scripts/release-check.sh <x.y.z>` stamps a
+  temporary worktree and runs the strict release verifier without modifying the
+  caller's checkout, so `main` can keep a development baseline. It rejects a
+  HEAD baseline that is not newer than the release target.
+- **Release provenance gate** — `scripts/verify-release-provenance.sh` rejects a
+  formal tag on unmerged feature history and a snapshot tag that is not
+  `main` history or a weekly/release version-stamp commit based on `main`. It
+  accepts only version element changes in the metadata commit, and the release
+  job fetches the
+  validators from `main` instead of executing the tag tree's copies. The release
+  job also uses an explicit checkout ref so a re-run after a tag move still
+  starts.
+
+### Changed
+
+- **Formal releases stamp a tag-only release commit** — the Release workflow no
+  longer writes a version commit back to `main`. It rewrites
+  `Directory.Build.props` from the tag, creates a metadata-only release commit,
+  runs every gate on it, moves only the tag after packing succeeds, and leaves
+  `main` on `0.1.1-dev`. A version-only PR is no longer required before
+  packaging; a `CHANGELOG`/analyzer release-prep PR is still required.
+- **The manual links to the build version instead of copying it** —
+  `docs/README.en.md` points at `<Version>` in `Directory.Build.props`, and
+  `verify-release.sh` checks the stamped build properties rather than a second
+  documentation literal.
+- **Weekly snapshots require an advanced development base** — the weekly job
+  fails fast when `<Version>` is not newer than the latest formal release, so a
+  forgotten base bump cannot publish a snapshot that sorts below an existing
+  release.
+
 ### Fixed
+
+- **Previous release baselines survive tag-only releases** — tag-only release
+  commits are siblings of the next release commit, not its ancestors. The API
+  baseline helper now selects the newest formal tag not newer than the current
+  source version and accepts a metadata-only release commit whose parent is
+  reachable, instead of silently falling back to an older baseline.
 
 - **Weekly snapshots push only their tag** — the weekly build no longer pushes
   its version-bump commit to `main`; it tags that commit and pushes only

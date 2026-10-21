@@ -31,7 +31,7 @@ The script runs in normal CI (Ubuntu/macOS/Windows), `scripts/ci.sh`, and the Re
 | Update condition | An approved new shell API, removal, or signature change with tests and English documentation updated in the same change |
 | Kernel impact | Kernel implementation additions/removals do not change the baseline; a reference leak fails immediately |
 
-There is no previous stable shell package before the first 0.1.0 release, so previous-package validation is explicitly skipped with an explanation. Afterwards, when `ORIGO_PREVIOUS_API_BASELINE` is not set, `scripts/api-inventory.sh` auto-detects the newest formal release tag reachable from HEAD, excluding the tag on the current commit and the current release tag supplied through `ORIGO_CURRENT_RELEASE_TAG`, and extracts its `shell-api-baseline.json`; the explicit environment variable overrides auto-detection. The previous-package compare fails removals and signature changes while allowing backward-compatible additions: 0.1.x allows compatible additions, and behavior breaks/removals target 0.2.0. 0.1.x promises source/behavior compatibility, not binary compatibility.
+There is no previous stable shell package before the first 0.1.0 release, so previous-package validation is explicitly skipped with an explanation. Afterwards, when `ORIGO_PREVIOUS_API_BASELINE` is not set, `scripts/api-inventory.sh` auto-detects the newest formal release tag not newer than the current source version, excluding the tag on the current commit and the current release tag supplied through `ORIGO_CURRENT_RELEASE_TAG`, and extracts its `shell-api-baseline.json`; the explicit environment variable overrides auto-detection. A tag-only release commit is a metadata-only child of the main commit it was cut from, so the helper accepts such a tag even when it is not an ancestor of HEAD. The previous-package compare fails removals and signature changes while allowing backward-compatible additions: 0.1.x allows compatible additions, and behavior breaks/removals target 0.2.0. 0.1.x promises source/behavior compatibility, not binary compatibility.
 
 ## Failure Semantics
 
@@ -89,6 +89,17 @@ The 0.1.0 shell surface is still stabilizing. A tracked JSON baseline gives a re
 ### Why Additions Also Require a Baseline Update
 
 The gate means "the shell surface consumers see can only change intentionally", not "no evolution". An added API changes the consumer contract just as a removal does, so it requires explicit review and a same-commit baseline update.
+
+### Why Release Tags Are Selected by Version, Not Ancestry
+
+A release tag points at a tag-only release commit whose parent is the main commit
+the release was cut from. That commit is a sibling of the next release commit, not
+its ancestor. Requiring ancestry alone would silently skip the immediately
+preceding release and compare the new surface against an older baseline, which
+could let a removal introduced in the skipped release pass. The helper therefore
+selects the newest formal tag not newer than the current source version and accepts a
+non-ancestor tag only when it is the known metadata-only `chore(release): sync
+version stamps to vX.Y.Z` commit whose parent is reachable from HEAD.
 
 ### Why the Baseline Excludes Kernel Assemblies
 

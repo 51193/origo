@@ -28,11 +28,19 @@ line must be one of the known version-stamp/tag commands, and the only allowed
 push is the exact tag refspec ``git push origin "refs/tags/${TAG}"``. A branch
 push, a second push, an unapproved action, or an obfuscated command therefore
 fails the guard. This is a regression tripwire, not a security boundary.
+
+The release rule applies the same tag-only invariant to the publishing job:
+every non-comment line containing a push token must be the exact reviewed
+tag-only command (no branch refspec, extra refspec, prefix command, or plain
+push), requires exactly one such push, requires the provenance and source-archive
+validators in order before it, and pins the release action's target_commitish so
+a missing tag can never be created at the default branch.
 """
 
 from __future__ import annotations
 
 import re
+import shlex
 import sys
 from pathlib import Path
 
@@ -62,6 +70,9 @@ WEEKLY_ALLOWED_ACTIONS = {"actions/checkout"}
 RELEASE_ACTION = "softprops/action-gh-release"
 RESOLVED_TAG = "${{ steps.resolve-tag.outputs.tag }}"
 RESOLVED_TAG_REF = f"refs/tags/{RESOLVED_TAG}"
+RELEASE_COMMIT_SHA = "${{ steps.release-commit.outputs.sha }}"
+TAG_COMMIT_SHA = "${{ steps.tag-commit.outputs.base_commit }}"
+RELEASE_CHECKOUT_REF = "${{ inputs.tag || github.ref }}"
 # Only these actions may run in the publishing job; a new action needs a
 # deliberate review and an entry here.
 RELEASE_JOB_ACTIONS = {
@@ -103,11 +114,106 @@ def _calls_version_helper(run: str) -> bool:
     )
     for line in run.splitlines():
         stripped = line.strip()
-        if stripped.startswith("#"):
+        if stripped.startswith("#") or "||" in stripped:
             continue
         if pattern.match(stripped):
             return True
     return False
+
+
+def _release_push_errors(release_steps: list) -> list[str]:
+    """Require exactly the reviewed tag-only push command.
+
+    This is a structural tripwire, not a shell parser: every non-comment line
+    that contains a ``push`` token must be the exact reviewed command. That
+    rejects branch refspecs, extra refspecs, prefix commands, and a plain
+    ``git push`` without spawning shell parsing edge cases.
+    """
+    expected = [
+        "git",
+        "push",
+        "--force-with-lease=refs/tags/${TAG}:${BASE_SHA}",
+        "origin",
+        "refs/tags/${TAG}",
+    ]
+    errors: list[str] = []
+    tag_pushes = 0
+    for index, step in enumerate(release_steps):
+        if not isinstance(step, dict):
+            continue
+        run = str(step.get("run") or "")
+        joined = run.replace("\\\n", "").replace("\\\r", "")
+        for number, raw_line in enumerate(joined.splitlines(), start=1):
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+            try:
+                tokens = shlex.split(line, posix=True)
+            except ValueError:
+                errors.append(
+                    f"release.steps[{index}] line {number} cannot be parsed as shell: {line!r}."
+                )
+                continue
+            if "push" not in tokens:
+                continue
+            if tokens != expected:
+                errors.append(
+                    f"release.steps[{index}] line {number} is not the reviewed "
+                    f"tag-only push command: {line!r}."
+                )
+                continue
+            tag_pushes += 1
+    if tag_pushes != 1:
+        errors.append(
+            "release job must contain exactly one reviewed tag-only push so "
+            f"the release commit reaches the tag without writing main; found {tag_pushes}."
+        )
+    return errors
+
+
+def _calls_bash_script(run: str, script: str) -> bool:
+    """True when a non-comment line starts with ``bash <script>``."""
+    pattern = re.compile(rf"^bash\s+{re.escape(script)}(?:\s|$)")
+    for line in run.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("#") or "||" in stripped:
+            continue
+        if pattern.match(stripped):
+            return True
+    return False
+
+
+def _step_index_with_run(release_steps: list, script: str) -> int | None:
+    for index, step in enumerate(release_steps):
+        if not isinstance(step, dict):
+            continue
+        if _calls_bash_script(str(step.get("run") or ""), script):
+            return index
+    return None
+
+
+def _step_index_with_push(release_steps: list) -> int | None:
+    expected = [
+        "git",
+        "push",
+        "--force-with-lease=refs/tags/${TAG}:${BASE_SHA}",
+        "origin",
+        "refs/tags/${TAG}",
+    ]
+    for index, step in enumerate(release_steps):
+        if not isinstance(step, dict):
+            continue
+        joined = str(step.get("run") or "").replace("\\\n", "").replace("\\\r", "")
+        for raw_line in joined.splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+            try:
+                if shlex.split(line, posix=True) == expected:
+                    return index
+            except ValueError:
+                continue
+    return None
 
 
 def _release_creation_line_conflicts(run: str) -> list[int]:
@@ -144,6 +250,7 @@ def _weekly_snapshot_errors(workflow: dict) -> list[str]:
     """Validate the weekly bump step's tag-only push and action allowlist."""
     errors: list[str] = []
     bump_seen = False
+    base_check_seen = False
     tag_pushes = 0
     for job_name, job in (workflow.get("jobs") or {}).items():
         if not isinstance(job, dict):
@@ -167,6 +274,8 @@ def _weekly_snapshot_errors(workflow: dict) -> list[str]:
             run = str(step.get("run") or "")
             if not run:
                 continue
+            if _calls_bash_script(run, "scripts/check-weekly-base.sh"):
+                base_check_seen = True
             joined = run.replace("\\\n", "").replace("\\\r", "")
             if step.get("name") == WEEKLY_BUMP_STEP:
                 bump_seen = True
@@ -211,6 +320,11 @@ def _weekly_snapshot_errors(workflow: dict) -> list[str]:
     if not bump_seen:
         errors.append(
             f"weekly workflow must define the '{WEEKLY_BUMP_STEP}' step."
+        )
+    if not base_check_seen:
+        errors.append(
+            "weekly workflow must run scripts/check-weekly-base.sh so a "
+            "snapshot cannot sort at or below the latest formal release."
         )
     if tag_pushes != 1:
         errors.append(
@@ -291,12 +405,41 @@ def main() -> int:
                     "the action default is github.ref_name, which is main "
                     "for a workflow_dispatch run."
                 )
+            target_commitish = (
+                with_section.get("target_commitish")
+                if isinstance(with_section, dict)
+                else None
+            )
+            if target_commitish != RELEASE_COMMIT_SHA:
+                errors.append(
+                    f"{job_name}.steps[{index}] must set "
+                    f"{RELEASE_ACTION} with.target_commitish to "
+                    f"{RELEASE_COMMIT_SHA}; a missing tag must never be created "
+                    "at the default branch."
+                )
 
     release_job = (workflow.get("jobs") or {}).get("release")
     release_steps = release_job.get("steps") if isinstance(release_job, dict) else None
     if not isinstance(release_steps, list):
         errors.append("release workflow must define release job steps.")
     else:
+        checkout_step = next(
+            (
+                step
+                for step in release_steps
+                if isinstance(step, dict)
+                and str(step.get("uses") or "").split("@", 1)[0] == "actions/checkout"
+            ),
+            None,
+        )
+        checkout_with = checkout_step.get("with") if isinstance(checkout_step, dict) else None
+        if not isinstance(checkout_with, dict) or checkout_with.get("ref") != RELEASE_CHECKOUT_REF:
+            errors.append(
+                "the release job checkout must set "
+                f"ref to {RELEASE_CHECKOUT_REF}; an explicit ref keeps a "
+                "re-run working after this workflow moved the tag."
+            )
+
         run_commands = [
             str(step.get("run") or "")
             for step in release_steps
@@ -323,14 +466,17 @@ def main() -> int:
                     "release job must pass ORIGO_BRANCH_NAME as "
                     f"{RESOLVED_TAG_REF} when linting a detached release checkout."
                 )
-        version_step = next(
+        version_index = next(
             (
-                step
-                for step in release_steps
+                index
+                for index, step in enumerate(release_steps)
                 if isinstance(step, dict)
                 and _calls_version_helper(str(step.get("run") or ""))
             ),
             None,
+        )
+        version_step = (
+            release_steps[version_index] if version_index is not None else None
         )
         if version_step is None:
             errors.append(
@@ -363,6 +509,130 @@ def main() -> int:
                     f"{RELEASE_ACTION} and mark a genuinely read-only /releases "
                     "call with a preceding '# guard: read-only' line."
                 )
+
+        provenance_index = _step_index_with_run(
+            release_steps, ".release-validators/verify-release-provenance.sh"
+        )
+        if provenance_index is None:
+            errors.append(
+                "release job must run scripts/verify-release-provenance.sh so a "
+                "formal tag cannot bypass main review and a snapshot tag must "
+                "come from a weekly version-stamp commit."
+            )
+        else:
+            provenance_env = release_steps[provenance_index].get("env")
+            if not isinstance(provenance_env, dict) or provenance_env.get("TAG") != RESOLVED_TAG:
+                errors.append(
+                    "the provenance step must receive "
+                    f"TAG={RESOLVED_TAG}."
+                )
+            if (
+                not isinstance(provenance_env, dict)
+                or provenance_env.get("BASE_COMMIT_SHA") != TAG_COMMIT_SHA
+            ):
+                errors.append(
+                    "the provenance step must receive "
+                    f"BASE_COMMIT_SHA={TAG_COMMIT_SHA}."
+                )
+
+        source_index = _step_index_with_run(
+            release_steps, ".release-validators/validate-release-source.sh"
+        )
+        if source_index is None:
+            errors.append(
+                "release job must run bash scripts/validate-release-source.sh "
+                "so the attached source archive proves its version stamps."
+            )
+        else:
+            source_env = release_steps[source_index].get("env")
+            if not isinstance(source_env, dict) or source_env.get("TAG") != RESOLVED_TAG:
+                errors.append(
+                    "the source-archive validation step must receive "
+                    f"TAG={RESOLVED_TAG}."
+                )
+            source_run = str(release_steps[source_index].get("run") or "")
+            if "$PWD/.release-validators/verify-release.sh" not in source_run:
+                errors.append(
+                    "the source-archive validation step must pass the trusted "
+                    "$PWD/.release-validators/verify-release.sh verifier."
+                )
+
+        push_index = _step_index_with_push(release_steps)
+        action_index = next(
+            (
+                index
+                for index, step in enumerate(release_steps)
+                if isinstance(step, dict)
+                and str(step.get("uses") or "").split("@", 1)[0] == RELEASE_ACTION
+            ),
+            None,
+        )
+        if None not in (
+            provenance_index,
+            version_index,
+            source_index,
+            push_index,
+            action_index,
+        ):
+            if not (
+                provenance_index
+                < version_index
+                < source_index
+                < push_index
+                < action_index
+            ):
+                errors.append(
+                    "release job must run tag provenance, version stamping, "
+                    "source-archive validation, the tag push, and GitHub Release "
+                    "creation in that order."
+                )
+
+        release_commit_step = next(
+            (
+                step
+                for step in release_steps
+                if isinstance(step, dict) and step.get("id") == "release-commit"
+            ),
+            None,
+        )
+        if release_commit_step is None:
+            errors.append(
+                "release job must define the release-commit step so "
+                "target_commitish has a SHA to pin."
+            )
+        elif 'echo "sha=' not in str(release_commit_step.get("run") or ""):
+            errors.append(
+                "the release-commit step must write its sha output for "
+                "target_commitish."
+            )
+
+        for validator in (
+            "verify-release-provenance.sh",
+            "validate-release-source.sh",
+            "verify-release.sh",
+        ):
+            if not any(
+                f"git show refs/remotes/origin/main:scripts/{validator}" in command
+                for command in run_commands
+            ):
+                errors.append(
+                    f"release job must fetch scripts/{validator} from "
+                    "refs/remotes/origin/main so the tag tree cannot replace "
+                    "the validator."
+                )
+
+        if not any("cp Directory.Build.props" in command for command in run_commands):
+            errors.append(
+                "release job must copy Directory.Build.props into the "
+                "documentation snapshot so the manual's version reference resolves."
+            )
+        if not any("git archive" in command for command in run_commands):
+            errors.append(
+                "release job must build the source archive with git archive "
+                "before validating it."
+            )
+
+        errors.extend(_release_push_errors(release_steps))
 
         for dependency in ("shellcheck", "python3-yaml"):
             if not any(dependency in command for command in run_commands):

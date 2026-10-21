@@ -8,7 +8,7 @@
 
 | Item | Value | Authority |
 |------|-------|-----------|
-| Package version | Current repository version (for example `0.1.0`) | `<Version>` in `Directory.Build.props` |
+| Package version | Current source version (for example `0.1.1-dev` on `main` or `0.1.1` on a release tag) | `<Version>` in `Directory.Build.props` |
 | .NET | `net10.0` | SDK pinned by `global.json` |
 | Godot.NET.Sdk | `4.7.2` | `Origo.GodotAdapter.csproj`; the consumer fixture must match and the script compares both |
 | Package references | `Origo.Core` + `Origo.GodotAdapter` | `tools/ShellPackageConsumer/OrigoShellPackageConsumer.csproj` |
