@@ -451,6 +451,39 @@ public partial class RandomAndStateMachineTests
     }
 
     [Fact]
+    public void StateMachineContainer_PopAllOnQuit_FirstHookThrows_StillRunsLaterMachines()
+    {
+        var logger = new TestLogger();
+        var host = new TestSndSceneHost();
+        var runtime = TestFactory.CreateRuntime(logger, host);
+        var fs = new TestMemoryFileSystem();
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var pool = runtime.SndWorld.StrategyPool;
+        pool.Register(() => new SmPushStrategy());
+        pool.Register(() => new SmThrowOnQuitStrategy());
+        pool.Register(() => new SmPopOrderProbeStrategy());
+        var events = new List<string>();
+        SmPopOrderProbeStrategy.Events = events;
+        try
+        {
+            var container = new StateMachineContainer(pool, ctx.StateMachineContext);
+            container.CreateOrGet("a", "sm.push.test", "sm.pop.throw").Push("a");
+            container.CreateOrGet("b", "sm.push.test", "sm.pop.orderprobe").Push("b");
+
+            Assert.Throws<InvalidOperationException>(() => container.PopAllOnQuit());
+            Assert.Contains("b", events);
+            container.Clear();
+        }
+        finally
+        {
+            ResetStrategyHooks();
+        }
+    }
+
+    [Fact]
     public void StateMachineContainer_DeserializeFromNode_DuplicateMachineKey_Throws()
     {
         var logger = new TestLogger();

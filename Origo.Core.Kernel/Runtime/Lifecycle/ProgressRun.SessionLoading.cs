@@ -97,6 +97,12 @@ internal sealed partial class ProgressRun
             // recoverable snapshot of the current runtime state.
             WriteForegroundTopology(_owner.RequireForegroundSession().LevelId);
             _owner.EnsureActiveLevelInvariant();
+
+            // Replay progress-level stacks exactly once, after the payload has
+            // been deserialized and the foreground scene exists. This is the
+            // only place progress-level OnPushAfterLoad is fired; a level
+            // switch must not replay live progress stacks.
+            FlushStateMachinesAfterSceneReady();
         }
 
         internal ISessionRun LoadAndMountForeground(string levelId)
@@ -195,7 +201,6 @@ internal sealed partial class ProgressRun
 
         private ISessionRun FinalizeForegroundMount(string levelId, ISessionRun session, bool writeTopology)
         {
-            FlushStateMachinesAfterSceneReady();
             if (writeTopology)
                 WriteForegroundTopology(levelId);
             return session;

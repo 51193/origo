@@ -60,6 +60,19 @@ public class SessionTopologyCodecTests
     }
 
     [Fact]
+    public void Parse_DuplicateSessionKey_Throws()
+    {
+        var raw = SessionTopologyCodec.Join(
+        [
+            SessionTopologyCodec.Serialize("bg", "level_a", true),
+            SessionTopologyCodec.Serialize("bg", "level_b", true)
+        ]);
+
+        var ex = Assert.Throws<InvalidOperationException>(() => SessionTopologyCodec.Parse(raw));
+        Assert.Contains("duplicate", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void Parse_NonBooleanSyncField_ThrowsInvalidOperation() =>
         Assert.Throws<InvalidOperationException>(() => SessionTopologyCodec.Parse("bg=alpha=not_bool"));
 

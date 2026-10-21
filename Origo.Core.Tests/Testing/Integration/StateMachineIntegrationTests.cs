@@ -208,6 +208,59 @@ public class StateMachineIntegrationTests
     }
 
     [Fact]
+    public void ProgressStateMachine_LevelSwitch_DoesNotReplayOnPushAfterLoad()
+    {
+        var events = new List<string>();
+        var harness = GameplaySimulationHarness.Create()
+            .WithStrategy(() => new HookRecordingStateMachineStrategy())
+            .Build();
+
+        HookRecordingStateMachineStrategy.Events = events;
+        try
+        {
+            var sm = harness.Context.StateMachines.GetProgressStateMachines()!
+                .CreateOrGet("flow", "test.int.sm.hook_recorder", "test.int.sm.hook_recorder");
+            sm.Push("in_game");
+            harness.DriveFrame();
+            events.Clear();
+
+            harness.Context.Save.RequestSwitchForegroundLevel("other");
+            harness.DriveFrame();
+
+            Assert.DoesNotContain(events,
+                e => e.StartsWith("on_push_after_load:", StringComparison.Ordinal));
+        }
+        finally
+        {
+            HookRecordingStateMachineStrategy.Events = null;
+        }
+    }
+
+    [Fact]
+    public void ProgressStateMachine_QuitHook_CanReadSceneAccess()
+    {
+        var events = new List<string>();
+        var harness = GameplaySimulationHarness.Create()
+            .WithStrategy(() => new ProgressQuitSceneProbeStrategy())
+            .Build();
+        ProgressQuitSceneProbeStrategy.Events = events;
+        try
+        {
+            var sm = harness.Context.StateMachines.GetProgressStateMachines()!
+                .CreateOrGet("quit_probe", "test.int.sm.progress_quit_scene", "test.int.sm.progress_quit_scene");
+            sm.Push("in_game");
+
+            harness.Context.EnsureProgressRun().Dispose();
+
+            Assert.Contains("ok", events);
+        }
+        finally
+        {
+            ProgressQuitSceneProbeStrategy.Events = null;
+        }
+    }
+
+    [Fact]
     public void StateMachine_MultipleEntities_IndependentStacks()
     {
         var events = new List<string>();
@@ -331,6 +384,31 @@ public class StateMachineIntegrationTests
 
         public override void OnPopBeforeQuit(StateMachineStrategyContext context, IStateMachineContext ctx) =>
             Events?.Add($"on_pop_before_quit:{context.BeforeTop}");
+    }
+
+    [StrategyIndex("test.int.sm.progress_quit_scene")]
+    private sealed class ProgressQuitSceneProbeStrategy : StateMachineStrategyBase
+    {
+        private static readonly AsyncLocal<List<string>?> _events = new();
+
+        public static List<string>? Events
+        {
+            get => _events.Value;
+            set => _events.Value = value;
+        }
+
+        public override void OnPopBeforeQuit(StateMachineStrategyContext context, IStateMachineContext ctx)
+        {
+            try
+            {
+                _ = ctx.SceneAccess.GetEntities().Count;
+                Events?.Add("ok");
+            }
+            catch (Exception ex)
+            {
+                Events?.Add($"fail:{ex.GetType().Name}");
+            }
+        }
     }
 
     [StrategyIndex("test.int.sm.lifecycle_pusher")]

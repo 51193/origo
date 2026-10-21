@@ -69,24 +69,41 @@ internal sealed class SaveCoordinator
         ((SessionRun)fgSession).FireBeforeSaveHooks();
         _progressBlackboard.SetValue(WellKnownKeys.SessionTopology, topologyValue);
 
-        var saveContext = new SaveContext(
-            _progressBlackboard, fgSession.SessionBlackboard, _progressRuntime.SndWorld);
+        // Serialize background sessions before the progress payload: their
+        // BeforeSave hooks may write progress blackboard/state-machine state,
+        // and those writes must be captured by the progress serialization below.
+        Dictionary<string, LevelPayload>? bgPayloads = null;
+        try
+        {
+            bgPayloads = new Dictionary<string, LevelPayload>(
+                _sessionManager.SerializeBackgroundSessions(), StringComparer.Ordinal);
 
-        var progressSmNode =
-            ((StateMachineContainer)_progressStateMachines).SerializeToNode(_progressRuntime.ConverterRegistry);
-        var sessionSmNode = ((StateMachineContainer)fgSession.GetSessionStateMachines())
-            .SerializeToNode(_progressRuntime.ConverterRegistry);
+            var saveContext = new SaveContext(
+                _progressBlackboard, fgSession.SessionBlackboard, _progressRuntime.SndWorld);
 
-        var payload = saveContext.SaveGame(
-            ((SessionRun)fgSession).SceneHost,
-            newSaveId,
-            fgSession.LevelId,
-            mergedMeta,
-            progressSmNode,
-            sessionSmNode);
+            var progressSmNode =
+                ((StateMachineContainer)_progressStateMachines).SerializeToNode(_progressRuntime.ConverterRegistry);
+            var sessionSmNode = ((StateMachineContainer)fgSession.GetSessionStateMachines())
+                .SerializeToNode(_progressRuntime.ConverterRegistry);
 
-        AppendBackgroundPayloads(payload, bgSessions);
-        return payload;
+            var payload = saveContext.SaveGame(
+                ((SessionRun)fgSession).SceneHost,
+                newSaveId,
+                fgSession.LevelId,
+                mergedMeta,
+                progressSmNode,
+                sessionSmNode);
+
+            AppendBackgroundPayloads(payload, bgSessions, bgPayloads);
+            return payload;
+        }
+        catch
+        {
+            if (bgPayloads is not null)
+                foreach (var bgPayload in bgPayloads.Values)
+                    SavePayloadDisposal.Dispose(bgPayload);
+            throw;
+        }
     }
 
     internal void PersistProgress()
@@ -142,11 +159,11 @@ internal sealed class SaveCoordinator
             fgSession.LevelId, $"save id: '{saveId}'");
     }
 
-    private void AppendBackgroundPayloads(
+    private static void AppendBackgroundPayloads(
         SaveGamePayload payload,
-        IReadOnlyList<KeyValuePair<string, ISessionRun>> bgSessions)
+        IReadOnlyList<KeyValuePair<string, ISessionRun>> bgSessions,
+        Dictionary<string, LevelPayload> bgPayloads)
     {
-        var bgPayloads = _sessionManager.SerializeBackgroundSessions();
         foreach (var kvp in bgSessions)
         {
             if (!bgPayloads.TryGetValue(kvp.Key, out var bgPayload))

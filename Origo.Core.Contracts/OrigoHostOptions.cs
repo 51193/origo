@@ -49,10 +49,16 @@ public sealed class OrigoHostOptions
     /// <summary>Optional SND template mapping file path.</summary>
     public string? SndTemplateMapPath { get; init; }
 
-    /// <summary>Optional console input queue.</summary>
+    /// <summary>
+    ///     Optional console input queue. Supply both console channels or
+    ///     neither; a single channel is rejected at host construction.
+    /// </summary>
     public IConsoleInputSource? ConsoleInput { get; init; }
 
-    /// <summary>Optional console output channel.</summary>
+    /// <summary>
+    ///     Optional console output channel. Supply both console channels or
+    ///     neither; a single channel is rejected at host construction.
+    /// </summary>
     public IConsoleOutputChannel? ConsoleOutputChannel { get; init; }
 
     /// <summary>Optional custom data-source converter registration callback.</summary>

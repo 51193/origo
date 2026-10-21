@@ -53,6 +53,10 @@ internal static class SessionTopologyCodec
                 throw new InvalidOperationException(
                     $"Session topology entry '{entry}' has empty key or levelId.");
 
+            if (list.Exists(existing => string.Equals(existing.Key, key, StringComparison.Ordinal)))
+                throw new InvalidOperationException(
+                    $"Session topology contains duplicate session key '{key}'.");
+
             list.Add(new SessionDescriptor(key, levelId, sync));
         }
 

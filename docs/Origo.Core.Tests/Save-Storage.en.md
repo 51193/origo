@@ -31,6 +31,7 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | `SaveFormatGoldenTests.cs` | Golden v1 snapshot (`Save/Golden/v1/save_goldenv1/`): current-format load through `OrigoHost`, save missing the format-version key, and future-version rejection without a partial mount |
 | `SaveSnapshotMarkerTests.cs` | Snapshot integrity: no .write_in_progress residue in snapshot directory |
 | `StaleLevelDirectoryCleanupTests.cs` | Verifies that after a full save `current/` is consistent with the payload's level set — level directories of destroyed background sessions are cleaned up, not leaked into subsequent snapshots |
+| `Runtime/Lifecycle/BackgroundSaveHookTests.cs` | Verifies that a background session's BeforeSave progress write is captured by the same full-save snapshot |
 
 ## SaveStorageContractTests Details
 
@@ -157,6 +158,7 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 
 | Test Method | Verified Behavior | Reference |
 |-------------|-----------------|-----------|
+| `BackgroundBeforeSave_ProgressWrite_IsIncludedInSnapshot` | A background BeforeSave hook writes progress state; the full-save progress node contains it | Save/Lifecycle: background hooks |
 | `SaveAfterDestroyingBackgroundSession_PrunesStaleLevelDirectory` | After saving foreground + background sessions each with one level, destroy the background and save again: neither `current/` nor the new snapshot contains the destroyed session's level directory; surviving levels are retained | Save/Storage: stale level directory cleanup |
 
 ## SaveStorageAndPayloadTests Details

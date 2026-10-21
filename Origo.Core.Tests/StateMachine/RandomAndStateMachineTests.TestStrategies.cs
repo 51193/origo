@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using Origo.Core.Abstractions.StateMachine;
@@ -45,6 +46,13 @@ public partial class RandomAndStateMachineTests
 
         public override void OnPopBeforeQuit(StateMachineStrategyContext context, IStateMachineContext ctx) =>
             PopQuitEvents?.Add($"pop:beforeQuit:{context.BeforeTop ?? "null"}->{context.AfterTop ?? "null"}");
+    }
+
+    [StrategyIndex("sm.pop.throw")]
+    private sealed class SmThrowOnQuitStrategy : StateMachineStrategyBase
+    {
+        public override void OnPopBeforeQuit(StateMachineStrategyContext context, IStateMachineContext ctx) =>
+            throw new InvalidOperationException("quit hook failure");
     }
 
     [StrategyIndex("sm.pop.orderprobe")]
