@@ -38,6 +38,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **Hyphenated release tags are always pre-releases** — the Release workflow
+  marks any tag containing `-` as a pre-release, not only dispatches with the
+  `snapshot` input, so a manually pushed snapshot cannot become Latest.
 - **BREAKING: save IDs reserve the atomic-write suffixes** — a save ID ending
   in `.tmp` or `.bak` is now rejected during validation. Those names were
   accepted before, but they collided with the `save_{id}.tmp` staging and
@@ -60,6 +63,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   release.
 
 ### Fixed
+
+- **Release tags must have the exact `x.y.z` shape** — `write-version-stamp.py`
+  and `verify-release.sh` now reject truncated (`0.1`) and four-part
+  (`0.1.0.0`) versions before rewriting or verifying metadata; those shapes
+  previously produced assembly stamps that could never match the release tag.
+- **The tag move is rechecked on every release run** — the publish step no
+  longer skips when the version stamp was already current, so a rerun still
+  moves a stale tag to the release commit.
+- **Version-stamp provenance must name the tag's own version** — a metadata
+  commit for a different version is rejected.
+- **Local release preflight rejects an already-released version** — it compares
+  against the newest formal `vx.y.z` tag before creating the temporary
+  worktree.
 
 - **Save storage recovers interrupted snapshot swaps and ignores invalid slot
   directories** — when the real slot is missing after a crash between the two

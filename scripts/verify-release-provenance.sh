@@ -69,9 +69,15 @@ if [[ "$VERSION" == *-* ]]; then
         echo "Snapshot tag $TAG points at main history."
         exit 0
     fi
+    SNAPSHOT_SUBJECT="$(git log -1 --format=%s "$COMMIT" 2>/dev/null || true)"
     if ! is_metadata_commit "$COMMIT" '^chore: bump version to .* for weekly build$' &&
        ! is_metadata_commit "$COMMIT" '^chore\(release\): sync version stamps to v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
         echo "ERROR: snapshot tag $TAG does not point at main history or a weekly/release version-stamp commit based on main." >&2
+        exit 1
+    fi
+    if [[ "$SNAPSHOT_SUBJECT" != "chore: bump version to ${VERSION} for weekly build" &&
+          "$SNAPSHOT_SUBJECT" != "chore(release): sync version stamps to v${VERSION}" ]]; then
+        echo "ERROR: snapshot tag $TAG points at a version-stamp commit for a different version (${SNAPSHOT_SUBJECT})." >&2
         exit 1
     fi
     echo "Snapshot tag $TAG is based on a version-stamp commit on main."
@@ -83,8 +89,13 @@ if git merge-base --is-ancestor "$COMMIT" "$MAIN_REF" 2>/dev/null; then
     exit 0
 fi
 
-is_metadata_commit "$COMMIT" '^chore\(release\): sync version stamps to v[0-9]+\.[0-9]+\.[0-9]+$' || {
+if ! is_metadata_commit "$COMMIT" '^chore\(release\): sync version stamps to v[0-9]+\.[0-9]+\.[0-9]+$'; then
     echo "ERROR: formal tag $TAG does not point at main history or the metadata-only release commit." >&2
     exit 1
-}
+fi
+FORMAL_SUBJECT="$(git log -1 --format=%s "$COMMIT")"
+if [[ "$FORMAL_SUBJECT" != "chore(release): sync version stamps to v${VERSION}" ]]; then
+    echo "ERROR: formal tag $TAG points at a version-stamp commit for a different version (${FORMAL_SUBJECT})." >&2
+    exit 1
+fi
 echo "Formal tag $TAG points at the metadata-only release commit based on main."

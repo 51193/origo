@@ -67,6 +67,21 @@ if ! version_is_newer "$HEAD_BASE" "$VERSION"; then
     exit 1
 fi
 
+LATEST_TAG="$(
+    git -C "$ROOT" tag --list 'v[0-9]*' --sort=-v:refname         | while IFS= read -r tag; do
+            [[ "$tag" == *-* ]] && continue
+            printf '%s\n' "$tag"
+            break
+        done
+)"
+if [[ -n "$LATEST_TAG" ]]; then
+    LATEST_VERSION="${LATEST_TAG#v}"
+    if ! version_is_newer "$VERSION" "$LATEST_VERSION"; then
+        echo "ERROR: release $VERSION is not newer than the latest formal release $LATEST_VERSION ($LATEST_TAG)." >&2
+        exit 1
+    fi
+fi
+
 TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/origo-release-check.XXXXXX")"
 WORKTREE="$TMP_ROOT/worktree"
 cleanup() {

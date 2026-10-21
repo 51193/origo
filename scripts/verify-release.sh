@@ -18,19 +18,19 @@ import re
 import sys
 
 version = sys.argv[1]
+if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?", version):
+    print(
+        f"ERROR: TAG_VERSION must be x.y.z or x.y.z-<suffix>; got '{version}'.",
+        file=sys.stderr,
+    )
+    sys.exit(2)
 if "-" in version:
     print(f"Release metadata verification SKIPPED for snapshot version {version}.")
     sys.exit(0)
 
-numeric = version.split("+", 1)[0]
+numeric = version
 parts = numeric.split(".")
-if not parts or not all(part.isdigit() for part in parts) or len(parts) > 4:
-    print(
-        f"ERROR: TAG_VERSION must start with a numeric x.y.z version; got '{version}'.",
-        file=sys.stderr,
-    )
-    sys.exit(2)
-assembly_version = ".".join((parts + ["0"] * 4)[:4])
+assembly_version = ".".join(parts + ["0"])
 
 failures = []
 

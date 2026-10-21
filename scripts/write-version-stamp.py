@@ -21,12 +21,15 @@ def main(argv: list[str]) -> int:
         return 1
 
     version = argv[1]
-    numeric = re.split(r"[-+]", version, maxsplit=1)[0]
-    parts = numeric.split(".")
-    if not parts or not all(part.isdigit() for part in parts) or len(parts) > 4:
-        print(f"ERROR: version '{version}' has no usable numeric form.", file=sys.stderr)
+    # Tags are exactly x.y.z or x.y.z-<suffix>. Four-part/truncated versions
+    # used to pass here and produce an AssemblyVersion that could never match
+    # the release verifier, so reject the shape before touching the file.
+    if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?", version):
+        print(f"ERROR: version '{version}' must be x.y.z or x.y.z-<suffix>.", file=sys.stderr)
         return 1
-    assembly_version = ".".join((parts + ["0"] * 4)[:4])
+    numeric = version.split("-", 1)[0]
+    parts = numeric.split(".")
+    assembly_version = ".".join(parts + ["0"])
 
     if not PROPS.is_file():
         print(f"ERROR: {PROPS} is missing.", file=sys.stderr)

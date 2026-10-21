@@ -50,6 +50,16 @@ if python3 "$ROOT/scripts/write-version-stamp.py" "not-a-version" 2>/dev/null; t
 fi
 grep -q "<Version>0.2.0-nightly.7</Version>" Directory.Build.props || FAIL "failed rewrite modified the file"
 
+# The tag shape is exactly x.y.z or x.y.z-suffix; truncated and four-part
+# versions used to produce assembly stamps the release verifier rejects.
+for invalid in "0.3" "0.3.0.0" "0.3.0+build"; do
+    if python3 "$ROOT/scripts/write-version-stamp.py" "$invalid" 2>/dev/null; then
+        FAIL "invalid version shape '$invalid' was accepted"
+    fi
+    grep -q "<Version>0.2.0-nightly.7</Version>" Directory.Build.props \
+        || FAIL "invalid shape '$invalid' modified the file"
+done
+
 # A missing stamp fails instead of writing a partially updated file.
 cat > Directory.Build.props <<'PROPS_EOF'
 <Project>
