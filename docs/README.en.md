@@ -117,7 +117,7 @@ Each module directory's English entry contains:
 
 ## Version
 
-Current Origo framework version: **0.1.0**. Documentation is co-located with source code in the same repository; versions are naturally synchronized. When code directory structure changes, the manual's directory mirror and indexes should be updated accordingly.
+Current Origo framework version: see the `<Version>` value in `Directory.Build.props` at the repository root. Development checkouts use a `-dev` pre-release baseline; the release workflow stamps the exact version on the tag-only release commit. Documentation is co-located with source code in the same repository. When code directory structure changes, the manual's directory mirror and indexes should be updated accordingly.
 
 - Framework source and docs: this repository [origo](https://github.com/51193/origo) (docs under `docs/`)
 - Example project: [origo.demo](https://github.com/51193/origo.demo)

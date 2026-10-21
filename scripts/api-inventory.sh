@@ -9,9 +9,11 @@
 #    baseline for an approved API change.
 # 3. Runs previous-package validation. An explicit
 #    ORIGO_PREVIOUS_API_BASELINE overrides auto-detection; otherwise the newest
-#    formal release tag reachable from HEAD (excluding the current commit) is
-#    used when it contains the tracked baseline. Releases before the baseline
-#    tool exists skip this comparison with an explicit message.
+#    formal release tag not newer than the current source version is used when it
+#    contains the tracked baseline. A tag-only release commit is a metadata-only
+#    child of main, so the helper accepts it even though it is not an ancestor
+#    of HEAD; releases before the baseline tool exists skip this comparison with
+#    an explicit message.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

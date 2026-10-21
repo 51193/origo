@@ -69,12 +69,7 @@ jobs:
             echo "Manual dispatch window includes commits up to now."
           fi
 
-          # This workflow's own bump commit is created at ~02:30 UTC on Monday,
-          # i.e. inside the *following* week's window. Ignore those commits so an
-          # idle week really publishes nothing instead of re-triggering on itself.
-          IGNORE_ARGS=(--invert-grep --grep='^chore: bump version to .* for weekly build$')
-
-          if ! WINDOW_COMMITS="$(git rev-list "${REVISION_ARGS[@]}" "${IGNORE_ARGS[@]}" HEAD)"; then
+          if ! WINDOW_COMMITS="$(git rev-list "${REVISION_ARGS[@]}" HEAD)"; then
             echo "ERROR: git rev-list failed while evaluating the weekly window." >&2
             exit 1
           fi
@@ -92,6 +87,20 @@ jobs:
           if ! [[ "$BASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "ERROR: cannot derive base version from Directory.Build.props: '$BASE_VERSION'" >&2
             exit 1
+          fi
+
+          # Refresh tags so a formal release that finished after checkout is
+          # visible to the fail-fast comparison.
+          git fetch --tags --force origin >/dev/null
+
+          # A snapshot must sort above every formal release already published.
+          # Otherwise a forgotten post-release base bump would publish
+          # 0.1.1-nightly.* below the existing 0.1.1 forever. The tested helper
+          # keeps the comparison out of an unpinned workflow shell block.
+          LATEST_FORMAL="$(git tag --list 'v[0-9]*' --sort=-version:refname \
+              | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1 || true)"
+          if [[ -n "$LATEST_FORMAL" ]]; then
+            bash scripts/check-weekly-base.sh "$BASE_VERSION" "${LATEST_FORMAL#v}"
           fi
 
           DATE="$(date -u +%Y%m%d)"

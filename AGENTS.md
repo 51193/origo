@@ -199,13 +199,12 @@ usage/test guidance accurate.
 Full details: `docs/release-process.en.md`. Pre-tag summary:
 
 1. Choose formal `x.y.z`; move `[Unreleased]` to `## [x.y.z] - YYYY-MM-DD` and clear it.
-2. Set `<Version>` in `Directory.Build.props` to `x.y.z` and `AssemblyVersion` / `FileVersion` to `x.y.z.0` (tag is `vx.y.z`).
-3. Update the version text in `docs/README.en.md`.
-4. Move analyzer rules to `AnalyzerReleases.Shipped.md` with `## Release x.y.z`; leave no unshipped rules in `AnalyzerReleases.Unshipped.md`.
-5. Run `TAG_VERSION=x.y.z bash scripts/verify-release.sh` (Changelog block, empty `[Unreleased]`, `Directory.Build.props` version stamps, analyzer tracking, docs version stamps).
-6. Commit all release metadata and documentation changes together.
-7. Run `bash scripts/ci.sh` and `bash scripts/lint-commits.sh` on that commit; amend and rerun if either fails.
-8. Tag `vx.y.z` on the verified commit and push it. Release workflow runs tests, packs the five shell/kernel packages, and attaches packages plus the docs snapshot to GitHub Release; packages are not pushed to nuget.org.
+2. Advance the development baseline in `Directory.Build.props` to the next planned version with a `-dev` suffix and matching numeric `AssemblyVersion` / `FileVersion`; never commit the release version on `main`. The Release workflow stamps `x.y.z` on the tag-only release commit.
+3. Move analyzer rules to `AnalyzerReleases.Shipped.md` with `## Release x.y.z`; leave no unshipped rules in `AnalyzerReleases.Unshipped.md`.
+4. Commit all release metadata and documentation changes together.
+5. Run `bash scripts/release-check.sh x.y.z` on that commit (rejects a stale HEAD baseline, then checks a temporary worktree: Changelog block, empty `[Unreleased]`, analyzer tracking, stamped build properties). `docs/README.en.md` refers to the build stamp instead of copying the version.
+6. Run `bash scripts/ci.sh` and `bash scripts/lint-commits.sh` on that commit; amend and rerun if either fails.
+7. Tag `vx.y.z` on the verified commit and push it; a formal tag must be reachable from `main`. The Release workflow verifies provenance, creates a metadata-only release commit, runs the gates, moves only the tag, and attaches the five packages, the validated source archive, and the docs snapshot to the GitHub Release; `main` is not written. Packages are not pushed to nuget.org.
 
 ## 7. Document Index
 

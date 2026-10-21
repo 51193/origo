@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Release metadata verification for the release workflow.
 # Checks CHANGELOG/version-block alignment, [Unreleased] emptiness,
-# analyzer release tracking, and the manual version stamps.
+# analyzer release tracking, and the stamped build version. The manual links
+# to Directory.Build.props instead of copying the version, so it is not a
+# second version stamp.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
@@ -66,11 +68,6 @@ unshipped = open("Origo.SourceGeneration/AnalyzerReleases.Unshipped.md", encodin
 rules = [line for line in unshipped.splitlines() if line.strip().startswith("| ORIGOSG")]
 if rules:
     failures.append("AnalyzerReleases.Unshipped.md still contains unshipped rules")
-
-for path in ("docs/README.en.md",):
-    text = open(path, encoding="utf-8").read()
-    if version not in text:
-        failures.append(f"{path} does not mention version {version}")
 
 if failures:
     print("Release metadata verification FAILED:", file=sys.stderr)

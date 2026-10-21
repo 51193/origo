@@ -65,6 +65,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          # Explicit ref keeps actions/checkout from rejecting a re-run after
+          # this workflow moved the tag: it would otherwise compare the tag's
+          # new peeled commit with the original event SHA.
+          ref: ${{ inputs.tag || github.ref }}
           fetch-depth: 0
 
       - name: Setup .NET
@@ -128,6 +132,24 @@ jobs:
           echo "base_sha=${TAG_REF_SHA}" >> "$GITHUB_OUTPUT"
           echo "base_commit=${TAG_COMMIT_SHA}" >> "$GITHUB_OUTPUT"
 
+      - name: Fetch trusted release validators
+        run: |
+          set -euo pipefail
+          # Validation code must come from reviewed main, not from the tag tree
+          # (a tag-triggered workflow still runs the workflow file at the tag;
+          # tag creation remains a trusted operation).
+          git fetch --force origin "refs/heads/main:refs/remotes/origin/main"
+          mkdir -p .release-validators
+          git show refs/remotes/origin/main:scripts/verify-release-provenance.sh > .release-validators/verify-release-provenance.sh
+          git show refs/remotes/origin/main:scripts/validate-release-source.sh > .release-validators/validate-release-source.sh
+          git show refs/remotes/origin/main:scripts/verify-release.sh > .release-validators/verify-release.sh
+
+      - name: Verify release tag provenance
+        env:
+          TAG: ${{ steps.resolve-tag.outputs.tag }}
+          BASE_COMMIT_SHA: ${{ steps.tag-commit.outputs.base_commit }}
+        run: bash .release-validators/verify-release-provenance.sh "$TAG" "$BASE_COMMIT_SHA"
+
       - name: Sync version from tag
         env:
           TAG: ${{ steps.resolve-tag.outputs.tag }}
@@ -186,9 +208,10 @@ jobs:
         env:
           TAG: ${{ steps.resolve-tag.outputs.tag }}
         run: |
-          # verify-release.sh reads TAG_VERSION from the environment.
+          # verify-release.sh reads TAG_VERSION from the environment. Use the
+          # copy fetched from main, not the tag tree's verifier.
           export TAG_VERSION="${TAG#v}"
-          bash scripts/verify-release.sh
+          bash .release-validators/verify-release.sh
 
       - name: Install script lint dependencies
         run: |
@@ -265,11 +288,33 @@ jobs:
           cp -r docs/. "${DIRNAME}/docs/"
           cp AGENTS.md "${DIRNAME}/"
           cp CHANGELOG.md "${DIRNAME}/"
+          cp Directory.Build.props "${DIRNAME}/"
           mkdir -p ./artifacts
           tar -czf "./artifacts/${DIRNAME}.tar.gz" "${DIRNAME}"
           zip -rq "./artifacts/${DIRNAME}.zip" "${DIRNAME}"
 
-      - name: Write release commit back to main and tag
+      - name: Package release source tree
+        env:
+          TAG: ${{ steps.resolve-tag.outputs.tag }}
+        run: |
+          VERSION="${TAG#v}"
+          mkdir -p ./artifacts
+          git archive \
+            --format=tar.gz \
+            --prefix="origo-${VERSION}/" \
+            --output="artifacts/origo-source-${VERSION}.tar.gz" \
+            HEAD
+
+      - name: Validate release source tree
+        env:
+          TAG: ${{ steps.resolve-tag.outputs.tag }}
+        run: |
+          VERSION="${TAG#v}"
+          bash .release-validators/validate-release-source.sh \
+            "artifacts/origo-source-${VERSION}.tar.gz" "$VERSION" \
+            "$PWD/.release-validators/verify-release.sh"
+
+      - name: Publish release commit to the tag
         if: steps.release-commit.outputs.changed == 'true'
         env:
           TAG: ${{ steps.resolve-tag.outputs.tag }}
@@ -278,32 +323,28 @@ jobs:
           RELEASE_SHA: ${{ steps.release-commit.outputs.sha }}
         run: |
           set -euo pipefail
-          git fetch --force origin "refs/heads/main:refs/remotes/origin/main"
-          REMOTE_MAIN_SHA="$(git rev-parse refs/remotes/origin/main)"
-          REMOTE_TAG_SHA="$(git ls-remote --refs origin "refs/tags/${TAG}" | cut -f1 | head -1)"
+          git fetch --force origin "refs/tags/${TAG}:refs/tags/${TAG}"
+          REMOTE_TAG_REF="$(git rev-parse "refs/tags/${TAG}")"
+          REMOTE_TAG_COMMIT="$(git rev-parse "refs/tags/${TAG}^{commit}")"
 
-          if [[ "$REMOTE_TAG_SHA" == "$RELEASE_SHA" && "$REMOTE_MAIN_SHA" == "$RELEASE_SHA" ]]; then
-            echo "main and tag ${TAG} already point at the release commit."
+          if [[ "$REMOTE_TAG_COMMIT" == "$RELEASE_SHA" ]]; then
+            echo "tag ${TAG} already points at release commit ${RELEASE_SHA}."
             exit 0
           fi
-          if [[ "$REMOTE_TAG_SHA" != "$BASE_SHA" ]]; then
-            echo "ERROR: tag ${TAG} moved from ${BASE_SHA} to ${REMOTE_TAG_SHA} during this run." >&2
-            exit 1
-          fi
-          if [[ "$REMOTE_MAIN_SHA" != "$BASE_COMMIT_SHA" ]]; then
-            echo "ERROR: main is at ${REMOTE_MAIN_SHA}, but ${TAG} was created on ${BASE_COMMIT_SHA}." >&2
-            echo "Automatic version write-back requires the tag to be created on the current main tip." >&2
+          if [[ "$REMOTE_TAG_REF" != "$BASE_SHA" ]]; then
+            echo "ERROR: tag ${TAG} moved from ${BASE_SHA} to ${REMOTE_TAG_REF} during this run." >&2
             exit 1
           fi
 
-          # All checks, tests, and packages above ran on RELEASE_SHA. Only now
-          # fast-forward main and move the tag, atomically, so a failed release
-          # never rewrites repository refs.
-          git push --atomic \
-            --force-with-lease="refs/heads/main:${BASE_COMMIT_SHA}" \
+          # Only the tag moves. main is PR-protected and must never be written
+          # by this workflow; the release commit exists solely as the tag target,
+          # so the tagged source archive carries the exact version while main
+          # keeps its development baseline.
+          git tag -f -a "$TAG" -m "Release ${TAG} from ${BASE_COMMIT_SHA}" "$RELEASE_SHA"
+          git push \
             --force-with-lease="refs/tags/${TAG}:${BASE_SHA}" \
-            origin "${RELEASE_SHA}:refs/heads/main" "${RELEASE_SHA}:refs/tags/${TAG}"
-          echo "main and tag ${TAG} now point at release commit ${RELEASE_SHA}."
+            origin "refs/tags/${TAG}"
+          echo "tag ${TAG} now points at release commit ${RELEASE_SHA}; main is unchanged."
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
@@ -311,6 +352,9 @@ jobs:
           # A workflow_dispatch run has github.ref_name=main, so use the tag
           # resolved for this run instead of the action's default ref name.
           tag_name: ${{ steps.resolve-tag.outputs.tag }}
+          # Never let the action create a missing tag at the default branch;
+          # if the tag push above failed, the release must fail instead.
+          target_commitish: ${{ steps.release-commit.outputs.sha }}
           files: ./artifacts/*
           generate_release_notes: true
 

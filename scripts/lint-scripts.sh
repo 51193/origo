@@ -94,6 +94,8 @@ if command -v python3 >/dev/null 2>&1; then
     python3 scripts/validate-agent-docs.py
     python3 scripts/test-validate-release-packages.py
     bash scripts/test-write-version-stamp.sh
+    bash scripts/test-validate-release-source.sh
+    bash scripts/test-release-check.sh
 elif [[ -n "${CI:-}" || -n "${GITHUB_ACTIONS:-}" ]]; then
     echo "ERROR: python3 is required to run the release-workflow, release-package, and agent-doc guards." >&2
     exit 1
@@ -103,6 +105,8 @@ fi
 
 bash scripts/test-verify-release.sh
 bash scripts/test-find-previous-api-baseline.sh
+bash scripts/test-check-weekly-base.sh
+bash scripts/test-verify-release-provenance.sh
 bash scripts/test-package-consumer-smoke-lib.sh
 bash scripts/test-download-godot-deps.sh
 bash scripts/test-pre-push-hook.sh
