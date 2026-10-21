@@ -14,7 +14,7 @@ The implementation layer of the runtime's four-layer lifecycle. Defines the comp
 | `SystemRuntime.cs` | System-level runtime container: holds SystemRun, SystemBlackboard, SndWorld |
 | `SystemRun.cs` | System-layer startup: holds OrigoRuntime (SndWorld created in its constructor) → constructs ProgressRuntime |
 | `ProgressParameters.cs` | Progress-layer construction parameters |
-| `ProgressRuntime.cs` | Progress-level runtime container: holds ProgressRun, ProgressBlackboard, SaveContext |
+| `ProgressRuntime.cs` | Progress-level runtime container: holds Logger, StorageService, SndWorld, AdapterSceneHost, StateMachineContext, SndContext, and SavePathPolicy |
 | `ProgressRun.cs` | Progress-layer main logic: level switching, save read/write, session lifecycle orchestration |
 | `ProgressRun.Persistence.cs` | Progress-layer persistence delegation (via SaveCoordinator) |
 | `ProgressRun.SessionLoading.cs` | Progress-layer session loading branch (partial class) |
@@ -34,7 +34,7 @@ The implementation layer of the runtime's four-layer lifecycle. Defines the comp
 
 ```
 SystemRun (constructed and held by SndContext)
-├── SystemRuntime (holds SndWorld forwarding, SystemBlackboard, scheduler)
+├── SystemRuntime (holds SndWorld forwarding, SystemBlackboard, and the OrigoRuntime reference)
 │   └── ProgressRun (created by SndContext)
 │       ├── ProgressRuntime (holds SndWorld, SndContext, StorageService)
 │       └── SessionManager (held by ProgressRun)
@@ -44,7 +44,7 @@ SystemRun (constructed and held by SndContext)
 
 Each layer container holds its layer's core object references and public access points:
 - `SndContext` is the global/progress-level aggregator: constructs `SystemRun` and creates/destroys `ProgressRun` on every progress lifecycle transition (load/save/level switch)
-- `SystemRuntime` holds `Logger`, `MetaAccess`, `PathResolver`, `SaveRootPath`, `StorageService`, `SavePathPolicy`, `AdapterSceneHost`, and the `OrigoRuntime` reference, with `SndWorld`/`SystemBlackboard` as convenience accessors (the scheduler is held by `OrigoRuntime` as an `ActionScheduler`)
+- `SystemRuntime` holds `Logger`, `MetaAccess`, `PathResolver`, `SaveRootPath`, `StorageService`, `SavePathPolicy`, `AdapterSceneHost`, and the `OrigoRuntime` reference, with `SndWorld`/`SystemBlackboard` as convenience accessors; the scheduler is held by `OrigoRuntime` as an `ActionScheduler`
 - `ProgressRuntime` holds `Logger`, `StorageService`, `SndWorld`, `AdapterSceneHost`, `StateMachineContext`, `SndContext`, `SavePathPolicy` (the progress blackboard and state machine container are held layer-wise by `SessionManager`/`ProgressRun`; SaveContext is a transient object created on demand)
 - `SessionManagerRuntime` holds `SndWorld`, `SndContext`, `ProgressBlackboard` and other runtime dependencies (`ISessionManager` is held by `ProgressRun`)
 - `SessionManager` reads and stores `AdapterSceneHost` at construction for creating foreground sessions

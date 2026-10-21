@@ -5,8 +5,9 @@
 ## Module Capability
 
 Data-source contract layer: tree data model, I/O gateway contract, file-meta
-contract, and converter base classes. Codecs, the factory, the registry, and
-concrete converters live in [Origo.Core.Kernel/DataSource](../../Origo.Core.Kernel/DataSource/README.en.md).
+contract, converter base classes, and the shared converter registry. Codecs,
+the factory, and concrete converters live in
+[Origo.Core.Kernel/DataSource](../../Origo.Core.Kernel/DataSource/README.en.md).
 
 ## Included Files
 
@@ -36,9 +37,10 @@ own node trees at save boundaries and must release them.
 ### Why converter bases live in Contracts
 
 `DataSourceConverter<T>` / `DataSourceConverterBase` are consumer and adapter
-extension points; the concrete registry and default converters stay in the
-implementation package, and the contract layer contains no runtime
-construction logic.
+extension points. `DataSourceConverterRegistry` is also a Contracts type because
+consumers and shell tooling need to compose converters; the default converters
+and codecs stay in the implementation package, and the contract layer contains
+no runtime construction logic.
 
 ---
 [↑ Back to Origo.Core.Contracts](../README.en.md)

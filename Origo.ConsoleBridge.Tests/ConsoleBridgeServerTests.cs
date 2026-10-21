@@ -393,7 +393,7 @@ public class ConsoleBridgeServerTests
     }
 
     [Fact]
-    public void Constructor_CustomPort_StoredInOptions()
+    public void Constructor_EphemeralPort_StartAssignsActualPort()
     {
         var input = new ConsoleInputBuffer();
         var output = new ConsoleOutputChannel();

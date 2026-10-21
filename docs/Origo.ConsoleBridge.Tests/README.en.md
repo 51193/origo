@@ -10,7 +10,7 @@ server lifecycle (Start / Stop / Dispose), command input (client send → input 
 console output (Publish → client receive), connection management (single-connection mode, disconnect / reconnect),
 thread safety (no deadlock under concurrent publish + read), and Agent workflow integration (command-response round-trip).
 
-All tests use real `TcpClient` connections for integration testing (no mocking), ensuring the bridge
+Most integration tests use real `TcpClient` connections; fault-injection tests use fake streams or injected fields, ensuring the bridge
 server works in a real network environment.
 
 ## Capability Document Index

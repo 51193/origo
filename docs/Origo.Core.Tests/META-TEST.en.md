@@ -176,7 +176,7 @@ but must observe the following whitelist principle:
    or read private fields to construct the fault state. Such injection is more fragile than
    `InternalsVisibleTo` (a field rename breaks the test at runtime) and must follow these rules:
    - Use it **only** where the fault state itself has no public trigger path; scenarios reachable via
-     public paths must use them (e.g. `Start_AfterDispose`, `Start_PortInUse` both drive public calls)
+     public paths must use them (e.g. `Start_AfterDispose_ThrowsObjectDisposed`, `Start_PortInUse_RollsBackListenerAndAllowsRetryAfterRelease` both drive public calls)
    - Reflection field access stays confined to that test file — never spread into production code or
      other tests
    - Precedent: `Origo.ConsoleBridge.Tests/ConsoleBridgeServerErrorPathTests.cs` (`_acceptTask` /

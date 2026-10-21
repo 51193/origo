@@ -6,7 +6,7 @@
 
 ## Behavior Under Test Overview
 
-Verifies the complete TCP bridge behavior of ConsoleBridgeServer. All tests use real `TcpClient` connections.
+Verifies the complete TCP bridge behavior of ConsoleBridgeServer. Most integration tests use real `TcpClient` connections; fault-injection tests use fake streams or injected fields.
 
 ## Test File List
 
@@ -105,7 +105,7 @@ Verifies the complete TCP bridge behavior of ConsoleBridgeServer. All tests use 
 | `Constructor_NullInput_Throws` | null input | ArgumentNullException |
 | `Constructor_NullOutput_Throws` | null output | ArgumentNullException |
 | `Constructor_DefaultOptions_HasExpectedPort` | Default options | ActualPort > 0 |
-| `Constructor_CustomPort_StoredInOptions` | Port=9876 | ActualPort=9876 |
+| `Constructor_EphemeralPort_StartAssignsActualPort` | Port=0 | ActualPort > 0 and the listener is bound |
 | `Options_OutputSendTimeoutMs_DefaultsAndCustom` | Default options / `OutputSendTimeoutMs = 250` | Default equals `DefaultOutputSendTimeoutMs`; custom value stored |
 | `Start_NonPositiveOutputSendTimeout_Throws` | `OutputSendTimeoutMs = 0` (SendTimeout treats zero as infinite) | `Start()` throws `ArgumentOutOfRangeException` |
 

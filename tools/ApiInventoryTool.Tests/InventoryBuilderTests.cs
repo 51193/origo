@@ -52,6 +52,35 @@ public class InventoryBuilderTests
     }
 
     [Fact]
+    public void Build_MultipleAssemblies_SortsByName()
+    {
+        var directory = TestAssemblyEmitter.CreateDirectory();
+        try
+        {
+            var beta = TestAssemblyEmitter.Emit(directory, "Beta.Api",
+                "namespace Beta { public class B { public void M() { } } }");
+            var alpha = TestAssemblyEmitter.Emit(directory, "Alpha.Api",
+                "namespace Alpha { public class A { public void M() { } } }");
+
+            var result = InventoryBuilder.Build(
+                [
+                    new AssemblyInput("Beta.Api", beta),
+                    new AssemblyInput("Alpha.Api", alpha)
+                ],
+                [directory],
+                []);
+
+            Assert.True(result.Succeeded, string.Join('\n', result.Errors));
+            Assert.Equal(["Alpha.Api", "Beta.Api"],
+                result.Document!.Assemblies.Select(assembly => assembly.Name));
+        }
+        finally
+        {
+            TestAssemblyEmitter.TryDelete(directory);
+        }
+    }
+
+    [Fact]
     public void Build_RejectsMissingAssemblyExplicitly()
     {
         var result = InventoryBuilder.Build(
