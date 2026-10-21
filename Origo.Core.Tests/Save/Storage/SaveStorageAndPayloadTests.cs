@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.DataSource;
 using Origo.Core.Save;
@@ -131,7 +133,7 @@ public class SaveStorageAndPayloadTests
     }
 
     [Fact]
-    public void SaveStorageFacade_EnumerateSaveIds_SuffixNamedSlotWithoutRealSlot_IsEnumerated()
+    public void SaveStorageFacade_EnumerateSaveIds_ReservedSuffixDirectories_AreNotSlots()
     {
         var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
@@ -139,34 +141,154 @@ public class SaveStorageAndPayloadTests
         fs.CreateDirectory("root/save_foo.tmp");
         fs.CreateDirectory("root/save_bar");
         fs.CreateDirectory("root/save_bar.tmp");
+        fs.CreateDirectory("root/save_bar.bak");
 
         var ids = SaveStorageFacade.EnumerateSaveIds(handle);
 
-        // "bar.tmp" is a leftover of an interrupted snapshot (real slot
-        // exists); "foo.tmp" is a user-chosen id that ends with the suffix
-        // and must stay enumerable.
-        Assert.Equal(["bar", "foo.tmp"], ids);
+        // Atomic-write remnants are never user slots; the real bar slot remains.
+        Assert.Equal(["bar"], ids);
     }
 
     [Fact]
-    public void SaveStorageFacade_EnumerateSaveIds_SuffixOnlyId_DoesNotThrow()
+    public void SaveStorageFacade_EnumerateSaveIds_InvalidDirectory_IsSkipped()
     {
-        // A user-chosen id that is itself only the suffix (".tmp") produces
-        // the directory save_.tmp; stripping the suffix would yield an empty
-        // id, which must not crash the enumeration (there is no valid real
-        // slot for an empty id).
         var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
-        fs.CreateDirectory("root/save_.tmp");
+        fs.CreateDirectory("root/save_bad space");
+        fs.CreateDirectory("root/save_good");
 
         var ids = SaveStorageFacade.EnumerateSaveIds(handle);
 
-        Assert.Equal([".tmp"], ids);
+        Assert.Equal(["good"], ids);
+        Assert.DoesNotContain(
+            SaveStorageFacade.EnumerateSavesWithMetaData(handle),
+            entry => entry.SaveId == "bad space");
     }
 
     [Fact]
-    public void SaveStorageFacade_EnumerateSaveIds_NullFileSystem_Throws() =>
+    public void SavePathLayout_ValidateSaveId_RejectsReservedSuffixes()
+    {
+        Assert.Throws<ArgumentException>(() => SavePathLayout.ValidateSaveId("foo.tmp", "saveId"));
+        Assert.Throws<ArgumentException>(() => SavePathLayout.ValidateSaveId("foo.bak", "saveId"));
+        Assert.Throws<ArgumentException>(() => SavePathLayout.ValidateSaveId("foo.TMP", "saveId"));
+        SavePathLayout.ValidateSaveId("foo.tmpx", "saveId");
+    }
+
+    [Fact]
+    public void SaveStorageFacade_RecoverInterruptedSnapshots_RestoresCompleteBackup()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        SeedCompleteSnapshot(fs, "root/save_recovered.bak");
+
+        var ids = SaveStorageFacade.EnumerateSaveIds(handle);
+
+        Assert.Equal(["recovered"], ids);
+        Assert.True(fs.DirectoryExists("root/save_recovered"));
+        Assert.False(fs.DirectoryExists("root/save_recovered.bak"));
+    }
+
+    [Fact]
+    public void SaveStorageFacade_ReadProgressFromSnapshot_RecoversCompleteBackup()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        SeedCompleteSnapshot(fs, "root/save_recovered.bak");
+
+        using var progress = SaveStorageFacade.ReadProgressNodeFromSnapshot(handle, "recovered");
+
+        Assert.NotNull(progress);
+        Assert.True(fs.DirectoryExists("root/save_recovered"));
+        Assert.False(fs.DirectoryExists("root/save_recovered.bak"));
+    }
+
+    [Fact]
+    public void SaveStorageFacade_RecoverInterruptedSnapshots_LeavesIncompleteBackup()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        fs.SeedFile("root/save_incomplete.bak/progress.json", "{}");
+
+        var ids = SaveStorageFacade.EnumerateSaveIds(handle);
+
+        Assert.Empty(ids);
+        Assert.True(fs.DirectoryExists("root/save_incomplete.bak"));
+    }
+
+    [Fact]
+    public void SaveStorageFacade_SnapshotCurrentToSave_PreservesRootMarkerButCopiesArchiveMarker()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        fs.SeedFile("root/current/progress.json", "{}");
+        fs.SeedFile("root/current/progress_state_machines.json", """{"machines":[]}""");
+        fs.SeedFile("root/current/.write_in_progress", "");
+        fs.SeedFile("root/current/extra/.write_in_progress", "user data");
+
+        SaveStorageFacade.SnapshotCurrentToSave(handle, "001");
+
+        Assert.False(fs.Exists("root/save_001/.write_in_progress"));
+        Assert.True(fs.Exists("root/save_001/extra/.write_in_progress"));
+        Assert.Equal("user data", fs.ReadAllText("root/save_001/extra/.write_in_progress"));
+    }
+
+    [Fact]
+    public void WriteSavePayloadToCurrentThenSnapshot_WhenRenameFails_LogsErrorAndPreservesCurrent()
+    {
+        var fs = new FailOnRenameFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        var logger = new TestLogger();
+        fs.SeedFile("root/current/progress.json", "{}");
+        fs.SeedFile("root/current/progress_state_machines.json", """{"machines":[]}""");
+        fs.SeedFile("root/current/level_default/snd_scene.json", "[]");
+        fs.SeedFile("root/current/level_default/session.json", "{}");
+        fs.SeedFile("root/current/level_default/session_state_machines.json", """{"machines":[]}""");
+        fs.FailTempToFinalRename = true;
+
+        Assert.Throws<IOException>(() =>
+            SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(
+                handle, CreateFullPayloadForRenameTest(), "001", logger));
+
+        Assert.NotEmpty(logger.Errors);
+        Assert.True(fs.Exists("root/current/progress.json"));
+        Assert.False(fs.DirectoryExists("root/save_001"));
+    }
+
+    private static SaveGamePayload CreateFullPayloadForRenameTest() => new()
+    {
+        SaveId = "001",
+        ActiveLevelId = "default",
+        ProgressNode = TestFactory.NodeFromJson("{}"),
+        ProgressStateMachinesNode = TestFactory.NodeFromJson("""{"machines":[]}"""),
+        Levels = new Dictionary<string, LevelPayload>
+        {
+            ["default"] = new()
+            {
+                LevelId = "default",
+                SndSceneNode = TestFactory.NodeFromJson("[]"),
+                SessionNode = TestFactory.NodeFromJson("{}"),
+                SessionStateMachinesNode = TestFactory.NodeFromJson("""{"machines":[]}""")
+            }
+        }
+    };
+
+    private static void SeedCompleteSnapshot(TestMemoryFileSystem fs, string root)
+    {
+        fs.SeedFile($"{root}/progress.json", "{}");
+        fs.SeedFile($"{root}/progress_state_machines.json", """{"machines":[]}""");
+        fs.SeedFile($"{root}/level_default/snd_scene.json", "[]");
+        fs.SeedFile($"{root}/level_default/session.json", "{}");
+        fs.SeedFile($"{root}/level_default/session_state_machines.json", """{"machines":[]}""");
+    }
+
+    [Fact]
+    public void SaveStorageFacade_EnumerateSaveIds_NullHandle_Throws() =>
         Assert.Throws<ArgumentNullException>(() => SaveStorageFacade.EnumerateSaveIds(null!));
 
     [Fact]
@@ -649,11 +771,11 @@ public class SaveStorageAndPayloadTests
 
         fs.SeedFile("root/current/progress.json", """{"v":"new"}""");
         fs.FailTempToFinalRename = true;
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<IOException>(() =>
             SaveStorageFacade.SnapshotCurrentToSave(handle, "001"));
 
         // Retry while the temp-to-final rename still fails.
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<IOException>(() =>
             SaveStorageFacade.SnapshotCurrentToSave(handle, "001"));
 
         Assert.True(fs.DirectoryExists("root/save_001"),
@@ -769,11 +891,11 @@ public class SaveStorageAndPayloadTests
             if (FailTempToFinalRename
                 && source.EndsWith("save_001.tmp", StringComparison.Ordinal)
                 && destination.EndsWith("save_001", StringComparison.Ordinal))
-                throw new InvalidOperationException($"Simulated rename failure for '{sourcePath}' -> '{destinationPath}'.");
+                throw new IOException($"Simulated rename failure for '{sourcePath}' -> '{destinationPath}'.");
             if (FailBackupRollbackRename
                 && source.EndsWith("save_001.bak", StringComparison.Ordinal)
                 && destination.EndsWith("save_001", StringComparison.Ordinal))
-                throw new InvalidOperationException($"Simulated rollback rename failure for '{sourcePath}' -> '{destinationPath}'.");
+                throw new IOException($"Simulated rollback rename failure for '{sourcePath}' -> '{destinationPath}'.");
 
             _inner.Rename(sourcePath, destinationPath);
         }

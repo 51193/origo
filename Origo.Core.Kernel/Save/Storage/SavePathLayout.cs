@@ -34,12 +34,25 @@ internal static class SavePathLayout
 
     /// <summary>
     ///     Validates a save ID against the allowed character set
-    ///     (ASCII letters, digits, <c>.</c>, <c>_</c>, <c>-</c>). Save IDs
-    ///     are embedded in directory names, so arbitrary characters would
-    ///     allow path traversal or directory structure injection.
+    ///     (ASCII letters, digits, <c>.</c>, <c>_</c>, <c>-</c>) and rejects
+    ///     the reserved atomic-write suffixes. Save IDs are embedded in
+    ///     directory names, so arbitrary characters would allow path
+    ///     traversal or directory structure injection, and a suffix-ending ID
+    ///     would collide with the <c>save_{id}.tmp</c> staging or
+    ///     <c>save_{id}.bak</c> backup directory.
     /// </summary>
-    public static void ValidateSaveId(string saveId, string paramName) =>
+    public static void ValidateSaveId(string saveId, string paramName)
+    {
         ValidateToken(saveId, paramName, "save id");
+        if (saveId.EndsWith(SaveStorageFacade.SaveTempDirectorySuffix, StringComparison.OrdinalIgnoreCase)
+            || saveId.EndsWith(SaveStorageFacade.SaveBackupDirectorySuffix, StringComparison.OrdinalIgnoreCase))
+            throw new ArgumentException(
+                $"'{saveId}' ends with a reserved save-id suffix " +
+                $"('{SaveStorageFacade.SaveTempDirectorySuffix}' or " +
+                $"'{SaveStorageFacade.SaveBackupDirectorySuffix}'). " +
+                "Choose a save id whose name cannot collide with the atomic-write staging or backup directory.",
+                paramName);
+    }
 
     /// <summary>
     ///     Shared token validation for identifiers embedded in directory or

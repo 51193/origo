@@ -496,6 +496,61 @@ public class SaveExtraFilesRoundTripTests
         Assert.Contains("Idempotent save skip", logger.Infos.Last());
     }
 
+    [Fact]
+    public void RestoreExtraFilesFromSnapshot_CustomExtraDirectory_UsesPolicy()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var service = new DefaultSaveStorageService(
+            metaAccess, dataSourceIo, pathResolver, "root", new CustomExtraPolicy());
+        fs.SeedFile("root/save_001/archive/config.json", "ok");
+
+        service.RestoreExtraFilesFromSnapshot("001");
+
+        Assert.True(fs.Exists("root/current/archive/config.json"));
+        Assert.False(fs.Exists("root/current/extra/config.json"));
+    }
+
+    [Fact]
+    public void ComputeCombinedHash_CustomExtraDirectory_IncludesExtraData()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(
+            metaAccess, dataSourceIo, pathResolver, "root", new CustomExtraPolicy());
+        var payload = TestFactory.CreateMinimalPayload("001", "default");
+        fs.SeedFile("root/current/archive/config.json", """{"v":1}""");
+
+        var first = SaveAtomicWriter.ComputeCombinedHash(handle, payload);
+
+        fs.SeedFile("root/current/archive/config.json", """{"v":2}""");
+        var second = SaveAtomicWriter.ComputeCombinedHash(handle, payload);
+
+        Assert.NotEqual(first, second);
+    }
+
+    private sealed class CustomExtraPolicy : ISavePathPolicy
+    {
+        public string GetCurrentDirectory() => SavePathLayout.GetCurrentDirectory();
+        public string GetSaveDirectory(string saveId) => SavePathLayout.GetSaveDirectory(saveId);
+        public string GetProgressFile(string baseDirectory) => SavePathLayout.GetProgressFile(baseDirectory);
+        public string GetProgressStateMachinesFile(string baseDirectory) =>
+            SavePathLayout.GetProgressStateMachinesFile(baseDirectory);
+        public string GetCustomMetaFile(string baseDirectory) => SavePathLayout.GetCustomMetaFile(baseDirectory);
+        public string GetLevelDirectory(string baseDirectory, string levelId) =>
+            SavePathLayout.GetLevelDirectory(baseDirectory, levelId);
+        public string GetLevelSndSceneFile(string levelDirectory) =>
+            SavePathLayout.GetLevelSndSceneFile(levelDirectory);
+        public string GetLevelSessionFile(string levelDirectory) =>
+            SavePathLayout.GetLevelSessionFile(levelDirectory);
+        public string GetLevelSessionStateMachinesFile(string levelDirectory) =>
+            SavePathLayout.GetLevelSessionStateMachinesFile(levelDirectory);
+        public string GetWriteInProgressMarker(string baseDirectory) =>
+            SavePathLayout.GetWriteInProgressMarker(baseDirectory);
+        public string GetPayloadShaFile(string baseDirectory) => SavePathLayout.GetPayloadShaFile(baseDirectory);
+        public string GetExtraDirectory(string baseDirectory) => $"{baseDirectory}/archive";
+    }
+
     // ── Helpers ────────────────────────────────────────────────────────
 
     private static SndContext CreateContextWithEntry(out TestMemoryFileSystem fs)

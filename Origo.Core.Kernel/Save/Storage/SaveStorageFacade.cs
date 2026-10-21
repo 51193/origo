@@ -32,48 +32,127 @@ internal static class SaveStorageFacade
         if (!handle.MetaAccess.DirectoryExists(handle.SaveRootPath))
             return [];
 
+        RecoverInterruptedSnapshots(handle);
+
         var result = new List<string>();
-        foreach (var dir in handle.MetaAccess.EnumerateDirectories(handle.SaveRootPath))
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var id in handle.PathPolicy.EnumerateSaveIds(handle.MetaAccess, handle.SaveRootPath))
         {
-            var leaf = SaveFileHandle.GetLeafDirectoryName(dir);
-            if (!leaf.StartsWith(SaveDirectoryPrefix, StringComparison.Ordinal))
-                continue;
-            var id = leaf[SaveDirectoryPrefix.Length..];
-            if (id.Length == 0)
+            if (string.IsNullOrWhiteSpace(id))
                 continue;
 
-            // Directories left over from an interrupted snapshot (save_X.tmp
-            // staging / save_X.bak backup) are not valid slots; the swap logic
-            // only cleans them on the next write to the same id. An id that
-            // genuinely ends with the suffix (user-chosen name) with no
-            // matching real slot stays enumerable.
-            string trimmedId;
-            if (id.EndsWith(SaveTempDirectorySuffix, StringComparison.Ordinal))
+            // A stray directory can contain characters that are not legal in
+            // a save id. Skip it instead of failing listing/metadata for every
+            // valid slot; suffix-ending directories are atomic-write remnants
+            // and are never user slots.
+            try
             {
-                trimmedId = id[..^SaveTempDirectorySuffix.Length];
+                SavePathLayout.ValidateSaveId(id, nameof(id));
             }
-            else if (id.EndsWith(SaveBackupDirectorySuffix, StringComparison.Ordinal))
+            catch (ArgumentException)
             {
-                trimmedId = id[..^SaveBackupDirectorySuffix.Length];
+                continue;
             }
-            else
-            {
+
+            if (!seen.Add(id))
+                continue;
+
+            var saveRel = handle.PathPolicy.GetSaveDirectory(id);
+            if (handle.MetaAccess.DirectoryExists(handle.GetAbsolutePath(saveRel)))
                 result.Add(id);
-                continue;
-            }
-
-            if (trimmedId.Length > 0)
-            {
-                var realSlotRel = handle.PathPolicy.GetSaveDirectory(trimmedId);
-                if (handle.MetaAccess.DirectoryExists(handle.GetAbsolutePath(realSlotRel)))
-                    continue;
-            }
-
-            result.Add(id);
         }
 
         result.Sort(StringComparer.Ordinal);
         return result;
+    }
+
+    /// <summary>
+    ///     Recover the crash window between the two renames in
+    ///     <see cref="SaveAtomicWriter.SwapSnapshotDirectory" />: when the real
+    ///     slot is missing but a complete <c>.bak</c> snapshot exists, restore
+    ///     the backup as the real slot. Incomplete backups are left untouched
+    ///     and are never enumerated as slots.
+    /// </summary>
+    internal static void RecoverInterruptedSnapshots(SaveFileHandle handle)
+    {
+        ArgumentNullException.ThrowIfNull(handle);
+        if (!handle.MetaAccess.DirectoryExists(handle.SaveRootPath))
+            return;
+
+        foreach (var directory in handle.MetaAccess.EnumerateDirectories(handle.SaveRootPath))
+        {
+            var leaf = SaveFileHandle.GetLeafDirectoryName(directory);
+            if (!leaf.StartsWith(SaveDirectoryPrefix, StringComparison.Ordinal)
+                || !leaf.EndsWith(SaveBackupDirectorySuffix, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var id = leaf[SaveDirectoryPrefix.Length..^SaveBackupDirectorySuffix.Length];
+            if (id.Length == 0)
+                continue;
+            try
+            {
+                SavePathLayout.ValidateSaveId(id, nameof(id));
+            }
+            catch (ArgumentException)
+            {
+                continue;
+            }
+
+            var realRel = handle.PathPolicy.GetSaveDirectory(id);
+            var realAbs = handle.GetAbsolutePath(realRel);
+            if (handle.MetaAccess.DirectoryExists(realAbs))
+                continue;
+
+            if (IsCompleteSnapshot(handle, leaf))
+                handle.MetaAccess.Rename(directory, realAbs);
+        }
+    }
+
+    private static void RecoverInterruptedSnapshot(SaveFileHandle handle, string saveId)
+    {
+        var realRel = handle.PathPolicy.GetSaveDirectory(saveId);
+        var realAbs = handle.GetAbsolutePath(realRel);
+        if (handle.MetaAccess.DirectoryExists(realAbs))
+            return;
+
+        var backupRel = realRel + SaveBackupDirectorySuffix;
+        var backupAbs = handle.GetAbsolutePath(backupRel);
+        if (!handle.MetaAccess.DirectoryExists(backupAbs))
+            return;
+
+        if (IsCompleteSnapshot(handle, backupRel))
+            handle.MetaAccess.Rename(backupAbs, realAbs);
+    }
+
+    private static bool IsCompleteSnapshot(SaveFileHandle handle, string snapshotRel)
+    {
+        var progressRel = handle.PathPolicy.GetProgressFile(snapshotRel);
+        var stateMachinesRel = handle.PathPolicy.GetProgressStateMachinesFile(snapshotRel);
+        if (!handle.MetaAccess.FileExists(handle.GetAbsolutePath(progressRel))
+            || !handle.MetaAccess.FileExists(handle.GetAbsolutePath(stateMachinesRel)))
+            return false;
+
+        var snapshotAbs = handle.GetAbsolutePath(snapshotRel);
+        var hasLevel = false;
+        foreach (var levelDir in handle.MetaAccess.EnumerateDirectories(snapshotAbs))
+        {
+            var leaf = SaveFileHandle.GetLeafDirectoryName(levelDir);
+            if (!leaf.StartsWith(SavePathLayout.LevelDirectoryPrefix, StringComparison.Ordinal))
+                continue;
+
+            var levelRel = SavePathLayout.Combine(snapshotRel, leaf);
+            if (!handle.MetaAccess.FileExists(handle.GetAbsolutePath(
+                    handle.PathPolicy.GetLevelSndSceneFile(levelRel)))
+                || !handle.MetaAccess.FileExists(handle.GetAbsolutePath(
+                    handle.PathPolicy.GetLevelSessionFile(levelRel)))
+                || !handle.MetaAccess.FileExists(handle.GetAbsolutePath(
+                    handle.PathPolicy.GetLevelSessionStateMachinesFile(levelRel))))
+                return false;
+
+            hasLevel = true;
+        }
+
+        return hasLevel;
     }
 
     public static IReadOnlyList<SaveMetaDataEntry> EnumerateSavesWithMetaData(SaveFileHandle handle)
@@ -147,7 +226,7 @@ internal static class SaveStorageFacade
         {
             SnapshotCurrentToSave(handle, newSaveId, logger);
         }
-        catch (InvalidOperationException ex)
+        catch (Exception ex)
         {
             logger.Log(LogLevel.Error, nameof(SaveStorageFacade),
                 new LogMessageBuilder()
@@ -181,11 +260,19 @@ internal static class SaveStorageFacade
     public static SaveGamePayload ReadSavePayloadFromSnapshot(
         SaveFileHandle handle,
         string saveId,
-        string activeLevelId) => SavePayloadReader.ReadFromSnapshot(handle, saveId, activeLevelId);
+        string activeLevelId)
+    {
+        RecoverInterruptedSnapshot(handle, saveId);
+        return SavePayloadReader.ReadFromSnapshot(handle, saveId, activeLevelId);
+    }
 
     public static DataSourceNode? ReadProgressNodeFromSnapshot(
         SaveFileHandle handle,
-        string saveId) => SavePayloadReader.ReadProgressNodeFromSnapshot(handle, saveId);
+        string saveId)
+    {
+        RecoverInterruptedSnapshot(handle, saveId);
+        return SavePayloadReader.ReadProgressNodeFromSnapshot(handle, saveId);
+    }
 
     public static void SnapshotCurrentToSave(
         SaveFileHandle handle,
@@ -240,24 +327,43 @@ internal static class SaveStorageFacade
         SaveFileHandle sourceHandle,
         string saveId,
         string relativeDirName,
-        SaveFileHandle destinationHandle)
+        SaveFileHandle destinationHandle) =>
+        CopyDirectoryFromSnapshot(sourceHandle, saveId, relativeDirName, destinationHandle, relativeDirName);
+
+    /// <summary>
+    ///     Copy a source-relative subdirectory from a snapshot into a
+    ///     destination-relative subdirectory under current/. The two names may
+    ///     differ when source and destination use different path policies
+    ///     (for example a custom extra/ directory name). Silently returns when
+    ///     the source directory does not exist.
+    /// </summary>
+    public static void CopyDirectoryFromSnapshot(
+        SaveFileHandle sourceHandle,
+        string saveId,
+        string sourceRelativeDirName,
+        SaveFileHandle destinationHandle,
+        string destinationRelativeDirName)
     {
         ArgumentNullException.ThrowIfNull(sourceHandle);
         ArgumentNullException.ThrowIfNull(destinationHandle);
         if (string.IsNullOrWhiteSpace(saveId))
             throw new ArgumentException("Save id cannot be null or whitespace.", nameof(saveId));
-        if (string.IsNullOrWhiteSpace(relativeDirName))
-            throw new ArgumentException("Relative directory name cannot be null or whitespace.", nameof(relativeDirName));
+        if (string.IsNullOrWhiteSpace(sourceRelativeDirName))
+            throw new ArgumentException("Source relative directory name cannot be null or whitespace.",
+                nameof(sourceRelativeDirName));
+        if (string.IsNullOrWhiteSpace(destinationRelativeDirName))
+            throw new ArgumentException("Destination relative directory name cannot be null or whitespace.",
+                nameof(destinationRelativeDirName));
 
         var saveRel = sourceHandle.PathPolicy.GetSaveDirectory(saveId);
-        var srcRel = SavePathLayout.Combine(saveRel, relativeDirName);
+        var srcRel = SavePathLayout.Combine(saveRel, sourceRelativeDirName);
         var srcAbs = sourceHandle.GetAbsolutePath(srcRel);
 
         if (!sourceHandle.MetaAccess.DirectoryExists(srcAbs))
             return;
 
         var currentRel = destinationHandle.PathPolicy.GetCurrentDirectory();
-        var destRel = SavePathLayout.Combine(currentRel, relativeDirName);
+        var destRel = SavePathLayout.Combine(currentRel, destinationRelativeDirName);
         var destAbs = destinationHandle.GetAbsolutePath(destRel);
 
         destinationHandle.MetaAccess.CreateDirectory(destAbs);

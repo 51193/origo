@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using Origo.Core.DataSource;
+
 namespace Origo.Core.Save.Storage;
 
 /// <summary>
@@ -42,4 +46,30 @@ public interface ISavePathPolicy
 
     /// <summary>Get the relative path of the extra data subdirectory (e.g. current/extra).</summary>
     string GetExtraDirectory(string baseDirectory);
+
+    /// <summary>
+    ///     Enumerates save IDs visible under <paramref name="saveRootPath" />.
+    ///     The default implementation recognizes the standard <c>save_</c>
+    ///     prefix; a custom layout overrides it so enumeration and metadata
+    ///     listing use the same path policy as writes.
+    /// </summary>
+    IReadOnlyList<string> EnumerateSaveIds(IFileMetaAccess metaAccess, string saveRootPath)
+    {
+        ArgumentNullException.ThrowIfNull(metaAccess);
+        if (string.IsNullOrWhiteSpace(saveRootPath))
+            return [];
+
+        var ids = new List<string>();
+        foreach (var directory in metaAccess.EnumerateDirectories(saveRootPath))
+        {
+            var leaf = SaveFileHandle.GetLeafDirectoryName(directory);
+            if (!leaf.StartsWith(SaveStorageFacade.SaveDirectoryPrefix, StringComparison.Ordinal))
+                continue;
+            var id = leaf[SaveStorageFacade.SaveDirectoryPrefix.Length..];
+            if (id.Length > 0)
+                ids.Add(id);
+        }
+
+        return ids;
+    }
 }

@@ -120,8 +120,9 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
     /// <inheritdoc/>
     public void RestoreExtraFilesFromSnapshot(string saveId)
     {
+        var extraDirectoryName = GetExtraDirectoryName(_handle);
         SaveStorageFacade.CopyDirectoryFromSnapshot(
-            _handle, saveId, SavePathLayout.ExtraDirectoryName);
+            _handle, saveId, extraDirectoryName, _handle, extraDirectoryName);
     }
 
     /// <inheritdoc/>
@@ -139,7 +140,15 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
         SaveStorageFacade.CopyDirectoryFromSnapshot(
             source.Handle,
             saveId,
-            SavePathLayout.ExtraDirectoryName,
-            _handle);
+            GetExtraDirectoryName(source.Handle),
+            _handle,
+            GetExtraDirectoryName(_handle));
+    }
+
+    private static string GetExtraDirectoryName(SaveFileHandle handle)
+    {
+        var currentRel = handle.PathPolicy.GetCurrentDirectory();
+        return SavePathLayout.StripPathPrefix(
+            handle.PathPolicy.GetExtraDirectory(currentRel), currentRel);
     }
 }

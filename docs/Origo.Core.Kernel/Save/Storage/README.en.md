@@ -11,7 +11,7 @@ Complete implementation of the save storage layer. Responsible for file I/O (rea
 | File | Responsibility |
 |------|---------------|
 | `ISaveStorageService.cs` | Save read/write/delete service public interface (cross-assembly) |
-| `ISavePathPolicy.cs` | Save path policy interface (replaceable layout) |
+| `ISavePathPolicy.cs` | Save path policy interface (replaceable layout and slot enumeration) |
 | `DefaultSaveStorageService.cs` | Default ISaveStorageService implementation, internally delegates to SaveFileHandle + SavePayloadWriter/Reader |
 | `DefaultSavePathPolicy.cs` | Default ISavePathPolicy implementation, delegates to SavePathLayout |
 | `SaveFileHandle.cs` | Unified I/O context: encapsulates IFileMetaAccess + IDataSourceIoGateway + IPathResolver + saveRootPath + ISavePathPolicy, combining path utility methods and gateway creation |
@@ -71,7 +71,7 @@ Complete implementation of the save storage layer. Responsible for file I/O (rea
 
 `ISaveStorageService.DeleteSave(string saveId)` removes `save_{id}/` and also cleans the matching `save_{id}.tmp/` and `save_{id}.bak/` remnants. The method never touches `current/`.
 
-- The save ID is first validated as a standard token (ASCII letters, digits, `.`, `_`, `-`), matching the write/read path.
+- The save ID is first validated as a standard token (ASCII letters, digits, `.`, `_`, `-`) and must not end in the reserved `.tmp`/`.bak` suffixes, matching the write/read path.
 - When none of the three directories exists, the method throws `InvalidOperationException` rather than silently succeeding.
 - The real slot is removed before `.tmp/.bak`, so a remnant-cleanup failure cannot leave a readable real slot whose backup was already deleted.
 - Active-save protection belongs to the `ISndSaveOperations` business layer; the storage layer deletes exactly the slot it is given.
@@ -81,6 +81,18 @@ Complete implementation of the save storage layer. Responsible for file I/O (rea
 ### Why slot deletion is implemented once in the storage layer
 
 Deletion must cover the real slot and the `.tmp/.bak` remnants left by atomic writes. If UI or business code enumerated first and deleted paths itself, it would duplicate path-policy logic and could mistake `save_X.tmp` for an independent slot, breaking the recovery semantics of the next write. A single `DeleteSave` performs token validation and remnant cleanup in the storage layer, leaving active-slot and workflow protection to the business layer.
+
+### Why save IDs reject the atomic-write suffixes
+
+A save id is embedded directly in `save_{id}/`, while the snapshot phase uses `save_{id}.tmp/` and `save_{id}.bak/`. An id ending in `.tmp` or `.bak` would therefore describe a different valid slot and the same staging/backup path; saving or deleting one id could destroy the other. The validation now rejects those suffixes (case-insensitively) rather than attempting to disambiguate two meanings for one directory name. Existing suffix-named slots are outside the supported id set and must be renamed before use.
+
+### Why interrupted snapshots are recovered
+
+The backup-replace swap is safe against ordinary exceptions, but a process crash between `save_{id}/` → `save_{id}.bak/` and `save_{id}.tmp/` → `save_{id}/` leaves no real slot. Enumeration/read now checks for a complete backup and restores it as the real slot; incomplete backups and `.tmp` staging are ignored as slots. This preserves the last known-good snapshot without presenting fake slots to the UI.
+
+### Why enumeration goes through ISavePathPolicy
+
+`ISavePathPolicy.EnumerateSaveIds` gives every layout policy a single place to expose its slot IDs. Write, list, metadata, and delete paths therefore agree on the layout; an unreadable or invalid directory is skipped rather than breaking metadata listing for every valid slot. Extra data restore and the idempotency side hash use `GetExtraDirectory` for the same reason.
 
 ### Why two-phase write
 
@@ -96,7 +108,7 @@ Different platforms (desktop, mobile, cloud save) may require different path lay
 
 ### Why SaveFileHandle uniformly encapsulates I/O dependencies
 
-`SaveFileHandle` encapsulates the four I/O dependencies `(IFileSystem, IDataSourceIoGateway, string saveRootPath, ISavePathPolicy)` into a single parameter object, making methods in SavePayloadReader/SavePayloadWriter/SaveStorageFacade map one-to-one with their implementations, avoiding the multi-level overload chains needed for passing the four-piece set layer by layer. `DefaultSaveStorageService` internally holds only a single field. It simultaneously carries path utility methods and gateway creation logic without needing separate helper classes.
+`SaveFileHandle` encapsulates the five I/O dependencies `(IFileMetaAccess, IDataSourceIoGateway, IPathResolver, string saveRootPath, ISavePathPolicy)` into a single parameter object, making methods in SavePayloadReader/SavePayloadWriter/SaveStorageFacade map one-to-one with their implementations, avoiding the multi-level overload chains needed for passing the five-piece set layer by layer. `DefaultSaveStorageService` internally holds only a single field. It simultaneously carries path utility methods and gateway creation logic without needing separate helper classes.
 
 ### Why use SHA digest for idempotent deduplication
 
@@ -111,7 +123,7 @@ When the same game state is written to the same save slot multiple times, SHA-25
 - CustomMeta key-value change → hash differs → rewrite
 - Only SaveId differs (writing to a different slot) → always write (new slot has no .sha to compare)
 
-The `current/.payload.sha` writes follow three deliberate, non-conflicting semantics: the snapshot path (`WriteSavePayloadToCurrentThenSnapshot`) writes the **combined hash** (payload + `extra/`), which the next idempotency comparison consumes; the test path (`SaveStorageFacade.WriteSavePayloadToCurrent`) writes the **payload-only hash** (tests have no `extra/` side channel, so a combined hash would be inaccurate); the load-recovery path (`DefaultSaveStorageService.WriteSavePayloadToCurrent`) writes **no hash** — a recovery write has no idempotency contract, and only the snapshot phase performs deduplication. The only consumer of `.payload.sha` is `TryIdempotentSkip` comparing against the snapshot directory; the `current/` hash itself is consumed only indirectly when it is copied into a snapshot.
+The `current/.payload.sha` writes follow three deliberate, non-conflicting semantics: the snapshot path (`WriteSavePayloadToCurrentThenSnapshot`) writes the **combined hash** (payload + the policy's extra directory), which the next idempotency comparison consumes; the test path (`SaveStorageFacade.WriteSavePayloadToCurrent`) writes the **payload-only hash** (tests have no extra side channel, so a combined hash would be inaccurate); the load-recovery path (`DefaultSaveStorageService.WriteSavePayloadToCurrent`) writes **no hash** — a recovery write has no idempotency contract, and only the snapshot phase performs deduplication. The only consumer of `.payload.sha` is `TryIdempotentSkip` comparing against the snapshot directory; the `current/` hash itself is consumed only indirectly when it is copied into a snapshot.
 
 ### Why cross-storage-root extra/ restore takes an explicit source service
 
