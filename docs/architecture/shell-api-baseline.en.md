@@ -38,11 +38,11 @@ There is no previous stable shell package before the first 0.1.0 release, so pre
 - Build failure or Source Generator diagnostic error: the script exits before inventory generation and never leaves a partial baseline.
 - Missing assembly, missing reference directory, unresolved reference, or an exported signature referencing a kernel type: the tool reports an explicit error and exits non-zero without writing `generate` output. Kernel-reference checks recurse through generic type arguments, array/pointer/function-pointer elements, indexer parameters, and method generic constraints.
 - Missing baseline file: `verify` fails explicitly and instructs the developer to generate the baseline in the same reviewed change.
-- Determinism: JSON is ordered by assembly name and ordinal API lines with normalized LF line endings, so repeated runs are byte-identical. `ApiInventoryTool.Tests` covers determinism, addition/removal detection, previous-package rules, kernel-reference rejection, and command-line failure paths; the per-method breakdown is under [Test Capability](#test-capability) below.
+- Determinism: JSON is ordered by assembly name and ordinal API lines with normalized LF line endings, so repeated runs are byte-identical. `ApiInventoryTool.Tests` covers determinism (including multi-assembly name ordering), addition/removal detection, previous-package rules, kernel-reference rejection, and command-line failure paths; the per-method breakdown is under [Test Capability](#test-capability) below.
 
 ## Test Capability
 
-`tools/ApiInventoryTool.Tests` verifies the tool end to end (xUnit, 14 test methods):
+`tools/ApiInventoryTool.Tests` verifies the tool end to end (xUnit, 15 test methods):
 
 | Test File | Verification Focus |
 |-----------|-------------------|
@@ -62,6 +62,7 @@ There is no previous stable shell package before the first 0.1.0 release, so pre
 | Test Method | Verified Behavior |
 |-------------|-------------------|
 | `Build_IsDeterministicAndSorted` | The same assembly compiled with its declarations in the opposite order serializes to byte-identical JSON and the same ordered API lines. |
+| `Build_MultipleAssemblies_SortsByName` | Multiple input assemblies in reverse order serialize in ordinal assembly-name order. |
 | `Verify_ReportsAddedRemovedAndChangedApi` | Verify mode reports removed-or-changed API lines and added API lines separately. |
 | `ComparePrevious_AllowsAdditionsAndRejectsRemovals` | Previous-package comparison accepts additions and rejects a removal. |
 | `Build_RejectsMissingAssemblyExplicitly` | A missing assembly path fails the build with a "was not found" error. |

@@ -10,7 +10,7 @@ A TCP remote console bridge server. Allows connecting via telnet/nc (default por
 
 | File | Responsibility |
 |------|------|
-| `ConsoleBridgeOptions.cs` | Configuration options: port number (default 9876) |
+| `ConsoleBridgeOptions.cs` | Configuration options: port number (default 9876), output send timeout, and loopback-only behavior |
 | `ConsoleBridgeServer.cs` | TCP console bridge: internal async I/O for accepting connections and reading commands |
 
 ## Architecture

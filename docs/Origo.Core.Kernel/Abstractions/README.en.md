@@ -4,7 +4,7 @@
 
 ## Module Capability
 
-The stable public abstraction layer of Origo.Core. All interfaces are defined in this layer as platform-agnostic contracts, implemented concretely by downstream modules (Core implementation layer, Godot adapter layer, test layer). Follows the Interface Segregation Principle (ISP); each sub-module provides a cohesive set of interfaces.
+Kernel-internal implementation contracts used by the runtime, SND, and adapter bridges. The stable public abstraction surface lives in `Origo.Core.Contracts`; interfaces in this layer are internal so kernel implementation details cannot become consumer API. The contracts follow the Interface Segregation Principle (ISP), and each sub-module provides a cohesive set of interfaces.
 
 ## Sub-Modules
 

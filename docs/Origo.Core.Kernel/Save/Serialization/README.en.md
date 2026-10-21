@@ -30,7 +30,9 @@ Depends on `BlackboardDataConverter` (registered in DataSource.Converters).
   Fires no AfterLoad hooks and performs no ClearAll — `SessionRun.LoadFromPayload` fires hooks in batch afterwards; callers handle clearing before recovery.
 
 ### SaveContext
-Core orchestration object, **transient** — created fresh per save/load operation, held by no runtime component:
+Core orchestration object, created fresh per save/load operation. A `SessionRun`
+holds one instance for its lifetime (its `_saveContext` field); the type is not a
+global runtime singleton:
 
 ```
 SaveContext = IBlackboard(Progress) + IBlackboard(Session) + SndWorld
