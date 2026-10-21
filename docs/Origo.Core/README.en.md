@@ -57,7 +57,10 @@ exposes `IOrigoRuntime` and `ISndWorldAccess`. Supply
 needs entry-config or save files. The Core host persists its system blackboard
 at `<SaveRootPath>/system.json` (active/continue save state), so continue and
 lifecycle state survive host recreation. Strategy registration and frame
-driving work without file access.
+driving work without file access. Console channels are optional but must be
+supplied together: `OrigoHost.Create` rejects an options object with only
+`ConsoleInput` or only `ConsoleOutputChannel`, because a queued command would
+have no processor.
 
 ## Architecture Constraints
 

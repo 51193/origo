@@ -104,6 +104,9 @@ StateMachineStrategyBase default hook semantics, StateMachineStrategyContext sna
 | `StateMachineContainer_PopAllRuntime_InvokesBeforeRemoveTopToBottom` | PopAllRuntime triggers runtime hooks in LIFO order | state-machine: Container Operations |
 | `StateMachineContainer_PopAllOnQuit_InvokesBeforeQuitTopToBottom` | PopAllOnQuit triggers beforeQuit hooks in LIFO order | state-machine: Container Operations |
 | `StateMachineContainer_PopAllOnQuit_TraversesMachinesInInsertionOrder` | Multiple state machines traversed in insertion order | state-machine |
+| `StateMachineContainer_PopAllOnQuit_FirstHookThrows_StillRunsLaterMachines` | A throwing quit hook is aggregated and later machines still run | state-machine: Container Operations |
+| `ProgressStateMachine_LevelSwitch_DoesNotReplayOnPushAfterLoad` | A foreground switch does not replay live progress stacks | state-machine: Progress Lifecycle |
+| `ProgressStateMachine_QuitHook_CanReadSceneAccess` | Progress quit hooks run before session teardown, so SceneAccess is available | state-machine: Progress Lifecycle |
 | `StateMachineContainer_SerializeDeserialize_RoundTrip` | Serialize→Deserialize, state machine stacks identical | state-machine: Serialization Format |
 | `StateMachineContainer_DeserializeWithoutHooks_SwapsAtomically` | Hook-free deserialization atomically replaces old state | state-machine |
 | `StateMachineContainer_CreateOrGet_IdempotentForSameKeyAndIndices` | Same key + same indices CreateOrGet returns same instance | state-machine |

@@ -143,7 +143,7 @@ Level switch queued for 'town'.
 
 `list_saves` prints one line per slot; display metadata is appended as `key=value`, or `No saves found.` when storage is empty.
 
-`save`, `load`, and `switch_level` only queue a request in the system deferred queue; execution happens during the same frame's `IOrigoFrameDriver.DriveFrame` system-queue phase. `load` verifies the slot exists before queueing. `delete_save` executes synchronously and rejects deletion of the active save, the continue target, or a slot while a persistence request is executing or pending.
+`save`, `load`, and `switch_level` only queue a request in the system deferred queue. A console command is pumped at the end of frame N, so its queued system action executes in frame N+1's `IOrigoFrameDriver.DriveFrame` system-queue phase, not in the frame that received the command. `load` verifies the slot exists before queueing. `delete_save` executes synchronously and rejects deletion of the active save, the continue target, or a slot while a persistence request is executing or pending.
 
 ### tree_debug (Adapter Layer)
 

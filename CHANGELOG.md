@@ -41,6 +41,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Hyphenated release tags are always pre-releases** — the Release workflow
   marks any tag containing `-` as a pre-release, not only dispatches with the
   `snapshot` input, so a manually pushed snapshot cannot become Latest.
+- **Console channels are all-or-nothing** — `OrigoHostOptions` now requires
+  `ConsoleInput` and `ConsoleOutputChannel` together; a single channel is
+  rejected during `OrigoHost.Create` rather than creating a host that can queue
+  commands without processing them.
 - **BREAKING: save IDs reserve the atomic-write suffixes** — a save ID ending
   in `.tmp` or `.bak` is now rejected during validation. Those names were
   accepted before, but they collided with the `save_{id}.tmp` staging and
@@ -76,6 +80,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Local release preflight rejects an already-released version** — it compares
   against the newest formal `vx.y.z` tag before creating the temporary
   worktree.
+- **Foreground level switches no longer replay live progress state machines** —
+  `OnPushAfterLoad` for progress-level stacks ran on every foreground mount,
+  including a switch, so a progress machine with a fresh stack could re-run its
+  load hook. The flush now happens exactly once at the end of
+  `ProgressRun.LoadFromPayload`, after the payload has been deserialized and the
+  initial foreground scene is mounted.
+- **Background `BeforeSave` progress writes are included in full saves** —
+  background sessions were serialized after the progress blackboard and
+  progress state machines, so a background hook that wrote progress state was
+  silently omitted from the snapshot. Background sessions now serialize first.
+- **Progress quit hooks run before the session is cleared** — progress
+  state-machine `OnPopBeforeQuit` hooks can use `SceneAccess`, and a throwing
+  hook no longer prevents the remaining machines from running; quit failures
+  are aggregated.
+- **Duplicate session topology keys are rejected** — a malformed topology with
+  the same session key twice now fails explicitly instead of silently mounting
+  a partial/ambiguous session set.
+- **Half-configured console channels fail at host construction** — supplying
+  only `ConsoleInput` or only `ConsoleOutputChannel` now throws an
+  `ArgumentException`; previously the host accepted a command queue with no
+  processor.
 
 - **Save storage recovers interrupted snapshot swaps and ignores invalid slot
   directories** — when the real slot is missing after a crash between the two

@@ -70,6 +70,11 @@ public sealed class OrigoRuntime : IOrigoRuntime
         ArgumentNullException.ThrowIfNull(systemBlackboard);
         SystemBlackboard = systemBlackboard;
 
+        if ((consoleInput is null) != (consoleOutputChannel is null))
+            throw new ArgumentException(
+                "Console input and output channels must be supplied together; " +
+                "a command would otherwise be queued without a processor.");
+
         ConsoleInput = consoleInput;
         ConsoleOutputChannel = consoleOutputChannel;
         if (consoleInput is not null && consoleOutputChannel is not null)

@@ -110,9 +110,33 @@ internal sealed class StateMachineContainer : IStateMachineContainer
     public void PopAllRuntime()
         => ForEachMachine(sm => { while (sm.TryPopRuntime(out _)) { } });
 
-    /// <summary>Pops all state machine stacks during the quit process, one by one.</summary>
+    /// <summary>
+    ///     Pops all state machine stacks during the quit process, one by one.
+    ///     Each machine's quit hooks run even when an earlier machine throws;
+    ///     failures are aggregated so one broken hook cannot strand the rest.
+    /// </summary>
     public void PopAllOnQuit()
-        => ForEachMachine(sm => { while (sm.TryPopOnQuit(out _)) { } });
+    {
+        var failures = new List<Exception>();
+        foreach (var sm in EnumerateMachinesInInsertionOrder())
+        {
+            try
+            {
+                while (sm.TryPopOnQuit(out _)) { }
+            }
+            catch (Exception ex)
+            {
+                failures.Add(ex);
+            }
+        }
+
+        if (failures.Count == 1)
+            ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures.Count > 1)
+            throw new AggregateException(
+                "Multiple state machine quit hooks failed; the remaining machines were still released.",
+                failures);
+    }
 
     private void ForEachMachine(Action<StackStateMachine> action)
     {

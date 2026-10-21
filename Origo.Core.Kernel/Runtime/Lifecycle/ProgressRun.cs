@@ -105,9 +105,20 @@ internal sealed partial class ProgressRun : IDisposable
 
         try
         {
-            // Session, directory, and progress-level teardown steps run
-            // independently: a throwing user hook must not skip later cleanup
-            // steps. The first failure is rethrown after every step has run.
+            // Progress-level quit hooks run while the foreground session still
+            // exists, so SceneAccess remains available. Session, directory, and
+            // progress-level teardown steps then run independently: a throwing
+            // user hook must not skip later cleanup steps. The first failure is
+            // rethrown after every step has run.
+            try
+            {
+                ProgressScope.StateMachines.PopAllOnQuit();
+            }
+            catch (Exception ex)
+            {
+                RecordFailure(ex, "progress state machine quit pop");
+            }
+
             try
             {
                 _sessionManager.Clear();
@@ -130,32 +141,21 @@ internal sealed partial class ProgressRun : IDisposable
         {
             try
             {
-                ProgressScope.StateMachines.PopAllOnQuit();
+                ProgressScope.StateMachines.Clear();
             }
             catch (Exception ex)
             {
-                RecordFailure(ex, "progress state machine quit pop");
+                RecordFailure(ex, "progress state machine clear");
             }
             finally
             {
-                try
-                {
-                    ProgressScope.StateMachines.Clear();
-                }
-                catch (Exception ex)
-                {
-                    RecordFailure(ex, "progress state machine clear");
-                }
-                finally
-                {
-                    ProgressBlackboard.Clear();
-                    _disposed = true;
-                    _disposing = false;
-                    _progressRuntime.Logger.Log(LogLevel.Info, nameof(ProgressRun),
-                        new LogMessageBuilder()
-                            .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
-                            .Build($"Disposed ProgressRun (saveId: '{SaveId}')."));
-                }
+                ProgressBlackboard.Clear();
+                _disposed = true;
+                _disposing = false;
+                _progressRuntime.Logger.Log(LogLevel.Info, nameof(ProgressRun),
+                    new LogMessageBuilder()
+                        .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
+                        .Build($"Disposed ProgressRun (saveId: '{SaveId}')."));
             }
         }
 

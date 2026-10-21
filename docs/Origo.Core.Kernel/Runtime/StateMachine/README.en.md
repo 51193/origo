@@ -39,7 +39,7 @@ Full replacement ensures each state machine's reference count is consistent. Par
 Push/Pop strategy indices are the core behavior definition. Silently returning different behavior would be dangerous.
 
 ### Why PopAllRuntime remains an internal batch operation
-`PopAllOnQuit` is invoked by the session-quit pipeline; `PopAllRuntime` provides the matching runtime bulk-clear semantic. It is intentionally absent from `IStateMachineContainer` and remains an internal batch utility on the concrete container for framework orchestration and tests, preventing business code from mistaking "pop all machines" for a cross-session cleanup shortcut.
+`PopAllOnQuit` is invoked by the session-quit pipeline and visits every machine even when a quit hook throws; failures are aggregated. `PopAllRuntime` provides the matching runtime bulk-clear semantic. It is intentionally absent from `IStateMachineContainer` and remains an internal batch utility on the concrete container for framework orchestration and tests, preventing business code from mistaking "pop all machines" for a cross-session cleanup shortcut.
 
 ---
 [↑ Back to Runtime](../README.en.md)

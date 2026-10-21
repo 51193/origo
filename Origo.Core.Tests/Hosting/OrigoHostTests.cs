@@ -92,6 +92,23 @@ public class OrigoHostTests
         Assert.Contains("host_probe:value", outputLines);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void OrigoHost_ShouldFailFastOnHalfConfiguredConsole(bool inputOnly)
+    {
+        var options = new OrigoHostOptions
+        {
+            Meta = new OrigoMeta("Tests", "1.0.0", "test"),
+            AutoDiscoverStrategies = false,
+            ConsoleInput = inputOnly ? new ConsoleInputBuffer() : null,
+            ConsoleOutputChannel = inputOnly ? null : new ConsoleOutputChannel(),
+        };
+
+        var exception = Assert.Throws<ArgumentException>(() => OrigoHost.Create(options));
+        Assert.Contains("together", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
     [Fact]
     public void OrigoHost_ShouldFailFastWhenRegisteringConsoleHandlerWithoutConsoleChannels()
     {
