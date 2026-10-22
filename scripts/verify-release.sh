@@ -14,6 +14,7 @@ if [[ -z "${TAG_VERSION:-}" ]]; then
 fi
 
 python3 - "$TAG_VERSION" <<'PY'
+import datetime
 import re
 import sys
 
@@ -50,9 +51,25 @@ for element in ("AssemblyVersion", "FileVersion"):
         failures.append(
             f"Directory.Build.props <{element}> is '{actual}', expected '{assembly_version}'")
 
-version_heading = f"## [{version}] - "
-if version_heading not in changelog:
-    failures.append(f"CHANGELOG.md has no version block heading '{version_heading.strip()}'")
+version_heading_pattern = re.compile(
+    rf"^## \[{re.escape(version)}\] - (\S+)\s*$", re.MULTILINE)
+heading_match = version_heading_pattern.search(changelog)
+if heading_match is None:
+    failures.append(
+        f"CHANGELOG.md has no version block heading '## [{version}] - YYYY-MM-DD'")
+else:
+    date_text = heading_match.group(1)
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", date_text) is None:
+        failures.append(
+            f"CHANGELOG.md version block heading '{heading_match.group(0).strip()}' "
+            f"has an invalid date '{date_text}' (expected YYYY-MM-DD)")
+    else:
+        try:
+            datetime.date.fromisoformat(date_text)
+        except ValueError:
+            failures.append(
+                f"CHANGELOG.md version block heading '{heading_match.group(0).strip()}' "
+                f"has an invalid date '{date_text}' (expected YYYY-MM-DD)")
 
 unreleased = re.search(r"^## \[Unreleased\]\s*\n(.*?)(?=^## \[|\Z)", changelog, re.M | re.S)
 if unreleased is None:
@@ -61,11 +78,14 @@ elif [line for line in unreleased.group(1).splitlines() if line.strip()]:
     failures.append("CHANGELOG.md [Unreleased] section is not empty")
 
 shipped = open("Origo.SourceGeneration/AnalyzerReleases.Shipped.md", encoding="utf-8").read()
-if f"## Release {version}" not in shipped:
+if re.search(rf"^## Release {re.escape(version)}\s*$", shipped, re.MULTILINE) is None:
     failures.append(f"AnalyzerReleases.Shipped.md has no '## Release {version}' block")
 
 unshipped = open("Origo.SourceGeneration/AnalyzerReleases.Unshipped.md", encoding="utf-8").read()
-rules = [line for line in unshipped.splitlines() if line.strip().startswith("| ORIGOSG")]
+rules = [
+    line for line in unshipped.splitlines()
+    if re.match(r"^\s*\|?\s*ORIGOSG\d+\s*\|", line)
+]
 if rules:
     failures.append("AnalyzerReleases.Unshipped.md still contains unshipped rules")
 

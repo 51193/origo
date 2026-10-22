@@ -77,7 +77,7 @@ EXIT_CODE=$?
 set -e
 [[ $EXIT_CODE -eq 1 ]] || FAIL "missing release block expected exit 1, got $EXIT_CODE:
 $OUTPUT"
-grep -q "CHANGELOG.md has no version block heading '## \[0.1.0\] -'" <<<"$OUTPUT" \
+grep -qF "CHANGELOG.md has no version block heading '## [0.1.0] - YYYY-MM-DD'" <<<"$OUTPUT" \
     || FAIL "missing release block did not report the expected failure:
 $OUTPUT"
 grep -q "<Version>0.1.2-dev</Version>" "$REPO/Directory.Build.props" \
@@ -116,8 +116,8 @@ from pathlib import Path
 path = Path(sys.argv[1])
 text = path.read_text()
 text = text.replace('<Version>0.1.1-dev</Version>', '<Version>0.2.0-dev</Version>')
-text = text.replace('<AssemblyVersion>0.1.1.0</AssemblyVersion>', '<AssemblyVersion>0.2.0.0</AssemblyVersion>')
-text = text.replace('<FileVersion>0.1.1.0</FileVersion>', '<FileVersion>0.2.0.0</FileVersion>')
+text = text.replace('<AssemblyVersion>0.1.2.0</AssemblyVersion>', '<AssemblyVersion>0.2.0.0</AssemblyVersion>')
+text = text.replace('<FileVersion>0.1.2.0</FileVersion>', '<FileVersion>0.2.0.0</FileVersion>')
 Path(sys.argv[1]).write_text(text)
 PYEOF
 git -C "$REPO" add -A
@@ -134,3 +134,26 @@ grep -q "not newer than the latest formal release 0.1.1" <<<"$OUTPUT" \
 $OUTPUT"
 
 echo "Release preflight helper: OK"
+
+# The HEAD baseline check also validates the numeric assembly stamps; a
+# Version-only check would let a broken development baseline reach a release.
+python3 - "$REPO/Directory.Build.props" <<'PYEOF'
+import sys
+from pathlib import Path
+path = Path(sys.argv[1])
+text = path.read_text()
+text = text.replace('<AssemblyVersion>0.2.0.0</AssemblyVersion>', '<AssemblyVersion>9.9.9.0</AssemblyVersion>')
+text = text.replace('<FileVersion>0.2.0.0</FileVersion>', '<FileVersion>9.9.9.0</FileVersion>')
+Path(sys.argv[1]).write_text(text)
+PYEOF
+git -C "$REPO" add -A
+git -C "$REPO" commit -qm "broken assembly baseline"
+set +e
+OUTPUT="$(cd "$REPO" && bash scripts/release-check.sh 0.1.2 2>&1)"
+EXIT_CODE=$?
+set -e
+[[ $EXIT_CODE -eq 1 ]] || FAIL "broken assembly baseline expected exit 1, got $EXIT_CODE:
+$OUTPUT"
+grep -q "<AssemblyVersion>" <<<"$OUTPUT" \
+    || FAIL "broken assembly baseline did not report the expected failure:
+$OUTPUT"

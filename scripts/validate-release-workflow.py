@@ -251,6 +251,8 @@ def _weekly_snapshot_errors(workflow: dict) -> list[str]:
     errors: list[str] = []
     bump_seen = False
     base_check_seen = False
+    orphan_tag_recovery_seen = False
+    orphan_tag_dispatch_condition_seen = False
     tag_pushes = 0
     for job_name, job in (workflow.get("jobs") or {}).items():
         if not isinstance(job, dict):
@@ -276,6 +278,11 @@ def _weekly_snapshot_errors(workflow: dict) -> list[str]:
                 continue
             if _calls_bash_script(run, "scripts/check-weekly-base.sh"):
                 base_check_seen = True
+            if "gh release view" in run and "dispatch_existing=true" in run:
+                orphan_tag_recovery_seen = True
+            if "Dispatch the release pipeline" in str(step.get("name") or ""):
+                if "dispatch_existing" in str(step.get("if") or ""):
+                    orphan_tag_dispatch_condition_seen = True
             joined = run.replace("\\\n", "").replace("\\\r", "")
             if step.get("name") == WEEKLY_BUMP_STEP:
                 bump_seen = True
@@ -330,6 +337,16 @@ def _weekly_snapshot_errors(workflow: dict) -> list[str]:
         errors.append(
             "weekly bump step must contain exactly one tag push "
             f"{WEEKLY_TAG_PUSH!r}; found {tag_pushes}."
+        )
+    if not orphan_tag_recovery_seen:
+        errors.append(
+            "weekly workflow must check gh release view for an existing tag "
+            "and dispatch the release pipeline when the tag has no release."
+        )
+    if not orphan_tag_dispatch_condition_seen:
+        errors.append(
+            "weekly dispatch step must also run when the tag exists without "
+            "a GitHub Release (dispatch_existing)."
         )
     return errors
 

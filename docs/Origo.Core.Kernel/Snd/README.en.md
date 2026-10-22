@@ -18,7 +18,7 @@ strategy/observer machinery, and their internal file companions.
 
 | File | Responsibility |
 |------|----------------|
-| `SndContext.cs` | Unified SND runtime context facade: owns `SystemRun` and `ProgressRun` lifecycle transitions and exposes the ten `ISnd*` capability companions to strategies |
+| `SndContext.cs` | Unified SND runtime context facade: owns `SystemRun` and `ProgressRun` lifecycle transitions and exposes nine `ISnd*` role companions plus `IStateMachineContext` to strategies |
 | `SndContextArchiveFileAccess.cs` | `internal` save-archive file access companion: resolves relative paths into the current save's `extra/` subdirectory and rejects path traversal |
 | `SndContextFileAccess.cs` | `internal` static-resource file access companion: tree I/O through `IDataSourceIoGateway`, existence checks through `IFileMetaAccess`, typed conversion through `DataSourceConverterRegistry` |
 | `SndContextParameters.cs` | Construction parameters for `SndContext`: runtime, I/O gateway, storage wiring, and optional bootstrap configuration (strategy discovery, alias/template maps, custom converters) |

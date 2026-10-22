@@ -21,6 +21,7 @@ internal static class DisposeSemanticsTestInfrastructure
     public const string BeforeQuitStrategyIndex = "dispose_sem.before_quit";
     public const string SessionAccessStrategyIndex = "dispose_sem.session_access";
     public const string ThrowingQuitStrategyIndex = "dispose_sem.throwing_quit";
+    public const string BeforeQuitCreatesSessionStrategyIndex = "dispose_sem.before_quit_creates_session";
     public const string PopHookThrowsPushIndex = "dispose_sem.pop_hook_push";
     public const string PopHookThrowsPopIndex = "dispose_sem.pop_hook_throwing";
 
@@ -138,6 +139,13 @@ internal static class DisposeSemanticsTestInfrastructure
     {
         public override void BeforeQuit(ISndEntity entity, ISndContext ctx) =>
             throw new InvalidOperationException("Intentional BeforeQuit failure for testing.");
+    }
+
+    [StrategyIndex(BeforeQuitCreatesSessionStrategyIndex)]
+    public sealed class BeforeQuitCreatesSessionStrategy : LifecycleStrategyBase
+    {
+        public override void BeforeQuit(ISndEntity entity, ISndContext ctx) =>
+            entity.OwningSession.SessionManager.CreateBackgroundSession("late_session", "late_level");
     }
 
     [StrategyIndex(PopHookThrowsPushIndex)]

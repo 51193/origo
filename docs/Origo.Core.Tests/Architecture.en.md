@@ -29,7 +29,7 @@ as stateless via reflection at registration (rejects instance fields and writabl
 | `SceneWriteInterfacesAndSpawnFactory_AreInternal` | `ISndSceneHost`/`ISndSceneAccess`/`ISndContextAttachableSceneHost`/`IOwningSessionBindable` and `SndEntityFactory` are internal | architecture/overview: single access path |
 | `PrivateFields_FollowUnderscoreCamelCase` | Core production private fields follow `_camelCase` naming | .editorconfig naming rule |
 | `TestSupport_PrivateFields_FollowUnderscoreCamelCase` | Origo.TestSupport private fields follow `_camelCase` naming | .editorconfig naming rule |
-| `ISndContext_ShouldBeCompositionInterface_WithCompanionProperties` | ISndContext itself declares no methods/properties | Snd Abstraction: ISP |
+| `ISndContext_ShouldBeCompositionInterface_WithCompanionProperties` | ISndContext declares only `Bootstrap()` as a method; capabilities are companion properties | Snd Abstraction: ISP |
 | `ISndContext_ShouldExposeAllRoleInterfacesAsCompanionProperties` | ISndContext exposes all role-interface capabilities through 10 companion properties, not interface inheritance | Snd Abstraction: ISndContext composition |
 | `SndContext_ShouldNotImplementRoleInterfaces` | The SndContext concrete type implements no role interfaces (pure composition object) | Snd Abstraction: ISndContext composition |
 | `SndContext_CompanionProperties_ShareConsistentState` | Companion properties share the same blackboard instances (SystemBlackboard/ProgressBlackboard) | Snd Abstraction: ISndContext composition |

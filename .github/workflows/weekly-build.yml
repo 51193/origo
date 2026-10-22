@@ -31,6 +31,8 @@ jobs:
       - name: Check for commits in the weekly window
         id: check
         shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # The step below tags a commit and pushes only that tag; only main
           # may run this workflow so the snapshot describes main's history and
@@ -73,11 +75,9 @@ jobs:
             echo "ERROR: git rev-list failed while evaluating the weekly window." >&2
             exit 1
           fi
-          if [[ -z "$WINDOW_COMMITS" ]]; then
-            echo "No commits in the weekly window; nothing to publish."
-            exit 0
+          if [[ -n "$WINDOW_COMMITS" ]]; then
+            echo "Commits in the weekly window: $(printf '%s\n' "$WINDOW_COMMITS" | wc -l)"
           fi
-          echo "Commits in the weekly window: $(printf '%s\n' "$WINDOW_COMMITS" | wc -l)"
 
           # Reuse only the numeric base of the current stamp, so 0.0.11,
           # 0.0.11-nightly, v0.0.11 and 0.0.11-nightly.YYYYMMDD all yield 0.0.11
@@ -109,8 +109,38 @@ jobs:
 
           # Ask the remote, not the checkout: a tag created by a concurrent run
           # is not in this clone yet, and pushing over it would fail the job.
+          # A tag is only "done" when its GitHub Release also exists. Scan all
+          # recent snapshot tags for this base, not only today's computed name:
+          # a failed dispatch may be noticed on a later day, and the original
+          # tag must still be recovered instead of being orphaned forever.
+          ORPHAN_TAG=""
+          while IFS= read -r CANDIDATE; do
+            [[ -n "$CANDIDATE" ]] || continue
+            if ! gh release view "$CANDIDATE" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+              ORPHAN_TAG="$CANDIDATE"
+              break
+            fi
+          done < <(git tag --list "v${BASE_VERSION}-nightly.*" --sort=-version:refname)
+          if [[ -n "$ORPHAN_TAG" ]]; then
+            echo "Tag ${ORPHAN_TAG} exists but its GitHub Release is missing; dispatching the release pipeline."
+            echo "dispatch_existing=true" >> "$GITHUB_OUTPUT"
+            echo "tag=${ORPHAN_TAG}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [[ -z "$WINDOW_COMMITS" ]]; then
+            echo "No commits in the weekly window and no orphaned tag; nothing to publish."
+            exit 0
+          fi
+
           if git ls-remote --exit-code --refs origin "refs/tags/${TAG}" >/dev/null 2>&1; then
-            echo "Tag ${TAG} already exists on origin; nothing to publish."
+            if gh release view "$TAG" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+              echo "Tag ${TAG} and its GitHub Release already exist; nothing to publish."
+              exit 0
+            fi
+            echo "Tag ${TAG} exists (remote-only race) but its GitHub Release is missing; dispatching the release pipeline."
+            echo "dispatch_existing=true" >> "$GITHUB_OUTPUT"
+            echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -139,7 +169,7 @@ jobs:
           git push origin "refs/tags/${TAG}"
 
       - name: Dispatch the release pipeline for the snapshot tag
-        if: steps.check.outputs.new_version != ''
+        if: steps.check.outputs.new_version != '' || steps.check.outputs.dispatch_existing == 'true'
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

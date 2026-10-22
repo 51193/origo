@@ -28,6 +28,8 @@ internal sealed class SessionManager : ISessionManager
     private readonly ISndSceneHost _adapterSceneHost;
     private readonly SessionManagerRuntime _managerRuntime;
     private readonly Dictionary<string, MountedSession> _sessions = new(StringComparer.Ordinal);
+    private bool _clearingSessions;
+    private int _tearingDownSessions;
 
     // NOTE: MountedSession stores SessionRun (concrete) rather than ISessionRun (interface)
     // because SessionManager is internal and always creates SessionRun instances.
@@ -72,6 +74,11 @@ internal sealed class SessionManager : ISessionManager
     public ISessionRun CreateBackgroundSession(string key, string levelId, bool syncProcess = false)
     {
         ThrowIfSessionSetMutationForbidden();
+        if (_clearingSessions || _tearingDownSessions > 0)
+            throw new InvalidOperationException(
+                "Sessions cannot be created while a session is being disposed or " +
+                "SessionManager.Clear is running. A BeforeQuit hook must not extend " +
+                "the session set during teardown.");
         ValidateKey(key);
         ValidateLevelIdUnique(levelId, key);
         var session = CreateBackgroundSessionCore(levelId);
@@ -89,7 +96,19 @@ internal sealed class SessionManager : ISessionManager
         if (!_sessions.Remove(key, out var mounted))
             return;
 
-        DisposeMountedSession(key, mounted);
+        // BeforeQuit hooks run inside Dispose. They must not extend the
+        // session set while teardown is in flight; otherwise a hook could add
+        // a session that Clear/the caller never disposes, or a foreground
+        // switch could race its own level-conflict validation.
+        _tearingDownSessions++;
+        try
+        {
+            DisposeMountedSession(key, mounted);
+        }
+        finally
+        {
+            _tearingDownSessions--;
+        }
     }
 
     /// <inheritdoc />
@@ -196,31 +215,46 @@ internal sealed class SessionManager : ISessionManager
     ///     Clears all sessions (disposes and removes them). Every session is
     ///     disposed independently: the first user-hook failure is rethrown
     ///     after all sessions have been removed, and later failures are
-    ///     logged so they stay observable.
+    ///     logged so they stay observable. Background session creation is
+    ///     rejected while a session is being disposed or while Clear is
+    ///     running, so a BeforeQuit hook cannot leave an orphaned session
+    ///     outside the cleanup snapshot.
     /// </summary>
     internal void Clear()
     {
-        var keys = EnumerateManagedKeys(true);
-        Exception? firstFailure = null;
-        foreach (var key in keys)
-        {
-            try
-            {
-                DestroySession(key);
-            }
-            catch (Exception ex)
-            {
-                if (firstFailure is null)
-                {
-                    firstFailure = ex;
-                    continue;
-                }
+        if (_clearingSessions)
+            throw new InvalidOperationException(
+                "SessionManager.Clear is already running; teardown must not re-enter session clearing.");
 
-                _managerRuntime.Logger.Log(LogLevel.Warning, _logTag,
-                    new LogMessageBuilder()
-                        .AddContext("sessionKey", key)
-                        .Build($"Session dispose failed while clearing remaining sessions: {ex.Message}"));
+        _clearingSessions = true;
+        Exception? firstFailure = null;
+        try
+        {
+            var keys = EnumerateManagedKeys(true);
+            foreach (var key in keys)
+            {
+                try
+                {
+                    DestroySession(key);
+                }
+                catch (Exception ex)
+                {
+                    if (firstFailure is null)
+                    {
+                        firstFailure = ex;
+                        continue;
+                    }
+
+                    _managerRuntime.Logger.Log(LogLevel.Warning, _logTag,
+                        new LogMessageBuilder()
+                            .AddContext("sessionKey", key)
+                            .Build($"Session dispose failed while clearing remaining sessions: {ex.Message}"));
+                }
             }
+        }
+        finally
+        {
+            _clearingSessions = false;
         }
 
         if (firstFailure is not null)

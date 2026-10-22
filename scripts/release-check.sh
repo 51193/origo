@@ -67,6 +67,21 @@ if ! version_is_newer "$HEAD_BASE" "$VERSION"; then
     exit 1
 fi
 
+EXPECTED_HEAD_ASSEMBLY_VERSION="$HEAD_BASE.0"
+for element in AssemblyVersion FileVersion; do
+    HEAD_ELEMENT_VERSION="$(
+        sed -n "s:.*<$element>\([^<]*\)</$element>.*:\1:p" <<< "$HEAD_PROPS" \
+            | head -1 \
+            | tr -d '[:space:]'
+    )"
+    if [[ "$HEAD_ELEMENT_VERSION" != "$EXPECTED_HEAD_ASSEMBLY_VERSION" ]]; then
+        echo "ERROR: HEAD development baseline $HEAD_VERSION carries <$element> " >&2
+        echo "'$HEAD_ELEMENT_VERSION', but the matching numeric value is '$EXPECTED_HEAD_ASSEMBLY_VERSION'." >&2
+        echo "Keep <Version>, <AssemblyVersion>, and <FileVersion> in step before the release preflight." >&2
+        exit 1
+    fi
+done
+
 LATEST_TAG="$(
     git -C "$ROOT" tag --list 'v[0-9]*' --sort=-v:refname         | while IFS= read -r tag; do
             [[ "$tag" == *-* ]] && continue

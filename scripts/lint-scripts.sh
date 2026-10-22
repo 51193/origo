@@ -96,6 +96,7 @@ if command -v python3 >/dev/null 2>&1; then
     bash scripts/test-write-version-stamp.sh
     bash scripts/test-validate-release-source.sh
     bash scripts/test-release-check.sh
+    bash scripts/test-lint-pr-body.sh
 elif [[ -n "${CI:-}" || -n "${GITHUB_ACTIONS:-}" ]]; then
     echo "ERROR: python3 is required to run the release-workflow, release-package, and agent-doc guards." >&2
     exit 1

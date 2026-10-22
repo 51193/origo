@@ -119,7 +119,7 @@ The Core layer follows the Interface Segregation Principle (ISP); `ISndContext` 
 | `ISndBlackboardAccess` | System-level + progress-level blackboard access |
 | `ISndDeferredActions` | Deferred action queues |
 | `ISndTemplateAccess` | Template cloning |
-| `ISndConsoleAccess` | Console command submission/processing |
+| `ISndConsoleAccess` | Console command submission, output subscription, and unsubscribe (processing stays in the frame driver) |
 | `ISndStateMachineAccess` | Progress-level state machine container access |
 | `ISndSaveOperations` | Save/load/level switch/continue |
 | `ISndLifecycleOperations` | Lifecycle entry points (Continue/Initial/MainMenu) |

@@ -196,7 +196,13 @@ internal static class SavePayloadWriter
         var customMetaRel = handle.PathPolicy.GetCustomMetaFile(currentRel);
         var customMetaAbs = handle.GetAbsolutePath(customMetaRel);
 
-        if (customMeta is null || customMeta.Count == 0)
+        // A missing version key means format version 1. While the current
+        // format is still 1, a no-metadata save may omit meta.map (the legacy
+        // shape); once the format advances, every save must carry the marker so
+        // a new-format save without display metadata cannot be mistaken for v1.
+        var mustWriteMeta = SaveGamePayload.CurrentFormatVersion > 1
+                            || (customMeta is not null && customMeta.Count > 0);
+        if (!mustWriteMeta)
         {
             if (handle.MetaAccess.FileExists(customMetaAbs))
                 handle.MetaAccess.Delete(customMetaAbs);

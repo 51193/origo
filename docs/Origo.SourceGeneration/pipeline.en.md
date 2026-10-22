@@ -568,7 +568,7 @@ If the framework needs to support a new type (e.g., C# `nint`, a future BCL ≤8
 
 ### 7.3 Adding New Source Generator Diagnostic Rules
 
-Append `static readonly DiagnosticDescriptor` in the field area of `TypedDataGenerator.cs`, and append validation logic in `ValidateAndFilter`. Note: for each added validation, a corresponding `ORIGOSG00X` test case must also be added (in the `Origo.SourceGeneration.Tests` project).
+Append `static readonly DiagnosticDescriptor` in `TypedDataGenerator.Diagnostics.cs`, and append validation logic in `BuildGenerationPlan`/`ValidateAndFilter`; the separate diagnostic output reports the plan diagnostics against the current compilation. Note: for each added validation, a corresponding `ORIGOSG00X` test case must also be added (in the `Origo.SourceGeneration.Tests` project).
 
 ---
 

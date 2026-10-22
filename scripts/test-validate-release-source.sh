@@ -123,7 +123,7 @@ expect_failure "wrong archive prefix" "0.1.1" "source archive root must be 'orig
 write_tree "0.1.1" "0.1.1.0" "true"
 printf '# Changelog\n\n## [Unreleased]\n' > "$FIXTURE/tree/origo-0.1.1/CHANGELOG.md"
 repack "0.1.1"
-expect_failure "missing formal metadata" "0.1.1" "CHANGELOG.md has no version block heading '## [0.1.1] -'"
+expect_failure "missing formal metadata" "0.1.1" "CHANGELOG.md has no version block heading '## [0.1.1] - YYYY-MM-DD'"
 
 
 write_tree "0.1.1" "0.1.1.0" "true"
