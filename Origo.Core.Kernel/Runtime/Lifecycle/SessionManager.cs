@@ -250,14 +250,26 @@ internal sealed class SessionManager : ISessionManager
     internal IReadOnlyDictionary<string, LevelPayload> SerializeBackgroundSessions()
     {
         var result = new Dictionary<string, LevelPayload>();
-        foreach (var kvp in _sessions)
+        try
         {
-            if (string.Equals(kvp.Key, ISessionManager.ForegroundKey, StringComparison.Ordinal))
-                continue;
-            result[kvp.Key] = kvp.Value.Session.SerializeToPayload();
-        }
+            foreach (var kvp in _sessions)
+            {
+                if (string.Equals(kvp.Key, ISessionManager.ForegroundKey, StringComparison.Ordinal))
+                    continue;
+                result[kvp.Key] = kvp.Value.Session.SerializeToPayload();
+            }
 
-        return result;
+            return result;
+        }
+        catch
+        {
+            // A later background session can fail after earlier payloads were
+            // built (for example a throwing BeforeSave hook). Those payloads
+            // are not returned to the caller, so release their node trees here.
+            foreach (var payload in result.Values)
+                SavePayloadDisposal.Dispose(payload);
+            throw;
+        }
     }
 
     // ── Private helpers ──────────────────────────────────────────────

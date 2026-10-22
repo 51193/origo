@@ -64,6 +64,23 @@ public class SaveFormatVersionTests
             () => ctx.FlushFrame());
     }
 
+    [Theory]
+    [InlineData("0")]
+    [InlineData("-1")]
+    public void Load_RejectsFormatVersionBelowOne(string version)
+    {
+        var (fs, ctx) = CreateSavedGame("ver_slot");
+
+        var metaPath = "root/save_ver_slot/meta.map";
+        var metaText = fs.ReadAllText(metaPath);
+        fs.WriteAllText(metaPath, metaText.Replace(
+            "origo.format_version: 1", $"origo.format_version: {version}"), overwrite: true);
+
+        ctx.Save.RequestLoadGame("ver_slot");
+        Assert.Throws<InvalidOperationException>(
+            () => ctx.FlushFrame());
+    }
+
     [Fact]
     public void Load_AcceptsMissingFormatVersionKey()
     {

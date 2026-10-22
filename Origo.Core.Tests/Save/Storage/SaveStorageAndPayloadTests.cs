@@ -206,6 +206,192 @@ public class SaveStorageAndPayloadTests
     }
 
     [Fact]
+    public void DefaultSaveStorageService_ReadProgressFromSnapshot_RecoversCompleteBackup()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        SeedCompleteSnapshot(fs, "root/save_recovered.bak");
+        var service = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
+
+        using var progress = service.ReadProgressNodeFromSnapshot("recovered");
+
+        Assert.NotNull(progress);
+        Assert.True(fs.DirectoryExists("root/save_recovered"));
+        Assert.False(fs.DirectoryExists("root/save_recovered.bak"));
+    }
+
+    [Fact]
+    public void DefaultSaveStorageService_TryReadLevelPayloadFromSnapshot_RecoversCompleteBackup()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        SeedCompleteSnapshot(fs, "root/save_recovered.bak");
+        var service = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
+
+        var level = service.TryReadLevelPayloadFromSnapshot("recovered", "default");
+
+        Assert.NotNull(level);
+        Assert.Equal("default", level!.LevelId);
+        SavePayloadDisposal.Dispose(level);
+        Assert.True(fs.DirectoryExists("root/save_recovered"));
+        Assert.False(fs.DirectoryExists("root/save_recovered.bak"));
+    }
+
+    [Fact]
+    public void SaveStorageFacade_EnumerateSaveIds_UsesPolicyRecovery()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(
+            metaAccess, dataSourceIo, pathResolver, "root", new PrefixedRecoveryPathPolicy());
+        SeedCompleteCustomSnapshot(fs, "root/custom_save_recovered.bak");
+
+        var ids = SaveStorageFacade.EnumerateSaveIds(handle);
+
+        Assert.Equal(["recovered"], ids);
+        Assert.True(fs.DirectoryExists("root/custom_save_recovered"));
+        Assert.False(fs.DirectoryExists("root/custom_save_recovered.bak"));
+    }
+
+    [Fact]
+    public void SaveStorageFacade_EnumerateSaveIds_RecoversCaseVariantBackupSuffix()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        SeedCompleteSnapshot(fs, "root/save_recovered.BAK");
+
+        var ids = SaveStorageFacade.EnumerateSaveIds(handle);
+
+        Assert.Equal(["recovered"], ids);
+        Assert.True(fs.DirectoryExists("root/save_recovered"));
+        Assert.False(fs.DirectoryExists("root/save_recovered.BAK"));
+    }
+
+    [Fact]
+    public void DefaultSaveStorageService_ReadProgressFromSnapshot_RecoversCaseVariantBackupSuffix()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        SeedCompleteSnapshot(fs, "root/save_recovered.BAK");
+        var service = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
+
+        using var progress = service.ReadProgressNodeFromSnapshot("recovered");
+
+        Assert.NotNull(progress);
+        Assert.True(fs.DirectoryExists("root/save_recovered"));
+        Assert.False(fs.DirectoryExists("root/save_recovered.BAK"));
+    }
+
+    [Fact]
+    public void DefaultSaveStorageService_TryReadLevelPayloadFromSnapshot_MissingRoot_ReturnsNull()
+    {
+        var fs = new ThrowOnMissingRootEnumerationFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var service = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "missing_root");
+
+        var level = service.TryReadLevelPayloadFromSnapshot("missing", "default");
+
+        Assert.Null(level);
+    }
+
+    [Fact]
+    public void DefaultSaveStorageService_ReadProgressFromSnapshot_MissingRoot_ReturnsNull()
+    {
+        var fs = new ThrowOnMissingRootEnumerationFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var service = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "missing_root");
+
+        var progress = service.ReadProgressNodeFromSnapshot("missing");
+
+        Assert.Null(progress);
+    }
+
+    [Fact]
+    public void DefaultSaveStorageService_ReadSavePayloadFromSnapshot_MissingRoot_ThrowsMissingProgress()
+    {
+        var fs = new ThrowOnMissingRootEnumerationFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var service = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "missing_root");
+
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => service.ReadSavePayloadFromSnapshot("missing", "default"));
+
+        Assert.Contains("Missing required progress.json", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void DefaultSaveStorageService_ReadSavePayloadFromSnapshot_RecoversCompleteBackup()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        SeedCompleteSnapshot(fs, "root/save_recovered.bak");
+        var service = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
+
+        var payload = service.ReadSavePayloadFromSnapshot("recovered", "default");
+
+        Assert.Equal("recovered", payload.SaveId);
+        Assert.Contains("default", payload.Levels.Keys);
+        SavePayloadDisposal.Dispose(payload);
+        Assert.True(fs.DirectoryExists("root/save_recovered"));
+        Assert.False(fs.DirectoryExists("root/save_recovered.bak"));
+    }
+
+    [Fact]
+    public void DefaultSaveStorageService_WriteSavePayloadToCurrent_PrunesCustomLevelDirectories()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var service = new DefaultSaveStorageService(
+            metaAccess, dataSourceIo, pathResolver, "root", new PrefixedRecoveryPathPolicy());
+        fs.SeedFile("root/current/custom_level_old/snd_scene.json", "[]");
+        fs.SeedFile("root/current/custom_level_old/session.json", "{}");
+        fs.SeedFile("root/current/custom_level_old/session_state_machines.json", """{"machines":[]}""");
+
+        var payload = new SaveGamePayload
+        {
+            SaveId = "new_slot",
+            ActiveLevelId = "new",
+            ProgressNode = TestFactory.NodeFromJson("{}"),
+            ProgressStateMachinesNode = TestFactory.NodeFromJson("""{"machines":[]}"""),
+            Levels = new Dictionary<string, LevelPayload>
+            {
+                ["new"] = new()
+                {
+                    LevelId = "new",
+                    SndSceneNode = TestFactory.NodeFromJson("[]"),
+                    SessionNode = TestFactory.NodeFromJson("{}"),
+                    SessionStateMachinesNode = TestFactory.NodeFromJson("""{"machines":[]}""")
+                }
+            }
+        };
+
+        service.WriteSavePayloadToCurrent(payload);
+
+        Assert.False(fs.DirectoryExists("root/current/custom_level_old"));
+        Assert.True(fs.DirectoryExists("root/current/custom_level_new"));
+        SavePayloadDisposal.Dispose(payload);
+    }
+
+    [Fact]
+    public void DefaultSaveStorageService_ReadSavePayloadFromSnapshot_RecoversCustomLayout()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        SeedCompleteCustomSnapshot(fs, "root/custom_save_recovered.bak");
+        var service = new DefaultSaveStorageService(
+            metaAccess, dataSourceIo, pathResolver, "root", new PrefixedRecoveryPathPolicy());
+
+        var payload = service.ReadSavePayloadFromSnapshot("recovered", "default");
+
+        Assert.Equal("recovered", payload.SaveId);
+        Assert.Contains("bg", payload.Levels.Keys);
+        SavePayloadDisposal.Dispose(payload);
+        Assert.True(fs.DirectoryExists("root/custom_save_recovered"));
+        Assert.False(fs.DirectoryExists("root/custom_save_recovered.bak"));
+    }
+
+    [Fact]
     public void SaveStorageFacade_RecoverInterruptedSnapshots_LeavesIncompleteBackup()
     {
         var fs = new TestMemoryFileSystem();
@@ -287,6 +473,18 @@ public class SaveStorageAndPayloadTests
         fs.SeedFile($"{root}/level_default/session_state_machines.json", """{"machines":[]}""");
     }
 
+    private static void SeedCompleteCustomSnapshot(TestMemoryFileSystem fs, string root)
+    {
+        fs.SeedFile($"{root}/progress.json", "{}");
+        fs.SeedFile($"{root}/progress_state_machines.json", """{"machines":[]}""");
+        fs.SeedFile($"{root}/custom_level_default/snd_scene.json", "[]");
+        fs.SeedFile($"{root}/custom_level_default/session.json", "{}");
+        fs.SeedFile($"{root}/custom_level_default/session_state_machines.json", """{"machines":[]}""");
+        fs.SeedFile($"{root}/custom_level_bg/snd_scene.json", "[]");
+        fs.SeedFile($"{root}/custom_level_bg/session.json", "{}");
+        fs.SeedFile($"{root}/custom_level_bg/session_state_machines.json", """{"machines":[]}""");
+    }
+
     [Fact]
     public void SaveStorageFacade_EnumerateSaveIds_NullHandle_Throws() =>
         Assert.Throws<ArgumentNullException>(() => SaveStorageFacade.EnumerateSaveIds(null!));
@@ -309,6 +507,40 @@ public class SaveStorageAndPayloadTests
         Assert.False(fs.DirectoryExists("root/save_slot"));
         Assert.False(fs.DirectoryExists("root/save_slot.tmp"));
         Assert.False(fs.DirectoryExists("root/save_slot.bak"));
+    }
+
+    [Fact]
+    public void SaveStorageFacade_DeleteSave_RemovesCaseVariantBackup()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        fs.SeedFile("root/save_slot/progress.json", "{}");
+        fs.SeedFile("root/save_slot.bak/progress.json", "{}");
+        fs.SeedFile("root/save_slot.BAK/progress.json", "{}");
+
+        SaveStorageFacade.DeleteSave(handle, "slot");
+
+        Assert.False(fs.DirectoryExists("root/save_slot"));
+        Assert.False(fs.DirectoryExists("root/save_slot.bak"));
+        Assert.False(fs.DirectoryExists("root/save_slot.BAK"));
+    }
+
+    [Fact]
+    public void SaveStorageFacade_EnumerateSaveIds_MalformedLevelInBackup_DoesNotThrow()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        SeedCompleteSnapshot(fs, "root/save_incomplete.bak");
+        fs.SeedFile("root/save_incomplete.bak/level_bad name/snd_scene.json", "[]");
+        fs.SeedFile("root/save_incomplete.bak/level_bad name/session.json", "{}");
+        fs.SeedFile("root/save_incomplete.bak/level_bad name/session_state_machines.json", """{"machines":[]}""");
+
+        var ids = SaveStorageFacade.EnumerateSaveIds(handle);
+
+        Assert.Empty(ids);
+        Assert.True(fs.DirectoryExists("root/save_incomplete.bak"));
     }
 
     [Fact]
@@ -843,6 +1075,142 @@ public class SaveStorageAndPayloadTests
         (DataSourceFactory.CreateFileMetaAccess(fs),
          DataSourceFactory.CreateDefaultIoGateway(fs),
          DataSourceFactory.CreatePathResolver(fs));
+
+    /// <summary>
+    ///     File system that delegates to <see cref="TestMemoryFileSystem" /> but
+    ///     throws when enumerating a directory that does not exist, matching
+    ///     the Godot file-system behavior that a missing save root must not be
+    ///     enumerated.
+    /// </summary>
+    private sealed class ThrowOnMissingRootEnumerationFileSystem : IFileSystem
+    {
+        private readonly TestMemoryFileSystem _inner = new();
+
+        public bool Exists(string path) => _inner.Exists(path);
+
+        public bool DirectoryExists(string path) => _inner.DirectoryExists(path);
+
+        public string ReadAllText(string path) => _inner.ReadAllText(path);
+
+        public void WriteAllText(string path, string content, bool overwrite) =>
+            _inner.WriteAllText(path, content, overwrite);
+
+        public void Copy(string sourcePath, string destinationPath, bool overwrite) =>
+            _inner.Copy(sourcePath, destinationPath, overwrite);
+
+        public IEnumerable<string> EnumerateFiles(string directoryPath, string searchPattern, bool recursive) =>
+            _inner.EnumerateFiles(directoryPath, searchPattern, recursive);
+
+        public void CreateDirectory(string directoryPath) => _inner.CreateDirectory(directoryPath);
+
+        public void Delete(string path) => _inner.Delete(path);
+
+        public string CombinePath(string basePath, string relativePath) => _inner.CombinePath(basePath, relativePath);
+
+        public string GetParentDirectory(string path) => _inner.GetParentDirectory(path);
+
+        public IEnumerable<string> EnumerateDirectories(string directoryPath) =>
+            _inner.DirectoryExists(directoryPath)
+                ? _inner.EnumerateDirectories(directoryPath)
+                : throw new DirectoryNotFoundException($"Simulated missing directory: {directoryPath}");
+
+        public void Rename(string sourcePath, string destinationPath) => _inner.Rename(sourcePath, destinationPath);
+
+        public void DeleteDirectory(string directoryPath) => _inner.DeleteDirectory(directoryPath);
+    }
+
+    /// <summary>
+    ///     A path policy whose slot directories use a custom prefix, with the
+    ///     interrupted-snapshot enumeration overridden so recovery follows the
+    ///     same layout as writes.
+    /// </summary>
+    private sealed class PrefixedRecoveryPathPolicy : ISavePathPolicy
+    {
+        private const string _prefix = "custom_save_";
+        private readonly DefaultSavePathPolicy _inner = new();
+
+        public string GetCurrentDirectory() => _inner.GetCurrentDirectory();
+
+        public string GetSaveDirectory(string saveId) => $"{_prefix}{saveId}";
+
+        public string GetProgressFile(string baseDirectory) => _inner.GetProgressFile(baseDirectory);
+
+        public string GetProgressStateMachinesFile(string baseDirectory) =>
+            _inner.GetProgressStateMachinesFile(baseDirectory);
+
+        public string GetCustomMetaFile(string baseDirectory) => _inner.GetCustomMetaFile(baseDirectory);
+
+        public string GetLevelDirectory(string baseDirectory, string levelId) =>
+            $"{baseDirectory}/custom_level_{levelId}";
+
+        public string GetLevelSndSceneFile(string levelDirectory) =>
+            _inner.GetLevelSndSceneFile(levelDirectory);
+
+        public string GetLevelSessionFile(string levelDirectory) =>
+            _inner.GetLevelSessionFile(levelDirectory);
+
+        public string GetLevelSessionStateMachinesFile(string levelDirectory) =>
+            _inner.GetLevelSessionStateMachinesFile(levelDirectory);
+
+        public string GetWriteInProgressMarker(string baseDirectory) =>
+            _inner.GetWriteInProgressMarker(baseDirectory);
+
+        public string GetPayloadShaFile(string baseDirectory) => _inner.GetPayloadShaFile(baseDirectory);
+
+        public string GetExtraDirectory(string baseDirectory) => _inner.GetExtraDirectory(baseDirectory);
+
+        public IReadOnlyList<string> EnumerateSaveIds(IFileMetaAccess metaAccess, string saveRootPath)
+        {
+            var ids = new List<string>();
+            foreach (var directory in metaAccess.EnumerateDirectories(saveRootPath))
+            {
+                var leaf = SaveFileHandle.GetLeafDirectoryName(directory);
+                if (!leaf.StartsWith(_prefix, StringComparison.Ordinal)
+                    || leaf.EndsWith(SaveStorageFacade.SaveBackupDirectorySuffix, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                var id = leaf[_prefix.Length..];
+                if (id.Length > 0)
+                    ids.Add(id);
+            }
+
+            ids.Sort(StringComparer.Ordinal);
+            return ids;
+        }
+
+        public IReadOnlyDictionary<string, string> EnumerateInterruptedSnapshots(
+            IFileMetaAccess metaAccess,
+            string saveRootPath)
+        {
+            var snapshots = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (var directory in metaAccess.EnumerateDirectories(saveRootPath))
+            {
+                var leaf = SaveFileHandle.GetLeafDirectoryName(directory);
+                if (!leaf.StartsWith(_prefix, StringComparison.Ordinal)
+                    || !leaf.EndsWith(SaveStorageFacade.SaveBackupDirectorySuffix, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                var id = leaf[
+                    _prefix.Length..^SaveStorageFacade.SaveBackupDirectorySuffix.Length];
+                if (id.Length > 0)
+                    snapshots.TryAdd(id, leaf);
+            }
+
+            return snapshots;
+        }
+
+        public string? TryGetLevelIdFromDirectory(string directoryPath)
+        {
+            var leaf = SaveFileHandle.GetLeafDirectoryName(directoryPath);
+            const string levelPrefix = "custom_level_";
+            if (!leaf.StartsWith(levelPrefix, StringComparison.Ordinal))
+                return null;
+
+            var id = leaf[levelPrefix.Length..];
+            return id.Length == 0 ? null : id;
+        }
+
+    }
 
     /// <summary>
     ///     A file system that delegates to <see cref="TestMemoryFileSystem" /> but can be

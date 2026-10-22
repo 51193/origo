@@ -54,28 +54,43 @@ internal sealed class SaveGamePayloadFactory
 
         TopologyInvariant.EnsureActiveLevel(_progress, currentLevelId, "before building save payload");
 
-        var progressNode = _blackboardSerializer.Serialize(_progress);
-        var sessionNode = _blackboardSerializer.Serialize(_session);
-        var sndSceneNode = _sceneSerializer.Build(sceneAccess);
-
-        var levelPayload = new LevelPayload
+        DataSourceNode? progressNode = null;
+        DataSourceNode? sessionNode = null;
+        DataSourceNode? sndSceneNode = null;
+        try
         {
-            LevelId = currentLevelId,
-            SndSceneNode = sndSceneNode,
-            SessionNode = sessionNode,
-            SessionStateMachinesNode = sessionStateMachinesNode
-        };
+            progressNode = _blackboardSerializer.Serialize(_progress);
+            sessionNode = _blackboardSerializer.Serialize(_session);
+            sndSceneNode = _sceneSerializer.Build(sceneAccess);
 
-        return new SaveGamePayload
+            var levelPayload = new LevelPayload
+            {
+                LevelId = currentLevelId,
+                SndSceneNode = sndSceneNode,
+                SessionNode = sessionNode,
+                SessionStateMachinesNode = sessionStateMachinesNode
+            };
+
+            return new SaveGamePayload
+            {
+                SaveId = saveId,
+                ActiveLevelId = currentLevelId,
+                ProgressNode = progressNode,
+                ProgressStateMachinesNode = progressStateMachinesNode,
+                CustomMeta = customMeta is null
+                    ? null
+                    : new Dictionary<string, string>(customMeta, StringComparer.Ordinal),
+                Levels = new Dictionary<string, LevelPayload> { [currentLevelId] = levelPayload }
+            };
+        }
+        catch
         {
-            SaveId = saveId,
-            ActiveLevelId = currentLevelId,
-            ProgressNode = progressNode,
-            ProgressStateMachinesNode = progressStateMachinesNode,
-            CustomMeta = customMeta is null
-                ? null
-                : new Dictionary<string, string>(customMeta, StringComparer.Ordinal),
-            Levels = new Dictionary<string, LevelPayload> { [currentLevelId] = levelPayload }
-        };
+            // The factory owns the nodes it serialized here; on failure no
+            // payload reaches the caller, so release the partial node trees.
+            progressNode?.Dispose();
+            sessionNode?.Dispose();
+            sndSceneNode?.Dispose();
+            throw;
+        }
     }
 }

@@ -60,7 +60,7 @@ Save IDs use ASCII letters, digits, `.`, `_`, and `-`, but they must not end in 
 6. Delete .write_in_progress marker
 ```
 
-If Phase 2 fails, `current/` data is intact but the marker remains. The next read of `current/` will be rejected due to the marker, and logs will indicate manual intervention or retry is needed. If the process crashes between the two renames, the next enumeration/read restores the complete `.bak` snapshot as the real slot; the `.tmp` staging directory is never listed as a save.
+If Phase 2 fails, `current/` data is intact but the marker remains. The next read of `current/` will be rejected due to the marker, and logs will indicate manual intervention or retry is needed. If the process crashes between the two renames, the next enumeration or direct snapshot read restores the complete `.bak` snapshot as the real slot; the `.tmp` staging directory is never listed as a save.
 
 ## Strict Read Rules
 
@@ -70,6 +70,8 @@ If Phase 2 fails, `current/` data is intact but the marker remains. The next rea
 | All three level files missing | Treated as "no save for this level" (`null`) |
 | Level three files partially present | Throw exception (data corruption) |
 | `progress.json` missing | Throw exception |
+| Format version below 1 or newer than supported | Throw exception (0/negative is corrupt data; a newer version cannot be parsed) |
+| Topology and payload levels disagree | Throw exception (a referenced level has no payload, or a payload level is not referenced) |
 | No levels exist at all | Treated as "no save exists yet" |
 
 ## JSON Format Reference
@@ -271,10 +273,14 @@ public interface ISavePathPolicy
     string GetPayloadShaFile(string baseDir);
     string GetExtraDirectory(string baseDir);
     IReadOnlyList<string> EnumerateSaveIds(IFileMetaAccess metaAccess, string saveRootPath);
+    IReadOnlyDictionary<string, string> EnumerateInterruptedSnapshots(
+        IFileMetaAccess metaAccess,
+        string saveRootPath);
+    string? TryGetLevelIdFromDirectory(string directoryPath);
 }
 ```
 
-`EnumerateSaveIds` is the single enumeration hook for a custom layout. The default implementation recognizes the standard `save_` prefix; a custom policy overrides it so `ListSaves` and `ListSavesWithMetaData` see the same slots that writes created. `GetExtraDirectory` is also used by extra-file restore and the idempotency side hash, so a policy that renames `extra/` remains consistent across save and load.
+`EnumerateSaveIds` is the slot enumeration hook for a custom layout; `EnumerateInterruptedSnapshots` maps each save ID to the actual backup directory path used by interrupted-snapshot recovery, and `TryGetLevelIdFromDirectory` is the inverse mapping used when discovering level payloads and checking snapshot completeness. The default implementations recognize the standard `save_`, `level_`, and `.bak` naming; a custom policy overrides the applicable hooks so `ListSaves`, `ListSavesWithMetaData`, direct loads, and recovery see the same slots and levels that writes created. `GetExtraDirectory` is also used by extra-file restore and the idempotency side hash, so a policy that renames `extra/` remains consistent across save and load.
 
 The default implementation `DefaultSavePathPolicy` → `SavePathLayout` provides the standard layout.
 

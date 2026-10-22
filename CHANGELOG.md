@@ -90,6 +90,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   background sessions were serialized after the progress blackboard and
   progress state machines, so a background hook that wrote progress state was
   silently omitted from the snapshot. Background sessions now serialize first.
+- **Background `BeforeSave` hooks cannot replace the framework session
+  topology** — a background hook writes after the framework topology is
+  computed, so its `origo.session_topology` write could abort a save or persist
+  an inconsistent session set. The framework now reasserts the computed
+  topology after the foreground hooks and again after all background sessions'
+  hooks, and restores it when a hook fails so the next save is not poisoned.
 - **Progress quit hooks run before the session is cleared** — progress
   state-machine `OnPopBeforeQuit` hooks can use `SceneAccess`, and a throwing
   hook no longer prevents the remaining machines from running; quit failures
@@ -104,14 +110,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **Save storage recovers interrupted snapshot swaps and ignores invalid slot
   directories** — when the real slot is missing after a crash between the two
-  renames, a complete `.bak` snapshot is restored on the next list/read;
-  incomplete staging/backup directories are never exposed as slots, and a
-  stray directory with an invalid id no longer breaks metadata listing for
-  every valid save.
+  renames, a complete backup snapshot is restored on the next list or direct
+  snapshot read (including `OrigoHost.RequestLoadGame`); the actual discovered
+  backup name is used, so a case-variant suffix is not lost. The recovery
+  enumeration is guarded so a not-yet-created save root remains the normal
+  not-found state for progress/level reads, while a full payload read still
+  fails fast with the missing-progress error instead of a directory-enumeration
+  failure. Incomplete or
+  malformed backups are left untouched and never exposed as slots, and a stray
+  directory with an invalid id no longer breaks metadata listing for every
+  valid save.
 - **Custom save path policies are honored consistently** — enumeration now goes
-  through `ISavePathPolicy.EnumerateSaveIds`, and extra-file restore plus the
-  idempotency side hash use `GetExtraDirectory`, so a custom layout can list,
-  load, and deduplicate the same files it writes.
+  through `ISavePathPolicy.EnumerateSaveIds`, interrupted-snapshot recovery uses
+  `EnumerateInterruptedSnapshots` (actual backup path), `TryGetLevelIdFromDirectory`,
+  and the policy's level paths, and extra-file restore plus the idempotency side
+  hash use `GetExtraDirectory`, so a custom layout can list, load, recover, prune,
+  delete, and deduplicate the same files it writes.
+- **Save format versions below 1 are rejected** — a missing version key already
+  means the initial format (version 1); an explicit `0` or negative value is
+  corrupt data and now fails the strict read instead of being treated as an old
+  save.
+- **Topology and payload levels must agree exactly** — a save whose topology
+  misses a persisted level, or whose payload contains an unreferenced level, is
+  rejected before mounting instead of silently dropping or re-keying a
+  background level.
 - **Archive data named `.write_in_progress` survives snapshots** — only the
   write-in-progress marker at the root of `current/` is skipped; a same-named
   file below `extra/` is copied and restored.

@@ -66,15 +66,20 @@ internal static class SavePayloadReader
     }
 
     /// <summary>
-    ///     Rejects saves whose stored format version exceeds the current
-    ///     framework version (a future format cannot be safely parsed).
-    ///     A missing version key is treated as version 1 (the initial format);
-    ///     a present-but-unparseable value is corrupted data and fails the
-    ///     strict read.
+    ///     Rejects saves whose stored format version is below the initial
+    ///     format or exceeds the current framework version. A missing version
+    ///     key is treated as version 1 (the initial format); a
+    ///     present-but-unparseable value is corrupted data and fails the
+    ///     strict read. Explicit 0/negative values are not a supported older
+    ///     form: the writer has always emitted version 1, and older saves are
+    ///     identified by the missing key, so such values are corrupted data.
     /// </summary>
     private static void ValidateFormatVersion(string baseRel, IReadOnlyDictionary<string, string>? customMeta)
     {
-        var storedVersion = SaveGamePayload.CurrentFormatVersion;
+        // A missing key means the initial format (version 1), not "whatever
+        // the current framework version happens to be"; the latter would
+        // silently reinterpret a version-1 save after a future format bump.
+        var storedVersion = 1;
         if (customMeta is not null
             && customMeta.TryGetValue(SaveGamePayload.FormatVersionMetaKey, out var raw))
         {
@@ -84,6 +89,12 @@ internal static class SavePayloadReader
                     "the value is not a valid integer, so the save format cannot be trusted. " +
                     "The save data is corrupted or was written by an incompatible version.");
         }
+
+        if (storedVersion < 1)
+            throw new InvalidOperationException(
+                $"Save at '{baseRel}' uses format version {storedVersion}, but the initial " +
+                "supported format version is 1. A lower value is corrupted data; older saves " +
+                "omit the version key and are read as version 1.");
 
         if (storedVersion > SaveGamePayload.CurrentFormatVersion)
             throw new InvalidOperationException(
@@ -298,7 +309,7 @@ internal static class SavePayloadReader
 
         foreach (var dirAbs in handle.MetaAccess.EnumerateDirectories(baseAbs))
         {
-            var levelId = TryExtractLevelId(dirAbs);
+            var levelId = handle.PathPolicy.TryGetLevelIdFromDirectory(dirAbs);
             if (levelId is null || levels.ContainsKey(levelId))
                 continue;
 
@@ -306,16 +317,6 @@ internal static class SavePayloadReader
             if (levelPayload is not null)
                 levels[levelId] = levelPayload;
         }
-    }
-
-    private static string? TryExtractLevelId(string directoryPath)
-    {
-        var leaf = SaveFileHandle.GetLeafDirectoryName(directoryPath);
-        if (!leaf.StartsWith(SavePathLayout.LevelDirectoryPrefix, StringComparison.Ordinal))
-            return null;
-
-        var levelId = leaf[SavePathLayout.LevelDirectoryPrefix.Length..];
-        return string.IsNullOrWhiteSpace(levelId) ? null : levelId;
     }
 
     private sealed record LevelFiles(

@@ -58,6 +58,8 @@ internal sealed partial class ProgressRun
                 throw new InvalidOperationException(
                     $"Progress blackboard missing required '{WellKnownKeys.SessionTopology}' before load.");
 
+            ValidatePayloadTopology(topology, payload);
+
             try
             {
                 foreach (var descriptor in topology)
@@ -321,6 +323,38 @@ internal sealed partial class ProgressRun
                     $"Missing level '{descriptor.LevelId}' for background session '{descriptor.Key}'. " +
                     "The save topology is inconsistent and cannot be recovered.");
             }
+        }
+
+        /// <summary>
+        ///     Strict-read validation: the persisted topology and the persisted
+        ///     level payload set must describe exactly the same sessions. A
+        ///     missing referenced level already fails during mount; this also
+        ///     rejects an unreferenced level, which would otherwise be read and
+        ///     then silently ignored (losing its state on the next save).
+        /// </summary>
+        private static void ValidatePayloadTopology(
+            IReadOnlyList<SessionTopologyCodec.SessionDescriptor> topology,
+            SaveGamePayload payload)
+        {
+            var referencedLevels = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var descriptor in topology)
+            {
+                if (!referencedLevels.Add(descriptor.LevelId))
+                    throw new InvalidOperationException(
+                        $"Session topology references level '{descriptor.LevelId}' more than once. " +
+                        "The save topology is inconsistent and cannot be recovered.");
+
+                if (!payload.Levels.ContainsKey(descriptor.LevelId))
+                    throw new InvalidOperationException(
+                        $"Missing level '{descriptor.LevelId}' for session '{descriptor.Key}'. " +
+                        "The save topology is inconsistent and cannot be recovered.");
+            }
+
+            foreach (var levelId in payload.Levels.Keys)
+                if (!referencedLevels.Contains(levelId))
+                    throw new InvalidOperationException(
+                        $"Save payload contains level '{levelId}', but the session topology does not reference it. " +
+                        "The save topology is inconsistent and cannot be recovered.");
         }
 
         private List<SessionTopologyCodec.SessionDescriptor> ParseSessionTopologyFromProgress()

@@ -85,7 +85,7 @@ Example: `__foreground__=town=false,dungeon=dungeon_level=true,farm=farm_level=f
 
 The foreground entry is always first and background entries are written in ordinal session-key order; the same session set produces the same topology string and payload hash regardless of creation order. Due to the levelId uniqueness constraint, no two entries in the topology will point to the same levelId.
 
-On load recovery, `SessionTopologyCodec` parses this string and rebuilds all background sessions. If the parsed topology contains duplicate levelIds, `CreateBackgroundSession`'s levelId validation will throw — ensuring corrupted save data is never silently loaded.
+On load recovery, `SessionTopologyCodec` parses this string and rebuilds all background sessions. The topology and the persisted level payload set must agree exactly: a duplicated levelId, a referenced level without a payload, or a payload level not referenced by the topology fails the strict read before any session is mounted. This ensures a corrupted save cannot silently drop or re-key a background level.
 
 ## State Machine Context
 
