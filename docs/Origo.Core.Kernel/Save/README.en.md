@@ -47,13 +47,13 @@ SavePayloadWriter.WriteToCurrent(handle, payload)
     ├── Write current/level_*/snd_scene.json
     ├── Write current/level_*/session.json
     ├── Write current/level_*/session_state_machines.json
-    ├── Write current/meta.map
+    ├── Write current/meta.map (display metadata and origo.format_version; a no-metadata v1 save may omit it)
     └── Delete .write_in_progress
     (current/.payload.sha is written separately by SaveAtomicWriter.WritePayloadSha, recording the combined hash)
     │
     ▼
 DefaultSaveStorageService.WriteSavePayloadToCurrentThenSnapshot(...)
-    ├── Check if save_{id}/.payload.sha exists with identical hash → skip (idempotent dedup)
+    ├── Check current/ has no marker, save_{id}/.payload.sha exists, and hash matches → skip (idempotent dedup)
     ├── Recreate .write_in_progress marker
     ├── Copy current/ → save_{id}.tmp/
     ├── Backup-replace: rename old save_{id}/ → save_{id}.bak/ → rename save_{id}.tmp/ → save_{id}/ → delete save_{id}.bak/
@@ -69,14 +69,14 @@ DefaultSaveStorageService.WriteSavePayloadToCurrentThenSnapshot(...)
 - **current/ has `.write_in_progress`** → throw exception (previous write interrupted; needs handling)
 - **Level three files partially present** → throw exception (data corruption)
 - **progress.json or progress_state_machines.json missing** → throw exception (including when current/ does not exist at all)
-- **Format version below 1** → throw exception (the initial format is version 1; older saves omit the key, so an explicit 0/negative value is corrupt data)
+- **Format version below 1** → throw exception (the initial format is version 1; a no-metadata v1 save may omit the key, so an explicit 0/negative value is corrupt data)
 - **Format version newer than the supported one** → throw exception (refuses to load future saves)
 - **A level referenced by the topology has no payload** (foreground or background) → throw exception (an inconsistent topology; both foreground and background reject the silent fallback to an empty session)
 - **A payload level not referenced by the topology** → throw exception (an unreferenced level would otherwise be read and silently ignored, losing its state on the next save)
 
 ## DataSourceNode Ownership
 
-Every `DataSourceNode` tree in a `SaveGamePayload` / `LevelPayload` is owned by its caller and must be disposed when no longer needed. The framework uses `SavePayloadDisposal` at internal load/mount and write/snapshot boundaries to release temporary payloads promptly (including nodes created only to persist progress) instead of relying on GC. Payloads obtained through public `ISaveStorageService` read methods are caller-owned; write methods must fully consume the node trees during the call, so callers may dispose them immediately after the method returns.
+Every `DataSourceNode` tree in a `SaveGamePayload` / `LevelPayload` is owned by its caller and must be disposed when no longer needed. The framework uses `SavePayloadDisposal` at internal load/mount and write/snapshot boundaries to release temporary payloads promptly (including nodes created only to persist progress) instead of relying on GC. Payloads obtained through public `ISaveStorageService` read methods are caller-owned; write methods must fully consume the node trees during the call, so callers may dispose them immediately after the method returns. A strict read that fails after decoding some files disposes the partial progress/state-machine/level node trees before rethrowing, because no payload reaches the caller.
 
 ---
 [↑ Back to Origo.Core.Kernel](../README.en.md)

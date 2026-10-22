@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **PR title/body lint for squash-merge commit messages** — the `pr-body-lint` workflow checks the PR title as a Conventional Commit subject and the PR body lines that GitHub uses for the squash commit, running the linter from `origin/main` when available; merge commits remain exempt from the local message lint.
 - **`ORIGOSG009` rejects types that cannot appear in generated TypedData
   accessors** — `void`, ref-like types such as `Span<T>`, static classes,
   unbound generic definitions, and special runtime types such as
@@ -26,7 +27,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Local release preflight** — `scripts/release-check.sh <x.y.z>` stamps a
   temporary worktree and runs the strict release verifier without modifying the
   caller's checkout, so `main` can keep a development baseline. It rejects a
-  HEAD baseline that is not newer than the release target.
+  HEAD baseline that is not a newer `-dev` version, is not newer than the newest
+  formal release, or carries numeric assembly stamps that do not match that
+  baseline.
 - **Release provenance gate** — `scripts/verify-release-provenance.sh` rejects a
   formal tag on unmerged feature history and a snapshot tag that is not
   `main` history or a weekly/release version-stamp commit based on `main`. It
@@ -34,7 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   job fetches the
   validators from `main` instead of executing the tag tree's copies. The release
   job also uses an explicit checkout ref so a re-run after a tag move still
-  starts.
+  starts, and a metadata commit for a different version is rejected.
 
 ### Changed
 
@@ -56,7 +59,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `Directory.Build.props` from the tag, creates a metadata-only release commit,
   runs every gate on it, moves only the tag after packing succeeds, and leaves
   `main` on `0.1.1-dev`. A version-only PR is no longer required before
-  packaging; a `CHANGELOG`/analyzer release-prep PR is still required.
+  packaging; a `CHANGELOG`/analyzer release-prep PR is still required. The
+  publish step rechecks the tag on every run, so a rerun still moves a stale
+  tag.
 - **The manual links to the build version instead of copying it** —
   `docs/README.en.md` points at `<Version>` in `Directory.Build.props`, and
   `verify-release.sh` checks the stamped build properties rather than a second
@@ -68,18 +73,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **Release verification rejects unshipped rules, prefix-only analyzer blocks, and malformed dates** — the metadata verifier now recognizes the standard `ORIGOSGnnn | ...` row format, matches `## Release x.y.z` as a whole heading, and requires a real `YYYY-MM-DD` CHANGELOG date.
+- **Release preflight validates the HEAD baseline's assembly stamps** — `release-check.sh` now rejects a development baseline whose `AssemblyVersion` / `FileVersion` do not match its `-dev` `<Version>`, instead of re-stamping the values it is supposed to verify.
+- **Session teardown cannot create new sessions** — a `BeforeQuit` hook that calls `CreateBackgroundSession` now fails fast while a session is being disposed or `SessionManager.Clear` is running, preventing an orphaned session outside the cleanup snapshot and the level-conflict hole during a foreground reset.
+- **Failed strict reads dispose partial node trees** — a future/corrupt save that throws after progress, state-machine, or level files were decoded no longer leaks `DataSourceNode` trees.
+- **Progress `OnPushAfterLoad` hooks cannot poison the next save** — the framework reasserts the live session topology after progress-level AfterLoad hooks, so a hook write to `origo.session_topology` cannot make the next save fail in `EnsureActiveLevelInvariant`.
+- **Foreground mounts validate the level before destroying the current foreground** — `LoadAndMountForeground` now lets `CreateForegroundSession` validate the target levelId before teardown; a conflict with a background session leaves the existing foreground intact.
+- **Future-format no-metadata saves carry the format version marker** — while the format is v1 a no-metadata save may omit `meta.map`; once the format advances, every save writes `origo.format_version`, so a new-format save without display metadata cannot be mistaken for v1.
+- **Weekly snapshots recover orphaned tags across days** — when a previous run pushed a snapshot tag and failed before dispatching the Release workflow, a later run scans the current base's nightly tags, finds one without a GitHub Release, and dispatches the pipeline for that tag instead of exiting green with only today's tag; the scan runs even when the weekly commit window is empty.
 - **Release tags must have the exact `x.y.z` shape** — `write-version-stamp.py`
   and `verify-release.sh` now reject truncated (`0.1`) and four-part
   (`0.1.0.0`) versions before rewriting or verifying metadata; those shapes
   previously produced assembly stamps that could never match the release tag.
-- **The tag move is rechecked on every release run** — the publish step no
-  longer skips when the version stamp was already current, so a rerun still
-  moves a stale tag to the release commit.
-- **Version-stamp provenance must name the tag's own version** — a metadata
-  commit for a different version is rejected.
-- **Local release preflight rejects an already-released version** — it compares
-  against the newest formal `vx.y.z` tag before creating the temporary
-  worktree.
 - **Foreground level switches no longer replay live progress state machines** —
   `OnPushAfterLoad` for progress-level stacks ran on every foreground mount,
   including a switch, so a progress machine with a fresh stack could re-run its
@@ -103,11 +108,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Duplicate session topology keys are rejected** — a malformed topology with
   the same session key twice now fails explicitly instead of silently mounting
   a partial/ambiguous session set.
-- **Half-configured console channels fail at host construction** — supplying
-  only `ConsoleInput` or only `ConsoleOutputChannel` now throws an
-  `ArgumentException`; previously the host accepted a command queue with no
-  processor.
-
 - **Save storage recovers interrupted snapshot swaps and ignores invalid slot
   directories** — when the real slot is missing after a crash between the two
   renames, a complete backup snapshot is restored on the next list or direct

@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Origo.Core.Abstractions.Entity;
+using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Abstractions.StateMachine;
+using Origo.Core.Save;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Strategy;
 using Origo.Core.StateMachine;
@@ -97,6 +99,33 @@ public class StateMachineIntegrationTests
         {
             HookRecordingStateMachineStrategy.Events = null;
         }
+    }
+
+    [Fact]
+    public void ProgressStateMachine_OnPushAfterLoad_CannotPoisonSessionTopology()
+    {
+        var harness = GameplaySimulationHarness.Create()
+            .WithStrategy(() => new ProgressTopologyPoisonStrategy())
+            .Build();
+
+        var sm = harness.Context.StateMachines.GetProgressStateMachines()!
+            .CreateOrGet("flow", "test.int.sm.progress_topology_poison", "test.int.sm.progress_topology_poison");
+        sm.Push("loaded");
+        harness.DriveFrame();
+
+        harness.SaveAndReload("after_load_topology");
+
+        // The progress-level OnPushAfterLoad hook writes a bogus
+        // SessionTopology; the framework must reassert the live topology so the
+        // next save is not rejected by EnsureActiveLevelInvariant.
+        harness.Context.Save.RequestSaveGame("after_load_topology_2");
+        harness.Context.FlushFrame();
+
+        using var progress = harness.Context.StorageService.ReadProgressNodeFromSnapshot("after_load_topology_2");
+        Assert.NotNull(progress);
+        var json = TestFactory.JsonFromNode(progress);
+        Assert.Contains(ISessionManager.ForegroundKey, json, StringComparison.Ordinal);
+        Assert.DoesNotContain("evil", json, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -384,6 +413,13 @@ public class StateMachineIntegrationTests
 
         public override void OnPopBeforeQuit(StateMachineStrategyContext context, IStateMachineContext ctx) =>
             Events?.Add($"on_pop_before_quit:{context.BeforeTop}");
+    }
+
+    [StrategyIndex("test.int.sm.progress_topology_poison")]
+    private sealed class ProgressTopologyPoisonStrategy : StateMachineStrategyBase
+    {
+        public override void OnPushAfterLoad(StateMachineStrategyContext context, IStateMachineContext ctx) =>
+            ctx.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology, "evil=evil_level=true");
     }
 
     [StrategyIndex("test.int.sm.progress_quit_scene")]

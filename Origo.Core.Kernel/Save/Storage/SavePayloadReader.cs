@@ -45,24 +45,43 @@ internal static class SavePayloadReader
     {
         var progressRel = handle.PathPolicy.GetProgressFile(baseRel);
         var progressSmRel = handle.PathPolicy.GetProgressStateMachinesFile(baseRel);
-        var (progressNode, progressStateMachinesNode, customMeta) = ReadProgressAndCustomMeta(
-            handle,
-            baseRel,
-            $"Missing required progress.json in {location} (path='{progressRel}').",
-            $"Missing required progress_state_machines.json in {location} (path='{progressSmRel}').");
+        DataSourceNode? progressNode = null;
+        DataSourceNode? progressStateMachinesNode = null;
+        Dictionary<string, LevelPayload>? levels = null;
+        try
+        {
+            var (progress, progressSm, customMeta) = ReadProgressAndCustomMeta(
+                handle,
+                baseRel,
+                $"Missing required progress.json in {location} (path='{progressRel}').",
+                $"Missing required progress_state_machines.json in {location} (path='{progressSmRel}').");
+            progressNode = progress;
+            progressStateMachinesNode = progressSm;
 
-        ValidateFormatVersion(baseRel, customMeta);
+            ValidateFormatVersion(baseRel, customMeta);
 
-        var levels = CreateLevelPayloadMap(handle, baseRel, activeLevelId);
-        ReadRemainingLevelPayloads(handle, baseRel, levels);
+            levels = CreateLevelPayloadMap(handle, baseRel, activeLevelId);
+            ReadRemainingLevelPayloads(handle, baseRel, levels);
 
-        return CreateSavePayload(
-            saveId,
-            activeLevelId,
-            progressNode,
-            progressStateMachinesNode,
-            StripFrameworkMetaKeys(customMeta),
-            levels);
+            return CreateSavePayload(
+                saveId,
+                activeLevelId,
+                progress,
+                progressSm,
+                StripFrameworkMetaKeys(customMeta),
+                levels);
+        }
+        catch
+        {
+            // No payload reaches the caller on a failed strict read; release
+            // every node tree read before the failure.
+            progressNode?.Dispose();
+            progressStateMachinesNode?.Dispose();
+            if (levels is not null)
+                foreach (var level in levels.Values)
+                    SavePayloadDisposal.Dispose(level);
+            throw;
+        }
     }
 
     /// <summary>
@@ -71,8 +90,9 @@ internal static class SavePayloadReader
     ///     key is treated as version 1 (the initial format); a
     ///     present-but-unparseable value is corrupted data and fails the
     ///     strict read. Explicit 0/negative values are not a supported older
-    ///     form: the writer has always emitted version 1, and older saves are
-    ///     identified by the missing key, so such values are corrupted data.
+    ///     form: a no-metadata v1 save may omit the key, but once the writer
+    ///     emits any explicit version it emits the current supported version;
+    ///     explicit 0/negative values are corrupted data.
     /// </summary>
     private static void ValidateFormatVersion(string baseRel, IReadOnlyDictionary<string, string>? customMeta)
     {
@@ -210,18 +230,27 @@ internal static class SavePayloadReader
         if (!handle.MetaAccess.FileExists(progressAbs))
             throw new InvalidOperationException(missingProgressMessage);
         var progressNode = handle.IoGateway.ReadTree(progressAbs);
+        DataSourceNode? progressStateMachinesNode = null;
+        try
+        {
+            var progressSmRel = handle.PathPolicy.GetProgressStateMachinesFile(baseDirectoryRel);
+            var progressSmAbs = handle.GetAbsolutePath(progressSmRel);
+            if (!handle.MetaAccess.FileExists(progressSmAbs))
+                throw new InvalidOperationException(missingProgressStateMachinesMessage);
+            progressStateMachinesNode = handle.IoGateway.ReadTree(progressSmAbs);
 
-        var progressSmRel = handle.PathPolicy.GetProgressStateMachinesFile(baseDirectoryRel);
-        var progressSmAbs = handle.GetAbsolutePath(progressSmRel);
-        if (!handle.MetaAccess.FileExists(progressSmAbs))
-            throw new InvalidOperationException(missingProgressStateMachinesMessage);
-        var progressStateMachinesNode = handle.IoGateway.ReadTree(progressSmAbs);
+            var customMetaRel = handle.PathPolicy.GetCustomMetaFile(baseDirectoryRel);
+            var customMetaAbs = handle.GetAbsolutePath(customMetaRel);
+            var customMeta = TryReadStringMap(handle, customMetaAbs);
 
-        var customMetaRel = handle.PathPolicy.GetCustomMetaFile(baseDirectoryRel);
-        var customMetaAbs = handle.GetAbsolutePath(customMetaRel);
-        var customMeta = TryReadStringMap(handle, customMetaAbs);
-
-        return (progressNode, progressStateMachinesNode, customMeta);
+            return (progressNode, progressStateMachinesNode, customMeta);
+        }
+        catch
+        {
+            progressNode.Dispose();
+            progressStateMachinesNode?.Dispose();
+            throw;
+        }
     }
 
     /// <summary>
@@ -236,9 +265,10 @@ internal static class SavePayloadReader
             || !customMeta.Keys.Any(k => k.StartsWith(WellKnownKeys.FrameworkMetaKeyPrefix, StringComparison.Ordinal)))
             return customMeta;
 
-        return customMeta
+        var userMeta = customMeta
             .Where(kv => !kv.Key.StartsWith(WellKnownKeys.FrameworkMetaKeyPrefix, StringComparison.Ordinal))
             .ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.Ordinal);
+        return userMeta.Count == 0 ? null : userMeta;
     }
 
     private static LevelPayload? TryReadLevelPayload(
@@ -251,13 +281,30 @@ internal static class SavePayloadReader
             return null;
         ValidateRequiredLevelFiles(files);
 
-        return new LevelPayload
+        DataSourceNode? sceneNode = null;
+        DataSourceNode? sessionNode = null;
+        DataSourceNode? stateMachinesNode = null;
+        try
         {
-            LevelId = levelId,
-            SndSceneNode = handle.IoGateway.ReadTree(files.SndScene.AbsolutePath),
-            SessionNode = handle.IoGateway.ReadTree(files.Session.AbsolutePath),
-            SessionStateMachinesNode = handle.IoGateway.ReadTree(files.SessionStateMachines.AbsolutePath)
-        };
+            sceneNode = handle.IoGateway.ReadTree(files.SndScene.AbsolutePath);
+            sessionNode = handle.IoGateway.ReadTree(files.Session.AbsolutePath);
+            stateMachinesNode = handle.IoGateway.ReadTree(files.SessionStateMachines.AbsolutePath);
+
+            return new LevelPayload
+            {
+                LevelId = levelId,
+                SndSceneNode = sceneNode,
+                SessionNode = sessionNode,
+                SessionStateMachinesNode = stateMachinesNode
+            };
+        }
+        catch
+        {
+            sceneNode?.Dispose();
+            sessionNode?.Dispose();
+            stateMachinesNode?.Dispose();
+            throw;
+        }
     }
 
     private static void ValidateRequiredLevelFiles(LevelFiles files)

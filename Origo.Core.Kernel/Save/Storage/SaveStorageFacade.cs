@@ -183,7 +183,8 @@ internal static class SaveStorageFacade
 
             // Framework-reserved keys (the origo. namespace, e.g. the format
             // version) are internal bookkeeping and are not display metadata.
-            var displayMeta = SavePayloadReader.StripFrameworkMetaKeys(rawMeta)!;
+            var displayMeta = SavePayloadReader.StripFrameworkMetaKeys(rawMeta)
+                              ?? new Dictionary<string, string>(StringComparer.Ordinal);
 
             list.Add(new SaveMetaDataEntry { SaveId = id, MetaData = displayMeta });
         }

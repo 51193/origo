@@ -14,7 +14,7 @@ Origo's save system follows **strict read, explicit failure, two-phase write** c
 │   ├── .write_in_progress                # Write-in-progress marker
 │   ├── progress.json                    # Progress blackboard (global progress + full session topology)
 │   ├── progress_state_machines.json      # Progress-level state machine snapshot
-│   ├── meta.map                         # Display metadata (save list)
+│   ├── meta.map                         # Display metadata + format version (when present)
 │   ├── extra/                           # Strategy archive files (follow save lifecycle)
 │   └── level_{id}/                      # Per-level data
 │       ├── snd_scene.json               # Level three-piece set:
@@ -34,33 +34,48 @@ Save IDs use ASCII letters, digits, `.`, `_`, and `-`, but they must not end in 
 
 ## Two-Phase Write
 
+The write starts with an idempotent-skip check: when `current/` has no
+`.write_in_progress` marker, the target snapshot's `.payload.sha` exists, and it
+matches the current payload plus the policy's extra/ side hash, no file is
+written.
+
 ### Phase 1: Write to current/
 
-```
-1. Create current/.write_in_progress marker
-2. Write progress.json
-3. Write progress_state_machines.json
-4. Write meta.map (if custom metadata exists)
-5. For each level:
-   a. Write level_{id}/snd_scene.json
-   b. Write level_{id}/session.json
-   c. Write level_{id}/session_state_machines.json
-6. Delete the save_{id}.bak/ backup
-7. Delete .write_in_progress marker
-```
+1. Create `current/.write_in_progress`.
+2. Write `progress.json` and `progress_state_machines.json`.
+3. Write `meta.map` with custom display metadata plus `origo.format_version`
+   when display metadata exists or the framework format is newer than v1. A
+   no-metadata v1 save may omit `meta.map`; the reader maps the missing marker
+   to version 1. A framework-reserved `origo.*` key is never exposed as display
+   metadata.
+4. For each level, write `snd_scene.json`, `session.json`, and
+   `session_state_machines.json`. The payload dictionary key must equal the
+   level's `LevelId`; level directories not present in the payload are pruned.
+5. Write `current/.payload.sha` with the combined payload + extra/ hash.
+6. Recreate the marker after the payload is complete. The writer deletes and
+   recreates its own marker during this phase; the final state is a protected
+   `current/` so a crash before the snapshot cannot expose an unsnapshotted
+   write.
 
 ### Phase 2: Snapshot to save_{id}/
 
-```
-1. Recreate current/.write_in_progress marker
-2. Create save_{id}.tmp/
-3. Recursively copy all files from current/ to save_{id}.tmp/
-4. If save_{id}/ already exists, rename it aside to save_{id}.bak/ (the old data is never deleted before the new data is in place)
-5. Atomically rename save_{id}.tmp/ → save_{id}/
-6. Delete .write_in_progress marker
-```
+1. Prepare `save_{id}.tmp/` (delete a stale staging directory first).
+2. Recursively copy `current/` into the staging directory. The root
+   `.write_in_progress` marker is skipped; a file with that name below `extra/`
+   is user data and is copied.
+3. If `save_{id}/` exists, delete a stale `.bak` and rename `save_{id}/` to
+   `save_{id}.bak/`.
+4. Atomically rename `save_{id}.tmp/` to `save_{id}/`. If the rename fails, try
+   to restore `.bak/` to `save_{id}/`; if rollback also fails, keep `.bak/` and
+   report both failures.
+5. After the new snapshot is installed, delete `save_{id}.bak/`.
+6. After the snapshot succeeds, delete `current/.write_in_progress`. If the
+   snapshot fails, leave the marker in place so the next read of `current/` is
+   rejected; the failure is logged and rethrown.
 
-If Phase 2 fails, `current/` data is intact but the marker remains. The next read of `current/` will be rejected due to the marker, and logs will indicate manual intervention or retry is needed. If the process crashes between the two renames, the next enumeration or direct snapshot read restores the complete `.bak` snapshot as the real slot; the `.tmp` staging directory is never listed as a save.
+The backup is never deleted before the new snapshot is installed. A crash
+between the two renames leaves a complete `.bak` that the next list or direct
+snapshot read restores as the real slot; `.tmp` is never listed as a save.
 
 ## Strict Read Rules
 

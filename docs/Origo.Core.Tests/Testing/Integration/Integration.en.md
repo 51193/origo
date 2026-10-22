@@ -18,7 +18,7 @@ the four-layer runtime, with real `SndEntity` entities and strategies participat
 | `GameplaySessionSwitchAndConcurrencyTests.cs` | Session switch blackboard isolation, same-frame concurrent spawn/kill, respawn after kill, parallel processing of multiple background sessions; error path coverage: kill already-harvested entity |
 | `AdvancedGameplayIntegrationTests.cs` | Batch spawn/kill of many entities (100 entities), console command routing (snd_count / bb_set/bb_get system layer), entity data direct API round-trip, multi-strategy entity combinations (Lifecycle+Observer, Lifecycle+Active, all three types mounted), multi-entity save/load state preservation; error paths: request kill unknown entity, spawn unregistered strategy index |
 | `ActiveStrategyIntegrationTests.cs` | ActiveStrategy integration in full frame loop: direct InvokeStrategy calls, self-invocation triggered by Process, cross-entity InvokeStrategy, ActiveStrategy index save/load persistence, AfterLoad Invoke verification, Lifecycle+Active hybrid entity frame loop, dynamic AddActiveStrategy/RemoveActiveStrategy lifecycle; error paths: InvokeStrategy on killed entity, duplicate AddActiveStrategy |
-| `StateMachineIntegrationTests.cs` | State machine integration in frame loop: Push/Pop frame-driven, OnPushRuntime/OnPopRuntime hook triggers, OnPopBeforeQuit triggers on session destroy, state machine stack save/load AfterLoad recovery, multiple independent state machine stacks, Lifecycle strategy cross-frame Push/Pop states; error path: operate state machine after session destroy |
+| `StateMachineIntegrationTests.cs` | State machine integration in frame loop: Push/Pop frame-driven, OnPushRuntime/OnPopRuntime hook triggers, OnPopBeforeQuit triggers on session destroy, state machine stack save/load AfterLoad recovery, progress AfterLoad topology reassertion, multiple independent state machine stacks, Lifecycle strategy cross-frame Push/Pop states; error path: operate state machine after session destroy |
 | `ObserverTopologyIntegrationTests.cs` | Observer topology integration in frame loop: mount triggers OnMounted+OnDataChanged (with correct old/new values), unmount stops notifications, target kill triggers OnUnmounted, data change old/new value correctness, multi-target independent notifications, frame-driven strategy auto-mounts observer during Process; error paths: invalid index mount, duplicate mount, mount on killed entity |
 | `PlanningIntegrationTests.cs` | Intent-driven plan execution: intent triggers plan start, two-step plan completion, no intent no start, data attribute key validation, multi-entity independent plans |
 | `StrategyStateSaveLoadIntegrationTests.cs` | Strategy state persistence: lifecycle count state survives, entity data+blackboard survives, continued processing after reload, 20-entity batch with no loss, overwrite saves, multi-session full state preservation; error path: corrupted progress.json causes load failure |
@@ -117,6 +117,7 @@ the four-layer runtime, with real `SndEntity` entities and strategies participat
 
 | Test Method | Behavior Verified | Documentation Source |
 |-------------|------------------|---------------------|
+| `ProgressStateMachine_OnPushAfterLoad_CannotPoisonSessionTopology` | A progress state-machine AfterLoad hook writes `origo.session_topology`; the next save still succeeds and the persisted topology is the live framework value | state-machine: AfterLoad / session topology |
 | `StateMachine_PushPop_InFrameLoop` | Push/Pop of the state machine stack in the frame loop; Peek reflects the correct top | state-machine |
 | `StateMachine_OnPushHook_FiresCorrectly` | Push triggers the OnPushRuntime hook (records the after-top value) | state-machine: Push |
 | `StateMachine_OnPopHook_FiresCorrectly` | TryPopRuntime triggers the OnPopRuntime hook; Peek returns false once the stack is empty | state-machine: TryPopRuntime |
@@ -243,6 +244,7 @@ the four-layer runtime, with real `SndEntity` entities and strategies participat
 | `NoopActionStrategy` | `PlanningIntegrationTests.cs` | SharedNoopLifecycleStrategy subclass; plan Action placeholder |
 | `PushTrackingStateMachineStrategy` | `StateMachineIntegrationTests.cs` | SharedNoopStateMachineStrategy subclass; drives Push/Pop stack in the frame loop |
 | `HookRecordingStateMachineStrategy` | `StateMachineIntegrationTests.cs` | Records on_push_runtime/on_push_after_load/on_pop_runtime/on_pop_before_quit events |
+| `ProgressTopologyPoisonStrategy` | `StateMachineIntegrationTests.cs` | Writes a bogus `origo.session_topology` in progress `OnPushAfterLoad` to prove the framework reasserts it |
 | `SmPushingLifecycleStrategy` | `StateMachineIntegrationTests.cs` | Lifecycle strategy: pushes "active" in AfterSpawn, pops and pushes "idle" once frame count reaches 3 |
 | `StateFrameCounterStrategy` | `StrategyStateSaveLoadIntegrationTests.cs` | SharedFrameCounterStrategy subclass; frame counting for strategy state save/load |
 

@@ -56,8 +56,8 @@ int hp = harness.GetEntityData<int>("hp");
 var (found, lives) = harness.TryGetEntityData<int>("lives");
 
 // Blackboard access
-harness.SystemBlackboard.TryGet("difficulty", out string diff);
-harness.SessionBlackboard.TryGet("score", out int score);
+var (hasDifficulty, difficulty) = harness.SystemBlackboard.TryGet<string>("difficulty");
+var (hasScore, score) = harness.SessionBlackboard.TryGet<int>("score");
 
 // Side-effect inspection
 harness.SaveRequests.Count;       // Number of save requests

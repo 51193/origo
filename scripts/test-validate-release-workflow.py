@@ -629,5 +629,28 @@ class ReleaseWorkflowGuardTests(unittest.TestCase):
         self.assertEqual(code, 0, stderr)
 
 
+
+    def test_weekly_missing_orphan_tag_dispatch_is_rejected(self):
+        weekly = self.mutated_weekly(
+            '            echo "dispatch_existing=true" >> "$GITHUB_OUTPUT"\n',
+            "",
+        )
+        code, _, stderr = self.run_guard(
+            WORKFLOW.read_text(encoding="utf-8"), weekly
+        )
+        self.assertEqual(code, 1)
+        self.assertIn("check gh release view", stderr)
+
+    def test_weekly_dispatch_condition_without_existing_tag_is_rejected(self):
+        weekly = self.mutated_weekly(
+            "        if: steps.check.outputs.new_version != '' || steps.check.outputs.dispatch_existing == 'true'",
+            "        if: steps.check.outputs.new_version != ''",
+        )
+        code, _, stderr = self.run_guard(
+            WORKFLOW.read_text(encoding="utf-8"), weekly
+        )
+        self.assertEqual(code, 1)
+        self.assertIn("dispatch_existing", stderr)
+
 if __name__ == "__main__":
     unittest.main()

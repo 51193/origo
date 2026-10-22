@@ -31,7 +31,7 @@ Complete implementation of the save storage layer. Responsible for file I/O (rea
 │   ├── .payload.sha                  # Payload SHA-256 digest (idempotent dedup)
 │   ├── progress.json                # Progress blackboard
 │   ├── progress_state_machines.json  # Progress-level state machines
-│   ├── meta.map                     # Display metadata
+│   ├── meta.map                     # Display metadata + format version (when present)
 │   └── level_{id}/                  # Per-level saves
 │       ├── snd_scene.json           # Three-piece set
 │       ├── session.json
@@ -44,13 +44,13 @@ Complete implementation of the save storage layer. Responsible for file I/O (rea
 
 ## Two-Phase Write Flow
 
-1. **Idempotency check** (only at `WriteSavePayloadToCurrentThenSnapshot` entry): if the target snapshot `save_{id}/.payload.sha` exists and the hash matches, return immediately (skip write)
-2. **Integrity validation**: validate the payload before writing any file — active level must exist in `Levels`, progress node must be non-null. Validation failure throws immediately; no half-written `current/` is produced
-3. **Write marker**: create `.write_in_progress` under `current/`
-4. **Write payload**: write progress.json, per-level three-piece sets, meta.map; `.payload.sha` is written after the payload completes, before the marker is recreated (combined hash = payload + `extra/`)
+1. **Idempotency check** (only at `WriteSavePayloadToCurrentThenSnapshot` entry): if `current/` has no `.write_in_progress` marker, the target snapshot `save_{id}/.payload.sha` exists, and the hash matches, return immediately (skip write)
+2. **Write marker**: create `.write_in_progress` under `current/`
+3. **Integrity validation**: validate the payload before writing any payload file — active level must exist in `Levels`, progress node must be non-null. A validation failure leaves the marker in place, so `current/` is rejected by readers until the next write instead of being mistaken for a valid checkpoint
+4. **Write payload**: write progress.json, per-level three-piece sets, and meta.map (with `origo.format_version` plus any display metadata; a no-metadata v1 save may omit it); `.payload.sha` is written after the payload completes, before the marker is recreated (combined hash = payload + `extra/`)
 5. **Clean up stale level directories**: delete `level_*` directories under `current/` that are not in the payload (e.g. levels of destroyed sessions). The payload is the authoritative set of active levels; cleanup keeps `current/` consistent with the payload and prevents stale data from being copied into every snapshot (this step runs within marker protection; failure rejects reads)
-6. **Clear phase-1 marker**: after `current/` is fully written (including `.payload.sha`), delete the marker
-7. **Recreate marker**: rebuild marker for the snapshot phase; if snapshot fails, marker remains so subsequent reads will reject this "updated but not snapshotted" `current/`
+6. **Clear phase-1 marker**: after the payload files and stale-level cleanup, `WriteToCurrent` deletes its marker
+7. **Write `.payload.sha` and recreate the marker**: `WriteCurrentWithMarker` writes the combined hash and then rebuilds the marker for the snapshot phase; if the snapshot fails, that marker remains so subsequent reads reject this "updated but not snapshotted" `current/`
 8. **Snapshot (backup-replace)**: copy `current/` to `save_{id}.tmp/` → rename existing `save_{id}/` to `save_{id}.bak/` → rename `.tmp` to the final `save_{id}/` → delete `.bak`. Old data is not deleted until new data is in place; if the temp-to-final rename fails, the code attempts to roll `.bak` back to `save_{id}/`, and keeps the `.bak` copy when rollback fails
 9. **Clear marker**: delete the marker (the one recreated for the snapshot phase)
 
@@ -61,7 +61,8 @@ Complete implementation of the save storage layer. Responsible for file I/O (rea
 - **progress.json missing** → refuse to read
 - **Background level referenced by the topology has no payload** → refuse to load (consistent with the foreground: a topology referencing level data that does not exist must fail explicitly; silently mounting an empty session would hide data loss)
 - **Payload level not referenced by the topology** → refuse to load (an unreferenced level would be silently ignored, losing its state; the topology and level set must describe the same sessions)
-- **Format version below 1** → refuse to load (the initial format is version 1; older saves are identified by a missing version key, so an explicit 0/negative value is corrupt data)
+- **Format version marker** → written to `meta.map` whenever display metadata exists or the framework format is newer than v1; a no-metadata v1 save may omit it, and the reader maps the missing key to version 1.
+- **Format version below 1** → refuse to load (the initial format is version 1; a no-metadata v1 save may omit the version key, so an explicit 0/negative value is corrupt data)
 - **Format version above the current version** → refuse to load (the save was written by a newer framework)
 
 ## DataSourceNode Ownership Contract
@@ -69,6 +70,7 @@ Complete implementation of the save storage layer. Responsible for file I/O (rea
 - **Read methods** (`ReadSavePayloadFromSnapshot` / `ReadProgressNodeFromSnapshot` / `TryReadLevelPayload*` / `ResolveLevelPayload`) return payloads or nodes owned by the caller; the caller must dispose the contained `DataSourceNode` trees.
 - **Write methods** (`WriteSavePayloadToCurrent*` / `WriteLevelPayloadOnlyToCurrent` / `WriteProgressOnlyToCurrent`) must fully consume the supplied node trees before returning; they must not retain references for later reads. The framework disposes nodes immediately after these write boundaries, so custom implementations must not access the nodes after returning either.
 - Internal framework load/mount paths dispose payloads as soon as they are no longer needed; public-interface caller ownership is never managed on their behalf by internal framework paths.
+- A strict read that fails after some files were decoded disposes every partial `DataSourceNode` tree before rethrowing, so a corrupt save cannot leak managed node trees even though no payload is returned.
 
 ## Deleting Save Slots
 
@@ -119,8 +121,10 @@ Different platforms (desktop, mobile, cloud save) may require different path lay
 
 When the same game state is written to the same save slot multiple times, SHA-256 digest comparison avoids unnecessary I/O. At the `WriteSavePayloadToCurrentThenSnapshot` entry point, the target snapshot's `.payload.sha` is compared against the hash of the payload to be written:
 
-- **Hash matches** → log INFO "idempotent save skip", return immediately, no file operations performed
-- **Hash differs or .sha does not exist** → proceed with normal two-phase write flow
+- **Hash matches and `current/` has no `.write_in_progress` marker** → log INFO
+  "idempotent save skip", return immediately, no file operations performed
+- **Hash differs, `.sha` does not exist, or `current/` still has a marker** → proceed
+  with the normal two-phase write flow
 
 `ComputePayloadHash` computes SHA individually for each component's node tree and combines them, ensuring:
 - Progress blackboard change → hash differs → rewrite
@@ -128,7 +132,7 @@ When the same game state is written to the same save slot multiple times, SHA-25
 - CustomMeta key-value change → hash differs → rewrite
 - Only SaveId differs (writing to a different slot) → always write (new slot has no .sha to compare)
 
-The `current/.payload.sha` writes follow three deliberate, non-conflicting semantics: the snapshot path (`WriteSavePayloadToCurrentThenSnapshot`) writes the **combined hash** (payload + the policy's extra directory), which the next idempotency comparison consumes; the test path (`SaveStorageFacade.WriteSavePayloadToCurrent`) writes the **payload-only hash** (tests have no extra side channel, so a combined hash would be inaccurate); the load-recovery path (`DefaultSaveStorageService.WriteSavePayloadToCurrent`) writes **no hash** — a recovery write has no idempotency contract, and only the snapshot phase performs deduplication. The only consumer of `.payload.sha` is `TryIdempotentSkip` comparing against the snapshot directory; the `current/` hash itself is consumed only indirectly when it is copied into a snapshot.
+The `current/.payload.sha` writes follow three deliberate, non-conflicting semantics: the snapshot path (`WriteSavePayloadToCurrentThenSnapshot`) writes the **combined hash** (payload + the policy's extra directory), which the next idempotency comparison consumes; the test path (`SaveStorageAndPayloadTests.WritePayloadWithPayloadSha`, which calls `SavePayloadWriter.WriteToCurrent` then `SaveAtomicWriter.WritePayloadSha`) writes the **payload-only hash** (tests have no extra side channel, so a combined hash would be inaccurate); the load-recovery path (`DefaultSaveStorageService.WriteSavePayloadToCurrent`) writes **no hash** — a recovery write has no idempotency contract, and only the snapshot phase performs deduplication. The only consumer of `.payload.sha` is `TryIdempotentSkip` comparing against the snapshot directory; the `current/` hash itself is consumed only indirectly when it is copied into a snapshot.
 
 ### Why cross-storage-root extra/ restore takes an explicit source service
 

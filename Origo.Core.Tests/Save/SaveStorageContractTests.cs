@@ -351,6 +351,8 @@ public class SaveStorageContractTests
         ctx.StorageService.WriteSavePayloadToCurrentThenSnapshot(
             payload, "no_meta_save", NullLogger.Instance);
 
+        // Current format is still v1: a no-metadata v1 save may omit meta.map,
+        // and the reader maps the missing marker to format version 1.
         Assert.False(fs.Exists("root/save_no_meta_save/meta.map"));
     }
 

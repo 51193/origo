@@ -89,6 +89,11 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   workflow also marks any tag containing `-` as a pre-release, so a hand-pushed
   snapshot cannot become Latest either; only a formal `vx.y.z` tag pushed by
   hand keeps the release state chosen on GitHub.
+- An already-pushed snapshot tag is not treated as complete unless its GitHub
+  Release also exists. A run scans the current base's nightly tags and, if one
+  has no GitHub Release, dispatches the pipeline for that tag instead of exiting
+  green with only today's tag; this recovers an orphan from an earlier day too,
+  even when the current week has no commits.
 - Snapshot tags reuse the formal release pipeline for packages, source archives,
   and documentation snapshots; `verify-release.sh` skips formal metadata
   verification for versions containing `-`.
@@ -115,13 +120,14 @@ Complete these steps in order:
    together.
 6. Run `bash scripts/release-check.sh x.y.z` on that commit and confirm it
    passes. The helper first rejects a HEAD baseline that is not a newer `-dev`
-   version and a target that is not newer than the latest formal `vx.y.z` tag,
-   then creates a temporary worktree, stamps `x.y.z` there, and runs
+   version, whose `AssemblyVersion` / `FileVersion` do not match that baseline,
+   or a target that is not newer than the latest formal `vx.y.z` tag, then
+   creates a temporary worktree, stamps `x.y.z` there, and runs
    `scripts/verify-release.sh`; the caller checkout is not modified. That
    verifier requires the stamped `<Version>` and `AssemblyVersion` /
-   `FileVersion`, the matching CHANGELOG version block, an empty `[Unreleased]`,
-   the analyzer shipped block, and no unshipped rules in
-   `AnalyzerReleases.Unshipped.md`. Documentation refers to the build stamp
+   `FileVersion`, the matching `## [x.y.z] - YYYY-MM-DD` CHANGELOG block, an
+   empty `[Unreleased]`, the exact analyzer shipped block, and no unshipped
+   rules in `AnalyzerReleases.Unshipped.md`. Documentation refers to the build stamp
    instead of duplicating the version.
 7. Run the full `bash scripts/ci.sh` on that commit and confirm every
    compatibility gate listed under Release Pipeline Artifacts below passes.

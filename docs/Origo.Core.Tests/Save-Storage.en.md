@@ -24,6 +24,7 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | `SavePathResolverTests.cs` | Path resolution: SaveFileHandle relative path extraction, parent directory creation, traversal attack rejection, leaf directory name |
 | `SaveGamePayloadTests.cs` | Data model: SaveGamePayload/LevelPayload defaults, multi-level access, CustomMeta |
 | `SavePayloadDisposalTests.cs` | Deterministic release at internal boundaries: payload node trees and progress snapshot nodes are disposed after load/mount, save/snapshot, and switch-foreground flows |
+| `SavePayloadReaderDisposalTests.cs` | Failed strict reads dispose partial progress/state-machine node trees before rethrowing |
 | `WellKnownKeysTests.cs` | Constants: ActiveSaveId, SessionTopology key name correctness |
 | `SaveIdValidationTests.cs` | Save id validation: `RequestSaveGame`/`RequestLoadGame`/`SetContinueTarget` reject invalid ids (path separators / out-of-range chars), accept valid ids |
 | `SaveExtraFilesRoundTripTests.cs` | extra/ side-channel files: snapshot-to-current copy round-trip, structure preservation, missing/empty dir tolerance, argument validation |
@@ -48,7 +49,7 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | `WriteSavePayloadToCurrent_ValidPayload_WritesSuccessfully` | Valid Payload correctly written to current/ | SaveGamePayload model |
 | `WriteSavePayloadToCurrent_EmptySaveId_StillWrites` | Writes even with empty SaveId | SaveGamePayload model |
 | `WriteSavePayloadToCurrentThenSnapshot_WithCustomMeta_WritesMetaMap` | CustomMeta non-empty writes meta.map | persistence-flow: meta.map |
-| `WriteSavePayloadToCurrentThenSnapshot_WithoutCustomMeta_MetaMapNotCreated` | CustomMeta null does not create meta.map | persistence-flow: meta.map |
+| `WriteSavePayloadToCurrentThenSnapshot_WithoutCustomMeta_MetaMapNotCreated` | CustomMeta null in the current v1 format does not create meta.map; the reader treats the missing marker as v1 | persistence-flow: meta.map |
 | `DefaultSaveStorageService_WithCustomPathPolicy_UsesCustomLayout` | ISavePathPolicy custom path layout effective | ISavePathPolicy |
 | `EnumerateSaveIds_ReturnsCorrectList` | Enumerated saves do not include current directory | ISaveStorageService |
 | `DeleteCurrentDirectory_RemovesAllCurrentFiles` | DeleteCurrentDirectory removes all current/ contents | ISaveStorageService |
@@ -105,7 +106,7 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
 | `Load_RejectsSaveWithNewerFormatVersion` | Save format version newer than current (99) | InvalidOperationException (load rejected) |
-| `Load_RejectsFormatVersionBelowOne` | Explicit format version `0` or `-1` | InvalidOperationException (only older saves that omit the version key map to version 1) |
+| `Load_RejectsFormatVersionBelowOne` | Explicit format version `0` or `-1` | InvalidOperationException (a no-metadata v1 save that omits the key maps to version 1) |
 | `Load_RejectsCorruptFormatVersionValue` | meta.map carries an unparseable `origo.format_version` value | InvalidOperationException on flush (corrupt value is not treated as the missing-key default) |
 
 ### Boundary Path
@@ -248,6 +249,16 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | `DefaultSaveStorageService_WriteSavePayloadToCurrent_PrunesCustomLevelDirectories` | Custom level directory layout with a stale level under `current/` | Stale custom level directory is pruned; the live custom level remains |
 | `SaveStorageFacade_SnapshotCurrentToSave_PreservesRootMarkerButCopiesArchiveMarker` | Root `.write_in_progress` plus `extra/.write_in_progress` | Root marker is not copied; archive file with the same name is preserved |
 | `WriteSavePayloadToCurrentThenSnapshot_WhenRenameFails_LogsErrorAndPreservesCurrent` | Adapter-style `IOException` during temp→final rename | Exception propagates, current/ remains, error is logged |
+
+## SavePayloadReaderDisposalTests Details
+
+### Error Path
+
+| Test Method | Triggered Error | Expected Behavior |
+|-------------|----------------|-------------------|
+| `ReadFromCurrent_MissingProgressStateMachines_DisposesProgressNode` | `progress.json` exists but `progress_state_machines.json` is missing | The already-decoded progress node is disposed before the read throws |
+| `ReadFromCurrent_FutureFormatVersion_DisposesProgressTrees` | `meta.map` carries format version 99 | Progress and state-machine nodes are disposed before the format-version rejection |
+| `ReadFromCurrent_CorruptLevelStateMachines_DisposesLevelTrees` | A level's state-machine read fails after scene/session were decoded | The already-decoded level nodes are disposed before the read throws |
 
 ## SaveIdempotencyTests Details
 

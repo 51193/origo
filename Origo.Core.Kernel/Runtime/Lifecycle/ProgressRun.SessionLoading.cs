@@ -105,6 +105,12 @@ internal sealed partial class ProgressRun
             // only place progress-level OnPushAfterLoad is fired; a level
             // switch must not replay live progress stacks.
             FlushStateMachinesAfterSceneReady();
+
+            // Progress-level OnPushAfterLoad hooks can write progress blackboard
+            // keys; SessionTopology is framework-owned, so reassert the live
+            // topology after those hooks so a hook cannot poison the next save.
+            WriteForegroundTopology(_owner.RequireForegroundSession().LevelId);
+            _owner.EnsureActiveLevelInvariant();
         }
 
         internal ISessionRun LoadAndMountForeground(string levelId)
@@ -186,15 +192,20 @@ internal sealed partial class ProgressRun
 
         private ISessionRun MountForegroundFromPayload(string levelId, LevelPayload levelPayload, bool writeTopology)
         {
-            ResetForeground(false);
-
+            // CreateForegroundFromPayload validates the target level against
+            // every other session before destroying the current foreground, so
+            // a conflict leaves the existing foreground untouched.
             var session = _owner._sessionManager.CreateForegroundFromPayload(levelId, levelPayload);
             return FinalizeForegroundMount(levelId, session, writeTopology);
         }
 
         private ISessionRun MountEmptyForeground(string levelId, bool writeTopology)
         {
-            ResetForeground(true);
+            // CreateForegroundSession performs validation before teardown. When
+            // no foreground exists, clear any adapter-scene remnants explicitly;
+            // when one exists, its Dispose already clears the shared scene host.
+            if (_owner._sessionManager.ForegroundSession is null)
+                _owner._sessionManager.ClearAdapterScene();
 
             var session =
                 _owner._sessionManager.CreateForegroundSession(levelId);

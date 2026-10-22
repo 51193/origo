@@ -12,7 +12,7 @@ Role interface decomposition of ISndContext. 9 Snd role interfaces + `IStateMach
 | `ISndBlackboardAccess.cs` | System + progress-level blackboard access (2 members) |
 | `ISndDeferredActions.cs` | Deferred action queue: enqueue + pending-persistence count + persistence-idle state (3 members) |
 | `ISndTemplateAccess.cs` | Template load/reload, deep clone by key, JSON entity-list resolution (including template shorthand) (5 members) |
-| `ISndConsoleAccess.cs` | Console command submit/process/output subscribe (4 members) |
+| `ISndConsoleAccess.cs` | Console command submit/output subscribe/output unsubscribe (3 members) |
 | `ISndStateMachineAccess.cs` | Progress-level state machine container (1 member). Returns `IStateMachineContainer?` |
 | `ISndSaveOperations.cs` | Save list/read/write/delete + level switch + continue + meta contributor (10 members) |
 | `ISndLifecycleOperations.cs` | Bootstrap completion state + Continue/Initial/MainMenu entry points (5 members) |
@@ -37,7 +37,7 @@ ISndContext does not inherit any role interfaces; all capabilities are accessed 
 | `Blackboard` | `ISndBlackboardAccess` | System + progress blackboard |
 | `Deferred` | `ISndDeferredActions` | Deferred action queue: enqueue + pending-persistence count + persistence-idle state |
 | `Template` | `ISndTemplateAccess` | Template load/reload, cloning, entity-list resolution |
-| `ConsoleAccess` | `ISndConsoleAccess` | Console command submit/process/subscribe |
+| `ConsoleAccess` | `ISndConsoleAccess` | Console command submit / output subscribe / unsubscribe |
 | `StateMachines` | `ISndStateMachineAccess` | Progress-level state machine container |
 | `Save` | `ISndSaveOperations` | Save list/read/write/delete + level switch + meta contributor |
 | `Lifecycle` | `ISndLifecycleOperations` | Bootstrap completion state + Continue/Initial/MainMenu |

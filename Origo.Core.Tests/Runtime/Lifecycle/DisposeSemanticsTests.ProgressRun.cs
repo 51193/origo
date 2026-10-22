@@ -2,6 +2,7 @@ using System;
 using Origo.Core.DataSource;
 using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Snd;
+using Origo.Core.Snd.Scene;
 using Xunit;
 
 namespace Origo.Core.Tests;
@@ -223,5 +224,42 @@ public class DisposeSemanticsTestsProgressRun
         Assert.False(found);
         Assert.False(machines.TryGet("machine", out _));
         Assert.Null(Record.Exception(() => progressRun.Dispose()));
+    }
+
+    [Fact]
+    public void ProgressRun_Dispose_BeforeQuitCannotExtendSessionSet()
+    {
+        var host = new FullMemorySndSceneHost(new TestLogger());
+        var (ctx, _) = DisposeSemanticsTestInfrastructure.CreateForegroundContext(
+            world => world.RegisterStrategy(
+                () => new DisposeSemanticsTestInfrastructure.BeforeQuitCreatesSessionStrategy()),
+            host);
+        host.BindWorld(ctx.Runtime.SndWorld);
+
+        var progressRun = ctx.EnsureProgressRun();
+        var foreground = (SessionRun)progressRun.SessionManager.ForegroundSession!;
+        foreground.Spawn(DisposeSemanticsTestInfrastructure.CreateMetaWithIndex(
+            "late_session_creator",
+            DisposeSemanticsTestInfrastructure.BeforeQuitCreatesSessionStrategyIndex));
+
+        var exception = Assert.Throws<InvalidOperationException>(() => progressRun.Dispose());
+
+        Assert.Contains("during teardown", exception.Message, StringComparison.Ordinal);
+        Assert.Empty(ctx.Runtime.SessionManager.Keys);
+    }
+
+    [Fact]
+    public void LoadAndMountForeground_LevelConflict_LeavesExistingForeground()
+    {
+        var (ctx, _) = DisposeSemanticsTestInfrastructure.CreateForegroundContext();
+        var progressRun = ctx.EnsureProgressRun();
+        ctx.Runtime.SessionManager.CreateBackgroundSession("conflict", "conflicting_level");
+
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => progressRun.LoadAndMountForeground("conflicting_level"));
+
+        Assert.Contains("already manages", exception.Message, StringComparison.Ordinal);
+        Assert.NotNull(progressRun.SessionManager.ForegroundSession);
+        Assert.Equal("test_level", progressRun.SessionManager.ForegroundSession!.LevelId);
     }
 }

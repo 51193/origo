@@ -108,15 +108,35 @@ expect_failure "non-empty [Unreleased]" "[Unreleased] section is not empty"
 
 write_valid_fixture
 write_changelog "" ""
-expect_failure "missing CHANGELOG version block" "CHANGELOG.md has no version block heading '## [0.1.0] -'"
+expect_failure "missing CHANGELOG version block" "CHANGELOG.md has no version block heading '## [0.1.0] - YYYY-MM-DD'"
 
 write_valid_fixture
 printf '; no release block\n' > "$FIXTURE/Origo.SourceGeneration/AnalyzerReleases.Shipped.md"
 expect_failure "missing analyzer shipped block" "AnalyzerReleases.Shipped.md has no '## Release 0.1.0' block"
 
 write_valid_fixture
-printf '| ORIGOSG999 | Test | Error | fixture |\n' >> "$FIXTURE/Origo.SourceGeneration/AnalyzerReleases.Unshipped.md"
+printf '## Release 0.1.10\n' > "$FIXTURE/Origo.SourceGeneration/AnalyzerReleases.Shipped.md"
+expect_failure "shipped analyzer block for another version" "AnalyzerReleases.Shipped.md has no '## Release 0.1.0' block"
+
+write_valid_fixture
+printf 'ORIGOSG999 | Test | Error | fixture |\n' >> "$FIXTURE/Origo.SourceGeneration/AnalyzerReleases.Unshipped.md"
 expect_failure "unshipped analyzer rule" "AnalyzerReleases.Unshipped.md still contains unshipped rules"
+
+write_valid_fixture
+printf '| ORIGOSG999 | Test | Error | fixture |\n' >> "$FIXTURE/Origo.SourceGeneration/AnalyzerReleases.Unshipped.md"
+expect_failure "unshipped analyzer rule with leading pipe" "AnalyzerReleases.Unshipped.md still contains unshipped rules"
+
+write_valid_fixture
+write_changelog "" "## [0.1.0] - not-a-date"
+expect_failure "invalid CHANGELOG date" "has an invalid date 'not-a-date'"
+
+write_valid_fixture
+write_changelog "" "## [0.1.0] - 20260924"
+expect_failure "compact CHANGELOG date" "has an invalid date '20260924'"
+
+write_valid_fixture
+write_changelog "" "## [0.1.0] - 2026-W39-4"
+expect_failure "ISO week CHANGELOG date" "has an invalid date '2026-W39-4'"
 
 write_valid_fixture
 SNAPSHOT_OUTPUT="$(TAG_VERSION=0.1.0-nightly.20260924 bash "$FIXTURE/scripts/verify-release.sh")"

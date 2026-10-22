@@ -1,0 +1,31 @@
+name: PR Body Lint
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+
+jobs:
+  pr-body-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Lint the PR title/body used for squash-merge commits
+        run: |
+          set -euo pipefail
+          # Use the reviewed copy from main when it exists. This prevents a
+          # pull request from weakening the linter in the same change that it
+          # relies on a green check. Before the first merge has added the
+          # linter to main, fall back to the checked-out bootstrap copy.
+          git fetch --no-tags origin main:refs/remotes/origin/main
+          if git cat-file -e origin/main:scripts/lint-pr-body.py 2>/dev/null; then
+            git show origin/main:scripts/lint-pr-body.py > "$RUNNER_TEMP/lint-pr-body.py"
+            echo "Using scripts/lint-pr-body.py from origin/main."
+            python3 "$RUNNER_TEMP/lint-pr-body.py"
+          else
+            echo "origin/main does not contain the PR linter yet; using checked-out copy."
+            python3 scripts/lint-pr-body.py
+          fi

@@ -114,6 +114,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `ProgressRun_Dispose_PopHookThrows_ProgressStateStillReleasedAndFlagCommitted` | Quit pop hook throws | Exception propagates, but progress blackboard cleared, state machines released, disposed flag committed (second dispose idempotent) |
 | `ProgressRun_Dispose_SessionTearDownThrows_ProgressStateStillReleased` | Subscriber throws during session teardown | Exception propagates, but progress state still released and dispose state committed (second dispose no-op) |
 | `ProgressRun_Dispose_SessionTearDownThrows_CurrentDirectoryStillDeleted` | Subscriber throws during session teardown | Exception propagates, but current/ is still deleted (each cleanup step runs independently) |
+| `ProgressRun_Dispose_BeforeQuitCannotExtendSessionSet` | A BeforeQuit hook tries to create a background session during teardown | Creation is rejected; the manager ends empty and the teardown failure propagates |
 | `SessionRun_Dispose_EntityQuitHookThrows_LaterEntitiesStillReleased` | An entity's BeforeQuit hook throws during Dispose | Exception propagates, but the remaining entities' strategies are still released (LogPoolLeaks finds no leak) |
 
 ### Boundary Path
@@ -126,6 +127,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `ProgressRun_AfterDispose_ForegroundSession_IsNull` | ForegroundSession is null after Dispose | Returns null |
 | `ProgressRun_AfterDispose_SessionManagerKeys_IsEmpty` | Keys empty after Dispose | Empty collection |
 | `ProgressRun_AfterDispose_ProgressBlackboard_IsCleared` | ProgressBlackboard cleared after Dispose | TryGet returns false |
+| `LoadAndMountForeground_LevelConflict_LeavesExistingForeground` | Target levelId is held by a background session | InvalidOperationException; the existing foreground is still mounted |
 | `ProgressRun_Dispose_SafeEvenWhenNoCurrentDirectory` | current/ removed outside the run before Dispose | Does not throw |
 | `ProgressRun_Dispose_StateMachineContainerClear_DoesNotThrow` | StateMachineContainer Clear does not throw | Does not throw |
 | `SessionRun_Dispose_BeforeQuit_CanAccessSceneHost` | Session resources still accessible during BeforeQuit | Does not throw ObjectDisposedException |
@@ -549,6 +551,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `BeforeQuitSpyStrategy` | DisposeSemanticsTestInfrastructure.cs | Overrides BeforeQuit hook, records calls via AsyncLocal<List<string>> |
 | `SessionAccessQuitStrategy` | DisposeSemanticsTestInfrastructure.cs | Verifies SceneHost and SessionBlackboard are still accessible during BeforeQuit |
 | `ThrowingQuitStrategy` | DisposeSemanticsTestInfrastructure.cs | Deliberately throws in BeforeQuit to verify exception safety |
+| `BeforeQuitCreatesSessionStrategy` | DisposeSemanticsTestInfrastructure.cs | Attempts `CreateBackgroundSession` in BeforeQuit to prove teardown cannot extend the session set |
 | `PopHookThrowsPushStrategy` | DisposeSemanticsTestInfrastructure.cs | StateMachineStrategyBase: empty push strategy paired with the throwing pop strategy to construct a state machine |
 | `PopHookThrowsPopStrategy` | DisposeSemanticsTestInfrastructure.cs | StateMachineStrategyBase: deliberately throws in OnPopBeforeQuit to verify Dispose exception safety (shared by progress- and session-level tests) |
 | `ContractPushStrategy` | ForegroundBackgroundContractTests.cs | StateMachineStrategyBase: OnPushRuntime records BeforeTop→AfterTop events |
