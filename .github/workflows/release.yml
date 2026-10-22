@@ -367,10 +367,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.resolve-tag.outputs.tag }}
         run: |
-          # Only the automated snapshot path (the weekly job passes
-          # '-f snapshot=true') forces a pre-release, so an automatic snapshot
-          # never takes over as the repository's Latest release. The release step
-          # above is left exactly as it was for tags pushed or released by hand,
-          # so their state stays as chosen on GitHub.
+          # The snapshot input and any hyphenated tag force a pre-release, so a
+          # snapshot can never take over as the repository's Latest release. Only
+          # a formal x.y.z tag pushed or released by hand keeps the state chosen
+          # on GitHub.
           gh release edit "${TAG}" --prerelease
           echo "Marked ${TAG} as a pre-release."

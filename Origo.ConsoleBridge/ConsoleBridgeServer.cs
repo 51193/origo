@@ -122,10 +122,11 @@ public sealed class ConsoleBridgeServer : IDisposable
                         new LogMessageBuilder().Build($"Accept loop faulted: {inner.Message}"));
             }
 
-            // Closing the listener only after the accept task completed means
-            // no AcceptTcpClientAsync call is in flight while the listening
-            // socket is destroyed, so an already accepted-but-unhandled peer
-            // cannot be abandoned half-open.
+            // On the normal path the accept task completed, so no
+            // AcceptTcpClientAsync call is in flight while the listening socket
+            // is destroyed. If the bounded join timed out, the listener is still
+            // torn down to release the port; a pending accept/peer from the
+            // stuck loop is an accepted best-effort shutdown edge.
             _listener?.Stop();
             _listener?.Dispose();
             _output.Unsubscribe(_outputSubId);

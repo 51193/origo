@@ -85,9 +85,10 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   existing `0.1.1`.
 - The weekly job asks for a snapshot release (`gh workflow run ... -f
   snapshot=true`), which publishes the GitHub Release as a **pre-release**, so an
-  automatic snapshot never becomes the repository's Latest release. A tag pushed
-  or released by hand is never forced either way: its release state stays as
-  chosen on GitHub.
+  automatic snapshot never becomes the repository's Latest release. The Release
+  workflow also marks any tag containing `-` as a pre-release, so a hand-pushed
+  snapshot cannot become Latest either; only a formal `vx.y.z` tag pushed by
+  hand keeps the release state chosen on GitHub.
 - Snapshot tags reuse the formal release pipeline for packages, source archives,
   and documentation snapshots; `verify-release.sh` skips formal metadata
   verification for versions containing `-`.
@@ -113,14 +114,15 @@ Complete these steps in order:
    baseline in `Directory.Build.props`, and all other documentation changes
    together.
 6. Run `bash scripts/release-check.sh x.y.z` on that commit and confirm it
-   rejects a target that is not newer than the latest formal `vx.y.z` tag,
-   passes. The helper creates a temporary worktree, stamps `x.y.z` there, and
-   runs `scripts/verify-release.sh`; the caller checkout is not modified. It
-   also rejects a HEAD baseline that is not a newer `-dev` version, then requires the
-   stamped `<Version>` and `AssemblyVersion` / `FileVersion`, the matching
-   CHANGELOG version block, an empty `[Unreleased]`, the analyzer shipped block,
-   and no unshipped rules in `AnalyzerReleases.Unshipped.md`. Documentation
-   refers to the build stamp instead of duplicating the version.
+   passes. The helper first rejects a HEAD baseline that is not a newer `-dev`
+   version and a target that is not newer than the latest formal `vx.y.z` tag,
+   then creates a temporary worktree, stamps `x.y.z` there, and runs
+   `scripts/verify-release.sh`; the caller checkout is not modified. That
+   verifier requires the stamped `<Version>` and `AssemblyVersion` /
+   `FileVersion`, the matching CHANGELOG version block, an empty `[Unreleased]`,
+   the analyzer shipped block, and no unshipped rules in
+   `AnalyzerReleases.Unshipped.md`. Documentation refers to the build stamp
+   instead of duplicating the version.
 7. Run the full `bash scripts/ci.sh` on that commit and confirm every
    compatibility gate listed under Release Pipeline Artifacts below passes.
 8. Run `bash scripts/lint-commits.sh` on that commit; fix and amend if it fails.
@@ -171,8 +173,9 @@ first; every step below then applies to that tag:
   moved by this pipeline does not produce a duplicate release commit;
 - Attach the five packages, the source archive, and the documentation snapshot to
   the GitHub Release, marked as a pre-release when the run was started as a
-  snapshot (the `snapshot` input, which the weekly job sets); a tag pushed by hand
-  keeps the release state chosen on GitHub.
+  snapshot (the `snapshot` input, which the weekly job sets) or when the tag
+  contains `-`; only a formal `x.y.z` tag pushed by hand keeps the release state
+  chosen on GitHub.
 
 The release commit is not on `main`: `main` keeps the development baseline and
 the tag is the only ref that moves. Local clones that already fetched the old tag
