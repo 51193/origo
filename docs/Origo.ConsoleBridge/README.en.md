@@ -74,8 +74,8 @@ Origo's game frame loop is single-threaded. Multiple connections mean multiple c
 `AcceptTcpClientAsync` and `ReadLineAsync` wait at the OS level via IOCP without occupying dedicated thread stacks. 
 
 - Zero CPU overhead when idle (no 100ms wake-up to check state)
-- `Dispose()` shutdown latency reduced from worst-case 6 seconds (two `Thread.Join(3000)`); `Dispose` joins the accept loop with a worst-case timeout of 3 seconds (`_disposeJoinTimeoutMs`), logging a warning on timeout
-- `Dispose()` cancels active reads, wakes a pending accept with a loopback connection, joins the accept loop, and only then closes the listener — a connection accepted in the teardown race is returned and closed instead of being discarded half-open
+- `Dispose()` shutdown latency reduced from worst-case 6 seconds (two `Thread.Join(3000)`); `Dispose` joins the accept loop with a worst-case timeout of 3 seconds (`_disposeJoinTimeoutMs`), logging a warning if the loop has not stopped
+- `Dispose()` cancels active reads, wakes a pending accept with a loopback connection, and joins the accept loop. On the normal path the listener is closed only after the loop stops, so a connection accepted in the teardown race is returned and closed instead of being discarded half-open. If the 3-second bound expires, the listener is torn down anyway to release the port; the remaining pending accept/peer from the stuck loop is an accepted best-effort shutdown edge
 - No `ReceiveTimeout` read timeout fallback is needed — cancellation tokens directly interrupt `ReadLineAsync`
 
 The output path keeps synchronous `StreamWriter.WriteLine` to avoid changing the `Action<string>` callback to `Func<string, Task>` (which would cascade into polluting the `IConsoleOutputChannel` interface).

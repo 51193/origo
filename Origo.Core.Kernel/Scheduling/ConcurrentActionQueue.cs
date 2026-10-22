@@ -74,8 +74,8 @@ internal class ConcurrentActionQueue
     ///         throw unhandled exceptions, or catch them within the action itself.
     ///     </para>
     /// </summary>
-    /// <returns>Total number of actions executed in this call (including those successfully
-    /// executed before an exception was thrown).</returns>
+    /// <returns>Total number of actions executed in this call. When an action throws,
+    /// the exception is rethrown and no count is returned.</returns>
     public int ExecuteAll()
     {
         var executeCount = 0;
