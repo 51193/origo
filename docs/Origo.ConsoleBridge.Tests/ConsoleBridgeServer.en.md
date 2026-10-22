@@ -30,6 +30,7 @@ Verifies the complete TCP bridge behavior of ConsoleBridgeServer. Most integrati
 | `Dispose_StopsAcceptingNewConnections` | New connections rejected after Dispose | ConsoleBridge |
 | `Dispose_WhileClientConnected_NoHang` | Dispose does not hang while client is connected | ConsoleBridge |
 | `ActualPort_ReflectsAssignedPort` | ActualPort > 0 | ConsoleBridge |
+| `Listener_BindsOnlyLoopback` | The listening endpoint address is `IPAddress.Loopback`; a wildcard bind would fail the test | ConsoleBridge |
 | `Start_CalledTwice_DoesNotThrow` | Double Start is idempotent | ConsoleBridge |
 | `Start_CalledTwice_PortRemainsSame` | Port unchanged after double Start | ConsoleBridge |
 | `Dispose_BeforeStart_DoesNotThrow` | Dispose before Start is safe | ConsoleBridge |
