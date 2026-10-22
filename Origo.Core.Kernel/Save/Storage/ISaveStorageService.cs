@@ -76,14 +76,20 @@ public interface ISaveStorageService
     /// <summary>Reads a complete save payload from a save_* snapshot directory.</summary>
     /// <remarks>
     ///     The returned payload and all of its node trees are owned by the
-    ///     caller and must be disposed when no longer needed.
+    ///     caller and must be disposed when no longer needed. A snapshot read
+    ///     restores a complete interrupted `.bak` snapshot before reading; a
+    ///     direct load therefore has the same recovery behavior as a
+    ///     list-then-load flow.
     /// </remarks>
     SaveGamePayload ReadSavePayloadFromSnapshot(
         string saveId,
         string activeLevelId);
 
     /// <summary>Reads only the Progress node from a save_* snapshot directory.</summary>
-    /// <remarks>The returned node is owned by the caller and must be disposed.</remarks>
+    /// <remarks>
+    ///     The returned node is owned by the caller and must be disposed. A
+    ///     complete interrupted `.bak` snapshot is restored before reading.
+    /// </remarks>
     DataSourceNode? ReadProgressNodeFromSnapshot(string saveId);
 
     /// <summary>Attempts to read the payload of the specified level from current/; returns null when not found.</summary>
@@ -95,6 +101,7 @@ public interface ISaveStorageService
 
     /// <summary>Attempts to read the payload of the specified level from a save_* snapshot directory; returns null when not found.</summary>
     /// <remarks>
+    ///     A complete interrupted `.bak` snapshot is restored before reading.
     ///     The returned payload and all of its node trees are owned by the
     ///     caller and must be disposed when no longer needed.
     /// </remarks>

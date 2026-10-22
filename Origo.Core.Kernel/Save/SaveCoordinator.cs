@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Lifecycle;
+using Origo.Core.Abstractions.Logging;
+using Origo.Core.DataSource;
+using Origo.Core.Logging;
 using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.Runtime;
 using Origo.Core.Runtime.Lifecycle;
@@ -66,27 +69,60 @@ internal sealed class SaveCoordinator
         // BeforeSave hooks may write blackboard data; the topology is a
         // framework-owned key, so it is written AFTER hooks fire to guarantee
         // the serialized value is the framework-computed one.
-        ((SessionRun)fgSession).FireBeforeSaveHooks();
+        try
+        {
+            ((SessionRun)fgSession).FireBeforeSaveHooks();
+        }
+        catch
+        {
+            // A failed foreground hook may have left a framework-owned key
+            // overwritten; restore it before propagating so the next save is
+            // not poisoned by this failed attempt.
+            TryRestoreSessionTopology(topologyValue);
+            throw;
+        }
+
         _progressBlackboard.SetValue(WellKnownKeys.SessionTopology, topologyValue);
 
         // Serialize background sessions before the progress payload: their
         // BeforeSave hooks may write progress blackboard/state-machine state,
         // and those writes must be captured by the progress serialization below.
         Dictionary<string, LevelPayload>? bgPayloads = null;
+        SaveGamePayload? payload = null;
+        DataSourceNode? progressSmNode = null;
+        DataSourceNode? sessionSmNode = null;
         try
         {
-            bgPayloads = new Dictionary<string, LevelPayload>(
-                _sessionManager.SerializeBackgroundSessions(), StringComparer.Ordinal);
+            try
+            {
+                bgPayloads = new Dictionary<string, LevelPayload>(
+                    _sessionManager.SerializeBackgroundSessions(), StringComparer.Ordinal);
+            }
+            catch
+            {
+                // Background hooks run here, after the foreground hooks and
+                // the initial framework write. Restore the framework value even
+                // when a hook throws so a failed save cannot leave a corrupted
+                // topology in the progress blackboard for the next attempt.
+                TryRestoreSessionTopology(topologyValue);
+                throw;
+            }
+
+            // Reassert the framework-owned topology after ALL BeforeSave hooks
+            // (foreground and background) have run. A background hook may write
+            // this key; its write must never reach the serialized progress
+            // blackboard or override the complete session set.
+            _progressBlackboard.SetValue(WellKnownKeys.SessionTopology, topologyValue);
 
             var saveContext = new SaveContext(
                 _progressBlackboard, fgSession.SessionBlackboard, _progressRuntime.SndWorld);
 
-            var progressSmNode =
+            progressSmNode =
                 ((StateMachineContainer)_progressStateMachines).SerializeToNode(_progressRuntime.ConverterRegistry);
-            var sessionSmNode = ((StateMachineContainer)fgSession.GetSessionStateMachines())
+            sessionSmNode = ((StateMachineContainer)fgSession.GetSessionStateMachines())
                 .SerializeToNode(_progressRuntime.ConverterRegistry);
 
-            var payload = saveContext.SaveGame(
+            payload = saveContext.SaveGame(
                 ((SessionRun)fgSession).SceneHost,
                 newSaveId,
                 fgSession.LevelId,
@@ -95,14 +131,42 @@ internal sealed class SaveCoordinator
                 sessionSmNode);
 
             AppendBackgroundPayloads(payload, bgSessions, bgPayloads);
-            return payload;
+            var builtPayload = payload;
+            payload = null;
+            return builtPayload;
         }
         catch
         {
+            if (payload is not null)
+            {
+                SavePayloadDisposal.Dispose(payload);
+            }
+            else
+            {
+                // SaveGame did not return ownership of these caller-owned nodes.
+                progressSmNode?.Dispose();
+                sessionSmNode?.Dispose();
+            }
+
             if (bgPayloads is not null)
                 foreach (var bgPayload in bgPayloads.Values)
                     SavePayloadDisposal.Dispose(bgPayload);
             throw;
+        }
+    }
+
+    private void TryRestoreSessionTopology(string topologyValue)
+    {
+        try
+        {
+            _progressBlackboard.SetValue(WellKnownKeys.SessionTopology, topologyValue);
+        }
+        catch (Exception ex)
+        {
+            _progressRuntime.Logger.Log(LogLevel.Warning, nameof(SaveCoordinator),
+                new LogMessageBuilder()
+                    .AddContext("topologyKey", WellKnownKeys.SessionTopology)
+                    .Build($"Failed to restore the framework session topology after a failed save: {ex.Message}"));
         }
     }
 

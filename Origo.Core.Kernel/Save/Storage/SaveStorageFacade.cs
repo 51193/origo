@@ -79,43 +79,40 @@ internal static class SaveStorageFacade
         if (!handle.MetaAccess.DirectoryExists(handle.SaveRootPath))
             return;
 
-        foreach (var directory in handle.MetaAccess.EnumerateDirectories(handle.SaveRootPath))
-        {
-            var leaf = SaveFileHandle.GetLeafDirectoryName(directory);
-            if (!leaf.StartsWith(SaveDirectoryPrefix, StringComparison.Ordinal)
-                || !leaf.EndsWith(SaveBackupDirectorySuffix, StringComparison.OrdinalIgnoreCase))
-                continue;
-
-            var id = leaf[SaveDirectoryPrefix.Length..^SaveBackupDirectorySuffix.Length];
-            if (id.Length == 0)
-                continue;
-            try
-            {
-                SavePathLayout.ValidateSaveId(id, nameof(id));
-            }
-            catch (ArgumentException)
-            {
-                continue;
-            }
-
-            var realRel = handle.PathPolicy.GetSaveDirectory(id);
-            var realAbs = handle.GetAbsolutePath(realRel);
-            if (handle.MetaAccess.DirectoryExists(realAbs))
-                continue;
-
-            if (IsCompleteSnapshot(handle, leaf))
-                handle.MetaAccess.Rename(directory, realAbs);
-        }
+        foreach (var (saveId, backupRel) in handle.PathPolicy.EnumerateInterruptedSnapshots(
+                     handle.MetaAccess, handle.SaveRootPath))
+            RecoverInterruptedSnapshot(handle, saveId, backupRel);
     }
 
     private static void RecoverInterruptedSnapshot(SaveFileHandle handle, string saveId)
+    {
+        // A missing save root is the normal "no saves yet" state: direct
+        // reads must return not-found instead of enumerating a directory that
+        // the host has not created yet (Godot throws for a missing directory).
+        if (!handle.MetaAccess.DirectoryExists(handle.SaveRootPath))
+            return;
+
+        var realRel = handle.PathPolicy.GetSaveDirectory(saveId);
+        if (handle.MetaAccess.DirectoryExists(handle.GetAbsolutePath(realRel)))
+            return;
+
+        if (!handle.PathPolicy.EnumerateInterruptedSnapshots(
+                handle.MetaAccess, handle.SaveRootPath).TryGetValue(saveId, out var backupRel))
+            return;
+
+        RecoverInterruptedSnapshot(handle, saveId, backupRel);
+    }
+
+    private static void RecoverInterruptedSnapshot(
+        SaveFileHandle handle,
+        string saveId,
+        string backupRel)
     {
         var realRel = handle.PathPolicy.GetSaveDirectory(saveId);
         var realAbs = handle.GetAbsolutePath(realRel);
         if (handle.MetaAccess.DirectoryExists(realAbs))
             return;
 
-        var backupRel = realRel + SaveBackupDirectorySuffix;
         var backupAbs = handle.GetAbsolutePath(backupRel);
         if (!handle.MetaAccess.DirectoryExists(backupAbs))
             return;
@@ -136,17 +133,32 @@ internal static class SaveStorageFacade
         var hasLevel = false;
         foreach (var levelDir in handle.MetaAccess.EnumerateDirectories(snapshotAbs))
         {
-            var leaf = SaveFileHandle.GetLeafDirectoryName(levelDir);
-            if (!leaf.StartsWith(SavePathLayout.LevelDirectoryPrefix, StringComparison.Ordinal))
+            var levelId = handle.PathPolicy.TryGetLevelIdFromDirectory(levelDir);
+            if (levelId is null)
                 continue;
 
-            var levelRel = SavePathLayout.Combine(snapshotRel, leaf);
-            if (!handle.MetaAccess.FileExists(handle.GetAbsolutePath(
-                    handle.PathPolicy.GetLevelSndSceneFile(levelRel)))
-                || !handle.MetaAccess.FileExists(handle.GetAbsolutePath(
-                    handle.PathPolicy.GetLevelSessionFile(levelRel)))
-                || !handle.MetaAccess.FileExists(handle.GetAbsolutePath(
-                    handle.PathPolicy.GetLevelSessionStateMachinesFile(levelRel))))
+            // Round-trip the discovered ID through the policy's canonical
+            // level path so the completeness check uses exactly the path the
+            // writer would use, not the raw directory leaf. A malformed level
+            // directory name is treated as an incomplete backup and left
+            // untouched, so one stray remnant cannot break listing.
+            string levelRel;
+            try
+            {
+                levelRel = handle.PathPolicy.GetLevelDirectory(snapshotRel, levelId);
+            }
+            catch (ArgumentException)
+            {
+                return false;
+            }
+
+            var hasScene = handle.MetaAccess.FileExists(handle.GetAbsolutePath(
+                handle.PathPolicy.GetLevelSndSceneFile(levelRel)));
+            var hasSession = handle.MetaAccess.FileExists(handle.GetAbsolutePath(
+                handle.PathPolicy.GetLevelSessionFile(levelRel)));
+            var hasStateMachines = handle.MetaAccess.FileExists(handle.GetAbsolutePath(
+                handle.PathPolicy.GetLevelSessionStateMachinesFile(levelRel)));
+            if (!hasScene || !hasSession || !hasStateMachines)
                 return false;
 
             hasLevel = true;
@@ -187,12 +199,26 @@ internal static class SaveStorageFacade
         var saveRel = handle.PathPolicy.GetSaveDirectory(saveId);
         var realAbs = handle.GetAbsolutePath(saveRel);
         var tempAbs = handle.GetAbsolutePath(saveRel + SaveTempDirectorySuffix);
-        var backupAbs = handle.GetAbsolutePath(saveRel + SaveBackupDirectorySuffix);
+
+        // Clean the backup path that recovery would actually find, including
+        // a case-variant or policy-provided name; also remove the standard
+        // suffix when it differs, so two case variants cannot leave one behind
+        // and resurrect the deleted slot on the next enumeration.
+        var standardBackupRel = saveRel + SaveBackupDirectorySuffix;
+        var backupRel = standardBackupRel;
+        if (handle.MetaAccess.DirectoryExists(handle.SaveRootPath)
+            && handle.PathPolicy.EnumerateInterruptedSnapshots(
+                handle.MetaAccess, handle.SaveRootPath).TryGetValue(saveId, out var discoveredBackupRel))
+            backupRel = discoveredBackupRel;
+
+        var standardBackupAbs = handle.GetAbsolutePath(standardBackupRel);
+        var backupAbs = handle.GetAbsolutePath(backupRel);
 
         var hasReal = handle.MetaAccess.DirectoryExists(realAbs);
         var hasTemp = handle.MetaAccess.DirectoryExists(tempAbs);
+        var hasStandardBackup = handle.MetaAccess.DirectoryExists(standardBackupAbs);
         var hasBackup = handle.MetaAccess.DirectoryExists(backupAbs);
-        if (!hasReal && !hasTemp && !hasBackup)
+        if (!hasReal && !hasTemp && !hasStandardBackup && !hasBackup)
             throw new InvalidOperationException($"Save slot '{saveId}' does not exist.");
 
         // Remove the visible slot first: if a later remnant cleanup fails,
@@ -203,6 +229,8 @@ internal static class SaveStorageFacade
             handle.MetaAccess.DeleteDirectory(tempAbs);
         if (hasBackup)
             handle.MetaAccess.DeleteDirectory(backupAbs);
+        if (!string.Equals(backupAbs, standardBackupAbs, StringComparison.Ordinal) && hasStandardBackup)
+            handle.MetaAccess.DeleteDirectory(standardBackupAbs);
     }
 
     public static void WriteSavePayloadToCurrentThenSnapshot(
@@ -272,6 +300,15 @@ internal static class SaveStorageFacade
     {
         RecoverInterruptedSnapshot(handle, saveId);
         return SavePayloadReader.ReadProgressNodeFromSnapshot(handle, saveId);
+    }
+
+    public static LevelPayload? TryReadLevelPayloadFromSnapshot(
+        SaveFileHandle handle,
+        string saveId,
+        string levelId)
+    {
+        RecoverInterruptedSnapshot(handle, saveId);
+        return SavePayloadReader.TryReadLevelPayloadFromSnapshot(handle, saveId, levelId);
     }
 
     public static void SnapshotCurrentToSave(

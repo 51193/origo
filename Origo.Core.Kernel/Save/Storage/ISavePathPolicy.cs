@@ -72,4 +72,70 @@ public interface ISavePathPolicy
 
         return ids;
     }
+
+    /// <summary>
+    ///     Enumerates interrupted snapshot backups under
+    ///     <paramref name="saveRootPath" />, keyed by save ID and carrying the
+    ///     actual backup directory path relative to the save root (for example
+    ///     <c>save_{id}.bak</c>). The default implementation recognizes the
+    ///     standard backup naming; a custom layout overrides it when its slot
+    ///     directory naming differs, so recovery renames the path that was
+    ///     actually found instead of reconstructing a name.
+    /// </summary>
+    IReadOnlyDictionary<string, string> EnumerateInterruptedSnapshots(
+        IFileMetaAccess metaAccess,
+        string saveRootPath)
+    {
+        ArgumentNullException.ThrowIfNull(metaAccess);
+        if (string.IsNullOrWhiteSpace(saveRootPath))
+            return new Dictionary<string, string>(StringComparer.Ordinal);
+
+        var directories = new List<string>(metaAccess.EnumerateDirectories(saveRootPath));
+        directories.Sort(StringComparer.Ordinal);
+
+        var snapshots = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var directory in directories)
+        {
+            var leaf = SaveFileHandle.GetLeafDirectoryName(directory);
+            if (!leaf.StartsWith(SaveStorageFacade.SaveDirectoryPrefix, StringComparison.Ordinal)
+                || !leaf.EndsWith(SaveStorageFacade.SaveBackupDirectorySuffix, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var id = leaf[
+                SaveStorageFacade.SaveDirectoryPrefix.Length..^SaveStorageFacade.SaveBackupDirectorySuffix.Length];
+            if (id.Length == 0)
+                continue;
+
+            try
+            {
+                SavePathLayout.ValidateSaveId(id, nameof(id));
+            }
+            catch (ArgumentException)
+            {
+                continue;
+            }
+
+            snapshots.TryAdd(id, leaf);
+        }
+
+        return snapshots;
+    }
+
+    /// <summary>
+    ///     Extracts a level ID from a directory path when that directory is a
+    ///     level directory for this layout. The default implementation
+    ///     recognizes the standard <c>level_{id}</c> name; a custom layout
+    ///     overrides it so discovery of background level payloads follows the
+    ///     same layout as writes.
+    /// </summary>
+    string? TryGetLevelIdFromDirectory(string directoryPath)
+    {
+        ArgumentNullException.ThrowIfNull(directoryPath);
+        var leaf = SaveFileHandle.GetLeafDirectoryName(directoryPath);
+        if (!leaf.StartsWith(SavePathLayout.LevelDirectoryPrefix, StringComparison.Ordinal))
+            return null;
+
+        var id = leaf[SavePathLayout.LevelDirectoryPrefix.Length..];
+        return string.IsNullOrWhiteSpace(id) ? null : id;
+    }
 }

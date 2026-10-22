@@ -434,7 +434,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `SaveAndLoad_FromDisk_RestoresBackgroundSessions` | Write to disk→read snapshot→load→background restored | session-model |
 | `ReadFromSnapshot_IncludesAllLevelDirectories` | Snapshot read returns every level directory, including background sessions | ISaveStorageService |
 | `FullSave_FiresBeforeSaveHooks_OnForegroundEntities` | Full save triggers BeforeSave hooks on foreground entities (verifies BeforeSave hooks fire before serialization) | session-model |
-| `FullSave_BeforeSaveHookOverwritesSessionTopology_FrameworkValueWins` | When a BeforeSave hook overwrites SessionTopology, the framework-computed value wins and is persisted | session-model: Session Topology |
+| `FullSave_BeforeSaveHookOverwritesSessionTopology_FrameworkValueWins` | When a **foreground** BeforeSave hook overwrites SessionTopology, the framework-computed value wins and is persisted; background-hook coverage lives in [Save-Storage](Save-Storage.en.md#backgroundsavehooktests-details) | session-model: Session Topology |
 | `FullSave_BeforeSaveHookWrites_ArePersistedIntoForegroundSceneData` | Data written by BeforeSave hooks lands in foreground snd_scene.json | session-model |
 | `SaveAndLoad_ReSolidifiesFullTopology_IncludingBackgroundSessions` | Save→full teardown→reload re-solidifies topology to the complete session set (foreground + background with syncProcess) | session-model: Session Topology |
 
@@ -558,7 +558,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `SessionContextSpyStrategy` | BackgroundSessionTests.cs | LifecycleStrategyBase: Process hook records OwningSession.LevelId |
 | `FindByNameStrategy` | SaveAndSwitchForegroundIntegrationTests.cs | LifecycleStrategyBase: Looks up self and sibling entities via OwningSession.FindByName during AfterSpawn/AfterLoad hooks |
 | `BeforeSaveDataWriterStrategy` | BackgroundSessionTests.cs | LifecycleStrategyBase: Writes entity data in the BeforeSave hook, verifying hook writes reach the save file |
-| `TopologyOverwriteStrategy` | BackgroundSessionTests.cs | LifecycleStrategyBase: Deliberately overwrites the framework-owned session-topology key in BeforeSave, verifying the framework re-solidifies topology |
+| `TopologyOverwriteStrategy` | BackgroundSessionTests.cs | LifecycleStrategyBase: Deliberately overwrites the framework-owned session-topology key in a foreground BeforeSave hook; `BackgroundSaveHookTests` covers the background-session variant |
 | `BlackboardProbeStrategy` | SessionDecouplingTests.cs | StateMachineStrategyBase: OnPushRuntime reads marker key from SessionBlackboard |
 | `SceneAccessProbeStrategy` | SessionDecouplingTests.cs | StateMachineStrategyBase: OnPushRuntime reads all entity names from SceneAccess |
 | `NoOpPopStrategy` | SessionDecouplingTests.cs | Empty Pop strategy (placeholder, paired with BlackboardProbeStrategy/SceneAccessProbeStrategy) |

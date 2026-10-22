@@ -7,6 +7,7 @@ using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.Abstractions.StateMachine;
+using Origo.Core.DataSource;
 using Origo.Core.Logging;
 using Origo.Core.Runtime.StateMachine;
 using Origo.Core.Save;
@@ -466,14 +467,33 @@ internal sealed class SessionRun : ISessionRun, IDisposable
     {
         FireBeforeSaveHooks();
 
-        return new LevelPayload
+        DataSourceNode? sceneNode = null;
+        DataSourceNode? sessionNode = null;
+        DataSourceNode? stateMachinesNode = null;
+        try
         {
-            LevelId = LevelId,
-            SndSceneNode = _saveContext.BuildSndScene(_sceneHost),
-            SessionNode = _saveContext.SerializeSession(),
-            SessionStateMachinesNode =
-                _sessionScope.StateMachines.SerializeToNode(_saveContext.SndWorld.ConverterRegistry)
-        };
+            sceneNode = _saveContext.BuildSndScene(_sceneHost);
+            sessionNode = _saveContext.SerializeSession();
+            stateMachinesNode =
+                _sessionScope.StateMachines.SerializeToNode(_saveContext.SndWorld.ConverterRegistry);
+
+            return new LevelPayload
+            {
+                LevelId = LevelId,
+                SndSceneNode = sceneNode,
+                SessionNode = sessionNode,
+                SessionStateMachinesNode = stateMachinesNode
+            };
+        }
+        catch
+        {
+            // No LevelPayload reaches the caller on failure; release the nodes
+            // built before the throwing step instead of leaking them.
+            sceneNode?.Dispose();
+            sessionNode?.Dispose();
+            stateMachinesNode?.Dispose();
+            throw;
+        }
     }
 
     /// <summary>

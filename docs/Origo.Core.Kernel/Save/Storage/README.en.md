@@ -11,8 +11,8 @@ Complete implementation of the save storage layer. Responsible for file I/O (rea
 | File | Responsibility |
 |------|---------------|
 | `ISaveStorageService.cs` | Save read/write/delete service public interface (cross-assembly) |
-| `ISavePathPolicy.cs` | Save path policy interface (replaceable layout and slot enumeration) |
-| `DefaultSaveStorageService.cs` | Default ISaveStorageService implementation, internally delegates to SaveFileHandle + SavePayloadWriter/Reader |
+| `ISavePathPolicy.cs` | Save path policy interface (replaceable layout, slot/level discovery, and interrupted-snapshot enumeration) |
+| `DefaultSaveStorageService.cs` | Default ISaveStorageService implementation; delegates snapshot reads to the recovery-aware facade and other I/O to SaveFileHandle + SavePayloadWriter/Reader |
 | `DefaultSavePathPolicy.cs` | Default ISavePathPolicy implementation, delegates to SavePathLayout |
 | `SaveFileHandle.cs` | Unified I/O context: encapsulates IFileMetaAccess + IDataSourceIoGateway + IPathResolver + saveRootPath + ISavePathPolicy, combining path utility methods and gateway creation |
 | `SavePathLayout.cs` | Standard path layout constants and methods (current/, save_*, level_*) |
@@ -60,6 +60,9 @@ Complete implementation of the save storage layer. Responsible for file I/O (rea
 - **Per-level three-piece set incomplete** → refuse to read (partial existence = corruption)
 - **progress.json missing** → refuse to read
 - **Background level referenced by the topology has no payload** → refuse to load (consistent with the foreground: a topology referencing level data that does not exist must fail explicitly; silently mounting an empty session would hide data loss)
+- **Payload level not referenced by the topology** → refuse to load (an unreferenced level would be silently ignored, losing its state; the topology and level set must describe the same sessions)
+- **Format version below 1** → refuse to load (the initial format is version 1; older saves are identified by a missing version key, so an explicit 0/negative value is corrupt data)
+- **Format version above the current version** → refuse to load (the save was written by a newer framework)
 
 ## DataSourceNode Ownership Contract
 
@@ -69,11 +72,11 @@ Complete implementation of the save storage layer. Responsible for file I/O (rea
 
 ## Deleting Save Slots
 
-`ISaveStorageService.DeleteSave(string saveId)` removes `save_{id}/` and also cleans the matching `save_{id}.tmp/` and `save_{id}.bak/` remnants. The method never touches `current/`.
+`ISaveStorageService.DeleteSave(string saveId)` removes `save_{id}/` and also cleans the matching `save_{id}.tmp/` remnant plus the policy-discovered backup path (including a case-variant or custom-name backup, and the standard `save_{id}.bak/` when it differs). The method never touches `current/`.
 
 - The save ID is first validated as a standard token (ASCII letters, digits, `.`, `_`, `-`) and must not end in the reserved `.tmp`/`.bak` suffixes, matching the write/read path.
-- When none of the three directories exists, the method throws `InvalidOperationException` rather than silently succeeding.
-- The real slot is removed before `.tmp/.bak`, so a remnant-cleanup failure cannot leave a readable real slot whose backup was already deleted.
+- When neither the slot, the temp directory, nor any backup directory exists, the method throws `InvalidOperationException` rather than silently succeeding.
+- The real slot is removed before the `.tmp`/backup remnants, so a remnant-cleanup failure cannot leave a readable real slot whose backup was already deleted. Two case-variant backups are both removed rather than leaving one to be recovered after the delete.
 - Active-save protection belongs to the `ISndSaveOperations` business layer; the storage layer deletes exactly the slot it is given.
 
 ## Design Decisions
@@ -88,11 +91,13 @@ A save id is embedded directly in `save_{id}/`, while the snapshot phase uses `s
 
 ### Why interrupted snapshots are recovered
 
-The backup-replace swap is safe against ordinary exceptions, but a process crash between `save_{id}/` → `save_{id}.bak/` and `save_{id}.tmp/` → `save_{id}/` leaves no real slot. Enumeration/read now checks for a complete backup and restores it as the real slot; incomplete backups and `.tmp` staging are ignored as slots. This preserves the last known-good snapshot without presenting fake slots to the UI.
+The backup-replace swap is safe against ordinary exceptions, but a process crash between `save_{id}/` → `save_{id}.bak/` and `save_{id}.tmp/` → `save_{id}/` leaves no real slot. Both enumeration and the snapshot read APIs that consume a saved slot (full payload, progress, and level reads) check for a complete backup and restore it as the real slot, so a direct load by ID recovers the same way as a list-then-load flow; incomplete backups and `.tmp` staging are ignored as slots. Directory-copy restore is not a recovery read and does not perform this check. This preserves the last known-good snapshot without presenting fake slots to the UI.
+
+Recovery uses the path policy rather than assuming the default `save_`/`level_` names: `ISavePathPolicy.EnumerateInterruptedSnapshots` maps each save ID to the actual backup directory path, and completeness is checked through the policy's level paths. The recovery rename uses that actual path, so a custom layout can use a different slot prefix by overriding the enumeration and level-ID mapping instead of relying on the framework's default names.
 
 ### Why enumeration goes through ISavePathPolicy
 
-`ISavePathPolicy.EnumerateSaveIds` gives every layout policy a single place to expose its slot IDs. Write, list, metadata, and delete paths therefore agree on the layout; an unreadable or invalid directory is skipped rather than breaking metadata listing for every valid slot. Extra data restore and the idempotency side hash use `GetExtraDirectory` for the same reason.
+`ISavePathPolicy.EnumerateSaveIds` gives every layout policy a single place to expose its slot IDs. `EnumerateInterruptedSnapshots` does the same for recovery candidates (ID plus actual backup path), and `TryGetLevelIdFromDirectory` supplies the inverse mapping used when discovering level payloads, pruning stale levels, and checking snapshot completeness, so write, list, metadata, delete, load, and recovery paths agree on the layout; an unreadable or invalid directory is skipped rather than breaking metadata listing for every valid slot. Extra data restore and the idempotency side hash use `GetExtraDirectory` for the same reason.
 
 ### Why two-phase write
 

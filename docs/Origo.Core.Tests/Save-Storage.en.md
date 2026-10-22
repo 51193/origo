@@ -27,11 +27,11 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | `WellKnownKeysTests.cs` | Constants: ActiveSaveId, SessionTopology key name correctness |
 | `SaveIdValidationTests.cs` | Save id validation: `RequestSaveGame`/`RequestLoadGame`/`SetContinueTarget` reject invalid ids (path separators / out-of-range chars), accept valid ids |
 | `SaveExtraFilesRoundTripTests.cs` | extra/ side-channel files: snapshot-to-current copy round-trip, structure preservation, missing/empty dir tolerance, argument validation |
-| `SaveFormatVersionTests.cs` | Save format version: origo.format_version written to meta.map, newer versions rejected on load, missing version key tolerated, reserved keys hidden, public save-metadata listing |
-| `SaveFormatGoldenTests.cs` | Golden v1 snapshot (`Save/Golden/v1/save_goldenv1/`): current-format load through `OrigoHost`, save missing the format-version key, and future-version rejection without a partial mount |
+| `SaveFormatVersionTests.cs` | Save format version: origo.format_version written to meta.map, versions below 1 and newer versions rejected on load, missing version key tolerated, reserved keys hidden, public save-metadata listing |
+| `SaveFormatGoldenTests.cs` | Golden v1 snapshot (`Save/Golden/v1/save_goldenv1/`): current-format load through `OrigoHost`, direct load from a complete `.bak` snapshot, save missing the format-version key, and future-version rejection without a partial mount |
 | `SaveSnapshotMarkerTests.cs` | Snapshot integrity: no .write_in_progress residue in snapshot directory |
 | `StaleLevelDirectoryCleanupTests.cs` | Verifies that after a full save `current/` is consistent with the payload's level set — level directories of destroyed background sessions are cleaned up, not leaked into subsequent snapshots |
-| `Runtime/Lifecycle/BackgroundSaveHookTests.cs` | Verifies that a background session's BeforeSave progress write is captured by the same full-save snapshot |
+| `Runtime/Lifecycle/BackgroundSaveHookTests.cs` | Verifies background BeforeSave progress writes are captured, foreground/background topology writes are overridden or restored, and topology/payload mismatches (unreferenced level, duplicate level ID) are rejected on load |
 
 ## SaveStorageContractTests Details
 
@@ -105,6 +105,7 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
 | `Load_RejectsSaveWithNewerFormatVersion` | Save format version newer than current (99) | InvalidOperationException (load rejected) |
+| `Load_RejectsFormatVersionBelowOne` | Explicit format version `0` or `-1` | InvalidOperationException (only older saves that omit the version key map to version 1) |
 | `Load_RejectsCorruptFormatVersionValue` | meta.map carries an unparseable `origo.format_version` value | InvalidOperationException on flush (corrupt value is not treated as the missing-key default) |
 
 ### Boundary Path
@@ -137,6 +138,7 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 |-------------|-------------------|----------------------|
 | `GoldenV1Save_LoadsThroughShellHostAndPreservesState` | The in-repository v1 golden snapshot loads through the public `OrigoHost.RequestLoadGame` path; entity data, session blackboard, and `meta.map` display metadata match, while `origo.*` reserved keys stay hidden | persistence-flow: meta.map / strict read |
 | `GoldenV1SaveWithoutFormatVersion_LoadsAsInitialFormat` | The golden snapshot without `origo.format_version` still loads as initial format version 1 | persistence-flow: strict read |
+| `GoldenV1Backup_LoadsThroughShellHostAndRestoresSnapshot` | A complete golden v1 snapshot seeded as `save_recovered.bak` loads through the public `OrigoHost.RequestLoadGame` path; the backup is restored to `save_recovered` and removed, proving direct-load recovery without a prior list | persistence-flow: interrupted snapshot |
 
 ### Error Path
 
@@ -152,13 +154,31 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 |-------------|-----------------|-----------|
 | `Snapshot_DoesNotContainWriteInProgressMarker` | Snapshot directory has no `.write_in_progress` file after a full save | persistence-flow: Two-Phase Write |
 
-## StaleLevelDirectoryCleanupTests Details
+## BackgroundSaveHookTests Details
 
 ### Happy Path
 
 | Test Method | Verified Behavior | Reference |
 |-------------|-----------------|-----------|
 | `BackgroundBeforeSave_ProgressWrite_IsIncludedInSnapshot` | A background BeforeSave hook writes progress state; the full-save progress node contains it | Save/Lifecycle: background hooks |
+| `BackgroundBeforeSave_TopologyWrite_IsOverriddenByFramework` | A background BeforeSave hook writes a marker, then appends a bogus entry to the framework topology; the snapshot contains the marker, the real foreground/background set, and no bogus entry | Save/Lifecycle: framework-owned keys |
+| `BackgroundBeforeSave_MalformedTopology_DoesNotAbortSave` | A background BeforeSave hook writes a marker, then replaces the topology with a malformed value; the snapshot contains the marker and the framework topology | Save/Lifecycle: framework-owned keys |
+
+### Error Path
+
+| Test Method | Triggered Error | Expected Behavior |
+|-------------|----------------|-------------------|
+| `BackgroundBeforeSave_ThrowingAfterTopologyWrite_RestoresFrameworkTopology` | A background BeforeSave hook overwrites the topology and then throws | The save fails, but the progress blackboard is restored to the framework topology for the next attempt |
+| `ForegroundBeforeSave_ThrowingAfterTopologyWrite_RestoresFrameworkTopology` | A foreground BeforeSave hook overwrites the topology and then throws | The save fails, but the progress blackboard is restored to the framework topology for the next attempt |
+| `Load_SnapshotWithUnreferencedBackgroundLevel_Throws` | A snapshot whose topology omits a background level while its payload still contains that level | InvalidOperationException instead of silently dropping the level |
+| `Load_SnapshotWithDuplicateLevelIds_Throws` | A snapshot whose topology references the same level ID from two sessions | InvalidOperationException before any session mounts |
+
+## StaleLevelDirectoryCleanupTests Details
+
+### Happy Path
+
+| Test Method | Verified Behavior | Reference |
+|-------------|-----------------|-----------|
 | `SaveAfterDestroyingBackgroundSession_PrunesStaleLevelDirectory` | After saving foreground + background sessions each with one level, destroy the background and save again: neither `current/` nor the new snapshot contains the destroyed session's level directory; surviving levels are retained | Save/Storage: stale level directory cleanup |
 
 ## SaveStorageAndPayloadTests Details
@@ -213,6 +233,19 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | `SaveStorageFacade_RecoverInterruptedSnapshots_RestoresCompleteBackup` | Complete `save_recovered.bak` with no real slot | Backup restored as `save_recovered`; backup removed |
 | `SaveStorageFacade_RecoverInterruptedSnapshots_LeavesIncompleteBackup` | Incomplete `.bak` only | Not enumerated; backup left untouched |
 | `SaveStorageFacade_ReadProgressFromSnapshot_RecoversCompleteBackup` | Read a slot whose real directory is missing but complete `.bak` exists | Backup restored before read |
+| `DefaultSaveStorageService_ReadProgressFromSnapshot_RecoversCompleteBackup` | Production default service reads a slot whose real directory is missing but complete `.bak` exists | Backup restored before read |
+| `DefaultSaveStorageService_ReadSavePayloadFromSnapshot_RecoversCompleteBackup` | Production default service reads a complete payload from the same interrupted-snapshot state | Backup restored before the full payload read |
+| `DefaultSaveStorageService_TryReadLevelPayloadFromSnapshot_RecoversCompleteBackup` | Production default service reads a level from the same interrupted-snapshot state | Backup restored before the level read |
+| `SaveStorageFacade_EnumerateSaveIds_RecoversCaseVariantBackupSuffix` | Complete `save_recovered.BAK` on a case-sensitive filesystem | The actual discovered backup path is renamed; the slot is listed as `recovered` |
+| `DefaultSaveStorageService_ReadProgressFromSnapshot_RecoversCaseVariantBackupSuffix` | Direct progress read from the same case-variant backup without a prior list | The actual backup path is renamed before the read |
+| `DefaultSaveStorageService_TryReadLevelPayloadFromSnapshot_MissingRoot_ReturnsNull` | Save root does not exist and the file system throws on enumerating missing directories | Returns null instead of throwing; the host's not-yet-created save directory is a normal not-found state |
+| `DefaultSaveStorageService_ReadProgressFromSnapshot_MissingRoot_ReturnsNull` | Progress read on the same missing-root state | Returns null without enumerating the missing directory |
+| `DefaultSaveStorageService_ReadSavePayloadFromSnapshot_MissingRoot_ThrowsMissingProgress` | Full payload read on the same missing-root state | Fails fast with the missing-progress error, not a directory-enumeration error |
+| `SaveStorageFacade_DeleteSave_RemovesCaseVariantBackup` | Real slot plus both `.bak` and `.BAK` remnants | All are removed; neither remnant can resurrect the deleted slot on a later enumeration |
+| `SaveStorageFacade_EnumerateSaveIds_MalformedLevelInBackup_DoesNotThrow` | Complete backup with a malformed level directory name | The backup is treated as incomplete, left untouched, and does not break listing |
+| `SaveStorageFacade_EnumerateSaveIds_UsesPolicyRecovery` | Custom `ISavePathPolicy` layout (custom save prefix and custom level directory names) with a complete interrupted snapshot | `EnumerateInterruptedSnapshots` and `TryGetLevelIdFromDirectory` drive recovery; the custom real slot is restored and listed |
+| `DefaultSaveStorageService_ReadSavePayloadFromSnapshot_RecoversCustomLayout` | Direct full-payload read with the same custom policy, without a prior list; the snapshot also contains a non-active `bg` level under the custom level naming | The custom slot's backup is discovered through the policy and restored; `TryGetLevelIdFromDirectory` discovers the background level payload |
+| `DefaultSaveStorageService_WriteSavePayloadToCurrent_PrunesCustomLevelDirectories` | Custom level directory layout with a stale level under `current/` | Stale custom level directory is pruned; the live custom level remains |
 | `SaveStorageFacade_SnapshotCurrentToSave_PreservesRootMarkerButCopiesArchiveMarker` | Root `.write_in_progress` plus `extra/.write_in_progress` | Root marker is not copied; archive file with the same name is preserved |
 | `WriteSavePayloadToCurrentThenSnapshot_WhenRenameFails_LogsErrorAndPreservesCurrent` | Adapter-style `IOException` during temp→final rename | Exception propagates, current/ remains, error is logged |
 
@@ -418,6 +451,7 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | `FailOnRenameFileSystem` | SaveStorageAndPayloadTests.cs | Throws on temp→final or `.bak`→real-slot rename, simulating backup-replace and rollback failure |
 | `ThrowingOnReadFileSystem` | SaveIdempotencyTests.cs | Throws exception when ReadAllText accesses specified path, simulates SHA file read failure |
 | `TestPrefixedPathPolicy` | SavePathPolicyContractTests.cs | Prefixed custom ISavePathPolicy, verifying policy injection through all storage methods |
+| `PrefixedRecoveryPathPolicy` | SaveStorageAndPayloadTests.cs | Custom save/level directory layout with interrupted-snapshot and level-id enumeration overrides, verifying policy-aware recovery |
 | `SceneContractStrategy` | SavePathPolicyContractTests.cs | State machine strategy, collects SceneHost entity names in OnPushRuntime |
 | `BbContractStrategy` | SavePathPolicyContractTests.cs | State machine strategy, collects SessionBlackboard values in OnPushRuntime |
 | `NoOpPopContractStrategy` | SavePathPolicyContractTests.cs | Empty state machine strategy implementation for contract test state machine Push |

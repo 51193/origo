@@ -52,6 +52,23 @@ public class SaveFormatGoldenTests
     }
 
     [Fact]
+    public void GoldenV1Backup_LoadsThroughShellHostAndRestoresSnapshot()
+    {
+        var fileSystem = new MemoryFileSystem();
+        SeedGoldenSave(fileSystem, "recovered", GoldenVariant.Current, "root/save_recovered.bak");
+        var host = CreateBootstrappedHost(fileSystem);
+
+        host.Context.Save.RequestLoadGame("recovered");
+        host.DriveFrame(0.016);
+
+        var session = Assert.IsType<ISessionRun>(host.Runtime.SessionManager.ForegroundSession, exactMatch: false);
+        Assert.Equal("main_menu", session.LevelId);
+        Assert.NotNull(session.FindByName("hero"));
+        Assert.True(fileSystem.DirectoryExists("root/save_recovered"));
+        Assert.False(fileSystem.DirectoryExists("root/save_recovered.bak"));
+    }
+
+    [Fact]
     public void GoldenV1SaveWithoutFormatVersion_LoadsAsInitialFormat()
     {
         var fileSystem = new MemoryFileSystem();
@@ -111,10 +128,15 @@ public class SaveFormatGoldenTests
         return host;
     }
 
-    private static void SeedGoldenSave(MemoryFileSystem fileSystem, string saveId, GoldenVariant variant)
+    private static void SeedGoldenSave(
+        MemoryFileSystem fileSystem,
+        string saveId,
+        GoldenVariant variant,
+        string? destinationDirectory = null)
     {
         var sourceRoot = Path.Combine(AppContext.BaseDirectory, "Save", "Golden", "v1", "save_goldenv1");
         Assert.True(Directory.Exists(sourceRoot), $"Golden fixture not copied to output: {sourceRoot}");
+        var destination = destinationDirectory ?? $"root/save_{saveId}";
 
         foreach (var sourceFile in Directory.EnumerateFiles(sourceRoot, "*", SearchOption.AllDirectories))
         {
@@ -134,7 +156,7 @@ public class SaveFormatGoldenTests
                 };
             }
 
-            fileSystem.WriteAllText($"root/save_{saveId}/{relative}", content, overwrite: true);
+            fileSystem.WriteAllText($"{destination}/{relative}", content, overwrite: true);
         }
     }
 }

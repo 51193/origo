@@ -84,16 +84,19 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
     /// <inheritdoc/>
     public SaveGamePayload ReadSavePayloadFromSnapshot(
         string saveId,
-        string activeLevelId) => SavePayloadReader.ReadFromSnapshot(_handle, saveId, activeLevelId);
+        string activeLevelId) =>
+        SaveStorageFacade.ReadSavePayloadFromSnapshot(_handle, saveId, activeLevelId);
 
     /// <inheritdoc/>
-    public DataSourceNode? ReadProgressNodeFromSnapshot(string saveId) => SavePayloadReader.ReadProgressNodeFromSnapshot(_handle, saveId);
+    public DataSourceNode? ReadProgressNodeFromSnapshot(string saveId) =>
+        SaveStorageFacade.ReadProgressNodeFromSnapshot(_handle, saveId);
 
     /// <inheritdoc/>
     public LevelPayload? TryReadLevelPayloadFromCurrent(string levelId) => SavePayloadReader.TryReadLevelPayloadFromCurrent(_handle, levelId);
 
     /// <inheritdoc/>
-    public LevelPayload? TryReadLevelPayloadFromSnapshot(string saveId, string levelId) => SavePayloadReader.TryReadLevelPayloadFromSnapshot(_handle, saveId, levelId);
+    public LevelPayload? TryReadLevelPayloadFromSnapshot(string saveId, string levelId) =>
+        SaveStorageFacade.TryReadLevelPayloadFromSnapshot(_handle, saveId, levelId);
 
     /// <inheritdoc/>
     public LevelPayload? ResolveLevelPayload(string saveId, string levelId)

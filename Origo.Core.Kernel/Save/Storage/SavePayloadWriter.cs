@@ -125,12 +125,8 @@ internal static class SavePayloadWriter
 
         foreach (var dirAbs in handle.MetaAccess.EnumerateDirectories(currentAbs))
         {
-            var leaf = SaveFileHandle.GetLeafDirectoryName(dirAbs);
-            if (!leaf.StartsWith(SavePathLayout.LevelDirectoryPrefix, StringComparison.Ordinal))
-                continue;
-
-            var levelId = leaf[SavePathLayout.LevelDirectoryPrefix.Length..];
-            if (string.IsNullOrWhiteSpace(levelId) || liveLevels.ContainsKey(levelId))
+            var levelId = handle.PathPolicy.TryGetLevelIdFromDirectory(dirAbs);
+            if (levelId is null || liveLevels.ContainsKey(levelId))
                 continue;
 
             handle.MetaAccess.DeleteDirectory(dirAbs);

@@ -17,8 +17,8 @@
 | `TypedDataGenerator.HomeGeneration.cs` | partial — Home mode code generation (Core BCL type extension methods) |
 | `TypedDataGenerator.FactoryGeneration.cs` | partial — `TypedDataFactory<T>` Create/TryExtract branch generation (type mapping `TypedDataTypeMap` and Kind allocation live in HomeGeneration.cs) |
 | `TypedDataGenerator.Diagnostics.cs` | partial — Diagnostics definitions (ORIGOSG001-009) |
-| `AnalyzerReleases.Shipped.md` | Analyzer release tracking (rules shipped in 0.0.9: `ORIGOSG001`-`ORIGOSG007`; 0.1.0: `ORIGOSG008`; `ORIGOSG009` is tracked in Unshipped until the next formal release) |
-| `AnalyzerReleases.Unshipped.md` | Analyzer release tracking (rules for the next release; currently empty) |
+| `AnalyzerReleases.Shipped.md` | Analyzer release tracking (rules shipped in 0.0.9: `ORIGOSG001`-`ORIGOSG007`; 0.1.0: `ORIGOSG008`; `ORIGOSG009` is recorded in `AnalyzerReleases.Unshipped.md`) |
+| `AnalyzerReleases.Unshipped.md` | Analyzer release tracking (rules not yet in a formal release; currently lists `ORIGOSG009`) |
 | `pipeline.en.md` | Full-pipeline performance analysis: complete reasoning and benchmark notes from boxing problems to compile-time optimization |
 
 ## Dual-Mode Architecture
