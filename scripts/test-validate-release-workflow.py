@@ -631,10 +631,11 @@ class ReleaseWorkflowGuardTests(unittest.TestCase):
 
 
     def test_weekly_missing_orphan_tag_dispatch_is_rejected(self):
-        weekly = self.mutated_weekly(
-            '            echo "dispatch_existing=true" >> "$GITHUB_OUTPUT"\n',
-            "",
-        )
+        old = '            echo "dispatch_existing=true" >> "$GITHUB_OUTPUT"\n'
+        weekly = self.mutated_weekly(old, "")
+        # The workflow contains the marker in both the orphan scan and the
+        # remote-only tag branch; remove the second occurrence too.
+        weekly = weekly.replace(old, "", 1)
         code, _, stderr = self.run_guard(
             WORKFLOW.read_text(encoding="utf-8"), weekly
         )
