@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -74,6 +75,23 @@ public class ConsoleBridgeServerLifecycleTests
         var (server, _) = ConsoleBridgeTestInfrastructure.CreateStartedServer();
         Assert.True(server.ActualPort > 0);
         server.Dispose();
+    }
+
+    [Fact]
+    public void Listener_BindsOnlyLoopback()
+    {
+        var (server, _) = ConsoleBridgeTestInfrastructure.CreateStartedServer();
+        try
+        {
+            var field = typeof(ConsoleBridgeServer).GetField(
+                "_listener", BindingFlags.NonPublic | BindingFlags.Instance)!;
+            var listener = (TcpListener)field.GetValue(server)!;
+            Assert.Equal(IPAddress.Loopback, ((IPEndPoint)listener.LocalEndpoint).Address);
+        }
+        finally
+        {
+            server.Dispose();
+        }
     }
 
     [Fact]
