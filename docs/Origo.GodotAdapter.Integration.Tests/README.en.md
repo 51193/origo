@@ -56,6 +56,11 @@ Integration tests use a custom lightweight runner rather than xUnit:
 | OrigoDefaultEntryContextIntegrationTests | `Tests/OrigoDefaultEntryContextIntegrationTests.cs` | 1 | `OrigoDefaultEntry.Context` exposes the SndContext after successful startup and shares the same instance with `ConfigureSaveMetadataContributors` |
 | OrigoDefaultEntryStrategyRegistrationIntegrationTests | `Tests/OrigoDefaultEntryStrategyRegistrationIntegrationTests.cs` | 1 | A derived entry overrides `ConfigureStrategies` to register a strategy manually before `Bootstrap` seals the registry |
 
+The table currently sums to 98 tests. `IntegrationTestRunner` pins that floor and
+fails the run when fewer tests are discovered, so a silently lost class cannot
+pass CI; update the floor and this table together on intentional additions or
+removals.
+
 ## Running
 
 ### CI

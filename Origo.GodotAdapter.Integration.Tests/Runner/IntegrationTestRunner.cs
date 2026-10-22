@@ -12,6 +12,13 @@ namespace Origo.GodotAdapter.Integration.Tests.Runner;
 [GlobalClass]
 public partial class IntegrationTestRunner : Node
 {
+    // The full suite currently contains 98 tests. A silent discovery loss
+    // (for example a class made non-public or an attribute dropped) would
+    // otherwise reduce the total while still exiting 0. Update this floor and
+    // docs/Origo.GodotAdapter.Integration.Tests/README.en.md when tests are
+    // intentionally added or removed.
+    private const int _minimumTestCount = 98;
+
     private List<TestResult> _results = [];
     private readonly Queue<DeferredTestEntry> _deferredQueue = new();
     private DeferredTestEntry? _currentDeferred;
@@ -265,9 +272,11 @@ public partial class IntegrationTestRunner : Node
 
     private void FlushResults()
     {
-        if (_results.Count == 0)
+        if (_results.Count < _minimumTestCount)
         {
-            GD.PrintErr("INTEGRATION_TEST_RESULTS: 0 total — no tests were discovered. Failing the run.");
+            GD.PrintErr(
+                $"INTEGRATION_TEST_RESULTS: {_results.Count} total — expected at least " +
+                $"{_minimumTestCount}. A test class was not discovered. Failing the run.");
             OutputResults(_results);
             GetTree().Quit(1);
             return;

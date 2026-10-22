@@ -813,19 +813,26 @@ public class TypedDataGeneratorTests
     [Fact]
     public void Incremental_DiagnosticOnSecondRun_IsReportedWithCurrentLocation()
     {
-        var source = _scaffoldHeader
+        var firstSource = _scaffoldHeader
             + "\n[assembly: Origo.Core.Snd.Metadata.SndInlineTypes(typeof(decimal), typeof(int))]\n"
             + _scaffoldBody;
-        var firstCompilation = GeneratorTestHarness.CreateCompilation("Origo.HomeUnderTest", source);
-        var secondCompilation = GeneratorTestHarness.CreateCompilation("Origo.HomeUnderTest", source);
+        // Move only the offending attribute by one line: the generation input
+        // stays equivalent, while the diagnostic must use the current tree.
+        var secondSource = _scaffoldHeader
+            + "\n\n[assembly: Origo.Core.Snd.Metadata.SndInlineTypes(typeof(decimal), typeof(int))]\n"
+            + _scaffoldBody;
+        var firstCompilation = GeneratorTestHarness.CreateCompilation("Origo.HomeUnderTest", firstSource);
+        var secondCompilation = GeneratorTestHarness.CreateCompilation("Origo.HomeUnderTest", secondSource);
         var driver = GeneratorTestHarness.CreateTrackedDriver();
         var (first, secondDriver) = GeneratorTestHarness.RunIncremental(driver, firstCompilation);
         var (second, _) = GeneratorTestHarness.RunIncremental(secondDriver, secondCompilation);
 
-        Assert.True(first.HasGeneratorDiagnostic("ORIGOSG002"));
-        Assert.True(second.HasGeneratorDiagnostic("ORIGOSG002"));
+        var firstDiagnostic = Assert.Single(first.GeneratorDiagnostics, d => d.Id == "ORIGOSG002");
+        var secondDiagnostic = Assert.Single(second.GeneratorDiagnostics, d => d.Id == "ORIGOSG002");
+        var firstLine = firstDiagnostic.Location.GetLineSpan().StartLinePosition.Line;
+        var secondLine = secondDiagnostic.Location.GetLineSpan().StartLinePosition.Line;
+        Assert.Equal(firstLine + 1, secondLine);
         Assert.False(second.HasGeneratorDiagnostic("CS8785"));
-        Assert.NotEmpty(second.GeneratorDiagnostics);
     }
 
     [Fact]
