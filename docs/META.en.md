@@ -45,6 +45,7 @@
 - Design decisions use "why" and "why not" bullet-point exposition
 - **Uncertain design decisions must be escalated to the maintainer; do not fabricate**
 - **No evolution markers**: documentation is a snapshot of the current state. Do not use markers such as "new", "legacy", "deprecated", "since v0.x" that track the version evolution history of code/interfaces. Any description of an interface/method/decision should directly state its current responsibilities and rationale, without implying whether it "previously did not exist" or "may be removed in the future."
+- **No brittle implementation metrics**: do not record source line counts, approximate file sizes, or percentage breakdowns that change with refactoring. Describe responsibilities and constraints instead; keep exact counts only when they are contractual (for example a buffer limit or a runner-enforced test floor) and name the enforcement point.
 
 ### English Documentation Mechanism
 

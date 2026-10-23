@@ -185,7 +185,7 @@ The generated content falls into two sets based on **whether the current compila
 
 #### Source Generator Code Location
 
-The generator source lives under `Origo.SourceGeneration/` as 5 partial files (~1280 lines total): `TypedDataGenerator.cs` (pipeline and input extraction), `TypedDataGenerator.HomeGeneration.cs` (home-assembly generation), `TypedDataGenerator.AdapterGeneration.cs` (adapter generation), `TypedDataGenerator.FactoryGeneration.cs` (`TypedDataFactory<T>` branch generation), and `TypedDataGenerator.Diagnostics.cs` (diagnostic definitions). The core `GenerateTypedDataFactory` (`TypedDataGenerator.FactoryGeneration.cs`) iterates all registered types and generates `typeof(T) == typeof(...)`-style branches one by one.
+The generator source lives under `Origo.SourceGeneration/` as five partial files: `TypedDataGenerator.cs` (pipeline and input extraction), `TypedDataGenerator.HomeGeneration.cs` (home-assembly generation), `TypedDataGenerator.AdapterGeneration.cs` (adapter generation), `TypedDataGenerator.FactoryGeneration.cs` (`TypedDataFactory<T>` branch generation), and `TypedDataGenerator.Diagnostics.cs` (diagnostic definitions). The core `GenerateTypedDataFactory` (`TypedDataGenerator.FactoryGeneration.cs`) iterates all registered types and generates `typeof(T) == typeof(...)`-style branches one by one.
 
 ---
 

@@ -2,6 +2,11 @@
 
 > [↑ Back to Architecture](../README.en.md)
 
+> **Historical research (2026-09-18):** these reports are design input and
+> candidate proposals, not current repository rules. The authoritative gates
+> are [AGENTS.md](../../../AGENTS.md), [META](../../META.en.md), and
+> [release-process](../../release-process.en.md).
+
 ## Conclusion and scope
 
 This investigation separates reliable maintenance of Origo from developers asking agents to implement, run, and validate games using Origo. The latter is the primary product objective. Origo is a platform-independent C# game framework with a Godot adapter; rendering, physics, and the editor remain Godot responsibilities. Framework usability is not equivalent to a complete engine.

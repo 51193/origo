@@ -91,13 +91,13 @@ If the node is directly released during iteration over `_entities`, Godot's node
 
 ### Adapter layer entity bridging: Why GodotSndEntity must hand-write forwarding
 
-The code in `GodotSndEntity` (~238 lines) can be broken down into three categories:
+`GodotSndEntity` is dominated by mechanical forwarding to the wrapped `SndEntity`; the remaining code is engine-specific node/entity logic and infrastructure. Exact line counts change with every contract addition, so the categories below describe responsibility rather than size:
 
-| Category | Lines | Share | Notes |
-|------|------|------|------|
-| Pure forwarding boilerplate | ~120 | 60% | `ISndEntity` (~20 methods), `IEntityLifecycle` (10 methods), `ISndEntityRawSubscription` (2 methods) — all follow the pattern `Entity.Foo(...)`, each method 1–6 lines |
-| Engine-specific logic | ~60 | 21% | `StableName` ↔ `Node.Name` sync, `Free()` cleanup, `GetNodeFromSnd<TNode>()` Godot node escape, `EnsureEntity()` lazy creation |
-| Infrastructure | ~100 | 34% | Field declarations, constructors, guard methods, usings |
+| Category | Notes |
+|------|------|
+| Pure forwarding boilerplate | `ISndEntity`, `IEntityLifecycle`, and `ISndEntityRawSubscription` members follow the pattern `Entity.Foo(...)` |
+| Engine-specific logic | `StableName` ↔ `Node.Name` sync, `Free()` cleanup, `GetNodeFromSnd<TNode>()` Godot node escape, `EnsureEntity()` lazy creation |
+| Infrastructure | Field declarations, constructors, guard methods, usings |
 
 #### Why it cannot be extracted to a base class or auto-generated
 
@@ -106,7 +106,7 @@ The code in `GodotSndEntity` (~238 lines) can be broken down into three categori
 Other technical approaches also lack sufficient ROI:
 
 - **Default interface methods (DIMs)**: Require modifying the contract design of core interfaces like `ISndEntity`, adding abstract properties as indirection access points, which contradicts the current ISP decomposition direction. `IEntityLifecycle`'s explicit interface implementation semantics also conflict with DIMs.
-- **Source generator auto-forwarding**: To save ~130 lines of one-time boilerplate, would require a new Roslyn incremental source generator (~200-300 lines) and its ongoing maintenance burden. Entity bridging accounts for only about 5% of total engine adapter effort; the real cost is in the scene host, file system, serialization, and other components.
+- **Source generator auto-forwarding**: Eliminating the hand-written forwarding would require a new Roslyn incremental source generator and its ongoing maintenance burden. Entity bridging accounts for only a small part of total engine adapter effort; the real cost is in the scene host, file system, serialization, and other components.
 - **Standalone delegate object** (`SndEntityProxy`): Moving forwarding code from the adapter to a delegate class still requires the adapter to implement `ISndEntity` and forward calls to the delegate object — no boilerplate reduction.
 
 In summary, under the C# single-inheritance constraint, the current hand-written forwarding approach is already optimal and not worth code changes for further optimization.
@@ -143,7 +143,7 @@ The following must be rewritten in each adapter (engine-specific parts):
 | Node factory | `GodotPackedSceneNodeFactory`, with self as parent | `UnityPrefabNodeFactory`, instantiate under own Transform |
 | Lazy creation | `_world.CreateEntity(nodeFactory, ...)` | Same call, but with Unity's `INodeFactory` |
 
-**Estimated effort**: The entire entity bridging portion is about 2 hours (130 lines of mechanical forwarding copy + 60 lines of engine API replacement), accounting for less than 5% of total adapter layer effort. The real adaptation cost is in `ISndSceneHost` (scene entity management), `IFileSystem` (engine file API), `ILogger` (engine log API), `INodeFactory/INodeHandle` (node lifecycle), Bootstrap, and other components.
+**Estimated effort**: The entire entity bridging portion is about 2 hours of mechanical forwarding plus engine API replacement, accounting for less than 5% of total adapter layer effort. The real adaptation cost is in `ISndSceneHost` (scene entity management), `IFileSystem` (engine file API), `ILogger` (engine log API), `INodeFactory/INodeHandle` (node lifecycle), Bootstrap, and other components.
 
 ---
 
