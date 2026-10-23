@@ -7,6 +7,16 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 source "$ROOT/scripts/dotnet-env.sh"
 
+# Coverlet's instrumentation tracker creates a named Mutex during test-host
+# unload. On Linux .NET backs named mutexes with files under XDG_RUNTIME_DIR;
+# some sandboxes expose /run/user/<id> as EROFS, which makes the test host
+# report an unhandled System.IO.IOException after every test has passed. Use a
+# private writable runtime directory for this test invocation so the coverage
+# gate stays clean and does not emit a false crash report.
+ORIGO_TEST_RUNTIME_DIR="$(mktemp -d "${TMPDIR:-/tmp}/origo-test-runtime.XXXXXX")"
+export XDG_RUNTIME_DIR="$ORIGO_TEST_RUNTIME_DIR"
+trap 'rm -rf "$ORIGO_TEST_RUNTIME_DIR"' EXIT
+
 print_coverage_banner() {
   echo ""
   echo "══════════════════════════════════════════════════════════════════════"

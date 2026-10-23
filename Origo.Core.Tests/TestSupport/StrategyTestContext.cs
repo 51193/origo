@@ -50,6 +50,11 @@ internal sealed class StrategyTestContext : ISndContext, ISndBlackboardAccess, I
     {
     }
 
+    /// <inheritdoc />
+    public void Shutdown()
+    {
+    }
+
     public string SaveRootPath => string.Empty;
     public string InitialSaveRootPath => string.Empty;
     public string EntryConfigPath => string.Empty;

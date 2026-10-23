@@ -82,9 +82,12 @@ public static class Astar
 
     private static float Heuristic(GridPos a, GridPos b)
     {
-        var dx = a.X - b.X;
-        var dz = a.Z - b.Z;
-        return MathF.Sqrt(dx * dx + dz * dz);
+        // Compute in double: the public API accepts int grid coordinates, and
+        // squaring a difference above 46340 overflows int to a negative value,
+        // making MathF.Sqrt return NaN and destroying the priority order.
+        var dx = (double)a.X - b.X;
+        var dz = (double)a.Z - b.Z;
+        return (float)Math.Sqrt(dx * dx + dz * dz);
     }
 
     private static List<GridPos> ReconstructPath(Dictionary<GridPos, GridPos> cameFrom, GridPos current)

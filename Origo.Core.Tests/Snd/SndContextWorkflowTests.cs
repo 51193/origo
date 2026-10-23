@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using Origo.Core.Abstractions.Console;
 using Origo.Core.Abstractions.Runtime;
+using Origo.Core.Serialization;
 using Origo.Core.Runtime.Console;
 using Origo.Core.Save;
 using Origo.Core.Snd;
@@ -128,6 +131,42 @@ public class SndContextWorkflowTests
     }
 
     [Fact]
+    public void DeleteSave_ActiveSaveMixedCase_Throws()
+    {
+        var ctx = CreateContext(out var fs, out _);
+        SeedSaveSnapshot(fs, "root", "active_slot", "default");
+        ctx.Blackboard.SystemBlackboard.SetValue(WellKnownKeys.ActiveSaveId, "Active_Slot");
+
+        var ex = Assert.Throws<InvalidOperationException>(() => ctx.Save.DeleteSave("active_slot"));
+
+        Assert.Contains("active", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("active_slot", ctx.Save.ListSaves());
+    }
+
+    [Fact]
+    public void DeleteSave_LegacyCaseVariantSlot_ThrowsMigrationError()
+    {
+        var ctx = CreateContext(out var fs, out _);
+        fs.CreateDirectory("root/save_Legacy");
+
+        var ex = Assert.Throws<ArgumentException>(() => ctx.Save.DeleteSave("legacy"));
+
+        Assert.Contains("case", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.True(fs.DirectoryExists("root/save_Legacy"));
+    }
+
+    [Fact]
+    public void RequestLoadAndContinue_LegacyCaseVariantSlot_ThrowMigrationError()
+    {
+        var ctx = CreateContext(out var fs, out _);
+        fs.CreateDirectory("root/save_Legacy");
+
+        Assert.Throws<ArgumentException>(() => ctx.Save.RequestLoadGame("legacy"));
+        Assert.Throws<ArgumentException>(() => ctx.Save.SetContinueTarget("legacy"));
+        Assert.Throws<ArgumentException>(() => ctx.Save.RequestSaveGame("legacy"));
+    }
+
+    [Fact]
     public void DeleteSave_PendingPersistenceRequest_Throws()
     {
         var ctx = CreateContext(out var fs, out _);
@@ -145,6 +184,82 @@ public class SndContextWorkflowTests
     }
 
     // ── RequestSaveGame ──
+
+    [Fact]
+    public void Shutdown_ClearsProgressAndCurrent_IsIdempotentAndRejectsBootstrap()
+    {
+        var ctx = CreateContext(out var fs, out _);
+        SetupProgressRun(ctx, fs);
+        fs.SeedFile("root/current/shutdown_probe.txt", "probe");
+        Assert.NotNull(ctx.Blackboard.ProgressBlackboard);
+        Assert.True(fs.DirectoryExists("root/current"));
+
+        ctx.Shutdown();
+
+        Assert.Null(ctx.Blackboard.ProgressBlackboard);
+        Assert.False(fs.DirectoryExists("root/current"));
+        ctx.Shutdown();
+        Assert.Throws<InvalidOperationException>(() => ctx.Bootstrap());
+        Assert.Throws<InvalidOperationException>(() => ctx.Save.RequestSaveGame("after_shutdown"));
+        Assert.Throws<InvalidOperationException>(() => ctx.Save.DeleteSave("after_shutdown"));
+        Assert.Throws<InvalidOperationException>(() => ctx.Save.SetContinueTarget("after_shutdown"));
+        Assert.Throws<InvalidOperationException>(() => ctx.Save.RequestSwitchForegroundLevel("after_shutdown"));
+        Assert.Throws<InvalidOperationException>(() => ctx.Lifecycle.RequestLoadMainMenuEntrySave());
+        Assert.Throws<InvalidOperationException>(() => ctx.Lifecycle.RequestLoadInitialSave());
+        Assert.Throws<InvalidOperationException>(() => ctx.Lifecycle.RequestContinueGame());
+    }
+
+    [Fact]
+    public void Shutdown_ConsoleClearFailure_RemainsRetryable()
+    {
+        var input = new ThrowingConsoleInput();
+        var logger = new TestLogger();
+        var runtime = TestFactory.CreateRuntime(
+            logger,
+            new TestSndSceneHost(),
+            new TypeStringMapping(),
+            new Origo.Core.Blackboard.Blackboard(),
+            input,
+            new ConsoleOutputChannel());
+        var fs = new TestMemoryFileSystem();
+        var ctx = new SndContext(new SndContextParameters(
+            runtime,
+            TestFactory.CreateIoGateway(fs),
+            TestFactory.CreateFileMetaAccess(fs),
+            TestFactory.CreatePathResolver(fs),
+            "root",
+            "res://initial",
+            "entry.json"));
+
+        var first = Assert.Throws<InvalidOperationException>(() => ctx.Shutdown());
+        Assert.Contains("console clear failed", first.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.False(ctx.IsBootstrapCompleted);
+
+        input.ThrowOnClear = false;
+        ctx.Shutdown();
+        Assert.Throws<InvalidOperationException>(() => ctx.Bootstrap());
+    }
+
+    private sealed class ThrowingConsoleInput : IConsoleInputSource
+    {
+        public bool ThrowOnClear { get; set; } = true;
+
+        public bool TryDequeueCommand([NotNullWhen(true)] out string? line)
+        {
+            line = null;
+            return false;
+        }
+
+        public void Enqueue(string line)
+        {
+        }
+
+        public void Clear()
+        {
+            if (ThrowOnClear)
+                throw new InvalidOperationException("console clear failed");
+        }
+    }
 
     [Fact]
     public void RequestSaveGame_ThrowsOnEmptyId()
@@ -309,6 +424,21 @@ public class SndContextWorkflowTests
         SeedSaveSnapshot(fs, "root", "cont", "default");
         ctx.Save.SetContinueTarget("cont");
 
+        Assert.True(ctx.Lifecycle.RequestContinueGame());
+        ctx.FlushFrame();
+
+        Assert.NotNull(ctx.Blackboard.ProgressBlackboard);
+        Assert.NotNull(ctx.Runtime.SessionManager.ForegroundSession);
+    }
+
+    [Fact]
+    public void ContinueLookup_LegacyMixedCaseActiveId_FindsRenamedLowercaseSlot()
+    {
+        var ctx = CreateContext(out var fs, out _);
+        SeedSaveSnapshot(fs, "root", "slot", "default");
+        ctx.Blackboard.SystemBlackboard.SetValue(WellKnownKeys.ActiveSaveId, "Slot");
+
+        Assert.True(ctx.Lifecycle.HasContinueData());
         Assert.True(ctx.Lifecycle.RequestContinueGame());
         ctx.FlushFrame();
 

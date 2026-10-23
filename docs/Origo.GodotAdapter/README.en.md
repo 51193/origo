@@ -36,6 +36,7 @@ OrigoDefaultEntry._Ready()
   │       ├── GodotFileSystem + GodotSndManager (added as a child node)
   │       ├── AdapterHostKernelPort.CreateRuntime(options, sndManager, systemBlackboardPath, configureRegistry)
   │       │   ├── TypeStringMapping + default converter registry + GodotJsonConverterRegistry registrations
+  │       │   ├── ConfigureStartupRegistry(typeMapping, registry)  // user hook for system-blackboard types
   │       │   ├── IDataSourceIoGateway / IFileMetaAccess / IPathResolver
   │       │   ├── PersistentBlackboard → LoadFromDisk()
   │       │   ├── ConsoleInputBuffer / ConsoleOutputChannel (or host-injected channels)
@@ -47,6 +48,7 @@ OrigoDefaultEntry._Ready()
   ├── AdapterHostKernelPort.CreateContext(...)  // creates SndContext + ISndContextAttachableSceneHost.BindContext(context)
   ├── Context = sndContext                   // exposed to presentation/game code
   ├── ConfigureSaveMetadataContributors(context)  // hook for extra save metadata contributors
+  ├── (normal exit) _ExitTree → Context.Shutdown()  // quit hooks + current/ cleanup
   └── sndContext.Bootstrap()                 // Core-internal sequence:
         ├── scene-host readiness check (observer topology bound to a context)
         ├── ConfigureConverters hook

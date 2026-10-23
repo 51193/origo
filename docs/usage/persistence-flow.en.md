@@ -30,7 +30,7 @@ Origo's save system follows **strict read, explicit failure, two-phase write** c
 └── save_.../
 ```
 
-Save IDs use ASCII letters, digits, `.`, `_`, and `-`, but they must not end in `.tmp` or `.bak`: those suffixes are reserved for the snapshot staging and backup directories, and allowing them would let one save slot name collide with another slot's atomic-write path. A process crash between the two rename steps is recovered when the slot is next listed or read: a complete `save_{id}.bak/` is restored as `save_{id}/`; incomplete staging/backup directories are not exposed as slots.
+Save IDs use lowercase ASCII letters, digits, `.`, `_`, and `-`; they must not end in `.tmp` or `.bak` (reserved for snapshot staging/backup) and must not be dot-only or end with `.` (Windows strips a trailing period). Mixed-case IDs are rejected because `save_{id}/` is the same directory as a differently-cased ID on default Windows/macOS file systems; level IDs follow the same lowercase, path-safe rule because they name `level_{id}/`. A process crash between the two rename steps is recovered when the slot is next listed or read: a complete `save_{id}.bak/` is restored as `save_{id}/`; incomplete staging/backup directories are not exposed as slots.
 
 ## Two-Phase Write
 
@@ -84,7 +84,7 @@ snapshot read restores as the real slot; `.tmp` is never listed as a save.
 | `current/` has `.write_in_progress` | Throw `InvalidOperationException` (interrupted write; must be handled first) |
 | All three level files missing | Treated as "no save for this level" (`null`) |
 | Level three files partially present | Throw exception (data corruption) |
-| `progress.json` missing | Throw exception |
+| `progress.json` missing on a full payload read | Throw exception; the narrow `ReadProgressNodeFromSnapshot` probe returns `null` |
 | Format version below 1 or newer than supported | Throw exception (0/negative is corrupt data; a newer version cannot be parsed) |
 | Topology and payload levels disagree | Throw exception (a referenced level has no payload, or a payload level is not referenced) |
 | No levels exist at all | Treated as "no save exists yet" |
@@ -179,7 +179,7 @@ SaveGamePayload {
 
 ```csharp
 // In a strategy:
-ctx.Save.RequestSaveGame("my_save_id"); // ASCII letters/digits/._-, no .tmp/.bak suffix
+ctx.Save.RequestSaveGame("my_save_id"); // lowercase ASCII letters/digits/._-, no .tmp/.bak suffix
 ctx.Save.RequestSaveGameAuto();  // Auto-generate timestamp ID
 
 // ProgressRun handles these requests:

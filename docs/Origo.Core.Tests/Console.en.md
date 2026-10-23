@@ -25,7 +25,7 @@ input queue (polling dequeue, FIFO, trim, clear), `IConsoleInputSource` interfac
 | `EntityDataCommandHandlerTests.cs` | entity_get_data / entity_set_data commands |
 | `InvokeStrategyCommandHandlerTests.cs` | invoke_strategy command |
 | `SndCountCommandHandlerTests.cs` | snd_count command |
-| `SpawnTemplateCommandHandlerTests.cs` | spawn command error paths: mixed argument format, missing name parameter |
+| `SpawnTemplateCommandHandlerTests.cs` | spawn command error paths: mixed argument format, missing name parameter, unknown template, duplicate entity name, and a frame-loop duplicate followed by a command |
 | `PersistenceCommandHandlerTests.cs` | list_saves/save/load/delete_save/switch_level commands: listing, queueing, frame execution, deletion, and error paths |
 
 ## ConsoleCommandParserTests Details
@@ -168,6 +168,7 @@ input queue (polling dequeue, FIFO, trim, clear), `IConsoleInputSource` interfac
 | `EntitySetData_NewKey_BoolLiteral_StoredAsBoolean` | entity_set_data player alive true → Boolean | console-commands |
 | `EntitySetData_NewKey_StringLiteral_StoredAsString` | entity_set_data player tag hero → String | console-commands |
 | `EntitySetData_ExistingKey_PreservesType` | Existing float-typed "hunger" key, write 15 → preserved as Single(15.0f) | console-commands: entity_set_data |
+| `EntitySetData_ExistingFloat_RejectsNonFiniteValues` | Existing float key, write `NaN` | returns false; original finite value remains |
 | `EntitySetData_ExistingInt64Key_PreservesInt64` | Existing Int64-typed "coins" key, write 4000000000 → preserved as Int64(4000000000) | console-commands: entity_set_data |
 | `BlackboardSet_BeyondIntRange_StoredAsInt64` | bb_set system big 3000000000 (beyond int range) → Int64(3000000000) | console-commands: bb_set |
 | `EntitySetData_NewKey_BeyondIntRange_StoredAsInt64` | entity_set_data player coins 3000000000 → Int64 | console-commands: entity_set_data |
@@ -303,6 +304,8 @@ input queue (polling dequeue, FIFO, trim, clear), `IConsoleInputSource` interfac
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
 | `SpawnTemplateCommandHandler_MixNamedAndPositional_ReturnsError` | Mixed positional and named args | returns false + error containing "mix" |
+| `SpawnTemplateCommandHandler_DuplicateEntityName_ReturnsErrorInsteadOfThrowing` | Existing foreground entity with the requested name | returns false + "already exists" |
+| `FrameLoop_DuplicateSpawnDoesNotBlockFollowingCommand` | Duplicate spawn and a following `bb_set` in one `DriveFrame` | frame completes without throwing, error is published, later command executes |
 | `SpawnTemplateCommandHandler_NamedMissingName_ReturnsError` | Named args missing name | returns false + error containing "name" |
 | `SpawnTemplateCommandHandler_UnknownTemplate_ReturnsErrorInsteadOfThrowing` | Unknown template alias with templates loaded | returns false + error containing the alias |
 | `SpawnTemplateCommandHandler_TemplatesNotLoaded_ReturnsErrorInsteadOfThrowing` | Template lookup before any template map is loaded | returns false + error containing "template" |

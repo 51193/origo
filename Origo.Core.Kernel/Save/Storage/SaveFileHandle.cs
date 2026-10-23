@@ -49,21 +49,65 @@ internal sealed class SaveFileHandle
         if (string.IsNullOrEmpty(fullPath))
             return fullPath;
 
-        var sep = SavePathLayout.PathSeparator;
-        var baseDir = SaveRootPath.TrimEnd(sep, '\\');
-        var basePrefix = baseDir.Length == 0 ? $"{sep}" : $"{baseDir}{sep}";
+        // IFileSystem/IPathResolver are platform-adapter contracts and may
+        // return either separator style (and may expose a scheme root such as
+        // user://). Normalize both sides before the prefix check so a Windows
+        // host's backslash paths are not silently treated as "not under the
+        // save root" (which would embed the absolute path in a snapshot).
+        var normalizedFull = NormalizeSeparators(fullPath);
+        var baseDir = NormalizeRoot(SaveRootPath);
+        var basePrefix = baseDir.EndsWith("://", StringComparison.Ordinal)
+            ? baseDir
+            : baseDir.Length == 0 ? "/" : $"{baseDir}/";
+        // Drive-letter and UNC roots are Windows paths, whose file system is
+        // case-insensitive; a configured root's casing need not match the
+        // enumerator's casing. Other roots (including scheme roots used on
+        // Linux/macOS) stay ordinal so a genuinely different path is rejected.
+        var comparison = IsDriveOrUncRoot(baseDir)
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
 
-        if (fullPath.StartsWith(basePrefix, StringComparison.Ordinal))
+        if (normalizedFull.StartsWith(basePrefix, comparison))
         {
-            var relative = fullPath[basePrefix.Length..];
+            var relative = normalizedFull[basePrefix.Length..];
             RejectPathTraversal(relative);
             return relative;
         }
 
-        if (string.Equals(fullPath, baseDir, StringComparison.Ordinal))
+        if (string.Equals(normalizedFull, baseDir, comparison))
             return string.Empty;
 
-        return fullPath;
+        throw new InvalidOperationException(
+            $"Path '{fullPath}' is not under save root '{SaveRootPath}'. " +
+            "Snapshot enumeration must only return paths below the configured save root.");
+    }
+
+    private static bool IsDriveOrUncRoot(string path) =>
+        path.StartsWith("//", StringComparison.Ordinal)
+        || (path.Length >= 2 && char.IsAsciiLetter(path[0]) && path[1] == ':');
+
+    private static string NormalizeRoot(string path)
+    {
+        var normalized = NormalizeSeparators(path);
+        return normalized.EndsWith("://", StringComparison.Ordinal)
+            ? normalized
+            : normalized.TrimEnd('/');
+    }
+
+    private static string NormalizeSeparators(string path)
+    {
+        var normalized = path.Replace('\\', '/');
+        var schemeIndex = normalized.IndexOf("://", StringComparison.Ordinal);
+        if (schemeIndex < 0)
+            return normalized;
+
+        // Godot's directory enumerator adds a third slash when the root is an
+        // exact scheme root ("user://" + "/" + file); collapse extra leading
+        // slashes after the scheme so both the combine path and the enumerated
+        // path compare as "user://current/...".
+        var schemeRoot = normalized[..(schemeIndex + 3)];
+        var rest = normalized[(schemeIndex + 3)..].TrimStart('/');
+        return rest.Length == 0 ? schemeRoot : $"{schemeRoot}{rest}";
     }
 
     public static string GetLeafDirectoryName(string path)

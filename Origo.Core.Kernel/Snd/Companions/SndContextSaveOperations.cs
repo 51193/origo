@@ -17,6 +17,17 @@ internal sealed class SndContextSaveOperations(SndContext owner) : ISndSaveOpera
 {
     private long _lastAutoSaveId;
 
+    private void EnsureNoCaseVariantSlot(string saveId)
+    {
+        if (owner.StorageService is ICaseVariantSaveIdQuery query
+            && query.HasCaseVariantSlot(saveId))
+            throw new ArgumentException(
+                $"Save id '{saveId}' differs only by case from a legacy slot. " +
+                "Rename the legacy slot to the lowercase id before using it; " +
+                "mixed-case ids alias the same directory on case-insensitive file systems.",
+                nameof(saveId));
+    }
+
     /// <inheritdoc/>
     public void RegisterSaveMetaContributor(ISaveMetaContributor contributor)
     {
@@ -42,14 +53,16 @@ internal sealed class SndContextSaveOperations(SndContext owner) : ISndSaveOpera
     /// <inheritdoc/>
     public void DeleteSave(string saveId)
     {
+        owner.ThrowIfShutdown();
         SavePathLayout.ValidateSaveId(saveId, nameof(saveId));
+        EnsureNoCaseVariantSlot(saveId);
 
         if (owner.IsWorkflowInProgress || owner._pendingPersistenceRequests != 0)
             throw new InvalidOperationException(
                 $"Cannot delete save '{saveId}' while a persistence workflow is running or pending.");
 
         var (found, activeSaveId) = owner._systemRun.SystemBlackboard.TryGet<string>(WellKnownKeys.ActiveSaveId);
-        if (found && string.Equals(activeSaveId, saveId, StringComparison.Ordinal))
+        if (found && string.Equals(activeSaveId, saveId, StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException(
                 $"Cannot delete active save '{saveId}'.");
 
@@ -59,7 +72,9 @@ internal sealed class SndContextSaveOperations(SndContext owner) : ISndSaveOpera
     /// <inheritdoc/>
     public void RequestLoadGame(string saveId)
     {
+        owner.ThrowIfShutdown();
         SavePathLayout.ValidateSaveId(saveId, nameof(saveId));
+        EnsureNoCaseVariantSlot(saveId);
 
         owner.EnqueueTrackedSystemDeferred(() =>
             owner.SetProgressRun(owner.LoadOrContinueStrict(saveId)));
@@ -68,7 +83,9 @@ internal sealed class SndContextSaveOperations(SndContext owner) : ISndSaveOpera
     /// <inheritdoc/>
     public void RequestSaveGame(string newSaveId)
     {
+        owner.ThrowIfShutdown();
         SavePathLayout.ValidateSaveId(newSaveId, nameof(newSaveId));
+        EnsureNoCaseVariantSlot(newSaveId);
 
         owner.EnqueueTrackedSystemDeferred(() =>
         {
@@ -115,17 +132,20 @@ internal sealed class SndContextSaveOperations(SndContext owner) : ISndSaveOpera
     /// <inheritdoc/>
     public void SetContinueTarget(string saveId)
     {
+        owner.ThrowIfShutdown();
         SavePathLayout.ValidateSaveId(saveId, nameof(saveId));
+        EnsureNoCaseVariantSlot(saveId);
         owner._systemRun.SetActiveSaveSlot(saveId);
     }
 
     /// <inheritdoc/>
     public void RequestSwitchForegroundLevel(string newLevelId)
     {
+        owner.ThrowIfShutdown();
         if (string.IsNullOrWhiteSpace(newLevelId))
             throw new ArgumentException(
                 "New level id cannot be null or whitespace.", nameof(newLevelId));
-        SavePathLayout.ValidateToken(newLevelId, nameof(newLevelId), "level id");
+        SavePathLayout.ValidateLevelId(newLevelId, nameof(newLevelId));
 
         // A level switch persists the foreground state and progress to disk,
         // so it is tracked as a pending persistence request like save/load.

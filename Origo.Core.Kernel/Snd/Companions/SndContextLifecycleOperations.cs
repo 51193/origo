@@ -16,6 +16,7 @@ internal sealed class SndContextLifecycleOperations(SndContext owner) : ISndLife
     /// <inheritdoc/>
     public bool RequestContinueGame()
     {
+        owner.ThrowIfShutdown();
         if (!TryGetExistingContinueSaveId(out var saveId))
             return false;
 
@@ -35,10 +36,14 @@ internal sealed class SndContextLifecycleOperations(SndContext owner) : ISndLife
 
         foreach (var existingSaveId in owner.StorageService.EnumerateSaveIds())
         {
-            if (!string.Equals(existingSaveId, candidate, StringComparison.Ordinal))
+            // Active-save IDs persist in system.json, so a pre-lowercase value
+            // ("Foo") must still find its renamed lowercase slot ("foo"), and
+            // the returned ID must be the storage ID (returning "Foo" would be
+            // rejected by the save-id validation during load).
+            if (!string.Equals(existingSaveId, candidate, StringComparison.OrdinalIgnoreCase))
                 continue;
 
-            saveId = candidate;
+            saveId = existingSaveId;
             return true;
         }
 
@@ -47,10 +52,16 @@ internal sealed class SndContextLifecycleOperations(SndContext owner) : ISndLife
     }
 
     /// <inheritdoc/>
-    public void RequestLoadInitialSave() =>
+    public void RequestLoadInitialSave()
+    {
+        owner.ThrowIfShutdown();
         owner.EnqueueTrackedSystemDeferred(owner.ExecuteLoadInitialSaveNow);
+    }
 
     /// <inheritdoc/>
-    public void RequestLoadMainMenuEntrySave() =>
+    public void RequestLoadMainMenuEntrySave()
+    {
+        owner.ThrowIfShutdown();
         owner.EnqueueTrackedSystemDeferred(owner.ExecuteLoadMainMenuEntrySaveNow);
+    }
 }

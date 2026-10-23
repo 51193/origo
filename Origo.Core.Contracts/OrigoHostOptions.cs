@@ -5,6 +5,7 @@ using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.DataSource;
 using Origo.Core.Logging;
+using Origo.Core.Serialization;
 
 namespace Origo.Core;
 
@@ -63,4 +64,13 @@ public sealed class OrigoHostOptions
 
     /// <summary>Optional custom data-source converter registration callback.</summary>
     public Action<DataSourceConverterRegistry>? ConfigureConverters { get; init; }
+
+    /// <summary>
+    ///     Optional registration callback invoked before the persisted system
+    ///     blackboard is read. Use it to register the type-name mappings and
+    ///     converters required by custom types stored in the system blackboard;
+    ///     <see cref="ConfigureConverters" /> alone runs during Bootstrap, too
+    ///     late for that initial disk read.
+    /// </summary>
+    public Action<TypeStringMapping, DataSourceConverterRegistry>? ConfigureStartupRegistry { get; init; }
 }

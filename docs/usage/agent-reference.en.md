@@ -89,6 +89,7 @@ ISndContext is the unified facade interface received by strategy hooks. It does 
 public interface ISndContext
 {
     void Bootstrap();
+    void Shutdown();  // idempotent; after shutdown, bootstrap/save/load requests fail
     string SaveRootPath { get; }
     string InitialSaveRootPath { get; }
     string EntryConfigPath { get; }
@@ -288,7 +289,7 @@ public partial class MyEntry : OrigoDefaultEntry
 }
 ```
 
-- What the consumer must do: supply the entry configuration (`ConfigPath`, `SaveRootPath`, `InitialSaveRootPath`, alias/template map paths) and make sure every strategy is registered before bootstrap — through `AutoDiscoverStrategies`, `ConfigureStrategies`, or `ISndWorldAccess.RegisterStrategy`; `ConfigureSaveMetadataContributors` and `RegisterCustomConverters` cover display metadata and custom converters.
+- What the consumer must do: supply the entry configuration (`ConfigPath`, `SaveRootPath`, `InitialSaveRootPath`, alias/template map paths) and make sure every strategy is registered before bootstrap — through `AutoDiscoverStrategies`, `ConfigureStrategies`, or `ISndWorldAccess.RegisterStrategy`; `ConfigureSaveMetadataContributors` and `RegisterCustomConverters` cover display metadata and custom converters. If a custom type is stored in the system blackboard, register its type name and converter through `OrigoHostOptions.ConfigureStartupRegistry` (Core) or the adapter entry's `ConfigureStartupRegistry` hook (Godot) so they exist before `system.json` is read.
 - What the consumer observes after `base._Ready()` returns: `Runtime`, `Context`, `ConsoleInput`, and `ConsoleOutputChannel` are available on the node, strategy registration is sealed, the configured scene aliases and templates are loaded, and the main-menu entry load is enqueued as a deferred action that executes when `IOrigoFrameDriver.DriveFrame(delta)` flushes the frame.
 - `_Process` drives `Runtime.DriveFrame(delta)`. A failure inside `_Ready` and any frame driven after a failed bootstrap throw instead of running a partially initialized runtime.
 

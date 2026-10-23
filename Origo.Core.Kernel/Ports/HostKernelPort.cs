@@ -57,6 +57,7 @@ internal sealed class CoreHostKernelPort : IHostKernelPort
         var fileSystem = options.FileSystem ?? HostUnavailableFileSystem.Instance;
         var typeMapping = new TypeStringMapping();
         var converterRegistry = DataSourceFactory.CreateDefaultRegistry(typeMapping);
+        options.ConfigureStartupRegistry?.Invoke(typeMapping, converterRegistry);
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fileSystem, logger: options.Logger);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fileSystem);
         var pathResolver = DataSourceFactory.CreatePathResolver(fileSystem);

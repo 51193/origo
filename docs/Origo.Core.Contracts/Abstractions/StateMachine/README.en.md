@@ -29,7 +29,7 @@ Defines the string-stack state machine system. The state machine only stores str
 
 ## IStateMachineContext Members
 
-> Members inherited from [ISndBlackboardAccess](../Snd/README.en.md) and [ISndDeferredActions](../Snd/README.en.md) are not re-listed.
+> Members inherited from [ISndBlackboardAccess](../Snd/README.en.md) and [ISndDeferredActions](../Snd/README.en.md) are listed below with their inherited contracts so this context view is self-contained.
 
 | Member | Description |
 |------|------|

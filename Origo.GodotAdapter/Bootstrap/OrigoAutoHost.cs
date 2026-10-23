@@ -13,6 +13,7 @@ using Origo.Core.Kernel.Ports;
 using Origo.Core.Logging;
 using Origo.Core.Runtime;
 using Origo.Core.Runtime.Console;
+using Origo.Core.Serialization;
 using Origo.Core.Snd;
 using Origo.GodotAdapter.FileSystem;
 using Origo.GodotAdapter.Logging;
@@ -147,10 +148,11 @@ public partial class OrigoAutoHost : Node
             options,
             sndManager,
             systemBlackboardPath,
-            static (typeMapping, converterRegistry) =>
+            (typeMapping, converterRegistry) =>
             {
                 GodotJsonConverterRegistry.RegisterTypeMappings(typeMapping);
                 GodotJsonConverterRegistry.RegisterDataSourceConverters(converterRegistry);
+                ConfigureStartupRegistry(typeMapping, converterRegistry);
             });
 
         _runtimeBundle = bundle;
@@ -167,6 +169,21 @@ public partial class OrigoAutoHost : Node
                 .AddContext("filePath", systemBlackboardPath)
                 .Build("CreateRuntime completed."));
         return bundle.Runtime;
+    }
+
+    /// <summary>
+    ///     Registers type-name mappings and converters that must be available
+    ///     before the persisted system blackboard (<c>system.json</c>) is read.
+    ///     Override this hook, not <c>RegisterCustomConverters</c>, when a
+    ///     custom type is stored in the system blackboard: the latter runs
+    ///     during Bootstrap, after the initial disk read.
+    /// </summary>
+    /// <param name="typeMapping">Type-name mapping used by persisted data.</param>
+    /// <param name="converterRegistry">Data-source converter registry.</param>
+    protected virtual void ConfigureStartupRegistry(
+        TypeStringMapping typeMapping,
+        DataSourceConverterRegistry converterRegistry)
+    {
     }
 
     /// <summary>

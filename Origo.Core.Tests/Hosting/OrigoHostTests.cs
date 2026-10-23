@@ -69,6 +69,62 @@ public class OrigoHostTests
     }
 
     [Fact]
+    public void OrigoHost_Dispose_IsIdempotentAndRejectsLaterBootstrap()
+    {
+        var host = OrigoHost.Create(new OrigoHostOptions
+        {
+            Meta = new OrigoMeta("Tests", "1.0.0", "test"),
+            AutoDiscoverStrategies = false,
+        });
+
+        host.Dispose();
+        host.Dispose();
+
+        Assert.Throws<InvalidOperationException>(() => host.Bootstrap());
+    }
+
+    [Fact]
+    public void OrigoHost_Dispose_ConsoleClearFailure_RemainsRetryable()
+    {
+        var input = new DisposeThrowingConsoleInput();
+        var host = OrigoHost.Create(new OrigoHostOptions
+        {
+            Meta = new OrigoMeta("Tests", "1.0.0", "test"),
+            ConsoleInput = input,
+            ConsoleOutputChannel = new ConsoleOutputChannel(),
+            AutoDiscoverStrategies = false,
+        });
+
+        var first = Assert.Throws<InvalidOperationException>(() => host.Dispose());
+        Assert.Contains("console clear failed", first.Message, StringComparison.OrdinalIgnoreCase);
+
+        input.ThrowOnClear = false;
+        host.Dispose();
+        Assert.Throws<InvalidOperationException>(() => host.Bootstrap());
+    }
+
+    private sealed class DisposeThrowingConsoleInput : IConsoleInputSource
+    {
+        public bool ThrowOnClear { get; set; } = true;
+
+        public bool TryDequeueCommand([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out string? line)
+        {
+            line = null;
+            return false;
+        }
+
+        public void Enqueue(string line)
+        {
+        }
+
+        public void Clear()
+        {
+            if (ThrowOnClear)
+                throw new InvalidOperationException("console clear failed");
+        }
+    }
+
+    [Fact]
     public void OrigoHost_ShouldRegisterCustomConsoleHandlerThroughStableRuntime()
     {
         var input = new ConsoleInputBuffer();

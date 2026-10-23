@@ -74,7 +74,9 @@ internal static class ConsoleCommandHelper
             return true;
         }
 
-        if (targetType == typeof(float) && float.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out var fv))
+        if (targetType == typeof(float)
+            && float.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out var fv)
+            && float.IsFinite(fv))
         {
             entity.SetData(key, fv);
             return true;

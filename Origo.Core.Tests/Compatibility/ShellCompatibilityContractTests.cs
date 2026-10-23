@@ -161,6 +161,27 @@ public class ShellCompatibilityContractTests
     }
 
     [Fact]
+    public void ShellEntry_ShutdownFromQuitHook_IsNotUndoneByOuterWorkflow()
+    {
+        var host = CreateHost(new MemoryFileSystem());
+        host.Runtime.SndWorld.RegisterStrategy(static () => new ShutdownOnQuitStrategy());
+        host.Bootstrap();
+        host.DriveFrame(0.016);
+        var session = host.Runtime.SessionManager.ForegroundSession!;
+        session.Spawn(new SndMetaFluentBuilder("shutdown-probe")
+            .AddLifecycleStrategy(ShutdownOnQuitStrategy.Index)
+            .Build());
+
+        ShutdownOnQuitStrategy.Context = host.Context;
+        host.Context.Lifecycle.RequestLoadMainMenuEntrySave();
+
+        Assert.Throws<InvalidOperationException>(() => host.DriveFrame(0.016));
+
+        Assert.Null(host.Context.Blackboard.ProgressBlackboard);
+        Assert.Null(host.Runtime.SessionManager.ForegroundSession);
+    }
+
+    [Fact]
     public void ShellEntry_FailFastValidation_IsPreservedAfterBootstrap()
     {
         var host = CreateHost(new MemoryFileSystem());
@@ -276,4 +297,14 @@ internal sealed class ObserverProbeStrategy : ObserverStrategyBase
 internal sealed class LateProbeStrategy : LifecycleStrategyBase
 {
     internal const string Index = "compat.lifecycle.late";
+}
+
+[StrategyIndex(Index)]
+internal sealed class ShutdownOnQuitStrategy : LifecycleStrategyBase
+{
+    internal const string Index = "compat.shutdown.probe";
+
+    internal static ISndContext? Context { get; set; }
+
+    public override void BeforeQuit(ISndEntity entity, ISndContext ctx) => Context?.Shutdown();
 }

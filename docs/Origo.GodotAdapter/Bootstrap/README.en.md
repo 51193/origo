@@ -42,6 +42,15 @@ Startup logic (`OrigoDefaultEntry.Bootstrap.cs`) is separated from exported prop
 
 Lifecycle strategy `Before` / `After` constraints are validated over the complete registration graph, and the registry must be frozen before any entity is created. `SndContext.Bootstrap()` calls `SndStrategyPool.SealRegistration()` after strategy discovery: unknown targets, non-lifecycle targets, self references, or cycles throw immediately, and later `SndWorld.RegisterStrategy` calls throw. `AutoDiscoverStrategies` scans `[StrategyIndex]`-annotated types by default; strategies that need manual registration can override `ConfigureStrategies(ISndWorldAccess)` in a derived entry, which runs before `Bootstrap()`. The full ordering contract is in [Snd/Strategy](../../Origo.Core/Snd/Strategy/README.en.md).
 
+### Why the startup registry hook exists
+
+`ConfigureStartupRegistry(TypeStringMapping, DataSourceConverterRegistry)` runs
+inside `CreateRuntime` before `PersistentBlackboard.LoadFromDisk()`. A custom
+type stored in `system.json` must be registered here (mapping plus converter);
+`RegisterCustomConverters` runs during `Bootstrap`, after that initial read.
+`OrigoDefaultEntry._ExitTree` calls `Context.Shutdown()` so normal scene teardown
+runs the same quit hooks/current-directory cleanup as `OrigoHost.Dispose`.
+
 ### Why Context Is Public
 
 `OrigoAutoHost` exposes the stable `IOrigoRuntime`. Common presentation needs (save listing, continue availability, lifecycle entry points, template and blackboard queries) are concentrated on `ISndContext`. `Context` shares the host entry lifecycle: it is assigned during `_Ready()` and is the same instance passed to `ConfigureSaveMetadataContributors`.

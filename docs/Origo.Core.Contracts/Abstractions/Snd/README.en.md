@@ -26,6 +26,7 @@ Beyond its 10 companion properties, ISndContext directly exposes the following m
 | Member | Description |
 |------|------|
 | `Bootstrap()` | Entry point: strategy discovery → ordering validation and registration freeze → alias/template loading → entry save loading |
+| `Shutdown()` | Idempotent teardown: run progress/session quit hooks, release the active progress run, and delete the temporary `current/` working directory; later bootstrap and persistence mutations fail explicitly |
 | `SaveRootPath` | Current save root path |
 | `InitialSaveRootPath` | Initial save root path |
 | `EntryConfigPath` | Entry configuration file path |

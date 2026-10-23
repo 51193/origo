@@ -255,7 +255,7 @@ internal sealed partial class ProgressRun
         {
             if (string.IsNullOrWhiteSpace(levelId))
                 throw new ArgumentException(message, paramName);
-            SavePathLayout.ValidateToken(levelId, paramName, "level id");
+            SavePathLayout.ValidateLevelId(levelId, paramName);
         }
 
         private void ValidateLevelPayload(string levelId, LevelPayload payload)

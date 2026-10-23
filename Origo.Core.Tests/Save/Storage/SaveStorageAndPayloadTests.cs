@@ -167,12 +167,106 @@ public class SaveStorageAndPayloadTests
     }
 
     [Fact]
+    public void SnapshotCurrentToSave_IncompleteStaging_KeepsExistingSlotAndRemovesTemp()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
+        fs.SeedFile("root/save_001/progress.json", "{\"old\":true}");
+        fs.SeedFile("root/current/data.txt", "not a save");
+
+        Assert.Throws<InvalidOperationException>(() => storage.SnapshotCurrentToSave("001"));
+
+        Assert.Equal("{\"old\":true}", fs.ReadAllText("root/save_001/progress.json"));
+        Assert.False(fs.DirectoryExists("root/save_001.tmp"));
+    }
+
+    [Fact]
     public void SavePathLayout_ValidateSaveId_RejectsReservedSuffixes()
     {
         Assert.Throws<ArgumentException>(() => SavePathLayout.ValidateSaveId("foo.tmp", "saveId"));
         Assert.Throws<ArgumentException>(() => SavePathLayout.ValidateSaveId("foo.bak", "saveId"));
         Assert.Throws<ArgumentException>(() => SavePathLayout.ValidateSaveId("foo.TMP", "saveId"));
         SavePathLayout.ValidateSaveId("foo.tmpx", "saveId");
+    }
+
+    [Fact]
+    public void SavePathLayout_ValidateSaveId_RejectsCaseAndDotAliases()
+    {
+        Assert.Throws<ArgumentException>(() => SavePathLayout.ValidateSaveId("SaveSlot1", "saveId"));
+        Assert.Throws<ArgumentException>(() => SavePathLayout.ValidateSaveId(".", "saveId"));
+        Assert.Throws<ArgumentException>(() => SavePathLayout.ValidateSaveId("..", "saveId"));
+        Assert.Throws<ArgumentException>(() => SavePathLayout.ValidateSaveId("...", "saveId"));
+        Assert.Throws<ArgumentException>(() => SavePathLayout.ValidateSaveId("slot.", "saveId"));
+        SavePathLayout.ValidateSaveId("slot.one", "saveId");
+    }
+
+    [Fact]
+    public void SavePathLayout_ValidateLevelId_RejectsCaseAndDotAliases()
+    {
+        Assert.Throws<ArgumentException>(() => SavePathLayout.ValidateLevelId("Town", "levelId"));
+        Assert.Throws<ArgumentException>(() => SavePathLayout.ValidateLevelId("..", "levelId"));
+        Assert.Throws<ArgumentException>(() => SavePathLayout.ValidateLevelId("town.", "levelId"));
+        SavePathLayout.ValidateLevelId("town", "levelId");
+    }
+
+    [Fact]
+    public void SnapshotCurrentToSave_WithoutProgressFiles_ThrowsAndDoesNotInstallSlot()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        fs.SeedFile("root/current/data.txt", "not a save");
+
+        Assert.Throws<InvalidOperationException>(() => SaveStorageFacade.SnapshotCurrentToSave(handle, "001"));
+        Assert.False(fs.DirectoryExists("root/save_001"));
+        Assert.False(fs.DirectoryExists("root/save_001.tmp"));
+    }
+
+    [Fact]
+    public void SaveStorageFacade_HasCaseVariantSlot_DetectsLegacyUppercaseSlot()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        fs.CreateDirectory("root/save_Legacy");
+
+        Assert.True(SaveStorageFacade.HasCaseVariantSlot(handle, "legacy"));
+        Assert.False(SaveStorageFacade.HasCaseVariantSlot(handle, "other"));
+
+        fs.CreateDirectory("root/save_Legacy.bak");
+        fs.CreateDirectory("root/save_other.tmp");
+        Assert.True(SaveStorageFacade.HasCaseVariantSlot(handle, "legacy"));
+        Assert.False(SaveStorageFacade.HasCaseVariantSlot(handle, "other"));
+    }
+
+    [Fact]
+    public void DefaultSaveStorageService_WriteToCaseVariantLegacySlot_Throws()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
+        fs.CreateDirectory("root/save_Legacy");
+
+        var ex = Assert.Throws<ArgumentException>(() =>
+            storage.WriteSavePayloadToCurrentThenSnapshot(
+                TestFactory.CreateMinimalPayload("legacy", "default"), "legacy", new TestLogger()));
+
+        Assert.Contains("case", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void SavePayloadWriter_CaseVariantLegacyLevel_Throws()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        fs.CreateDirectory("root/current/level_Town");
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            SavePayloadWriter.EnsureNoCaseVariantLevelDirectory(handle, "current", "town"));
+
+        Assert.Contains("case", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

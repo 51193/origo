@@ -121,13 +121,13 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 
 | Test Method | Verified Behavior | Reference |
 |-------------|-----------------|-----------|
-| `RequestSaveGame_ValidSaveId_Succeeds` | Valid save ids (`slot_001`, `a.b-c`, `SaveSlot1`) are accepted and the slot is enumerable after the flush | ISndSaveOperations.RequestSaveGame |
+| `RequestSaveGame_ValidSaveId_Succeeds` | Valid lowercase save ids (`slot_001`, `a.b-c`, `save.slot1`) are accepted and enumerable after the flush | ISndSaveOperations.RequestSaveGame |
 
 ### Error Path
 
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
-| `RequestSaveGame_InvalidSaveId_Throws` | Save id with a path separator, traversal segment, space, or out-of-range char | ArgumentException |
+| `RequestSaveGame_InvalidSaveId_Throws` | Save id with a path separator, traversal segment, space, out-of-range char, uppercase letter, dot-only value, or trailing dot | ArgumentException |
 | `RequestLoadGame_InvalidSaveId_Throws` | Save id with a path separator, traversal segment, or space | ArgumentException |
 | `SetContinueTarget_InvalidSaveId_Throws` | Save id with a path separator, traversal segment, or space | ArgumentException |
 
@@ -231,6 +231,13 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | `SaveStorageFacade_EnumerateSaveIds_ReservedSuffixDirectories_AreNotSlots` | `.tmp`/`.bak` directories alongside a real `bar` slot | Only `bar` is enumerated; suffix directories are never user slots |
 | `SaveStorageFacade_EnumerateSaveIds_InvalidDirectory_IsSkipped` | A directory whose derived id contains a space | The invalid id is skipped; valid slots and metadata listing still work |
 | `SavePathLayout_ValidateSaveId_RejectsReservedSuffixes` | `foo.tmp`, `foo.bak`, `foo.TMP` | ArgumentException; `foo.tmpx` remains valid |
+| `SavePathLayout_ValidateSaveId_RejectsCaseAndDotAliases` | uppercase, `.`, `..`, `...`, trailing-dot save IDs | ArgumentException; `slot.one` remains valid |
+| `SavePathLayout_ValidateLevelId_RejectsCaseAndDotAliases` | uppercase/dot level IDs | ArgumentException; lowercase `town` remains valid |
+| `SaveStorageFacade_HasCaseVariantSlot_DetectsLegacyUppercaseSlot` | legacy `save_Legacy/` directory | case-variant query true; unrelated ID false |
+| `DefaultSaveStorageService_WriteToCaseVariantLegacySlot_Throws` | write `legacy` while `save_Legacy/` exists | ArgumentException with rename instruction |
+| `SavePayloadWriter_CaseVariantLegacyLevel_Throws` | `current/level_Town/` while writing `town` | InvalidOperationException; legacy directory is not overwritten/pruned |
+| `SnapshotCurrentToSave_WithoutProgressFiles_ThrowsAndDoesNotInstallSlot` | current/ has no progress pair | InvalidOperationException; no save or temp directory installed |
+| `SnapshotCurrentToSave_IncompleteStaging_KeepsExistingSlotAndRemovesTemp` | existing save_001 plus an incomplete current/ | previous progress.json is unchanged; no .tmp residue |
 | `SaveStorageFacade_RecoverInterruptedSnapshots_RestoresCompleteBackup` | Complete `save_recovered.bak` with no real slot | Backup restored as `save_recovered`; backup removed |
 | `SaveStorageFacade_RecoverInterruptedSnapshots_LeavesIncompleteBackup` | Incomplete `.bak` only | Not enumerated; backup left untouched |
 | `SaveStorageFacade_ReadProgressFromSnapshot_RecoversCompleteBackup` | Read a slot whose real directory is missing but complete `.bak` exists | Backup restored before read |
@@ -372,7 +379,11 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 |-------------|-------------------|-------------------|
 | `SavePathResolver_EnsureParentDirectory_NoOpForRootFile` | File at root level, no parent directory creation needed | Does not throw |
 | `SavePathResolver_GetRelativePath_ExactMatch_ReturnsEmpty` | Path exactly equals storage root | Returns empty string |
-| `SavePathResolver_GetRelativePath_NoMatch_ReturnsFullPath` | Path not under storage root | Returns full absolute path |
+| `SavePathResolver_GetRelativePath_NoMatch_Throws` | Path not under storage root | InvalidOperationException; snapshot code fails instead of embedding the absolute path |
+| `SavePathResolver_GetRelativePath_WindowsSeparators_StripsRoot` | Windows `\` root/full paths | Returns normalized relative path |
+| `SavePathResolver_GetRelativePath_DriveRootCaseMismatch_StripsRoot` | Drive root casing differs from enumerated path | Windows roots compare case-insensitively |
+| `SavePathResolver_GetRelativePath_SchemeRoot_StripsRoot` | `user://` root with a triple-slash enumerated path | Returns normalized relative path |
+| `SavePathLayout_StripPathPrefix_SchemeRoot_NormalizesSeparators` | scheme root and Windows separators | Returns normalized relative path |
 | `SavePathResolver_GetLeafDirectoryName_TrailingSlash` | Path with trailing slash | Returns last segment name |
 | `SavePathResolver_GetLeafDirectoryName_EmptyOrWhitespace_ReturnsEmpty` | Empty/whitespace path | Returns empty string |
 | `SavePathResolver_RejectPathTraversal_AllowsSafePaths` | Safe path (no `..`) | Does not throw |

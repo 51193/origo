@@ -191,6 +191,18 @@ public class SessionManagerTests
     // ── levelId conflict detection ────────────────────────────────────
 
     [Fact]
+    public void CreateBackgroundSession_MixedCaseLevelId_Throws()
+    {
+        var (ctx, _) = CreateContext();
+
+        var ex = Assert.Throws<ArgumentException>(() =>
+            ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "Town"));
+
+        Assert.Contains("lowercase", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.False(ctx.Runtime.SessionManager.Contains("bg1"));
+    }
+
+    [Fact]
     public void CreateBackgroundSession_DuplicateLevelIdWithForeground_Throws()
     {
         var (ctx, _) = CreateContext();

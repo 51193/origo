@@ -356,6 +356,10 @@ jobs:
           target_commitish: ${{ steps.release-commit.outputs.sha }}
           files: ./artifacts/*
           generate_release_notes: true
+          # Mark at creation/finalization, not only in the later edit step:
+          # a cancelled/failed edit must not leave a snapshot as the stable
+          # repository Latest release.
+          prerelease: ${{ inputs.snapshot || contains(steps.resolve-tag.outputs.tag, '-') }}
 
       - name: Mark snapshot release as pre-release
         # A boolean workflow input is a Boolean in the inputs context;

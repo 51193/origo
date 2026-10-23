@@ -12,7 +12,7 @@ and will acknowledge receipt within 48 hours.
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 0.0.x   | :white_check_mark: |
+| 0.1.x   | :white_check_mark: |
 
 Origo is in early development (pre-1.0). Only the latest release receives
 security fixes. No backports are provided for older versions.

@@ -66,7 +66,30 @@ public partial class OrigoDefaultEntry : OrigoAutoHost
     }
 
     /// <summary>
-    ///     Custom type converter registration hook. Called before <see cref="SndContext.Bootstrap" />.
+    ///     Normal scene-tree exit: stop the framework progress run so session
+    ///     and progress quit hooks run and the temporary current/ directory is
+    ///     cleaned. The manager's _ExitTree remains the out-of-contract
+    ///     fallback for hosts that never created a context.
+    /// </summary>
+    public override void _ExitTree()
+    {
+        try
+        {
+            Context?.Shutdown();
+        }
+        catch (Exception ex)
+        {
+            // Exit cleanup must not prevent the rest of the Godot tree from
+            // being freed; the shutdown failure is still reported.
+            GD.PushError($"Origo context shutdown during _ExitTree failed: {ex.Message}");
+        }
+
+        base._ExitTree();
+    }
+
+    /// <summary>
+    ///     Custom type converter registration hook. Called during
+    ///     <see cref="SndContext.Bootstrap" />, before strategy discovery.
     ///     Override this method to register custom <see cref="DataSourceConverter{T}" />,
     ///     ensuring custom types are available before strategy auto-discovery, template loading,
     ///     and entry save loading.

@@ -336,6 +336,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 |-------------|----------------|-------------------|
 | `CreateBackgroundSession_DuplicateKey_Throws` | Creating background with duplicate key | InvalidOperationException |
 | `CreateBackgroundSession_DuplicateLevelIdWithForeground_Throws` | Background levelId conflicts with foreground | InvalidOperationException |
+| `CreateBackgroundSession_MixedCaseLevelId_Throws` | levelId `Town` | ArgumentException containing "lowercase"; no session mounted |
 | `CreateBackgroundSession_DuplicateLevelIdWithAnotherBackground_Throws` | Background levelId conflicts with another background | InvalidOperationException |
 | `AppendBackgroundPayloads_LevelIdCollisionBetweenForegroundAndBackground_Throws` | Background levelId conflicts with foreground | InvalidOperationException |
 | `CreateBackgroundSession_DuplicateLevelId_ClearErrorMessage` | levelId conflict | InvalidOperationException (contains key/levelId/owner/Destroy suggestion) |

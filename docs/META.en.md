@@ -242,6 +242,13 @@ records, and deferred designs live in `docs/architecture/`.
 
 ## Environment Bootstrap
 
+- `scripts/test.sh` gives its test host a private writable `XDG_RUNTIME_DIR`.
+  Coverlet's instrumentation tracker creates a named mutex during unload; on
+  Linux .NET stores it under `XDG_RUNTIME_DIR`, and a read-only
+  `/run/user/<id>` makes the test host emit an unhandled
+  `System.IO.IOException` after a fully passing run. The script-local
+  directory keeps the coverage gate free of that false crash report.
+
 Before running any `dotnet` command, configure the environment to match the
 repository instead of editing `global.json` to match the machine:
 

@@ -16,8 +16,9 @@ They drive the stable Contracts entry surface (`OrigoHost`, `ISndContext`, `ISes
 | File | Focus |
 |------|-------|
 | `Compatibility/ShellCompatibilityContractTests.cs` | `OrigoHost` shell entry: lifecycle hook ordering, observer binding recovery, post-Bootstrap fail-fast, background-session create/destroy transitions |
-| `Hosting/OrigoHostTests.cs` | Stable `OrigoHost`/`HostKernelPort` runtime construction and background workflow; `AdapterHostKernelPort` runtime/observer/context binding order; explicit failure when the runtime binder, context binder, or file system is missing |
+| `Hosting/OrigoHostTests.cs` | Stable `OrigoHost`/`HostKernelPort` runtime construction, background workflow, dispose idempotence/rejection of later bootstrap, custom console handler; `AdapterHostKernelPort` runtime/observer/context binding order; explicit failure when the runtime binder, context binder, or file system is missing |
 | `Hosting/HostContextParametersTests.cs` | Shared `HostContextParameters` factory: every context parameter comes from its own `OrigoHostOptions` or `AdapterContextOptions` member, and null options fail fast with the parameter name |
+| `Hosting/HostStartupRegistryTests.cs` | `OrigoHostOptions.ConfigureStartupRegistry` runs before `system.json` load; a custom type persisted in the system blackboard reloads after host recreation; an unregistered custom type fails with the file path and startup-hook guidance |
 
 ## ShellCompatibilityContractTests Details
 
@@ -29,6 +30,7 @@ They drive the stable Contracts entry surface (`OrigoHost`, `ISndContext`, `ISes
 | `ShellEntry_ObserverRecovery_IsPreservedThroughSaveLoad` | An explicitly mounted observer receives OnMounted/OnDataChanged; after save and load the persisted observer binding is recovered, and later data changes keep notifying | [shell-kernel-boundary](../architecture/shell-kernel-boundary.en.md) |
 | `ShellEntry_SystemBlackboardPersistence_IsPreservedAcrossHostRestart` | Saving and recreating `OrigoHost` over the same file system restores active/continue state from `<SaveRootPath>/system.json`, so `HasContinueData()` remains true | [Origo.Core](../Origo.Core/README.en.md) |
 | `ShellEntry_SessionStateTransitions_ArePreserved` | A background session is created, spawns an entity, and is destroyed through `ISessionManager`; BeforeQuit fires and the key leaves Keys | [session-model](../usage/session-model.en.md) |
+| `ShellEntry_ShutdownFromQuitHook_IsNotUndoneByOuterWorkflow` | BeforeQuit calls `Shutdown` while an outer main-menu load is disposing the old progress run | workflow throws; no new progress/session is installed | [session-model](../usage/session-model.en.md) |
 
 ### Error Path
 
@@ -45,6 +47,9 @@ They drive the stable Contracts entry surface (`OrigoHost`, `ISndContext`, `ISes
 | `HostKernelPort_ShouldBeInternal_AndLiveInKernelPortsNamespace` | `HostKernelPort` and its contract stay internal and never enter the export surface | [Ports](../Origo.Core.Kernel/Ports/README.en.md) |
 | `OrigoHost_ShouldCreateStableRuntimeAndRunBackgroundWorkflow` | `OrigoHost` constructs a stable runtime/context and drives frames, strategy registration, and a session workflow | [Ports](../Origo.Core.Kernel/Ports/README.en.md) |
 | `OrigoHost_ShouldRegisterCustomConsoleHandlerThroughStableRuntime` | With injected console channels, a custom command registered through `IOrigoRuntime.RegisterConsoleCommandHandler` produces output during `DriveFrame` | [console-commands](../usage/console-commands.en.md) |
+| `OrigoHost_Dispose_IsIdempotentAndRejectsLaterBootstrap` | Host disposed twice; later Bootstrap | Second dispose no-op; Bootstrap throws | [Origo.Core](../Origo.Core/README.en.md) |
+| `OrigoHost_Dispose_ConsoleClearFailure_RemainsRetryable` | Console input Clear throws during Dispose | first Dispose throws; retry after recovery succeeds; Bootstrap rejected | [Origo.Core](../Origo.Core/README.en.md) |
+| `SystemBlackboard_UnregisteredCustomType_HostCreationExplainsStartupHook` | Custom type persisted without `ConfigureStartupRegistry` | host creation throws `InvalidOperationException` naming system.json and the hook | [Origo.Core](../Origo.Core/README.en.md) |
 | `OrigoHost_ShouldFailFastOnHalfConfiguredConsole` | Only one of `ConsoleInput` / `ConsoleOutputChannel` is supplied | `ArgumentException` at `OrigoHost.Create` | [Origo.Core](../Origo.Core/README.en.md) |
 | `AdapterHostKernelPort_ShouldBuildRuntimeAndBindSceneHost` | The port creates the runtime and default console channels, binds runtime/observer topology first, then creates and binds the SND context | [Ports](../Origo.Core.Kernel/Ports/README.en.md) |
 | `CoreShellPublicSignatures_ShouldNotExposeKernelTypes` | Every exported type of the Core shell assembly and its public members (properties, method returns/parameters, fields) avoid kernel types | [shell-kernel-boundary](../architecture/shell-kernel-boundary.en.md) |
@@ -61,6 +66,7 @@ They drive the stable Contracts entry surface (`OrigoHost`, `ISndContext`, `ISes
 | `OrigoHost_ShouldFailFastWhenRegisteringConsoleHandlerWithoutConsoleChannels` | Registering a custom command without either console channel, or with a null handler | `InvalidOperationException` / `ArgumentNullException`; handler is never silently dropped |
 | `Create_WithoutOptions_Throws` | Either option record is null at the shared context-parameters factory | `ArgumentNullException` for `OrigoHostOptions` and `AdapterContextOptions` alike |
 
+| `SystemBlackboard_CustomType_RoundTripsAcrossHostRecreation` | Custom `StartupSettings` type registered in `ConfigureStartupRegistry`, written to system blackboard, host recreated | Value reloads without a startup exception |
 ## Test Support Strategies
 
 | Strategy | Purpose |

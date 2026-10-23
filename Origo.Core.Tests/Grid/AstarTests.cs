@@ -88,4 +88,20 @@ public class AstarTests
             p => blocked.Contains(p));
         Assert.Null(path);
     }
+    [Fact]
+    public void FindPath_LargeCoordinates_HeuristicDoesNotOverflow()
+    {
+        var checks = 0;
+        var path = Astar.FindPath(new GridPos(0, 0), new GridPos(46341, 0), 46342, _ =>
+        {
+            checks++;
+            if (checks > 500_000)
+                throw new InvalidOperationException("A* expanded far beyond the straight-line path; heuristic priorities are not ordered.");
+            return false;
+        });
+
+        Assert.NotNull(path);
+        Assert.Equal(46341, path!.Count);
+    }
+
 }

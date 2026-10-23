@@ -35,6 +35,9 @@ public class SaveIdValidationTests
     [InlineData("bad+char")]
     [InlineData("bad:char")]
     [InlineData("bad\\char")]
+    [InlineData("SaveSlot1")]
+    [InlineData("slot.")]
+    [InlineData("..")]
     public void RequestSaveGame_InvalidSaveId_Throws(string saveId)
     {
         var ctx = CreateContext(new TestMemoryFileSystem());
@@ -64,7 +67,7 @@ public class SaveIdValidationTests
     [Theory]
     [InlineData("slot_001")]
     [InlineData("a.b-c")]
-    [InlineData("SaveSlot1")]
+    [InlineData("save.slot1")]
     public void RequestSaveGame_ValidSaveId_Succeeds(string saveId)
     {
         var ctx = CreateContext(new TestMemoryFileSystem());
