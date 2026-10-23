@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Startup registry hook for persisted system-blackboard types** — `OrigoHostOptions.ConfigureStartupRegistry` and the adapter entry's `ConfigureStartupRegistry` run before `system.json` is read, so a custom type's name mapping and converter are available at startup; an unregistered type now fails with the `system.json` path and hook guidance instead of a bare type-name error. `ConfigureConverters` remains the Bootstrap-time hook for save payload types.
+- **Public shutdown path** — `ISndContext.Shutdown()` stops the active progress run, runs progress/session quit hooks, and deletes the temporary `current/` directory; `OrigoHost.Dispose()` and `OrigoDefaultEntry._ExitTree` invoke it. The operation is idempotent and later bootstrap and persistence mutations (save/load/delete/continue/level-switch) fail explicitly.
 - **PR title/body lint for squash-merge commit messages** — the `pr-body-lint` workflow checks the PR title as a Conventional Commit subject and the PR body lines that GitHub uses for the squash commit, running the linter from `origin/main` when available; merge commits remain exempt from the local message lint.
 - **`ORIGOSG009` rejects types that cannot appear in generated TypedData
   accessors** — `void`, ref-like types such as `Span<T>`, static classes,
@@ -41,6 +43,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **BREAKING: save and level IDs are lowercase, path-safe identifiers** — IDs must use lowercase ASCII letters, digits, `.`, `_`, and `-`, must not be dot-only, and must not end with `.`. Save/level IDs are directory names, so `Foo`/`foo` and `foo`/`foo.` alias the same directory on default Windows/macOS file systems; the previous ordinal checks could overwrite a slot, bypass active-save deletion protection, or lose a level. Legacy mixed-case or trailing-dot slots are detected and rejected with a rename instruction rather than silently merged. Rename existing IDs before upgrading.
 - **Hyphenated release tags are always pre-releases** — the Release workflow
   marks any tag containing `-` as a pre-release, not only dispatches with the
   `snapshot` input, so a manually pushed snapshot cannot become Latest.
@@ -73,6 +76,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **Coverage runs no longer emit a false test-host crash report in read-only-runtime sandboxes** — `scripts/test.sh` gives the test host a private writable `XDG_RUNTIME_DIR`; Coverlet's named-mutex unload path otherwise reports an unhandled `System.IO.IOException` after a fully passing run when `/run/user/<id>` is EROFS.
+- **Snapshot paths are normalized across host separator styles** — `SaveFileHandle.GetRelativePath` now normalizes `\`/`/` and scheme roots, and fails explicitly when a path is outside the save root instead of embedding an absolute path. Staged snapshots must contain the progress pair before the swap, so a broken copy cannot replace a valid slot.
+- **Case-variant legacy slots cannot be overwritten or deleted** — write/delete/load/snapshot paths and level payload writes reject a directory that differs only by case, with a migration instruction.
+- **A\* heuristic no longer overflows for large valid coordinates** — the heuristic is computed in `double`; a 46341-cell straight-line path no longer degenerates into a NaN-priority search.
+- **Console input guards** — duplicate spawn names return a command error instead of escaping the frame loop, and an existing float key rejects NaN/Infinity/`1e400` instead of poisoning every later save.
+- **Weekly snapshots recover all orphaned/incomplete releases without dropping the current week** — the workflow dispatches every missing/draft/partial release for the current base (fewer than the nine expected assets) and still creates today's tag; GitHub API errors are distinguished from 404, and the release action receives `prerelease` at creation.
+- **System blackboard startup ordering** — custom persisted types are loaded after the startup registry hook, eliminating the host-construction failure and manual `system.json` deletion.
+- **Documentation drift** — corrected the Utility index row, `IOrigoRuntime` member description, StateMachine inherited-member table, strict-read scope, `SECURITY.md` supported version, and removed evolution-marker wording from save/lifecycle docs.
 - **Release verification rejects unshipped rules, prefix-only analyzer blocks, and malformed dates** — the metadata verifier now recognizes the standard `ORIGOSGnnn | ...` row format, matches `## Release x.y.z` as a whole heading, and requires a real `YYYY-MM-DD` CHANGELOG date.
 - **Release preflight validates the HEAD baseline's assembly stamps** — `release-check.sh` now rejects a development baseline whose `AssemblyVersion` / `FileVersion` do not match its `-dev` `<Version>`, instead of re-stamping the values it is supposed to verify.
 - **Session teardown cannot create new sessions** — a `BeforeQuit` hook that calls `CreateBackgroundSession` now fails fast while a session is being disposed or `SessionManager.Clear` is running, preventing an orphaned session outside the cleanup snapshot and the level-conflict hole during a foreground reset.
@@ -80,7 +91,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Progress `OnPushAfterLoad` hooks cannot poison the next save** — the framework reasserts the live session topology after progress-level AfterLoad hooks, so a hook write to `origo.session_topology` cannot make the next save fail in `EnsureActiveLevelInvariant`.
 - **Foreground mounts validate the level before destroying the current foreground** — `LoadAndMountForeground` now lets `CreateForegroundSession` validate the target levelId before teardown; a conflict with a background session leaves the existing foreground intact.
 - **Future-format no-metadata saves carry the format version marker** — while the format is v1 a no-metadata save may omit `meta.map`; once the format advances, every save writes `origo.format_version`, so a new-format save without display metadata cannot be mistaken for v1.
-- **Weekly snapshots recover orphaned tags across days** — when a previous run pushed a snapshot tag and failed before dispatching the Release workflow, a later run scans the current base's nightly tags, finds one without a GitHub Release, and dispatches the pipeline for that tag instead of exiting green with only today's tag; the scan runs even when the weekly commit window is empty.
 - **Release tags must have the exact `x.y.z` shape** — `write-version-stamp.py`
   and `verify-release.sh` now reject truncated (`0.1`) and four-part
   (`0.1.0.0`) versions before rewriting or verifying metadata; those shapes

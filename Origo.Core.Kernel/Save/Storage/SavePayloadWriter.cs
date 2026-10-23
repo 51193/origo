@@ -81,6 +81,7 @@ internal static class SavePayloadWriter
         var currentRel = handle.PathPolicy.GetCurrentDirectory();
         var currentAbs = handle.GetAbsolutePath(currentRel);
         handle.MetaAccess.CreateDirectory(currentAbs);
+        EnsureNoCaseVariantLevelDirectories(handle, currentRel, payload.Levels.Keys);
 
         var markerAbs = WriteCheckpointMarker(handle, currentRel);
 
@@ -114,6 +115,39 @@ internal static class SavePayloadWriter
         handle.MetaAccess.Delete(markerAbs);
     }
 
+    internal static void EnsureNoCaseVariantLevelDirectory(
+        SaveFileHandle handle,
+        string currentRel,
+        string levelId)
+    {
+        var currentAbs = handle.GetAbsolutePath(currentRel);
+        if (!handle.MetaAccess.DirectoryExists(currentAbs))
+            return;
+
+        foreach (var dirAbs in handle.MetaAccess.EnumerateDirectories(currentAbs))
+        {
+            var existing = handle.PathPolicy.TryGetLevelIdFromDirectory(dirAbs);
+            if (existing is null
+                || string.Equals(existing, levelId, StringComparison.Ordinal)
+                || !string.Equals(existing, levelId, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            throw new InvalidOperationException(
+                $"Legacy level directory '{existing}' differs only by case from '{levelId}'. " +
+                "Rename the legacy level directory to lowercase before saving; " +
+                "mixed-case level ids alias the same directory on case-insensitive file systems.");
+        }
+    }
+
+    private static void EnsureNoCaseVariantLevelDirectories(
+        SaveFileHandle handle,
+        string currentRel,
+        IEnumerable<string> liveLevelIds)
+    {
+        foreach (var levelId in liveLevelIds)
+            EnsureNoCaseVariantLevelDirectory(handle, currentRel, levelId);
+    }
+
     private static void PruneStaleLevelDirectories(
         SaveFileHandle handle,
         string currentRel,
@@ -128,6 +162,18 @@ internal static class SavePayloadWriter
             var levelId = handle.PathPolicy.TryGetLevelIdFromDirectory(dirAbs);
             if (levelId is null || liveLevels.ContainsKey(levelId))
                 continue;
+
+            try
+            {
+                SavePathLayout.ValidateLevelId(levelId, nameof(levelId));
+            }
+            catch (ArgumentException)
+            {
+                // A legacy mixed-case/trailing-dot level directory is not a
+                // stale level of the new identity set; leave it for an
+                // explicit migration instead of deleting its data.
+                continue;
+            }
 
             handle.MetaAccess.DeleteDirectory(dirAbs);
         }
@@ -197,8 +243,8 @@ internal static class SavePayloadWriter
         var customMetaAbs = handle.GetAbsolutePath(customMetaRel);
 
         // A missing version key means format version 1. While the current
-        // format is still 1, a no-metadata save may omit meta.map (the legacy
-        // shape); once the format advances, every save must carry the marker so
+        // format is still 1, a no-metadata save may omit meta.map (the initial
+        // no-metadata shape); once the format advances, every save must carry the marker so
         // a new-format save without display metadata cannot be mistaken for v1.
         var mustWriteMeta = SaveGamePayload.CurrentFormatVersion > 1
                             || (customMeta is not null && customMeta.Count > 0);

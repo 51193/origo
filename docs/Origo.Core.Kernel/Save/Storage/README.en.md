@@ -52,7 +52,8 @@ Complete implementation of the save storage layer. Responsible for file I/O (rea
 6. **Clear phase-1 marker**: after the payload files and stale-level cleanup, `WriteToCurrent` deletes its marker
 7. **Write `.payload.sha` and recreate the marker**: `WriteCurrentWithMarker` writes the combined hash and then rebuilds the marker for the snapshot phase; if the snapshot fails, that marker remains so subsequent reads reject this "updated but not snapshotted" `current/`
 8. **Snapshot (backup-replace)**: copy `current/` to `save_{id}.tmp/` → rename existing `save_{id}/` to `save_{id}.bak/` → rename `.tmp` to the final `save_{id}/` → delete `.bak`. Old data is not deleted until new data is in place; if the temp-to-final rename fails, the code attempts to roll `.bak` back to `save_{id}/`, and keeps the `.bak` copy when rollback fails
-9. **Clear marker**: delete the marker (the one recreated for the snapshot phase)
+9. **Validate staged copy**: require `progress.json` and `progress_state_machines.json` at the root of `save_{id}.tmp/`; on failure delete the temp copy and keep the existing slot (the marker remains)
+10. **Clear marker**: delete the marker (the one recreated for the snapshot phase)
 
 ## Strict Read Rules
 
@@ -76,7 +77,7 @@ Complete implementation of the save storage layer. Responsible for file I/O (rea
 
 `ISaveStorageService.DeleteSave(string saveId)` removes `save_{id}/` and also cleans the matching `save_{id}.tmp/` remnant plus the policy-discovered backup path (including a case-variant or custom-name backup, and the standard `save_{id}.bak/` when it differs). The method never touches `current/`.
 
-- The save ID is first validated as a standard token (ASCII letters, digits, `.`, `_`, `-`) and must not end in the reserved `.tmp`/`.bak` suffixes, matching the write/read path.
+- The save ID is first validated as a lowercase, path-safe token (ASCII lowercase letters, digits, `.`, `_`, `-`; no dot-only value and no trailing `.`) and must not end in the reserved `.tmp`/`.bak` suffixes, matching the write/read path. Level IDs use the same identity rule because they name `level_{id}/`.
 - When neither the slot, the temp directory, nor any backup directory exists, the method throws `InvalidOperationException` rather than silently succeeding.
 - The real slot is removed before the `.tmp`/backup remnants, so a remnant-cleanup failure cannot leave a readable real slot whose backup was already deleted. Two case-variant backups are both removed rather than leaving one to be recovered after the delete.
 - Active-save protection belongs to the `ISndSaveOperations` business layer; the storage layer deletes exactly the slot it is given.
@@ -89,7 +90,7 @@ Deletion must cover the real slot and the `.tmp/.bak` remnants left by atomic wr
 
 ### Why save IDs reject the atomic-write suffixes
 
-A save id is embedded directly in `save_{id}/`, while the snapshot phase uses `save_{id}.tmp/` and `save_{id}.bak/`. An id ending in `.tmp` or `.bak` would therefore describe a different valid slot and the same staging/backup path; saving or deleting one id could destroy the other. The validation now rejects those suffixes (case-insensitively) rather than attempting to disambiguate two meanings for one directory name. Existing suffix-named slots are outside the supported id set and must be renamed before use.
+A save id is embedded directly in `save_{id}/`, while the snapshot phase uses `save_{id}.tmp/` and `save_{id}.bak/`. An id ending in `.tmp` or `.bak` would therefore describe a different valid slot and the same staging/backup path; saving or deleting one id could destroy the other. Validation rejects those suffixes (case-insensitively), and also enforces lowercase and path-safe IDs: default Windows/macOS file systems fold case, and Windows strips a segment's trailing period, so `Foo`/`foo` and `foo`/`foo.` would otherwise alias one directory. Legacy mixed-case slots are outside the supported id set and must be renamed before use; storage operations detect a case-variant legacy slot and fail explicitly instead of overwriting or deleting it.
 
 ### Why interrupted snapshots are recovered
 
@@ -99,7 +100,7 @@ Recovery uses the path policy rather than assuming the default `save_`/`level_` 
 
 ### Why enumeration goes through ISavePathPolicy
 
-`ISavePathPolicy.EnumerateSaveIds` gives every layout policy a single place to expose its slot IDs. `EnumerateInterruptedSnapshots` does the same for recovery candidates (ID plus actual backup path), and `TryGetLevelIdFromDirectory` supplies the inverse mapping used when discovering level payloads, pruning stale levels, and checking snapshot completeness, so write, list, metadata, delete, load, and recovery paths agree on the layout; an unreadable or invalid directory is skipped rather than breaking metadata listing for every valid slot. Extra data restore and the idempotency side hash use `GetExtraDirectory` for the same reason.
+`ISavePathPolicy.EnumerateSaveIds` gives every layout policy a single place to expose its slot IDs. `EnumerateInterruptedSnapshots` does the same for recovery candidates (ID plus actual backup path), and `TryGetLevelIdFromDirectory` supplies the inverse mapping used when discovering level payloads, pruning stale levels, and checking snapshot completeness, so write, list, metadata, delete, load, and recovery paths agree on the layout; an unreadable or invalid directory is skipped rather than breaking metadata listing for every valid slot; a legacy case-variant slot is not silently merged and is rejected by write/delete/load entry points with a rename instruction. Extra data restore and the idempotency side hash use `GetExtraDirectory` for the same reason.
 
 ### Why two-phase write
 

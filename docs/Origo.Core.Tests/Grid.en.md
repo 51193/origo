@@ -14,7 +14,7 @@ Validates single-axis/dual-axis coordinate conversion (GridToWorld / WorldToGrid
 | `GridCoordinateSystemTests.cs` | Single-axis GridToWorld / WorldToGrid correctness and round-trip consistency |
 | `GridPosTests.cs` | record struct equality, deconstruction |
 | `GridCoordinateSystem2DTests.cs` | 2D convenience overloads: GridToWorld(GridPos) / WorldToGrid 2D round-trip |
-| `AstarTests.cs` | A* pathfinding: direct path, around obstacles, unreachable, out-of-bounds, empty path |
+| `AstarTests.cs` | A* pathfinding: direct path, around obstacles, unreachable, out-of-bounds, empty path, and no heuristic overflow at 46341-cell coordinates |
 | `GridParserTests.cs` | Coordinate parsing: valid input, invalid format, null, JsonElement |
 
 ## GridCoordinateSystemTests Details
@@ -92,6 +92,7 @@ Validates single-axis/dual-axis coordinate conversion (GridToWorld / WorldToGrid
 |-------------|----------------|-------------------|
 | `FindPath_NonPositiveGridSize_Throws` | gridSize is 0 or negative | ArgumentOutOfRangeException |
 | `FindPath_BlockedEndpoint_ReturnsNull` | Endpoint blocked | `null` |
+| `FindPath_LargeCoordinates_HeuristicDoesNotOverflow` | 46342 grid, 46341-cell straight line | Path found; bounded probe rejects the old NaN-priority explosion |
 | `FindPath_CompletelyBlocked_ReturnsNull` | Entire grid blocked | `null` |
 | `FindPath_OutOfBounds_ReturnsNull` | Endpoint out of bounds | `null` |
 | `FindPath_NoPathExists_ReturnsNull` | Completely enclosed by walls | `null` |

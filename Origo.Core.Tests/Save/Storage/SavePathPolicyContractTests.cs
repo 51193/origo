@@ -224,10 +224,13 @@ public class SavePathPolicyContractTests
         var policy = new TestPrefixedPathPolicy("sn_");
         var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root", policy);
 
-        // Seed current with a file at custom-policy path
+        // Seed current with the custom-policy root files (the staged
+        // snapshot validation requires the progress pair) and a payload file.
         var currentRel = policy.GetCurrentDirectory();
         var currentAbs = $"root/{currentRel}";
         fs.SeedFile($"{currentAbs}/data.txt", "hello");
+        fs.SeedFile($"{currentAbs}/{policy.GetProgressFile(currentAbs).Split('/')[^1]}", "{}");
+        fs.SeedFile($"{currentAbs}/{policy.GetProgressStateMachinesFile(currentAbs).Split('/')[^1]}", """{"machines":[]}""");
 
         storage.SnapshotCurrentToSave("snap1");
 

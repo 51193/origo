@@ -336,7 +336,7 @@ internal sealed class SessionManager : ISessionManager
 
     private void ValidateLevelIdUnique(string levelId, string newSessionKey)
     {
-        ValidateTopologyToken(levelId, nameof(levelId));
+        SavePathLayout.ValidateLevelId(levelId, nameof(levelId));
         foreach (var (existingKey, mounted) in _sessions)
         {
             // Replacing the same mount slot is not a duplicate session:

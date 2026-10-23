@@ -4,12 +4,29 @@ using Origo.Core.Runtime;
 using Origo.Core.Runtime.Console;
 using Origo.Core.Runtime.Console.CommandHandlers;
 using Origo.Core.Snd.Metadata;
+using Origo.Core.Snd;
 using Xunit;
 
 namespace Origo.Core.Tests;
 
 public class ConsoleTypeInferenceTests
 {
+    [Fact]
+    public void EntitySetData_ExistingFloat_RejectsNonFiniteValues()
+    {
+        var runtime = TestFactory.CreateRuntime();
+        var session = TestFactory.BootstrapForegroundSession(runtime);
+        var entity = session.Spawn(new SndMetaData { Name = "player" });
+        entity.SetData("speed", 1.5f);
+
+        var accepted = ConsoleCommandHelper.TrySetDataPreservingExistingType(
+            entity, "speed", "NaN", out var error);
+
+        Assert.False(accepted);
+        Assert.NotNull(error);
+        Assert.Equal(1.5f, entity.GetData<float>("speed"));
+    }
+
     // ── bb_set type inference ──────────────────────────────────────
 
     [Fact]

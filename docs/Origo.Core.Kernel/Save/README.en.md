@@ -68,7 +68,7 @@ DefaultSaveStorageService.WriteSavePayloadToCurrentThenSnapshot(...)
 
 - **current/ has `.write_in_progress`** → throw exception (previous write interrupted; needs handling)
 - **Level three files partially present** → throw exception (data corruption)
-- **progress.json or progress_state_machines.json missing** → throw exception (including when current/ does not exist at all)
+- **progress.json or progress_state_machines.json missing on a full payload read** → throw exception; the narrower `ReadProgressNodeFromSnapshot` probe returns `null` when the snapshot has no progress file, because it does not claim a complete save exists
 - **Format version below 1** → throw exception (the initial format is version 1; a no-metadata v1 save may omit the key, so an explicit 0/negative value is corrupt data)
 - **Format version newer than the supported one** → throw exception (refuses to load future saves)
 - **A level referenced by the topology has no payload** (foreground or background) → throw exception (an inconsistent topology; both foreground and background reject the silent fallback to an empty session)

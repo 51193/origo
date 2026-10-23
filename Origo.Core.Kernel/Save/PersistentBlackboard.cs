@@ -154,8 +154,20 @@ public sealed class PersistentBlackboard : IBlackboard
             if (!_metaAccess.FileExists(_filePath))
                 return;
 
-            using var node = _dataSourceIo.ReadTree(_filePath);
-            _inner.DeserializeAll(_registry.Read<IReadOnlyDictionary<string, TypedData>>(node));
+            try
+            {
+                using var node = _dataSourceIo.ReadTree(_filePath);
+                _inner.DeserializeAll(_registry.Read<IReadOnlyDictionary<string, TypedData>>(node));
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                throw new InvalidOperationException(
+                    $"Failed to load the persistent system blackboard '{_filePath}'. " +
+                    "If it contains a custom type, register that type's name mapping and converter " +
+                    "through OrigoHostOptions.ConfigureStartupRegistry (Core) or the adapter entry's " +
+                    "ConfigureStartupRegistry hook before constructing the host; otherwise remove the file.",
+                    ex);
+            }
         }
     }
 

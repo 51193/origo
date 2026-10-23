@@ -10,7 +10,7 @@ Defines the frame-driven and stable host/runtime abstractions. `IOrigoFrameDrive
 | File | Responsibility |
 |------|------|
 | `IOrigoFrameDriver.cs` | External frame boundary: `DriveFrame(double delta)` |
-| `IOrigoRuntime.cs` | Stable host/runtime contract: metadata, logger, world, blackboards, console channels, and sessions |
+| `IOrigoRuntime.cs` | Stable host/runtime contract: metadata, logger, world, console channels, and sessions |
 | `ISndWorldAccess.cs` | Stable SND world access: strategy registration, type mappings, metadata conversion, and data-source gateway |
 
 ## Interface Members

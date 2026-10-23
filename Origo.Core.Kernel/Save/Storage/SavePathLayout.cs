@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 
 namespace Origo.Core.Save.Storage;
 
@@ -34,16 +35,18 @@ internal static class SavePathLayout
 
     /// <summary>
     ///     Validates a save ID against the allowed character set
-    ///     (ASCII letters, digits, <c>.</c>, <c>_</c>, <c>-</c>) and rejects
-    ///     the reserved atomic-write suffixes. Save IDs are embedded in
-    ///     directory names, so arbitrary characters would allow path
-    ///     traversal or directory structure injection, and a suffix-ending ID
-    ///     would collide with the <c>save_{id}.tmp</c> staging or
-    ///     <c>save_{id}.bak</c> backup directory.
+    ///     (lowercase ASCII letters, digits, <c>.</c>, <c>_</c>, <c>-</c>),
+    ///     rejects path-ambiguous dot-only/trailing-dot IDs, and rejects the
+    ///     reserved atomic-write suffixes. Save IDs are embedded in directory
+    ///     names, so arbitrary characters would allow path traversal or
+    ///     directory structure injection, a suffix-ending ID would collide
+    ///     with the <c>save_{id}.tmp</c> staging or <c>save_{id}.bak</c>
+    ///     backup directory, and lowercase-only IDs keep the ordinal identity
+    ///     stable on case-insensitive file systems.
     /// </summary>
     public static void ValidateSaveId(string saveId, string paramName)
     {
-        ValidateToken(saveId, paramName, "save id");
+        ValidateIdentifier(saveId, paramName, "save id", requireLowercase: true, requirePathSafe: true);
         if (saveId.EndsWith(SaveStorageFacade.SaveTempDirectorySuffix, StringComparison.OrdinalIgnoreCase)
             || saveId.EndsWith(SaveStorageFacade.SaveBackupDirectorySuffix, StringComparison.OrdinalIgnoreCase))
             throw new ArgumentException(
@@ -55,11 +58,30 @@ internal static class SavePathLayout
     }
 
     /// <summary>
-    ///     Shared token validation for identifiers embedded in directory or
-    ///     file names (save ids, session keys, level ids). Allows only ASCII
-    ///     letters, digits, <c>.</c>, <c>_</c>, <c>-</c>.
+    ///     Validates a level ID embedded in <c>level_{id}</c>. Level IDs use
+    ///     the same lowercase, path-safe identity rule as save IDs so a save
+    ///     written on one platform resolves to the same directory on
+    ///     case-insensitive Windows/macOS file systems.
     /// </summary>
-    internal static void ValidateToken(string value, string paramName, string kind)
+    internal static void ValidateLevelId(string levelId, string paramName) =>
+        ValidateIdentifier(levelId, paramName, "level id", requireLowercase: true, requirePathSafe: true);
+
+    /// <summary>
+    ///     Shared token validation for identifiers embedded in directory or
+    ///     file names. Allows only ASCII letters, digits, <c>.</c>,
+    ///     <c>_</c>, and <c>-</c>. The optional rules are opt-in so session
+    ///     keys, which are not file-system path components, retain their
+    ///     existing token syntax.
+    /// </summary>
+    internal static void ValidateToken(string value, string paramName, string kind) =>
+        ValidateIdentifier(value, paramName, kind, requireLowercase: false, requirePathSafe: false);
+
+    private static void ValidateIdentifier(
+        string value,
+        string paramName,
+        string kind,
+        bool requireLowercase,
+        bool requirePathSafe)
     {
         if (string.IsNullOrWhiteSpace(value))
             throw new ArgumentException($"{kind} cannot be null or whitespace.", paramName);
@@ -73,6 +95,19 @@ internal static class SavePathLayout
                 "(allowed: ASCII letters, digits, '.', '_', '-').",
                 paramName);
         }
+
+        if (requireLowercase && value.Any(char.IsAsciiLetterUpper))
+            throw new ArgumentException(
+                $"'{value}' must use lowercase ASCII letters in {kind}; " +
+                "mixed-case identifiers alias the same directory on case-insensitive file systems " +
+                "and cannot be distinguished reliably across platforms.",
+                paramName);
+
+        if (requirePathSafe && (value.All(c => c == '.') || value.EndsWith('.')))
+            throw new ArgumentException(
+                $"'{value}' cannot be a dot-only {kind} or end with '.': " +
+                "Windows path normalization strips a trailing period, so the value would alias another directory.",
+                paramName);
     }
 
     /// <summary>
@@ -129,9 +164,10 @@ internal static class SavePathLayout
             throw new ArgumentException("Base directory cannot be null or whitespace.", nameof(baseDirectory));
 
         // Level ids are embedded in directory names (level_<id>); validate the
-        // token like save ids so a crafted level id cannot inject path
-        // separators or traverse out of the save directory.
-        ValidateToken(levelId, nameof(levelId), "level id");
+        // identity like save ids so the token cannot inject path separators,
+        // traverse out of the save directory, or alias a same-cased sibling on
+        // case-insensitive file systems.
+        ValidateLevelId(levelId, nameof(levelId));
 
         return Combine(baseDirectory, $"{LevelDirectoryPrefix}{levelId}");
     }
@@ -219,9 +255,26 @@ internal static class SavePathLayout
     /// </summary>
     internal static string StripPathPrefix(string fullPath, string prefix)
     {
-        var normalized = prefix + PathSeparator;
-        return fullPath.StartsWith(normalized, StringComparison.Ordinal)
-            ? fullPath[normalized.Length..]
-            : fullPath;
+        var normalizedFull = NormalizeSeparatorsAndScheme(fullPath);
+        var normalizedPrefix = NormalizeSeparatorsAndScheme(prefix);
+        var prefixToStrip = normalizedPrefix.EndsWith("://", StringComparison.Ordinal)
+            ? normalizedPrefix
+            : $"{normalizedPrefix.TrimEnd('/')}/";
+
+        return normalizedFull.StartsWith(prefixToStrip, StringComparison.Ordinal)
+            ? normalizedFull[prefixToStrip.Length..]
+            : normalizedFull;
+    }
+
+    private static string NormalizeSeparatorsAndScheme(string path)
+    {
+        var normalized = path.Replace('\\', '/');
+        var schemeIndex = normalized.IndexOf("://", StringComparison.Ordinal);
+        if (schemeIndex < 0)
+            return normalized;
+
+        var schemeRoot = normalized[..(schemeIndex + 3)];
+        var rest = normalized[(schemeIndex + 3)..].TrimStart('/');
+        return rest.Length == 0 ? schemeRoot : $"{schemeRoot}{rest}";
     }
 }

@@ -62,6 +62,15 @@ internal sealed class SpawnTemplateCommandHandler : ConsoleCommandHandlerBase
             return false;
         }
 
+        // A duplicate display name is a user-input error, not a framework
+        // failure. Check it here instead of catching around Spawn, so a
+        // throwing AfterSpawn hook still propagates as a real strategy bug.
+        if (session.FindByName(entityName) is not null)
+        {
+            errorMessage = $"Entity '{entityName}' already exists in the foreground session.";
+            return false;
+        }
+
         session.Spawn(template);
 
         var msg = $"Spawned '{entityName}' from template '{templateKey}'.";

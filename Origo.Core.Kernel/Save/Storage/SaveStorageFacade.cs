@@ -121,6 +121,14 @@ internal static class SaveStorageFacade
             handle.MetaAccess.Rename(backupAbs, realAbs);
     }
 
+    private static bool HasSnapshotRootFiles(SaveFileHandle handle, string snapshotRel)
+    {
+        var progressRel = handle.PathPolicy.GetProgressFile(snapshotRel);
+        var stateMachinesRel = handle.PathPolicy.GetProgressStateMachinesFile(snapshotRel);
+        return handle.MetaAccess.FileExists(handle.GetAbsolutePath(progressRel))
+               && handle.MetaAccess.FileExists(handle.GetAbsolutePath(stateMachinesRel));
+    }
+
     private static bool IsCompleteSnapshot(SaveFileHandle handle, string snapshotRel)
     {
         var progressRel = handle.PathPolicy.GetProgressFile(snapshotRel);
@@ -165,6 +173,41 @@ internal static class SaveStorageFacade
         }
 
         return hasLevel;
+    }
+
+    /// <summary>
+    ///     True when the policy sees a slot whose ID differs from
+    ///     <paramref name="saveId" /> only by case. Such a slot was created
+    ///     before the lowercase identity rule and would alias the target on a
+    ///     case-insensitive file system; callers must ask the user to rename
+    ///     the legacy slot instead of silently overwriting or deleting it.
+    /// </summary>
+    internal static bool HasCaseVariantSlot(SaveFileHandle handle, string saveId)
+    {
+        ArgumentNullException.ThrowIfNull(handle);
+        SavePathLayout.ValidateSaveId(saveId, nameof(saveId));
+        if (!handle.MetaAccess.DirectoryExists(handle.SaveRootPath))
+            return false;
+
+        foreach (var existing in handle.PathPolicy.EnumerateSaveIds(handle.MetaAccess, handle.SaveRootPath))
+        {
+            // The policy also returns atomic-write remnants (save_<id>.tmp /
+            // .bak). Strip the reserved suffix before the case check: a
+            // legacy save_Foo.bak is data that belongs to save id Foo, not to
+            // an unrelated id "Foo.bak", and an exact foo.tmp/foo.bak is this
+            // target's own recoverable remnant, not a case-variant slot.
+            var candidate = existing;
+            if (candidate.EndsWith(SaveTempDirectorySuffix, StringComparison.OrdinalIgnoreCase)
+                || candidate.EndsWith(SaveBackupDirectorySuffix, StringComparison.OrdinalIgnoreCase))
+                candidate = candidate[..^4];
+
+            if (string.Equals(candidate, saveId, StringComparison.Ordinal))
+                continue;
+            if (string.Equals(candidate, saveId, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        return false;
     }
 
     public static IReadOnlyList<SaveMetaDataEntry> EnumerateSavesWithMetaData(SaveFileHandle handle)
@@ -330,8 +373,35 @@ internal static class SaveStorageFacade
         var saveRel = handle.PathPolicy.GetSaveDirectory(newSaveId);
         var saveAbs = handle.GetAbsolutePath(saveRel);
         var tempAbs = SaveAtomicWriter.PrepareTempDirectory(handle, saveRel);
+        var tempRel = $"{saveRel}.tmp";
 
-        SaveAtomicWriter.CopyCurrentToTempDirectory(handle, currentRel, $"{saveRel}.tmp", logger);
+        SaveAtomicWriter.CopyCurrentToTempDirectory(handle, currentRel, tempRel, logger);
+
+        // A copy can complete successfully yet place files at the wrong
+        // relative location (for example a path-contract mismatch in a custom
+        // host). Never install a staged snapshot that the reader would reject;
+        // delete the staged copy and keep the previous slot intact. The
+        // progress pair is the minimum root contract; a direct
+        // SnapshotCurrentToSave caller may intentionally stage a current/
+        // without levels, so level presence is not required here.
+        if (!HasSnapshotRootFiles(handle, tempRel))
+        {
+            try
+            {
+                handle.MetaAccess.DeleteDirectory(tempAbs);
+            }
+            catch (Exception cleanupEx)
+            {
+                logger?.Log(LogLevel.Warning, nameof(SaveStorageFacade),
+                    new LogMessageBuilder()
+                        .AddContext("tempPath", tempAbs)
+                        .Build($"Incomplete snapshot temp cleanup failed: {cleanupEx.Message}"));
+            }
+
+            throw new InvalidOperationException(
+                $"Snapshot staged for save '{newSaveId}' is incomplete (missing progress or " +
+                "progress state-machine files); the existing snapshot was not replaced.");
+        }
 
         SaveAtomicWriter.SwapSnapshotDirectory(handle, saveAbs, tempAbs, saveRel);
 

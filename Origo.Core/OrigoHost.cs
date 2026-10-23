@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Origo.Core.Abstractions.Runtime;
 using Origo.Core.Kernel.Ports;
 using Origo.Core.Snd;
@@ -14,6 +15,7 @@ namespace Origo.Core;
 public sealed class OrigoHost : IOrigoFrameDriver
 {
     private readonly ISndContext _context;
+    private int _disposeState;
 
     private OrigoHost(IOrigoRuntime runtime, ISndContext context)
     {
@@ -48,4 +50,29 @@ public sealed class OrigoHost : IOrigoFrameDriver
 
     /// <summary>Drives one runtime frame through the stable frame-driver contract.</summary>
     public void DriveFrame(double delta) => Runtime.DriveFrame(delta);
+
+    /// <summary>
+    ///     Stops the active progress run, runs session/progress quit hooks, and
+    ///     cleans the temporary <c>current/</c> directory. Idempotent.
+    /// </summary>
+    public void Dispose()
+    {
+        // 0 = live, 1 = shutdown in progress, 2 = successfully shut down.
+        // A failed attempt returns to 0 so the caller can retry after fixing
+        // the failing teardown dependency; a successful attempt is terminal.
+        if (Interlocked.CompareExchange(ref _disposeState, 1, 0) != 0)
+            return;
+
+        try
+        {
+            _context.Shutdown();
+        }
+        catch
+        {
+            Interlocked.Exchange(ref _disposeState, 0);
+            throw;
+        }
+
+        Interlocked.Exchange(ref _disposeState, 2);
+    }
 }

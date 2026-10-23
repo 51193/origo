@@ -30,7 +30,7 @@ assignees: ""
 
 - **OS:** [e.g. Ubuntu 26.04, Windows 11, macOS 15]
 - **.NET SDK:** [e.g. `10.0.400` — run `dotnet --version`]
-- **Origo version:** [e.g. `0.0.9`]
+- **Origo version:** [e.g. `0.1.0`]
 - **Affected package/area:** [e.g. Origo.Core / Origo.GodotAdapter / ConsoleBridge / docs / build]
 
 ## Additional context

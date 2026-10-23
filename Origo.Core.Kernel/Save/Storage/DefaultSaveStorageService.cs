@@ -8,17 +8,40 @@ using Origo.Core.Save.Meta;
 namespace Origo.Core.Save.Storage;
 
 /// <summary>
+///     Optional storage query used by the shell save operations to detect a
+///     legacy case-variant slot before a lowercase write/delete aliases it on a
+///     case-insensitive file system. Custom storage services may opt in.
+/// </summary>
+internal interface ICaseVariantSaveIdQuery
+{
+    bool HasCaseVariantSlot(string saveId);
+}
+
+/// <summary>
 ///     Default implementation of <see cref="ISaveStorageService" />.
 ///     Holds I/O dependencies through a single <see cref="SaveFileHandle" />
 ///     and delegates to <see cref="SavePayloadWriter" /> /
 ///     <see cref="SavePayloadReader" /> / <see cref="SaveStorageFacade" />,
 ///     freeing callers from repeating I/O parameter passing.
 /// </summary>
-internal sealed class DefaultSaveStorageService : ISaveStorageService
+internal sealed class DefaultSaveStorageService : ISaveStorageService, ICaseVariantSaveIdQuery
 {
     private readonly SaveFileHandle _handle;
 
     internal SaveFileHandle Handle => _handle;
+
+    bool ICaseVariantSaveIdQuery.HasCaseVariantSlot(string saveId) =>
+        SaveStorageFacade.HasCaseVariantSlot(_handle, saveId);
+
+    private void EnsureNoCaseVariantSlot(string saveId)
+    {
+        if (SaveStorageFacade.HasCaseVariantSlot(_handle, saveId))
+            throw new ArgumentException(
+                $"Save id '{saveId}' differs only by case from a legacy slot. " +
+                "Rename the legacy slot to the lowercase id before using it; " +
+                "mixed-case ids alias the same directory on case-insensitive file systems.",
+                nameof(saveId));
+    }
 
     public DefaultSaveStorageService(
         IFileMetaAccess metaAccess,
@@ -41,7 +64,11 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
         SaveStorageFacade.EnumerateSavesWithMetaData(_handle);
 
     /// <inheritdoc/>
-    public void DeleteSave(string saveId) => SaveStorageFacade.DeleteSave(_handle, saveId);
+    public void DeleteSave(string saveId)
+    {
+        EnsureNoCaseVariantSlot(saveId);
+        SaveStorageFacade.DeleteSave(_handle, saveId);
+    }
 
     /// <summary>
     ///     Writes a payload to current/ without touching .payload.sha: this
@@ -59,6 +86,7 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
         string newSaveId,
         ILogger logger)
     {
+        EnsureNoCaseVariantSlot(newSaveId);
         SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(
             _handle, payload, newSaveId, logger);
     }
@@ -67,6 +95,7 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
     public void WriteLevelPayloadOnlyToCurrent(LevelPayload levelPayload)
     {
         var currentRel = _handle.PathPolicy.GetCurrentDirectory();
+        SavePayloadWriter.EnsureNoCaseVariantLevelDirectory(_handle, currentRel, levelPayload.LevelId);
         var markerAbs = SavePayloadWriter.WriteCheckpointMarker(_handle, currentRel);
 
         // If the write throws, the marker is intentionally left on disk so
@@ -84,19 +113,28 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
     /// <inheritdoc/>
     public SaveGamePayload ReadSavePayloadFromSnapshot(
         string saveId,
-        string activeLevelId) =>
-        SaveStorageFacade.ReadSavePayloadFromSnapshot(_handle, saveId, activeLevelId);
+        string activeLevelId)
+    {
+        EnsureNoCaseVariantSlot(saveId);
+        return SaveStorageFacade.ReadSavePayloadFromSnapshot(_handle, saveId, activeLevelId);
+    }
 
     /// <inheritdoc/>
-    public DataSourceNode? ReadProgressNodeFromSnapshot(string saveId) =>
-        SaveStorageFacade.ReadProgressNodeFromSnapshot(_handle, saveId);
+    public DataSourceNode? ReadProgressNodeFromSnapshot(string saveId)
+    {
+        EnsureNoCaseVariantSlot(saveId);
+        return SaveStorageFacade.ReadProgressNodeFromSnapshot(_handle, saveId);
+    }
 
     /// <inheritdoc/>
     public LevelPayload? TryReadLevelPayloadFromCurrent(string levelId) => SavePayloadReader.TryReadLevelPayloadFromCurrent(_handle, levelId);
 
     /// <inheritdoc/>
-    public LevelPayload? TryReadLevelPayloadFromSnapshot(string saveId, string levelId) =>
-        SaveStorageFacade.TryReadLevelPayloadFromSnapshot(_handle, saveId, levelId);
+    public LevelPayload? TryReadLevelPayloadFromSnapshot(string saveId, string levelId)
+    {
+        EnsureNoCaseVariantSlot(saveId);
+        return SaveStorageFacade.TryReadLevelPayloadFromSnapshot(_handle, saveId, levelId);
+    }
 
     /// <inheritdoc/>
     public LevelPayload? ResolveLevelPayload(string saveId, string levelId)
@@ -108,8 +146,11 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
     }
 
     /// <inheritdoc/>
-    public void SnapshotCurrentToSave(string newSaveId) =>
+    public void SnapshotCurrentToSave(string newSaveId)
+    {
+        EnsureNoCaseVariantSlot(newSaveId);
         SaveStorageFacade.SnapshotCurrentToSave(_handle, newSaveId);
+    }
 
     /// <inheritdoc/>
     public void DeleteCurrentDirectory()
@@ -123,6 +164,7 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
     /// <inheritdoc/>
     public void RestoreExtraFilesFromSnapshot(string saveId)
     {
+        EnsureNoCaseVariantSlot(saveId);
         var extraDirectoryName = GetExtraDirectoryName(_handle);
         SaveStorageFacade.CopyDirectoryFromSnapshot(
             _handle, saveId, extraDirectoryName, _handle, extraDirectoryName);
@@ -140,6 +182,8 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
                 "DefaultSaveStorageService. Custom storage services must be paired with a " +
                 "custom destination implementation that understands their snapshot layout.");
 
+        EnsureNoCaseVariantSlot(saveId);
+        source.EnsureNoCaseVariantSlot(saveId);
         SaveStorageFacade.CopyDirectoryFromSnapshot(
             source.Handle,
             saveId,

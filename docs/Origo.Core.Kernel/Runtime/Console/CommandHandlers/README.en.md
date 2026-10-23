@@ -18,7 +18,7 @@ Concrete built-in console command handlers. All are `internal`, registered via `
 | `KillAllCommandHandler.cs` | `kill_all` | Marks all entities for destruction (end of frame) |
 | `SndCountCommandHandler.cs` | `snd_count` | Displays entity count |
 | `GetEntityDataCommandHandler.cs` | `entity_get_data` | Reads entity data (value + type) |
-| `SetEntityDataCommandHandler.cs` | `entity_set_data` | Sets entity data (preserves existing type) |
+| `SetEntityDataCommandHandler.cs` | `entity_set_data` | Sets entity data (preserves existing type; non-finite float literals are rejected) |
 | `InvokeStrategyCommandHandler.cs` | `invoke_strategy` | Invokes active strategy with optional JSON input |
 | `ListSavesCommandHandler.cs` | `list_saves` | Lists save slots and display metadata |
 | `SaveGameCommandHandler.cs` | `save` | Queues a save request for the named slot |
@@ -45,7 +45,7 @@ Syntax and type-inference rules: [Usage: Console Commands — bb_set](../../../.
 spawn <name> <template>
 spawn name=<name> template=<template>
 ```
-Spawns an entity from a template. Mixing positional and named arguments is not supported. Templates resolve via `SndWorld.ResolveTemplate`; an **unknown template alias** (or templates not yet loaded) is treated as a user input error and returns an error message (consistent with `bb_get`'s unknown-layer handling), never breaking out of the command loop.
+Spawns an entity from a template. Mixing positional and named arguments is not supported. Templates resolve via `SndWorld.ResolveTemplate`; an **unknown template alias** (or templates not yet loaded) and a **duplicate entity name** are treated as user input errors and return an error message (consistent with `bb_get`'s unknown-layer handling), never breaking out of the command loop. An unregistered strategy index or a throwing `AfterSpawn` hook still propagates as a real configuration/strategy failure.
 
 ### invoke_strategy
 

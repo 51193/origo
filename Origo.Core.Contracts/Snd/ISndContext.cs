@@ -28,6 +28,14 @@ public interface ISndContext
     /// <summary>Boot sequence: strategy discovery → alias/template loading → entry save loading.</summary>
     void Bootstrap();
 
+    /// <summary>
+    ///     Stops the active progress run and cleans the temporary
+    ///     <c>current/</c> working directory. Session and progress quit hooks
+    ///     run while their resources are still available. Idempotent; after
+    ///     shutdown, bootstrap and persistence mutations (save/load/delete/continue/level-switch) fail explicitly.
+    /// </summary>
+    void Shutdown();
+
     /// <summary>Current save root path.</summary>
     string SaveRootPath { get; }
 

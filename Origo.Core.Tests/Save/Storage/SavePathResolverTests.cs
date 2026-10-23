@@ -55,11 +55,34 @@ public class SaveFileHandleTests
     }
 
     [Fact]
-    public void SavePathResolver_GetRelativePath_NoMatch_ReturnsFullPath()
+    public void SavePathResolver_GetRelativePath_NoMatch_Throws()
     {
         var handle = CreateHandle("root/a");
-        var result = handle.GetRelativePath("root/b/file.json");
-        Assert.Equal("root/b/file.json", result);
+        Assert.Throws<InvalidOperationException>(() => handle.GetRelativePath("root/b/file.json"));
+    }
+
+    [Fact]
+    public void SavePathResolver_GetRelativePath_WindowsSeparators_StripsRoot()
+    {
+        var handle = CreateHandle(@"C:\saves");
+        Assert.Equal("current/progress.json",
+            handle.GetRelativePath(@"C:\saves\current\progress.json"));
+    }
+
+    [Fact]
+    public void SavePathResolver_GetRelativePath_DriveRootCaseMismatch_StripsRoot()
+    {
+        var handle = CreateHandle(@"C:\Saves");
+        Assert.Equal("current/progress.json",
+            handle.GetRelativePath(@"c:\saves\current\progress.json"));
+    }
+
+    [Fact]
+    public void SavePathResolver_GetRelativePath_SchemeRoot_StripsRoot()
+    {
+        var handle = CreateHandle("user://");
+        Assert.Equal("current/progress.json",
+            handle.GetRelativePath("user:///current/progress.json"));
     }
 
     [Fact]
@@ -84,6 +107,15 @@ public class SaveFileHandleTests
     [Fact]
     public void SavePathResolver_GetLeafDirectoryName_SingleSegment() =>
         Assert.Equal("single", SaveFileHandle.GetLeafDirectoryName("single"));
+
+    [Fact]
+    public void SavePathLayout_StripPathPrefix_SchemeRoot_NormalizesSeparators()
+    {
+        Assert.Equal("current/progress.json",
+            SavePathLayout.StripPathPrefix("user:///current/progress.json", "user://"));
+        Assert.Equal("extra",
+            SavePathLayout.StripPathPrefix(@"current\extra", "current"));
+    }
 
     [Fact]
     public void SavePathResolver_GetLeafDirectoryName_TrailingSlash() =>

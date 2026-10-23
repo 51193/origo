@@ -41,6 +41,12 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `RequestLoadGame_IncrementsThenDecrementsPendingCount` | Pending count changes for Load requests | ISndDeferredActions |
 | `SetContinueTarget_MakesHasContinueDataTrue` | After setting Continue target, HasContinueData returns true | ISndLifecycleOperations |
 | `RequestContinueGame_ReturnsTrueAndLoadsWhenContinueSet` | Continue correctly loads the save | ISndLifecycleOperations |
+| `Shutdown_ClearsProgressAndCurrent_IsIdempotentAndRejectsBootstrap` | progress cleared, current/ removed, second Shutdown no-op, Bootstrap/persistence rejected | [ISndContext](../Origo.Core.Contracts/Abstractions/Snd/README.en.md) |
+| `Shutdown_ConsoleClearFailure_RemainsRetryable` | first Shutdown throws on Clear failure; retry after recovery completes | [ISndContext](../Origo.Core.Contracts/Abstractions/Snd/README.en.md) |
+| `ContinueLookup_LegacyMixedCaseActiveId_FindsRenamedLowercaseSlot` | case-insensitive lookup uses the storage slot ID | [session-model](../usage/session-model.en.md) |
+| `DeleteSave_ActiveSaveMixedCase_Throws` | active-save protection is case-insensitive | [persistence-flow](../usage/persistence-flow.en.md) |
+| `DeleteSave_LegacyCaseVariantSlot_ThrowsMigrationError` | ArgumentException with rename guidance; directory preserved | [persistence-flow](../usage/persistence-flow.en.md) |
+| `RequestLoadAndContinue_LegacyCaseVariantSlot_ThrowMigrationError` | load/continue/save rejected before enqueue | [persistence-flow](../usage/persistence-flow.en.md) |
 | `RequestLoadInitialSave_LoadsFromInitialRoot` | Loads initial save from the initial path | ISndLifecycleOperations |
 | `RequestLoadInitialSave_RestoresExtraFilesFromInitialRoot` | Initial-save extra/ files are restored from the initial storage root into runtime current/extra | ISndArchiveFileAccess |
 | `RequestSwitchForegroundLevel_SwitchesLevel` | After level switch, ForegroundSession.LevelId is correct | ISndLifecycleOperations |

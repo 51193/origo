@@ -84,16 +84,20 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   job fails with the required fix instead of creating `0.1.1-nightly.*` below an
   existing `0.1.1`.
 - The weekly job asks for a snapshot release (`gh workflow run ... -f
-  snapshot=true`), which publishes the GitHub Release as a **pre-release**, so an
-  automatic snapshot never becomes the repository's Latest release. The Release
-  workflow also marks any tag containing `-` as a pre-release, so a hand-pushed
-  snapshot cannot become Latest either; only a formal `vx.y.z` tag pushed by
-  hand keeps the release state chosen on GitHub.
-- An already-pushed snapshot tag is not treated as complete unless its GitHub
-  Release also exists. A run scans the current base's nightly tags and, if one
-  has no GitHub Release, dispatches the pipeline for that tag instead of exiting
-  green with only today's tag; this recovers an orphan from an earlier day too,
-  even when the current week has no commits.
+  snapshot=true`). The Release action receives `prerelease` at creation (the
+  `snapshot` input or any tag containing `-`), and the later edit step is an
+  idempotent repair, so a cancelled/failed edit cannot leave an automatic
+  snapshot as the repository's Latest release. Only a formal `vx.y.z` tag pushed
+  by hand keeps the release state chosen on GitHub.
+- An already-pushed snapshot tag is complete only when its GitHub Release is
+  published (not a draft), marked pre-release, and carries at least the nine
+  expected assets (five packages, the source archive, two documentation
+  archives, and `nuget.config`). A run scans all nightly tags for the current
+  base; every missing/draft/partial release is dispatched, and the current
+  week's tag is still created when the window has commits. GitHub API errors
+  other than 404 fail the job instead of being mistaken for an orphan. This
+  recovers an orphan from an earlier day without consuming the current
+  snapshot.
 - Snapshot tags reuse the formal release pipeline for packages, source archives,
   and documentation snapshots; `verify-release.sh` skips formal metadata
   verification for versions containing `-`.
@@ -178,10 +182,10 @@ first; every step below then applies to that tag:
   explicit ref -- resolves the tag's current target first, so a tag already
   moved by this pipeline does not produce a duplicate release commit;
 - Attach the five packages, the source archive, and the documentation snapshot to
-  the GitHub Release, marked as a pre-release when the run was started as a
-  snapshot (the `snapshot` input, which the weekly job sets) or when the tag
-  contains `-`; only a formal `x.y.z` tag pushed by hand keeps the release state
-  chosen on GitHub.
+  the GitHub Release; pass `prerelease` when the run was started as a snapshot
+  (the `snapshot` input, which the weekly job sets) or when the tag contains `-`.
+  Only a formal `x.y.z` tag pushed by hand keeps the release state chosen on
+  GitHub.
 
 The release commit is not on `main`: `main` keeps the development baseline and
 the tag is the only ref that moves. Local clones that already fetched the old tag

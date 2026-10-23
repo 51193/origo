@@ -630,6 +630,15 @@ class ReleaseWorkflowGuardTests(unittest.TestCase):
 
 
 
+    def test_release_action_without_prerelease_is_rejected(self):
+        text = self.mutated(
+            "          prerelease: ${{ inputs.snapshot || contains(steps.resolve-tag.outputs.tag, '-') }}\n",
+            "",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("with.prerelease", stderr)
+
     def test_weekly_missing_orphan_tag_dispatch_is_rejected(self):
         old = '            echo "dispatch_existing=true" >> "$GITHUB_OUTPUT"\n'
         weekly = self.mutated_weekly(old, "")
@@ -640,7 +649,49 @@ class ReleaseWorkflowGuardTests(unittest.TestCase):
             WORKFLOW.read_text(encoding="utf-8"), weekly
         )
         self.assertEqual(code, 1)
-        self.assertIn("check gh release view", stderr)
+        self.assertIn("check the GitHub release state", stderr)
+
+    def test_weekly_orphan_recovery_exit_before_window_is_rejected(self):
+        old = '            echo "dispatch_existing=true" >> "$GITHUB_OUTPUT"\n'
+        weekly = self.mutated_weekly(old, old + "            exit 0\n")
+        code, _, stderr = self.run_guard(WORKFLOW.read_text(encoding="utf-8"), weekly)
+        self.assertEqual(code, 1)
+        self.assertIn("must not exit before the current window", stderr)
+
+    def test_weekly_non_404_return_is_rejected(self):
+        old = (
+            '            echo "ERROR: GitHub release lookup for ${release_tag} failed: ${state}" >&2\n'
+            "            exit 1\n"
+        )
+        new = (
+            '            echo "ERROR: GitHub release lookup for ${release_tag} failed: ${state}" >&2\n'
+            "            return 1\n"
+        )
+        weekly = self.mutated_weekly(old, new)
+        code, _, stderr = self.run_guard(WORKFLOW.read_text(encoding="utf-8"), weekly)
+        self.assertEqual(code, 1)
+        self.assertIn("must exit 1", stderr)
+
+    def test_weekly_dispatch_skipping_orphan_file_is_rejected(self):
+        old = '            done < "$ORPHAN_TAGS_FILE"'
+        weekly = self.mutated_weekly(old, "              done < /dev/null")
+        code, _, stderr = self.run_guard(WORKFLOW.read_text(encoding="utf-8"), weekly)
+        self.assertEqual(code, 1)
+        self.assertIn("consume the complete orphan tag file", stderr)
+
+    def test_weekly_partial_release_completeness_is_rejected(self):
+        old = '[[ "$draft" == "false" && "$prerelease" == "true" && "$assets" -ge 9 ]]'
+        weekly = self.mutated_weekly(old, '[[ "$assets" -ge 9 ]]')
+        code, _, stderr = self.run_guard(WORKFLOW.read_text(encoding="utf-8"), weekly)
+        self.assertEqual(code, 1)
+        self.assertIn("reject draft releases", stderr)
+
+    def test_weekly_missing_new_tag_output_is_rejected(self):
+        old = '          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"\n'
+        weekly = self.mutated_weekly(old, "")
+        code, _, stderr = self.run_guard(WORKFLOW.read_text(encoding="utf-8"), weekly)
+        self.assertEqual(code, 1)
+        self.assertIn("must emit tag", stderr)
 
     def test_weekly_dispatch_condition_without_existing_tag_is_rejected(self):
         weekly = self.mutated_weekly(

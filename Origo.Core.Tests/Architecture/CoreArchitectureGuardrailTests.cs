@@ -117,9 +117,13 @@ public class CoreArchitectureGuardrailTests
             Assert.NotNull(type.GetProperty(prop));
 
         var ownMethods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly)
-            .Where(m => !m.IsSpecialName).ToArray();
-        Assert.Single(ownMethods);
-        Assert.Equal(nameof(ISndContext.Bootstrap), ownMethods[0].Name);
+            .Where(m => !m.IsSpecialName)
+            .Select(m => m.Name)
+            .OrderBy(name => name, StringComparer.Ordinal)
+            .ToArray();
+        Assert.Equal(
+            new[] { nameof(ISndContext.Bootstrap), nameof(ISndContext.Shutdown) },
+            ownMethods);
     }
 
     [Fact]

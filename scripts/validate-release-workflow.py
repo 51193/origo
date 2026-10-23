@@ -49,6 +49,8 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "release.yml"
 WEEKLY_WORKFLOW = ROOT / ".github" / "workflows" / "weekly-build.yml"
+WEEKLY_CHECK_STEP = "Check for commits in the weekly window"
+WEEKLY_DISPATCH_STEP = "Dispatch the release pipeline for the snapshot tag"
 WEEKLY_BUMP_STEP = "Bump version, commit, and tag"
 WEEKLY_TAG_PUSH = 'git push origin "refs/tags/${TAG}"'
 WEEKLY_TAG_ASSIGNMENT = 'TAG="${{ steps.check.outputs.tag }}"'
@@ -253,6 +255,8 @@ def _weekly_snapshot_errors(workflow: dict) -> list[str]:
     base_check_seen = False
     orphan_tag_recovery_seen = False
     orphan_tag_dispatch_condition_seen = False
+    check_run = ""
+    dispatch_run = ""
     tag_pushes = 0
     for job_name, job in (workflow.get("jobs") or {}).items():
         if not isinstance(job, dict):
@@ -276,9 +280,14 @@ def _weekly_snapshot_errors(workflow: dict) -> list[str]:
             run = str(step.get("run") or "")
             if not run:
                 continue
+            if step.get("name") == WEEKLY_CHECK_STEP:
+                check_run = run
+            if step.get("name") == WEEKLY_DISPATCH_STEP:
+                dispatch_run = run
             if _calls_bash_script(run, "scripts/check-weekly-base.sh"):
                 base_check_seen = True
-            if "gh release view" in run and "dispatch_existing=true" in run:
+            if ("gh api" in run and "/releases/tags/" in run
+                    and "dispatch_existing=true" in run):
                 orphan_tag_recovery_seen = True
             if "Dispatch the release pipeline" in str(step.get("name") or ""):
                 if "dispatch_existing" in str(step.get("if") or ""):
@@ -340,14 +349,95 @@ def _weekly_snapshot_errors(workflow: dict) -> list[str]:
         )
     if not orphan_tag_recovery_seen:
         errors.append(
-            "weekly workflow must check gh release view for an existing tag "
-            "and dispatch the release pipeline when the tag has no release."
+            "weekly workflow must check the GitHub release state for an existing tag "
+            "and dispatch the release pipeline when it is missing, draft, or incomplete."
         )
     if not orphan_tag_dispatch_condition_seen:
         errors.append(
             "weekly dispatch step must also run when the tag exists without "
             "a GitHub Release (dispatch_existing)."
         )
+    if not check_run:
+        errors.append(
+            f"weekly workflow must define the '{WEEKLY_CHECK_STEP}' step."
+        )
+    else:
+        required_check_markers = {
+            'release_is_complete': (
+                "the weekly check must define release_is_complete()"
+            ),
+            'gh api': (
+                "the weekly check must query the GitHub API for release state"
+            ),
+            '/releases/tags/': (
+                "the weekly check must query a release by tag"
+            ),
+            '"$draft" == "false"': (
+                "the weekly check must reject draft releases"
+            ),
+            '"$prerelease" == "true"': (
+                "the weekly check must require a pre-release"
+            ),
+            '"$assets" -ge 9': (
+                "the weekly check must require all nine expected snapshot assets"
+            ),
+            'HTTP 404': (
+                "the weekly check must distinguish a missing release (404) from other API errors"
+            ),
+            'record_orphan "$TAG"': (
+                "the weekly check must recover an incomplete tag found by the remote check"
+            ),
+            'if [[ -z "$WINDOW_COMMITS" ]]': (
+                "the weekly check must still consider the current window after orphan recovery"
+            ),
+            'echo "new_version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"': (
+                "the weekly check must emit new_version when the window has commits"
+            ),
+            'echo "tag=${TAG}" >> "$GITHUB_OUTPUT"': (
+                "the weekly check must emit tag when the window has commits"
+            ),
+        }
+        for marker, message in required_check_markers.items():
+            if marker not in check_run:
+                errors.append(f"weekly workflow check: {message}.")
+
+        orphan_start = check_run.find('if [[ -s "$ORPHAN_TAGS_FILE" ]]; then')
+        window_start = check_run.find('if [[ -z "$WINDOW_COMMITS" ]]', orphan_start)
+        if orphan_start < 0 or window_start < 0:
+            errors.append(
+                "weekly workflow check must record/probe orphans before considering the window."
+            )
+        elif "exit 0" in check_run[orphan_start:window_start]:
+            errors.append(
+                "weekly orphan recovery must not exit before the current window can emit a new tag."
+            )
+
+        error_marker = 'echo "ERROR: GitHub release lookup for ${release_tag} failed: ${state}" >&2'
+        error_index = check_run.find(error_marker)
+        if error_index < 0:
+            errors.append(
+                "weekly release lookup must fail on non-404 GitHub API errors."
+            )
+        else:
+            next_fi = check_run.find("fi", error_index)
+            if next_fi < 0 or "exit 1" not in check_run[error_index:next_fi]:
+                errors.append(
+                    "weekly release lookup must exit 1 on non-404 GitHub API errors, not return a false completeness result."
+                )
+
+    if not dispatch_run:
+        errors.append(
+            f"weekly workflow must define the '{WEEKLY_DISPATCH_STEP}' step."
+        )
+    else:
+        if 'while IFS= read -r ORPHAN_TAG; do' not in dispatch_run:
+            errors.append(
+                "weekly dispatch step must iterate every recovered orphan tag."
+            )
+        if 'done < "$ORPHAN_TAGS_FILE"' not in dispatch_run:
+            errors.append(
+                "weekly dispatch step must consume the complete orphan tag file."
+            )
     return errors
 
 
@@ -433,6 +523,16 @@ def main() -> int:
                     f"{RELEASE_ACTION} with.target_commitish to "
                     f"{RELEASE_COMMIT_SHA}; a missing tag must never be created "
                     "at the default branch."
+                )
+            prerelease = with_section.get("prerelease") if isinstance(with_section, dict) else None
+            expected_prerelease = (
+                "${{ inputs.snapshot || contains(steps.resolve-tag.outputs.tag, '-') }}"
+            )
+            if prerelease != expected_prerelease:
+                errors.append(
+                    f"{job_name}.steps[{index}] must set "
+                    f"{RELEASE_ACTION} with.prerelease to {expected_prerelease}; "
+                    "a cancelled/failed later edit must not leave a snapshot as the stable Latest release."
                 )
 
     release_job = (workflow.get("jobs") or {}).get("release")

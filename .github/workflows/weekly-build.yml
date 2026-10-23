@@ -109,38 +109,58 @@ jobs:
 
           # Ask the remote, not the checkout: a tag created by a concurrent run
           # is not in this clone yet, and pushing over it would fail the job.
-          # A tag is only "done" when its GitHub Release also exists. Scan all
-          # recent snapshot tags for this base, not only today's computed name:
-          # a failed dispatch may be noticed on a later day, and the original
-          # tag must still be recovered instead of being orphaned forever.
-          ORPHAN_TAG=""
+          # A tag is only "done" when its GitHub Release is published with the
+          # expected snapshot assets. Draft/incomplete/stable snapshots are
+          # recovered too, and all orphans are dispatched rather than consuming
+          # the whole run and dropping today's window.
+          ORPHAN_TAGS_FILE="${RUNNER_TEMP}/origo-orphan-tags.txt"
+          : > "$ORPHAN_TAGS_FILE"
+          release_is_complete() {
+            local release_tag="$1"
+            local state draft prerelease assets
+            if state="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${release_tag}"                 --jq '[.draft, .prerelease, (.assets | length)] | @tsv' 2>&1)"; then
+              IFS=$'\t' read -r draft prerelease assets <<< "$state"
+              # softprops creates the prerelease before uploading; a failed
+              # upload can leave a published prerelease with only some assets.
+              # The snapshot has five packages, the source archive, two docs
+              # archives, and nuget.config.
+              [[ "$draft" == "false" && "$prerelease" == "true" && "$assets" -ge 9 ]]
+              return
+            fi
+            if [[ "$state" == *"HTTP 404"* || "$state" == *"Not Found"* ]]; then
+              return 1
+            fi
+            echo "ERROR: GitHub release lookup for ${release_tag} failed: ${state}" >&2
+            exit 1
+          }
+          record_orphan() {
+            local orphan="$1"
+            grep -qxF "$orphan" "$ORPHAN_TAGS_FILE" || printf '%s\n' "$orphan" >> "$ORPHAN_TAGS_FILE"
+          }
           while IFS= read -r CANDIDATE; do
             [[ -n "$CANDIDATE" ]] || continue
-            if ! gh release view "$CANDIDATE" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-              ORPHAN_TAG="$CANDIDATE"
-              break
+            if ! release_is_complete "$CANDIDATE"; then
+              record_orphan "$CANDIDATE"
             fi
           done < <(git tag --list "v${BASE_VERSION}-nightly.*" --sort=-version:refname)
-          if [[ -n "$ORPHAN_TAG" ]]; then
-            echo "Tag ${ORPHAN_TAG} exists but its GitHub Release is missing; dispatching the release pipeline."
+          if [[ -s "$ORPHAN_TAGS_FILE" ]]; then
+            echo "Recovering orphaned snapshot tags: $(paste -sd, "$ORPHAN_TAGS_FILE")"
             echo "dispatch_existing=true" >> "$GITHUB_OUTPUT"
-            echo "tag=${ORPHAN_TAG}" >> "$GITHUB_OUTPUT"
-            exit 0
           fi
 
           if [[ -z "$WINDOW_COMMITS" ]]; then
-            echo "No commits in the weekly window and no orphaned tag; nothing to publish."
+            echo "No commits in the weekly window; orphan recovery (if any) runs in the dispatch step."
             exit 0
           fi
 
           if git ls-remote --exit-code --refs origin "refs/tags/${TAG}" >/dev/null 2>&1; then
-            if gh release view "$TAG" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            if release_is_complete "$TAG"; then
               echo "Tag ${TAG} and its GitHub Release already exist; nothing to publish."
               exit 0
             fi
-            echo "Tag ${TAG} exists (remote-only race) but its GitHub Release is missing; dispatching the release pipeline."
+            echo "Tag ${TAG} exists (remote-only race) but its GitHub Release is incomplete; dispatching the release pipeline."
+            record_orphan "$TAG"
             echo "dispatch_existing=true" >> "$GITHUB_OUTPUT"
-            echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -180,5 +200,15 @@ jobs:
           # trigger never fires here. workflow_dispatch is the documented
           # exception, so the pipeline is started explicitly instead of relying
           # on a PAT (or GitHub App token) in repository secrets.
-          gh workflow run release.yml --ref main -f tag="${TAG}" -f snapshot=true
-          echo "Dispatched release.yml for ${TAG}."
+          ORPHAN_TAGS_FILE="${RUNNER_TEMP}/origo-orphan-tags.txt"
+          if [[ -f "$ORPHAN_TAGS_FILE" ]]; then
+            while IFS= read -r ORPHAN_TAG; do
+              [[ -n "$ORPHAN_TAG" ]] || continue
+              gh workflow run release.yml --ref main -f tag="${ORPHAN_TAG}" -f snapshot=true
+              echo "Dispatched release.yml for orphaned tag ${ORPHAN_TAG}."
+            done < "$ORPHAN_TAGS_FILE"
+          fi
+          if [[ -n "${TAG:-}" ]]; then
+            gh workflow run release.yml --ref main -f tag="${TAG}" -f snapshot=true
+            echo "Dispatched release.yml for ${TAG}."
+          fi

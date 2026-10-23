@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.FileSystem;
@@ -40,6 +41,7 @@ public sealed class SndContext : ISndContext
     internal readonly SystemRun _systemRun;
     internal readonly List<ISaveMetaContributor> _saveMetaContributors = [];
     private bool _bootstrapped;
+    private bool _shutdown;
     private bool _bootstrapCompleted;
     private readonly SndContextParameters _parameters;
     internal int _pendingPersistenceRequests;
@@ -69,8 +71,8 @@ public sealed class SndContext : ISndContext
         SaveRootPath = parameters.SaveRootPath;
         InitialSaveRootPath = parameters.InitialSaveRootPath;
         EntryConfigPath = parameters.EntryConfigPath;
-        SavePathLayout.ValidateToken(
-            parameters.InitialLevelId, nameof(parameters.InitialLevelId), "initial level id");
+        SavePathLayout.ValidateLevelId(
+            parameters.InitialLevelId, nameof(parameters.InitialLevelId));
 
         SavePathPolicy = parameters.SavePathPolicy ?? new DefaultSavePathPolicy();
         StorageService =
@@ -131,6 +133,7 @@ public sealed class SndContext : ISndContext
     /// </exception>
     public void Bootstrap()
     {
+        ThrowIfShutdown();
         if (_bootstrapped)
             throw new InvalidOperationException(
                 "SndContext.Bootstrap has already been executed. Bootstrap must be called exactly once.");
@@ -153,6 +156,48 @@ public sealed class SndContext : ISndContext
             Runtime.SndWorld.LoadTemplates(_parameters.SndTemplateMapPath, Runtime.Logger);
 
         Lifecycle.RequestLoadMainMenuEntrySave();
+    }
+
+    /// <inheritdoc />
+    public void Shutdown()
+    {
+        if (_shutdown)
+            return;
+
+        // Both teardown steps are attempted even if the first fails. The
+        // terminal flag is committed only after the whole attempt succeeds,
+        // so a throwing consumer console source cannot make Shutdown a
+        // permanent no-op with the progress run/current directory still live.
+        Exception? firstFailure = null;
+        try
+        {
+            Runtime.ResetConsoleState();
+        }
+        catch (Exception ex)
+        {
+            firstFailure = ex;
+        }
+
+        try
+        {
+            // ProgressRun.Dispose runs the session/progress quit hooks and
+            // deletes current/. A host that never started a progress run has
+            // nothing to clean and no file-system access requirement here.
+            ShutdownCurrentProgressAndScene();
+        }
+        catch (Exception ex)
+        {
+            firstFailure ??= ex;
+        }
+        finally
+        {
+            _progressRun = null;
+        }
+
+        if (firstFailure is not null)
+            ExceptionDispatchInfo.Capture(firstFailure).Throw();
+
+        _shutdown = true;
     }
 
     /// <summary>
@@ -220,12 +265,18 @@ public sealed class SndContext : ISndContext
     /// </exception>
     internal ProgressRun EnsureProgressRun()
     {
+        ThrowIfShutdown();
         return _progressRun ?? throw new InvalidOperationException(
             "No active ProgressRun. Call RequestLoadMainMenuEntrySave first.");
     }
 
     /// <summary>Swap the active ProgressRun (used during lifecycle transitions).</summary>
-    internal void SetProgressRun(ProgressRun? progressRun) => _progressRun = progressRun;
+    internal void SetProgressRun(ProgressRun? progressRun)
+    {
+        if (progressRun is not null)
+            ThrowIfShutdown();
+        _progressRun = progressRun;
+    }
 
     /// <summary>True while a lifecycle workflow (load/save/change-level) is executing.</summary>
     internal bool IsWorkflowInProgress => _workflowInProgress;
@@ -519,17 +570,29 @@ public sealed class SndContext : ISndContext
 
     private T RunWorkflow<T>(Func<T> body)
     {
+        ThrowIfShutdown();
         Runtime.SndWorld.StrategyPool.SealRegistration();
         BeginWorkflow();
         try
         {
             Runtime.ResetConsoleState();
             ShutdownCurrentProgressAndScene();
-            return body();
+            ThrowIfShutdown();
+
+            var result = body();
+            ThrowIfShutdown();
+            return result;
         }
         finally
         {
             EndWorkflow();
         }
+    }
+
+    internal void ThrowIfShutdown()
+    {
+        if (_shutdown)
+            throw new InvalidOperationException(
+                "SndContext has been shut down; bootstrap and persistence mutations (save, load, delete, continue, level-switch) are no longer accepted.");
     }
 }

@@ -105,7 +105,7 @@ Reads entity data of any type via `TryGetData<object>`, displaying the value and
 [player] health = 50
 ```
 
-Type inference rules are the same as `bb_set` (int/long/float/bool/string). If the key already exists, **the existing key's type is preserved** when writing (e.g., if `hunger` key already has type `float`, `entity_set_data player hunger 15` writes as `Single(15)` rather than `Int32(15)`).
+Type inference rules are the same as `bb_set` (int/long/float/bool/string). If the key already exists, **the existing key's type is preserved** when writing (e.g., if `hunger` key already has type `float`, `entity_set_data player hunger 15` writes as `Single(15)` rather than `Int32(15)`). Non-finite float literals (`NaN`, `Infinity`, or an overflowing value such as `1e400`) are rejected for an existing float key; accepting them would make every later save fail because JSON numbers must be finite.
 
 ### invoke_strategy
 

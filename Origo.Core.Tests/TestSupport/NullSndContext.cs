@@ -35,6 +35,11 @@ public sealed class NullSndContext : ISndContext, ISndBlackboardAccess, ISndDefe
     {
     }
 
+    /// <inheritdoc />
+    public void Shutdown()
+    {
+    }
+
     public string SaveRootPath => string.Empty;
     public string InitialSaveRootPath => string.Empty;
     public string EntryConfigPath => string.Empty;

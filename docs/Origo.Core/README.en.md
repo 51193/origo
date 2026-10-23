@@ -51,10 +51,14 @@ host.Runtime.SndWorld.RegisterStrategy(() => new CounterStrategy());
 host.DriveFrame(1.0 / 60.0);
 ```
 
-`host.Context` exposes the stable `ISndContext` capability facets; `host.Runtime`
+Call `host.Dispose()` (or `host.Context.Shutdown()`) when the process stops driving the host: it runs session/progress quit hooks and deletes the temporary `current/` working directory. `host.Context` exposes the stable `ISndContext` capability facets; `host.Runtime`
 exposes `IOrigoRuntime` and `ISndWorldAccess`. Supply
 `OrigoHostOptions.FileSystem` and call `host.Bootstrap()` when the workflow
-needs entry-config or save files. The Core host persists its system blackboard
+needs entry-config or save files. If the system blackboard stores a custom
+type, register its type-name mapping and converter with
+`OrigoHostOptions.ConfigureStartupRegistry`; the callback runs before
+`system.json` is read, unlike `ConfigureConverters`, which runs during
+Bootstrap. The Core host persists its system blackboard
 at `<SaveRootPath>/system.json` (active/continue save state), so continue and
 lifecycle state survive host recreation. Strategy registration and frame
 driving work without file access. Console channels are optional but must be

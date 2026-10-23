@@ -45,7 +45,7 @@ bgSession.Spawn(dungeonEntityMeta);
 bgSession.SessionBlackboard.SetValue("explored", true);
 ```
 
-**levelId uniqueness constraint:** At any given time, a levelId can only be held by one session. If attempting to create a background session while a foreground or another background session already uses that levelId, `CreateBackgroundSession` throws `InvalidOperationException`. Replacing the foreground slot itself is not a concurrent conflict: `CreateForegroundSession` validates conflicts with other sessions first, then destroys the old foreground and mounts the replacement.
+**levelId identity and uniqueness:** Level IDs are lowercase, path-safe tokens (the same identity rule as save IDs) because they name `level_{id}/`; at any given time a levelId can only be held by one session. Mixed-case or trailing-dot level IDs are rejected before any session is created. If attempting to create a background session while a foreground or another background session already uses that levelId, `CreateBackgroundSession` throws `InvalidOperationException`. Replacing the foreground slot itself is not a concurrent conflict: `CreateForegroundSession` validates conflicts with other sessions first, then destroys the old foreground and mounts the replacement.
 
 Before executing, `SwitchForeground` **automatically checks** whether a background session holds the target `levelId`. If a conflict exists, it saves that background session's data to `current/`, destroys it, and then creates a new foreground session. The caller does not need to manually destroy the background session.
 
@@ -145,7 +145,8 @@ Destroy:
     → Release the levelId held by that session
 
 Exit:
-  ProgressRun dispose
+  SndContext.Shutdown() (or OrigoHost.Dispose / OrigoDefaultEntry._ExitTree)
+    → ProgressRun dispose
     → Destroy all background sessions and foreground session in order
     → Clean up current/ temp directory
     → Does not trigger persistence (saving is the application layer's responsibility via explicit RequestSaveGame)
