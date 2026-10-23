@@ -10,7 +10,7 @@ Third-party noise library **FastNoiseLite v1.1.1**, developed by Jordan Peck, MI
 
 | File | Responsibility |
 |------|---------------|
-| `FastNoiseLite.cs` | Complete noise library implementation (~2700 lines), all algorithms in a single file |
+| `FastNoiseLite.cs` | Complete noise library implementation; all algorithms live in a single file |
 
 ## Capabilities
 
