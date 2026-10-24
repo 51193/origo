@@ -20,6 +20,7 @@ Documentation for Origo framework users (game developers, AI agents). Organized 
 | [capabilities](capabilities.en.md) | All users | Complete framework capability checklist, indexed by functional domain — quickly understand what Origo can do |
 | [agent-reference](agent-reference.en.md) | AI agents | Complete runtime reference: interface signatures, lifecycle timeline, strategy writing templates |
 | [shell-package-consumer](shell-package-consumer.en.md) | Release/integration maintainers | Shell-only package consumer fixture: local-feed restore, warnings-as-errors build, kernel-leak negative probe, ConsoleBridge loopback round-trip, and Godot headless startup |
+| [windows-development](windows-development.en.md) | Windows developers | Native PowerShell development suite: SDK install, format, API baseline, tests, benchmarks, Godot integration, package consumer smoke, layered checks, and commit lint |
 
 ## Recommended Reading Paths
 

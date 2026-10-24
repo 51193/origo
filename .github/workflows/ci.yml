@@ -90,6 +90,44 @@ jobs:
       - name: Benchmarks — TypedData + subsystem baselines
         run: bash scripts/benchmark.sh
 
+  # Native Windows suite: scripts/windows/*.ps1, independent of the Bash
+  # scripts above. This job runs the same gates on Windows PowerShell so the
+  # two platform script sets cannot drift silently.
+  windows-powershell:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The API baseline selects the previous formal release tag.
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/cache@v6
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/Directory.Build.props', 'Directory.Packages.props', 'global.json') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Cache Godot binary
+        uses: actions/cache@v6
+        with:
+          path: .godot_binary
+          key: godot-${{ runner.os }}-${{ hashFiles('Origo.GodotAdapter/Origo.GodotAdapter.csproj') }}
+
+      - name: Windows PowerShell gates
+        shell: cmd
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File scripts\windows\ci.ps1
+
   godot-integration-tests:
     needs: build-and-test
     strategy:

@@ -279,6 +279,15 @@ repository instead of editing `global.json` to match the machine:
    `Godot.NET.Sdk` version from `Origo.GodotAdapter/Origo.GodotAdapter.csproj`
    and caches the matching engine under `.godot_binary/`.
 
+Windows development uses the native PowerShell suite under `scripts/windows/`
+instead of the POSIX scripts; the two sets implement the same gates and never
+invoke each other. `scripts/windows/install-dotnet.ps1` installs the pinned SDK
+through `dotnet-install.ps1`, and `scripts/windows/ci.ps1` is the Windows
+equivalent of `scripts/ci.sh` (script parse/lint, format, API baseline, build
+and tests, benchmarks, Godot integration, and package consumer smoke).
+Prerequisites, the command table, SDK/Python/Godot resolution, and CI parity are
+documented in [Windows Development](usage/windows-development.en.md).
+
 ## Local Agent Work Buffer
 
 `_origo_local/` is a git-ignored single-book work buffer for findings and

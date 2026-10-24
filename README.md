@@ -178,6 +178,17 @@ bash scripts/ci.sh              # Full local pipeline; the final gate (lint-scri
 bash scripts/format.sh          # Format check only
 ```
 
+Windows uses the native PowerShell suite (no Bash/Git Bash required):
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\windows\install-dotnet.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\windows\ci.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\windows\check.ps1 quick -Project Origo.Core.Tests/Origo.Core.Tests.csproj -Filter 'FullyQualifiedName~Save'
+```
+
+See [Windows Development](docs/usage/windows-development.en.md) for prerequisites
+and the full command table.
+
 | Module | Description |
 |---|---|
 | `Origo.Core.Contracts` | Stable, engine-agnostic consumer contracts: public interfaces, pure data, metadata, strategy bases, data-source contracts, logging abstractions, and shared pure helpers |
