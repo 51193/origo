@@ -6,7 +6,7 @@ obj/
 *.suo
 
 # Repository-local .NET SDK and CLI/NuGet caches installed or refreshed by
-# scripts/install-dotnet.sh. The ./dotnet wrapper script at the repository
+# scripts/bash/install-dotnet.sh. The ./dotnet wrapper script at the repository
 # root is tracked.
 /.dotnet/
 /.dotnet-cli-home/
@@ -33,14 +33,14 @@ publish/
 coverage.cobertura.xml
 TestResults/
 
-# Python bytecode caches written by scripts/*.py and the script self-tests
+# Python bytecode caches written by scripts/python/*.py and the script self-tests
 __pycache__/
 *.pyc
 
 # OS
 .DS_Store
 Thumbs.db
-# Godot binary cache (downloaded by scripts/download-godot.sh)
+# Godot binary cache (downloaded by scripts/bash/download-godot.sh)
 .godot_binary/
 
 # Godot user-data home used when the real HOME/XDG directories are read-only

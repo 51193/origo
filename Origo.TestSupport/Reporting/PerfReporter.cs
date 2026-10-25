@@ -10,7 +10,7 @@ namespace Origo.TestSupport;
 /// <summary>
 ///     Benchmark reporter that writes human-readable tables and
 ///     machine-readable <c>BENCH|</c> metric lines consumed by
-///     <c>scripts/benchmark.sh</c>. Emitted metric keys must be unique within
+///     <c>scripts/bash/benchmark.sh</c>. Emitted metric keys must be unique within
 ///     the test process.
 /// </summary>
 public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = null)
@@ -38,11 +38,11 @@ public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = nul
 
     /// <summary>
     ///     Emits a machine-readable metric line (stable format consumed by
-    ///     scripts/benchmark.sh for baseline comparison):
+    ///     scripts/bash/benchmark.sh for baseline comparison):
     ///     <c>BENCH|&lt;kind&gt;|&lt;label&gt;|&lt;side&gt;|&lt;ops/s&gt;|&lt;alloc bytes&gt;</c>.
     ///     <paramref name="side" /> is "A"/"B" for two-sided comparisons or empty for single rows.
     ///     The line is formatted with the invariant culture so the
-    ///     <c>BENCH|</c> regex in scripts/benchmark.sh parses identically on
+    ///     <c>BENCH|</c> regex in scripts/bash/benchmark.sh parses identically on
     ///     every locale (decimal separators / group separators must not vary).
     /// </summary>
     public void EmitMetric(string kind, string label, string side, double opsPerSec, long allocatedBytes)

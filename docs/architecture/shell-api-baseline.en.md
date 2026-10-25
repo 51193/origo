@@ -12,26 +12,26 @@ This document defines the 0.1.0 shell API baseline gate: a tracked Roslyn invent
 
 ## Gate Execution
 
-`scripts/api-inventory.sh`:
+`scripts/bash/api-inventory.sh`:
 
 1. Builds the four shell projects in Release; the repository-wide warnings-as-errors setting stops the gate before inventory generation on any compiler or Source Generator diagnostic error.
 2. Runs the `tools/ApiInventoryTool` Roslyn metadata inventory.
 3. In `verify` mode, compares each API line with `tools/ApiInventoryTool/shell-api-baseline.json`; any addition, removal, or signature change exits non-zero with the diff and the regeneration command.
 4. `generate` mode is for approved changes: it rewrites the baseline JSON, which must be reviewed and committed with the implementation.
 
-The script runs in normal CI (Ubuntu/macOS/Windows), `scripts/ci.sh`, and the Release workflow. The normal CI checkout fetches full history and tags, and a dedicated step fails if no formal release tag is visible; without that, a depth-1 checkout would silently skip the previous-package comparison. An unapproved change therefore cannot pass any of those gates.
+The script runs in normal CI (Ubuntu/macOS/Windows), `scripts/bash/ci.sh`, and the Release workflow. The normal CI checkout fetches full history and tags, and a dedicated step fails if no formal release tag is visible; without that, a depth-1 checkout would silently skip the previous-package comparison. An unapproved change therefore cannot pass any of those gates.
 
 ## Baseline and Ownership
 
 | Item | Description |
 |------|-------------|
 | Baseline file | `tools/ApiInventoryTool/shell-api-baseline.json` |
-| Produced by | `bash scripts/api-inventory.sh generate`; never hand-written |
+| Produced by | `bash scripts/bash/api-inventory.sh generate`; never hand-written |
 | Owner | Framework maintainer, who confirms every diff is an intentional shell contract change during review |
 | Update condition | An approved new shell API, removal, or signature change with tests and English documentation updated in the same change |
 | Kernel impact | Kernel implementation additions/removals do not change the baseline; a reference leak fails immediately |
 
-There is no previous stable shell package before the first 0.1.0 release, so previous-package validation is explicitly skipped with an explanation. Afterwards, when `ORIGO_PREVIOUS_API_BASELINE` is not set, `scripts/api-inventory.sh` auto-detects the newest formal release tag not newer than the current source version, excluding the tag on the current commit and the current release tag supplied through `ORIGO_CURRENT_RELEASE_TAG`, and extracts its `shell-api-baseline.json`; the explicit environment variable overrides auto-detection. A tag-only release commit is a metadata-only child of the main commit it was cut from, so the helper accepts such a tag even when it is not an ancestor of HEAD. The previous-package compare fails removals and signature changes while allowing backward-compatible additions: 0.1.x allows compatible additions, and behavior breaks/removals target 0.2.0. 0.1.x promises source/behavior compatibility, not binary compatibility.
+There is no previous stable shell package before the first 0.1.0 release, so previous-package validation is explicitly skipped with an explanation. Afterwards, when `ORIGO_PREVIOUS_API_BASELINE` is not set, `scripts/bash/api-inventory.sh` auto-detects the newest formal release tag not newer than the current source version, excluding the tag on the current commit and the current release tag supplied through `ORIGO_CURRENT_RELEASE_TAG`, and extracts its `shell-api-baseline.json`; the explicit environment variable overrides auto-detection. A tag-only release commit is a metadata-only child of the main commit it was cut from, so the helper accepts such a tag even when it is not an ancestor of HEAD. The previous-package compare fails removals and signature changes while allowing backward-compatible additions: 0.1.x allows compatible additions, and behavior breaks/removals target 0.2.0. 0.1.x promises source/behavior compatibility, not binary compatibility.
 
 ## Failure Semantics
 

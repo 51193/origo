@@ -44,6 +44,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **BREAKING: repository scripts are grouped by implementation language** — POSIX scripts live under `scripts/bash/`, the Windows PowerShell suite under `scripts/powershell/`, and cross-platform Python helpers under `scripts/python/`; `scripts/README.md` is the gate and directory map. Entry points are now `bash scripts/bash/ci.sh` and `powershell -File scripts/powershell/ci.ps1`. Automation that invoked the old `scripts/*.sh`, `scripts/*.py`, or `scripts/windows/*.ps1` paths must update; no compatibility wrappers are provided.
 - **BREAKING: save and level IDs are lowercase, path-safe identifiers** — IDs must use lowercase ASCII letters, digits, `.`, `_`, and `-`, must not be dot-only, and must not end with `.`. Save/level IDs are directory names, so `Foo`/`foo` and `foo`/`foo.` alias the same directory on default Windows/macOS file systems; the previous ordinal checks could overwrite a slot, bypass active-save deletion protection, or lose a level. Legacy mixed-case or trailing-dot slots are detected and rejected with a rename instruction rather than silently merged. Rename existing IDs before upgrading.
 - **Hyphenated release tags are always pre-releases** — the Release workflow
   marks any tag containing `-` as a pre-release, not only dispatches with the

@@ -92,9 +92,9 @@ After a code PR is merged, check:
 
 ## Git Commit Message Format
 
-All non-merge commits must follow the Conventional Commits specification to keep repository history readable and machine-parseable. Merge commits are exempt because Git/GitHub generates their "Merge ..." subject and body; `scripts/lint-commits.sh` therefore lints only non-merge commits. Each clone must enable the repository hooks once with `git config core.hooksPath .githooks`; the local `.githooks/pre-push` hook invokes `scripts/lint-commits.sh` before Git uploads objects and checks every non-merge commit in each branch range being pushed: type, 72-character subject limit, no trailing period, and body lines no longer than 72 characters. This gate runs locally. Dependabot-authored commits are exempt because Dependabot can configure a commit-message prefix but does not support custom message templates, and its generated body lines exceed 72 characters. `.github/dependabot.yml` sets the `chore(deps)` prefix for every ecosystem so generated subjects remain Conventional Commits, and `scripts/lint-commits.sh` skips Dependabot-authored commits; human-authored commits in the same branch remain fully checked.
+All non-merge commits must follow the Conventional Commits specification to keep repository history readable and machine-parseable. Merge commits are exempt because Git/GitHub generates their "Merge ..." subject and body; `scripts/bash/lint-commits.sh` therefore lints only non-merge commits. Each clone must enable the repository hooks once with `git config core.hooksPath .githooks`; the local `.githooks/pre-push` hook invokes `scripts/bash/lint-commits.sh` before Git uploads objects and checks every non-merge commit in each branch range being pushed: type, 72-character subject limit, no trailing period, and body lines no longer than 72 characters. This gate runs locally. Dependabot-authored commits are exempt because Dependabot can configure a commit-message prefix but does not support custom message templates, and its generated body lines exceed 72 characters. `.github/dependabot.yml` sets the `chore(deps)` prefix for every ecosystem so generated subjects remain Conventional Commits, and `scripts/bash/lint-commits.sh` skips Dependabot-authored commits; human-authored commits in the same branch remain fully checked.
 
-GitHub's squash merge uses the pull-request body as the commit body. Because no local hook sees that generated commit, the `pr-body-lint` CI workflow runs `scripts/lint-pr-body.py` on opened, synchronized, reopened, and edited pull requests; it checks the title as a Conventional Commit subject (including GitHub's ` (#number)` suffix) and enforces the 72-character body-line rule (excluding fenced code blocks, table rows, and single-URL lines). It runs the linter from `origin/main` when that file exists, falling back to the checked-out copy only before the first merge introduces it. Wrap prose in the PR body; a passing local commit is not sufficient when the squash body would violate the rule.
+GitHub's squash merge uses the pull-request body as the commit body. Because no local hook sees that generated commit, the `pr-body-lint` CI workflow runs `scripts/python/lint-pr-body.py` on opened, synchronized, reopened, and edited pull requests; it checks the title as a Conventional Commit subject (including GitHub's ` (#number)` suffix) and enforces the 72-character body-line rule (excluding fenced code blocks, table rows, and single-URL lines). It runs the linter from `origin/main` when that file exists, falling back to the checked-out copy only before the first merge introduces it. Wrap prose in the PR body; a passing local commit is not sufficient when the squash body would violate the rule.
 
 ### Basic Format
 
@@ -195,12 +195,12 @@ handoff, and meaningless numeric suffixes are forbidden. `main`, `master`,
 `dependabot/**`, and tags are exempt; `codex/**` and `deepseek/**` are not.
 Pull request branches from forks are exempt in CI because the base repository
 does not own their names; same-repository pull request branches stay validated.
-Use `bash scripts/work-identity.sh validate` or `new`; creator resolution is
+Use `bash scripts/bash/work-identity.sh validate` or `new`; creator resolution is
 explicit `--creator`, local `origo.githubUser`, then authenticated `gh api user`.
 
 ## Layered Test Checks
 
-Use `bash scripts/check.sh plan`, `quick`, `affected`, or `full`; quick requires
+Use `bash scripts/bash/check.sh plan`, `quick`, `affected`, or `full`; quick requires
 an explicit project/filter and does not measure coverage, affected uses the
 evaluated project graph and impact contracts, and full remains the final CI
 gate. Unknown or empty selections stop and require `full`. Documentation changes
@@ -243,7 +243,7 @@ records, and deferred designs live in `docs/architecture/`.
 
 ## Environment Bootstrap
 
-- `scripts/test.sh` gives its test host a private writable `XDG_RUNTIME_DIR`.
+- `scripts/bash/test.sh` gives its test host a private writable `XDG_RUNTIME_DIR`.
   Coverlet's instrumentation tracker creates a named mutex during unload; on
   Linux .NET stores it under `XDG_RUNTIME_DIR`, and a read-only
   `/run/user/<id>` makes the test host emit an unhandled
@@ -256,7 +256,7 @@ repository instead of editing `global.json` to match the machine:
 1. `global.json` is the single authority for the required .NET SDK feature band.
    Never downgrade the request or edit `global.json` to match an
    already-installed SDK.
-2. Run `bash scripts/install-dotnet.sh`. It parses `global.json` and installs the
+2. Run `bash scripts/bash/install-dotnet.sh`. It parses `global.json` and installs the
    exact SDK through the official `dotnet-install.sh` into the SDK root the
    scripts use: an explicit `DOTNET_INSTALL_DIR` wins, an existing
    repository-local `.dotnet/` is refreshed in place, and otherwise the default
@@ -267,7 +267,7 @@ repository instead of editing `global.json` to match the machine:
    repository-local `.dotnet/`; use the tracked `./dotnet` wrapper. The wrapper
    applies the same selection and validation as the scripts and exports nothing
    into the caller shell.
-4. Repository scripts source `scripts/dotnet-env.sh`, which selects that same
+4. Repository scripts source `scripts/bash/dotnet-env.sh`, which selects that same
    SDK root (falling back to the `dotnet` on PATH when no root is installed)
    and validates it against `global.json` before exporting anything; a
    stale selection fails with the required version, the selected path, the
@@ -275,15 +275,22 @@ repository instead of editing `global.json` to match the machine:
    `global.json`. Do not add `PATH` / `DOTNET_ROOT` / `NUGET_PACKAGES` exports to
    shell profiles or per-session workflows as a substitute for the install
    script.
-5. The Godot engine binary is separate: `scripts/download-godot.sh` reads the
+5. The Godot engine binary is separate: `scripts/bash/download-godot.sh` reads the
    `Godot.NET.Sdk` version from `Origo.GodotAdapter/Origo.GodotAdapter.csproj`
    and caches the matching engine under `.godot_binary/`.
 
-Windows development uses the native PowerShell suite under `scripts/windows/`
+Repository scripts are grouped by implementation language under
+`scripts/bash/` (POSIX entry points, helpers, and self-tests),
+`scripts/powershell/` (Windows suite), and `scripts/python/` (cross-platform
+helpers). [scripts/README.md](../scripts/README.md) is the script map: it lists
+every gate, both OS entry points, and the directory rules for adding or moving
+scripts.
+
+Windows development uses the native PowerShell suite under `scripts/powershell/`
 instead of the POSIX scripts; the two sets implement the same gates and never
-invoke each other. `scripts/windows/install-dotnet.ps1` installs the pinned SDK
-through `dotnet-install.ps1`, and `scripts/windows/ci.ps1` is the Windows
-equivalent of `scripts/ci.sh` (script parse/lint, format, API baseline, build
+invoke each other. `scripts/powershell/install-dotnet.ps1` installs the pinned SDK
+through `dotnet-install.ps1`, and `scripts/powershell/ci.ps1` is the Windows
+equivalent of `scripts/bash/ci.sh` (script parse/lint, format, API baseline, build
 and tests, benchmarks, Godot integration, and package consumer smoke).
 Prerequisites, the command table, SDK/Python/Godot resolution, and CI parity are
 documented in [Windows Development](usage/windows-development.en.md).
@@ -324,7 +331,7 @@ Documentation is maintained with the source in the repository. The manual refers
 to `<Version>` in `Directory.Build.props` instead of copying the number, so it
 cannot drift from the build stamp. A release tag receives the exact version from
 the Release workflow as described in
-[release-process.en.md](release-process.en.md); `scripts/verify-release.sh`
+[release-process.en.md](release-process.en.md); `scripts/bash/verify-release.sh`
 checks the stamped build properties, not a second documentation literal.
 
 ## Generation

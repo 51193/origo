@@ -19,7 +19,7 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
     private const int _iterateIterations = 2_000;
     // Ten warmup rounds let the CPU leave power-saving/low-frequency states
     // before timed rounds start. This benchmark runs immediately after the
-    // SourceGeneration benchmark process in scripts/benchmark.sh; with only
+    // SourceGeneration benchmark process in scripts/bash/benchmark.sh; with only
     // one warmup round, NumChain's first timed side was repeatedly captured
     // during the frequency ramp (37-74 Mops/s instead of ~260 Mops/s).
     private const int _warmupRounds = 10;

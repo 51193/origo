@@ -2,8 +2,8 @@
 
 > [↑ Back to Usage Documentation](README.en.md)
 
-Origo keeps one POSIX script set (`scripts/*.sh`) for Linux/macOS and one
-Windows-native script set (`scripts/windows/*.ps1`). The two sets implement the
+Origo keeps one POSIX script set (`scripts/bash/*.sh`) for Linux/macOS and one
+Windows-native script set (`scripts/powershell/*.ps1`). The two sets implement the
 same gates; neither invokes the other. On Windows, use the PowerShell scripts
 and do not call the Bash scripts from Git Bash.
 
@@ -25,57 +25,45 @@ Install the exact SDK pinned by `global.json` into `%USERPROFILE%\.dotnet`
 directory is unavailable):
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts\windows\install-dotnet.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\powershell\install-dotnet.ps1
 ```
 
 Then run the full local gate:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts\windows\ci.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\powershell\ci.ps1
 ```
 
 ## Command Reference
 
 | Gate | Command (from the repository root) | Equivalent POSIX script |
 |---|---|---|
-| Install SDK | `scripts\windows\install-dotnet.ps1` | `scripts/install-dotnet.sh` |
-| Format | `scripts\windows\format.ps1` | `scripts/format.sh` |
-| Shell API baseline | `scripts\windows\api-inventory.ps1` | `scripts/api-inventory.sh` |
-| Build + tests + coverage | `scripts\windows\test.ps1` | `scripts/test.sh` |
-| Benchmarks | `scripts\windows\benchmark.ps1` | `scripts/benchmark.sh` |
-| Godot integration | `scripts\windows\godot-test.ps1` | `scripts/godot-test.sh` |
-| Package consumer smoke | `scripts\windows\package-consumer-smoke.ps1` | `scripts/package-consumer-smoke.sh` |
-| Script lint | `scripts\windows\lint-scripts.ps1` | `scripts/lint-scripts.sh` |
-| Layered checks | `scripts\windows\check.ps1 <plan\|quick\|affected\|full>` | `scripts/check.sh` |
-| Commit lint | `scripts\windows\lint-commits.ps1` | `scripts/lint-commits.sh` |
-| Full local pipeline | `scripts\windows\ci.ps1` | `scripts/ci.sh` |
-| Godot download | `scripts\windows\download-godot.ps1` | `scripts/download-godot.sh` |
+| Install SDK | `scripts\powershell\install-dotnet.ps1` | `scripts/bash/install-dotnet.sh` |
+| Format | `scripts\powershell\format.ps1` | `scripts/bash/format.sh` |
+| Shell API baseline | `scripts\powershell\api-inventory.ps1` | `scripts/bash/api-inventory.sh` |
+| Build + tests + coverage | `scripts\powershell\test.ps1` | `scripts/bash/test.sh` |
+| Benchmarks | `scripts\powershell\benchmark.ps1` | `scripts/bash/benchmark.sh` |
+| Godot integration | `scripts\powershell\godot-test.ps1` | `scripts/bash/godot-test.sh` |
+| Package consumer smoke | `scripts\powershell\package-consumer-smoke.ps1` | `scripts/bash/package-consumer-smoke.sh` |
+| Script lint | `scripts\powershell\lint-scripts.ps1` | `scripts/bash/lint-scripts.sh` |
+| Layered checks | `scripts\powershell\check.ps1 <plan\|quick\|affected\|full>` | `scripts/bash/check.sh` |
+| Commit lint | `scripts\powershell\lint-commits.ps1` | `scripts/bash/lint-commits.sh` |
+| Full local pipeline | `scripts\powershell\ci.ps1` | `scripts/bash/ci.sh` |
+| Godot download | `scripts\powershell\download-godot.ps1` | `scripts/bash/download-godot.sh` |
 
 Examples:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts\windows\check.ps1 plan
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts\windows\check.ps1 quick -Project Origo.Core.Tests/Origo.Core.Tests.csproj -Filter 'FullyQualifiedName~Save'
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts\windows\test.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\powershell\check.ps1 plan
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\powershell\check.ps1 quick -Project Origo.Core.Tests/Origo.Core.Tests.csproj -Filter 'FullyQualifiedName~Save'
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\powershell\test.ps1
 ```
 
 `check.ps1 full` runs `ci.ps1` and then `lint-commits.ps1`.
 
-On hosts where Windows Smart App Control or Defender blocks or hangs the
-unsigned VSTest host, run the tests through the xUnit in-process runner:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts\windows\test.ps1 -Direct
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts\windows\ci.ps1 -DirectTests
-```
-
-`-Direct` (`-DirectTests` for `ci.ps1`) runs every test project without
-VSTest/Coverlet, so it verifies behavior but not the coverage threshold. The
-default path and CI use `dotnet test` with Coverlet and the >=90% line gate.
-
 ## How the Windows Suite Works
 
-`scripts/windows/common.ps1` centralizes the platform mapping:
+`scripts/powershell/common.ps1` centralizes the platform mapping:
 
 - **SDK selection**: `DOTNET_INSTALL_DIR`, repository-local `.dotnet\`, then
   `%USERPROFILE%\.dotnet\`, then `dotnet` on `PATH`; each candidate is validated
@@ -111,8 +99,3 @@ Windows.
 The Windows benchmark comparison follows the same machine-capture rule as the
 POSIX gate: thresholds apply only when `docs/benchmarks/baseline.json` was
 captured on the current machine; otherwise the benchmark run is a smoke test.
-
-If Windows Smart App Control blocks the unsigned xUnit test host, use a normal
-developer shell or turn Smart App Control off for the machine; this is a host
-security policy, not a repository configuration. The test command itself is the
-standard `dotnet test`.

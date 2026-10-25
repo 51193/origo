@@ -54,7 +54,7 @@ jobs:
           sudo apt-get install -y -qq libxcursor1 libxinerama1 libxrandr2 libasound2t64 libpulse0 libgl1 libfontconfig1
 
       - name: Godot headless integration tests
-        run: bash scripts/godot-test.sh
+        run: bash scripts/bash/godot-test.sh
 
   release:
     needs: godot-integration-tests
@@ -139,10 +139,10 @@ jobs:
           # (a tag-triggered workflow still runs the workflow file at the tag;
           # tag creation remains a trusted operation).
           git fetch --force origin "refs/heads/main:refs/remotes/origin/main"
-          mkdir -p .release-validators
-          git show refs/remotes/origin/main:scripts/verify-release-provenance.sh > .release-validators/verify-release-provenance.sh
-          git show refs/remotes/origin/main:scripts/validate-release-source.sh > .release-validators/validate-release-source.sh
-          git show refs/remotes/origin/main:scripts/verify-release.sh > .release-validators/verify-release.sh
+          mkdir -p .release-validators/scripts/bash
+          git show refs/remotes/origin/main:scripts/bash/verify-release-provenance.sh > .release-validators/verify-release-provenance.sh
+          git show refs/remotes/origin/main:scripts/bash/validate-release-source.sh > .release-validators/validate-release-source.sh
+          git show refs/remotes/origin/main:scripts/bash/verify-release.sh > .release-validators/scripts/bash/verify-release.sh
 
       - name: Verify release tag provenance
         env:
@@ -164,7 +164,7 @@ jobs:
             exit 1
           fi
 
-          python3 scripts/write-version-stamp.py "$TAG_VERSION"
+          python3 scripts/python/write-version-stamp.py "$TAG_VERSION"
 
           echo "::group::Version stamps after sync"
           grep -nE '<(Version|AssemblyVersion|FileVersion)>' Directory.Build.props
@@ -211,7 +211,7 @@ jobs:
           # verify-release.sh reads TAG_VERSION from the environment. Use the
           # copy fetched from main, not the tag tree's verifier.
           export TAG_VERSION="${TAG#v}"
-          bash .release-validators/verify-release.sh
+          bash .release-validators/scripts/bash/verify-release.sh
 
       - name: Install script lint dependencies
         run: |
@@ -221,7 +221,7 @@ jobs:
       - name: Lint scripts and workflows
         env:
           ORIGO_BRANCH_NAME: refs/tags/${{ steps.resolve-tag.outputs.tag }}
-        run: bash scripts/lint-scripts.sh
+        run: bash scripts/bash/lint-scripts.sh
 
       - uses: actions/cache@v6
         with:
@@ -236,24 +236,24 @@ jobs:
           key: godot-${{ runner.os }}-${{ hashFiles('Origo.GodotAdapter/Origo.GodotAdapter.csproj') }}
 
       - name: Format check
-        run: bash scripts/format.sh
+        run: bash scripts/bash/format.sh
 
       - name: Shell API baseline gate
         env:
           ORIGO_CURRENT_RELEASE_TAG: ${{ steps.resolve-tag.outputs.tag }}
-        run: bash scripts/api-inventory.sh
+        run: bash scripts/bash/api-inventory.sh
 
       - name: CI — build, tests, line coverage gates (>= 90%)
-        run: bash scripts/test.sh
+        run: bash scripts/bash/test.sh
 
       - name: Benchmarks — TypedData + subsystem baselines
-        run: bash scripts/benchmark.sh
+        run: bash scripts/bash/benchmark.sh
 
       # Packaged consumer startup is a release gate: packs a fresh local feed,
       # restores only shell packages, runs the CS0246 negative probe, and starts
       # OrigoDefaultEntry headlessly.
       - name: Shell-only package consumer smoke
-        run: bash scripts/package-consumer-smoke.sh
+        run: bash scripts/bash/package-consumer-smoke.sh
 
       - name: Pack Origo.Core.Contracts
         run: dotnet pack Origo.Core.Contracts/Origo.Core.Contracts.csproj --no-build --configuration Release --output ./artifacts
@@ -273,7 +273,7 @@ jobs:
       - name: Validate release package set
         env:
           TAG: ${{ steps.resolve-tag.outputs.tag }}
-        run: bash scripts/validate-release-packages.sh ./artifacts "${TAG#v}"
+        run: bash scripts/bash/validate-release-packages.sh ./artifacts "${TAG#v}"
 
       - name: Copy NuGet config to artifacts
         run: cp nuget.config.example ./artifacts/nuget.config
@@ -312,7 +312,7 @@ jobs:
           VERSION="${TAG#v}"
           bash .release-validators/validate-release-source.sh \
             "artifacts/origo-source-${VERSION}.tar.gz" "$VERSION" \
-            "$PWD/.release-validators/verify-release.sh"
+            "$PWD/.release-validators/scripts/bash/verify-release.sh"
 
       - name: Publish release commit to the tag
         env:

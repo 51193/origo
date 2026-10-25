@@ -5,14 +5,14 @@
 > A snapshot of the performance status of Origo framework subsystems, serving as the authoritative reference for future performance optimization.
 > Values are tightly coupled to the runtime environment and runtime version; cross-machine comparison is not meaningful. Before-and-after optimization comparisons must be retested **in the same environment with the same runtime**.
 
-> The current `baseline.json` keeps only entries whose metric keys are unchanged and still correspond to the same measurement. Renamed or redesigned measurements have no baseline entry yet; run `bash scripts/benchmark.sh --update-baseline` on the baseline machine to refill and commit them.
+> The current `baseline.json` keeps only entries whose metric keys are unchanged and still correspond to the same measurement. Renamed or redesigned measurements have no baseline entry yet; run `bash scripts/bash/benchmark.sh --update-baseline` on the baseline machine to refill and commit them.
 
 ## Reproduction
 
 Run from the Origo source repository root:
 
 ```bash
-bash scripts/benchmark.sh
+bash scripts/bash/benchmark.sh
 ```
 
 This script runs three benchmark suites sequentially (all marked `[Trait("Category","Benchmark")]`, excluded from `test.sh`, run only once here):
@@ -23,7 +23,7 @@ This script runs three benchmark suites sequentially (all marked `[Trait("Catego
 
 ## Regression Gate (benchmark.sh comparison)
 
-`scripts/benchmark.sh` compares every run against `docs/benchmarks/baseline.json`
+`scripts/bash/benchmark.sh` compares every run against `docs/benchmarks/baseline.json`
 (a machine-readable baseline generated from the `BENCH|kind|label|side|ops|alloc`
 lines emitted by `PerfReporter.EmitMetric`):
 
@@ -41,10 +41,10 @@ lines emitted by `PerfReporter.EmitMetric`):
   frequency scaling, tiered-JIT inlining decisions, and runtime builds, so
   neither is comparable across machines): the benchmark step acts as a smoke
   test that the benchmarks still run
-- Local `scripts/ci.sh` runs on the baseline machine and catches real
+- Local `scripts/bash/ci.sh` runs on the baseline machine and catches real
   throughput and allocation regressions
 - After a confirmed improvement or an environment change, run
-  `bash scripts/benchmark.sh --update-baseline` and commit the refreshed baseline
+  `bash scripts/bash/benchmark.sh --update-baseline` and commit the refreshed baseline
 
 ## Sampling Metadata
 

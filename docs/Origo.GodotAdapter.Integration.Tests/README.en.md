@@ -66,7 +66,7 @@ removals.
 ### CI
 
 ```bash
-bash scripts/godot-test.sh
+bash scripts/bash/godot-test.sh
 ```
 
 This script automatically:
@@ -79,7 +79,7 @@ This script automatically:
 
 ```bash
 # One-click run (auto-downloads Godot binary)
-bash scripts/godot-test.sh
+bash scripts/bash/godot-test.sh
 
 # Manual mode (existing Godot installation)
 godot --headless --path Origo.GodotAdapter.Integration.Tests
@@ -138,8 +138,8 @@ Origo.GodotAdapter.Integration.Tests/
 
 - **`Godot.NET.Sdk` MSBuild SDK reference**: Not updated by Dependabot's NuGet ecosystem
   (a `<Project Sdk="...">` reference is not a `PackageReference`); bump it together with the
-  adapter and consumer pins. `scripts/godot-test.sh`, `scripts/package-consumer-smoke.sh`, and
-  `scripts/validate-release-packages.sh` fail when the pins drift
+  adapter and consumer pins. `scripts/bash/godot-test.sh`, `scripts/bash/package-consumer-smoke.sh`, and
+  `scripts/bash/validate-release-packages.sh` fail when the pins drift
 - **Godot engine binary**: CI script auto-downloads matching binary after parsing SDK version from `.csproj`,
   no separate version tracking file needed
 

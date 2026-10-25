@@ -7,7 +7,7 @@
 `Origo.SourceGeneration.Tests` contains two categories of tests:
 
 - **Generator behavior tests**: Directly drive `TypedDataGenerator`, run the generator on in-memory compilations and assert the generated sources, generator diagnostics, and the result of merged compilation of "original source + generated source". It references the generator as a regular library (not as an analyzer attachment), enabling instantiation and execution within tests.
-- **Generated artifact performance benchmarks**: Obtain the generated `TypedData` by referencing `Origo.Core` (public API plus internal members accessed via `InternalsVisibleTo`), comparing throughput of inline storage/Kind dispatch against an unoptimized boxing implementation across multiple value types and the reference type `string`. Marked `[Trait("Category","Benchmark")]`, run once in a separate CI step (`scripts/benchmark.sh`) and printing comparison tables, separated from test runs subject to coverage gates.
+- **Generated artifact performance benchmarks**: Obtain the generated `TypedData` by referencing `Origo.Core` (public API plus internal members accessed via `InternalsVisibleTo`), comparing throughput of inline storage/Kind dispatch against an unoptimized boxing implementation across multiple value types and the reference type `string`. Marked `[Trait("Category","Benchmark")]`, run once in a separate CI step (`scripts/bash/benchmark.sh`) and printing comparison tables, separated from test runs subject to coverage gates.
 
 ## Files
 
@@ -94,7 +94,7 @@
 
 ## Benchmarks/TypedDataGeneratedBenchmarkTests Test Details
 
-> See [Benchmarks.en.md](Benchmarks.en.md). Marked `[Trait("Category","Benchmark")]` (class-level), run only by `scripts/benchmark.sh`.
+> See [Benchmarks.en.md](Benchmarks.en.md). Marked `[Trait("Category","Benchmark")]` (class-level), run only by `scripts/bash/benchmark.sh`.
 
 ## Test Support Infrastructure
 

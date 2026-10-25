@@ -171,23 +171,24 @@ Development workflow and agent rules: **[`AGENTS.md`](AGENTS.md)**.
 ## Development
 
 ```bash
-bash scripts/check.sh quick --project Origo.Core.Tests/Origo.Core.Tests.csproj --filter 'FullyQualifiedName~Save'
-bash scripts/check.sh affected  # Local checks selected from the evaluated project graph
-bash scripts/test.sh            # Full build + test + coverage gates before commit
-bash scripts/ci.sh              # Full local pipeline; the final gate (lint-scripts + format + API baseline + test + benchmarks + Godot + consumer smoke)
-bash scripts/format.sh          # Format check only
+bash scripts/bash/check.sh quick --project Origo.Core.Tests/Origo.Core.Tests.csproj --filter 'FullyQualifiedName~Save'
+bash scripts/bash/check.sh affected  # Local checks selected from the evaluated project graph
+bash scripts/bash/test.sh            # Full build + test + coverage gates before commit
+bash scripts/bash/ci.sh              # Full local pipeline; the final gate (lint-scripts + format + API baseline + test + benchmarks + Godot + consumer smoke)
+bash scripts/bash/format.sh          # Format check only
 ```
 
 Windows uses the native PowerShell suite (no Bash/Git Bash required):
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts\windows\install-dotnet.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts\windows\ci.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts\windows\check.ps1 quick -Project Origo.Core.Tests/Origo.Core.Tests.csproj -Filter 'FullyQualifiedName~Save'
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\powershell\install-dotnet.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\powershell\ci.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\powershell\check.ps1 quick -Project Origo.Core.Tests/Origo.Core.Tests.csproj -Filter 'FullyQualifiedName~Save'
 ```
 
 See [Windows Development](docs/usage/windows-development.en.md) for prerequisites
-and the full command table.
+and the full command table. The [script map](scripts/README.md) lists every
+entry point and helper by language.
 
 | Module | Description |
 |---|---|

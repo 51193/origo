@@ -2,7 +2,7 @@
 
 > [↑ Back to the Agent Friendly investigation](README.en.md)
 
-Investigation date: 2026-09-18; repository observation baseline: `cdba5e4`. This report proposes a machine-readable inventory and query tool. Its proposed `origo api query`/`diff` commands, capability schema, and phased acceptance remain unimplemented examples, not current API promises; the shell API inventory and baseline gate are implemented in `tools/ApiInventoryTool` and `scripts/api-inventory.sh` (baseline `tools/ApiInventoryTool/shell-api-baseline.json`), run by `scripts/ci.sh` and the CI/release workflows, and documented in [shell-api-baseline](../shell-api-baseline.en.md).
+Investigation date: 2026-09-18; repository observation baseline: `cdba5e4`. This report proposes a machine-readable inventory and query tool. Its proposed `origo api query`/`diff` commands, capability schema, and phased acceptance remain unimplemented examples, not current API promises; the shell API inventory and baseline gate are implemented in `tools/ApiInventoryTool` and `scripts/bash/api-inventory.sh` (baseline `tools/ApiInventoryTool/shell-api-baseline.json`), run by `scripts/bash/ci.sh` and the CI/release workflows, and documented in [shell-api-baseline](../shell-api-baseline.en.md).
 
 ## 1. What Origo specifically lacks
 

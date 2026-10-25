@@ -29,7 +29,7 @@ jobs:
           sudo apt-get install -y -qq shellcheck python3-yaml
 
       - name: Lint repository scripts
-        run: bash scripts/lint-scripts.sh
+        run: bash scripts/bash/lint-scripts.sh
 
   build-and-test:
     strategy:
@@ -58,7 +58,7 @@ jobs:
           restore-keys: nuget-${{ runner.os }}-
 
       - name: Format check
-        run: bash scripts/format.sh
+        run: bash scripts/bash/format.sh
 
       # A shallow checkout silently disables the previous-package comparison.
       # Fail before the API gate if the formal release tags are unavailable.
@@ -76,21 +76,21 @@ jobs:
       # verifies the tracked Roslyn JSON inventory against the committed
       # baseline. Unapproved additions, removals, and signature changes fail.
       - name: Shell API baseline gate
-        run: bash scripts/api-inventory.sh
+        run: bash scripts/bash/api-inventory.sh
 
-      # scripts/test.sh: restore + build + dotnet test; all test projects run Coverlet.
+      # scripts/bash/test.sh: restore + build + dotnet test; all test projects run Coverlet.
       # Benchmarks (Category=Benchmark) are excluded here and run in the next step.
       # Coverage gate: >= 90% line coverage across all projects.
       - name: CI — build, tests, line coverage gates (>= 90%)
-        run: bash scripts/test.sh
+        run: bash scripts/bash/test.sh
 
       # Performance benchmarks covering TypedData and core subsystems (entity lifecycle,
       # observer topology, DataSourceNode, Blackboard, save persistence, concurrent queue,
       # random number generator, strategy performance, and Godot adapter throughput).
       - name: Benchmarks — TypedData + subsystem baselines
-        run: bash scripts/benchmark.sh
+        run: bash scripts/bash/benchmark.sh
 
-  # Native Windows suite: scripts/windows/*.ps1, independent of the Bash
+  # Native Windows suite: scripts/powershell/*.ps1, independent of the Bash
   # scripts above. This job runs the same gates on Windows PowerShell so the
   # two platform script sets cannot drift silently.
   windows-powershell:
@@ -126,7 +126,7 @@ jobs:
 
       - name: Windows PowerShell gates
         shell: cmd
-        run: powershell -NoProfile -ExecutionPolicy Bypass -File scripts\windows\ci.ps1
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File scripts\powershell\ci.ps1
 
   godot-integration-tests:
     needs: build-and-test
@@ -162,11 +162,11 @@ jobs:
           sudo apt-get install -y -qq libxcursor1 libxinerama1 libxrandr2 libasound2t64 libpulse0 libgl1 libfontconfig1
 
       - name: Godot headless integration tests
-        run: bash scripts/godot-test.sh
+        run: bash scripts/bash/godot-test.sh
 
       # Packs the shell packages into a fresh local feed, restores the tracked
       # consumer fixture through PackageReference only, builds with warnings as
       # errors, rejects kernel compile-asset leakage, and starts the public
       # OrigoDefaultEntry path headlessly.
       - name: Shell-only package consumer smoke
-        run: bash scripts/package-consumer-smoke.sh
+        run: bash scripts/bash/package-consumer-smoke.sh

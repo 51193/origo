@@ -3,7 +3,7 @@
     <!--
       Fresh-package consumer fixture. It must never contain a ProjectReference
       to the Origo repository; the package-consumer smoke script restores it
-      from a local feed built by scripts/package-consumer-smoke.sh.
+      from a local feed built by scripts/bash/package-consumer-smoke.sh.
       OrigoShellPackageVersion is supplied on the restore/build command line.
     -->
     <PropertyGroup>

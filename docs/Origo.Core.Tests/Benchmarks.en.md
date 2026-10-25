@@ -13,7 +13,7 @@ DataSourceNode tree construction/traversal, Blackboard read/write, Save persiste
 random number generation, and Strategy pool subsystems.
 
 Benchmarks are marked `[Trait("Category","Benchmark")]`, excluded from `test.sh`'s full test run via
-`--filter "Category!=Benchmark"`, and instead run as a separate step by `scripts/benchmark.sh`.
+`--filter "Category!=Benchmark"`, and instead run as a separate step by `scripts/bash/benchmark.sh`.
 This script runs this suite, [SG pure micro-benchmarks](../Origo.SourceGeneration.Tests/README.en.md),
 and [Godot adapter benchmarks](../Origo.GodotAdapter.Tests/Serialization.en.md) together, and verifies that every `BENCH` metric key is unique within a run before comparing baselines; duplicate keys fail immediately.
 
@@ -155,7 +155,7 @@ due to machine and runtime variance.
 Benchmarks have large iteration counts and long run times. Running them together with coverage-gated
 tests would slow down regular CI, and they should not count toward coverage. Marking
 `[Trait("Category","Benchmark")]` lets `test.sh` exclude them via `--filter "Category!=Benchmark"`,
-running them separately in `scripts/benchmark.sh` as an independent step, both printing comparison
+running them separately in `scripts/bash/benchmark.sh` as an independent step, both printing comparison
 tables and executing loose assertions, avoiding being run twice.
 
 ### Why use fixed datasets + warmup + min(reps) for noise reduction

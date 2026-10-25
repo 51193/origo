@@ -50,8 +50,8 @@ assignees: ""
 - [ ] Behavior or API result is observable and tested through a real path.
 - [ ] English documentation is updated, or the exemption is stated.
 - [ ] `CHANGELOG.md` is updated when the change is user-visible.
-- [ ] `scripts/test.sh`, post-commit `scripts/ci.sh`, and
-      `scripts/lint-commits.sh` pass when the task is implemented.
+- [ ] `scripts/bash/test.sh`, post-commit `scripts/bash/ci.sh`, and
+      `scripts/bash/lint-commits.sh` pass when the task is implemented.
 - [ ] No compatibility shim or evolution marker is introduced
       (`AGENTS.md`, early-development rule).
 

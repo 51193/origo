@@ -11,7 +11,7 @@ namespace Origo.Core.Tests;
 ///     The build is the gate: <c>EnforceCodeStyleInBuild</c> makes the IDE analyzers
 ///     run during the build, <c>IDE0051</c> and <c>IDE0052</c> are errors, and
 ///     warnings are errors, so an unused or unread private member fails
-///     <c>dotnet build</c>, the <c>scripts/format.sh</c> analyzer pass, and CI.
+///     <c>dotnet build</c>, the <c>scripts/bash/format.sh</c> analyzer pass, and CI.
 ///     Removing any of those settings would reopen the hole silently.
 /// </remarks>
 public class BuildGateGuardTests
