@@ -7,9 +7,11 @@ process.
 
 - Read the development workflow in [`AGENTS.md`](AGENTS.md) — it is the
   authoritative entry point for all code changes.
+- The script map in [`scripts/README.md`](scripts/README.md) explains the
+  `bash/`, `powershell/`, and `python/` layout and every gate.
 - Enable the repository hooks once per clone with
   `git config core.hooksPath .githooks`.
-- Read the commit message convention in [`docs/META.en.md`](docs/META.en.md#git-commit-message-format). The local pre-push hook runs `scripts/lint-commits.sh` before Git uploads branch commits (type, 72-character subject limit, no trailing period, body lines no longer than 72 characters). Dependabot-authored commits are skipped because Dependabot generates their message and supports only a prefix; `.github/dependabot.yml` sets that prefix to `chore(deps)` for every ecosystem.
+- Read the commit message convention in [`docs/META.en.md`](docs/META.en.md#git-commit-message-format). The local pre-push hook runs `scripts/bash/lint-commits.sh` before Git uploads branch commits (type, 72-character subject limit, no trailing period, body lines no longer than 72 characters). Dependabot-authored commits are skipped because Dependabot generates their message and supports only a prefix; `.github/dependabot.yml` sets that prefix to `chore(deps)` for every ecosystem.
 - Read [`docs/release-process.en.md`](docs/release-process.en.md) before touching `CHANGELOG.md` or cutting a release.
 - Use the [pull request template](PULL_REQUEST_TEMPLATE.md) when opening a PR.
 - Read the [code of conduct](CODE_OF_CONDUCT.md).
@@ -20,12 +22,12 @@ Every change must follow this cycle (see the Development Loop section in `AGENTS
 
 1. Develop the source change.
 2. Extend or adapt tests (red-first, real-path regression for bug fixes — see `docs/Origo.Core.Tests/META-TEST.en.md`).
-3. Iterate with `bash scripts/check.sh quick` or `bash scripts/check.sh affected`; before commit run `bash scripts/test.sh` and fix until green.
+3. Iterate with `bash scripts/bash/check.sh quick` or `bash scripts/bash/check.sh affected`; before commit run `bash scripts/bash/test.sh` and fix until green.
 4. Update `CHANGELOG.md` under `[Unreleased]` if the change is user-facing.
 5. Update the English documentation when behavior, interfaces, or design intent changes.
 6. Commit source, tests, Changelog, and documentation together.
-7. After the commit, run `bash scripts/ci.sh` (lint-scripts + format + shell API baseline + build/test + coverage gates + benchmarks + Godot integration + shell package consumer smoke); amend and rerun if it fails.
-8. After the commit, run `bash scripts/lint-commits.sh`; the local pre-push hook repeats it and remote CI does not enforce commit lint.
+7. After the commit, run `bash scripts/bash/ci.sh` (lint-scripts + format + shell API baseline + build/test + coverage gates + benchmarks + Godot integration + shell package consumer smoke); amend and rerun if it fails.
+8. After the commit, run `bash scripts/bash/lint-commits.sh`; the local pre-push hook repeats it and remote CI does not enforce commit lint.
 
 ## Dependency updates
 
@@ -38,7 +40,7 @@ live in that file's comments.
 - `xunit.v3` and `xunit.v3.extensibility.core` move together; semver-major
   updates stay ignored until the coordinated xUnit v4 / Microsoft Testing
   Platform migration updates the packages, test projects, and
-  `scripts/test.sh` in one PR.
+  `scripts/bash/test.sh` in one PR.
 - `Microsoft.CodeAnalysis.*` is coupled to the SDK's Roslyn compiler in
   `global.json`; bump it manually together with the matching SDK update.
 - See the dependency-update rule in `AGENTS.md` for the short policy.

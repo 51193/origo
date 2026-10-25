@@ -2,11 +2,11 @@
 # Repository-local .NET SDK launcher.
 #
 # Applies the same SDK selection and global.json validation as the repository
-# scripts (scripts/dotnet-env.sh) and then runs the selected dotnet. Exports
+# scripts (scripts/bash/dotnet-env.sh) and then runs the selected dotnet. Exports
 # nothing into the caller's shell and requires no dotnet-specific PATH entry.
 # On CI, where .dotnet/ is absent, it uses the system dotnet.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=scripts/dotnet-env.sh
-source "$ROOT/scripts/dotnet-env.sh"
+# shellcheck source=scripts/bash/dotnet-env.sh
+source "$ROOT/scripts/bash/dotnet-env.sh"
 exec "${ORIGO_DOTNET_EXE:-dotnet}" "$@"

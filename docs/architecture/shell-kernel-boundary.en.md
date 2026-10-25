@@ -272,20 +272,20 @@ runtime binder, context binder, or file system is missing; and the
 in-repository `origo.format_version=1` golden snapshot covers the current
 format, a save without the version key, and atomic rejection of a
 future format. The shell API and generated-code gate (#41) is also in
-place: `scripts/api-inventory.sh` verifies a tracked Roslyn JSON baseline of
+place: `scripts/bash/api-inventory.sh` verifies a tracked Roslyn JSON baseline of
 the Contracts/Core/Adapter/ConsoleBridge export surface, nullable annotations,
 and generated nested types; unapproved additions, removals, or signature changes fail in
-normal CI, `scripts/ci.sh`, and the Release workflow. Previous-package
+normal CI, `scripts/bash/ci.sh`, and the Release workflow. Previous-package
 validation is explicitly skipped before the first formal release with the
 first-release behavior stated. Packaged consumption (#42) is in place:
-`scripts/package-consumer-smoke.sh` restores only the Core + Adapter NuGet
+`scripts/bash/package-consumer-smoke.sh` restores only the Core + Adapter NuGet
 packages in an isolated temporary directory, builds with warnings as errors,
 proves kernel compile-asset isolation with a CS0246 negative probe, verifies
 the kernel runtime assembly, and starts `OrigoDefaultEntry` headlessly; the
 five-package set, analyzer asset, and Godot SDK pin of the packed feed are
-asserted by `scripts/validate-release-packages.sh`, which the smoke runs
-against the same feed. It runs in the normal CI Godot job and local `scripts/ci.sh`.
-The release pipeline (#43) is implemented in `.github/workflows/release.yml`: the workflow packs the five shell/kernel packages, validates the set with `scripts/validate-release-packages.sh`, builds and validates the source archive with `scripts/validate-release-source.sh`, and attaches the packages, source archive, and documentation snapshot to the GitHub Release. The version-stamp commit exists only as the tag target; `main` stays on its development baseline.
+asserted by `scripts/bash/validate-release-packages.sh`, which the smoke runs
+against the same feed. It runs in the normal CI Godot job and local `scripts/bash/ci.sh`.
+The release pipeline (#43) is implemented in `.github/workflows/release.yml`: the workflow packs the five shell/kernel packages, validates the set with `scripts/bash/validate-release-packages.sh`, builds and validates the source archive with `scripts/bash/validate-release-source.sh`, and attaches the packages, source archive, and documentation snapshot to the GitHub Release. The version-stamp commit exists only as the tag target; `main` stays on its development baseline.
 
 ## Verification and gates
 
@@ -294,7 +294,7 @@ The release pipeline (#43) is implemented in `.github/workflows/release.yml`: th
 | Compilation boundary | A fresh shell-only consumer compiles; referencing kernel types fails |
 | Behavior contracts | Lifecycle ordering, observer recovery, save/load, and fail-fast semantics remain unchanged |
 | Compatibility tests | Shell entry lifecycle/observer/fail-fast/session-state contracts and golden v1 save-format tests pass in the normal and release test runs |
-| Package integrity | No kernel compile-asset leakage; shell runtime and analyzer assets are complete; `scripts/validate-release-packages.sh` asserts the five-package set and the analyzer asset on the smoke's local feed, and the smoke's restore, negative compile probe, and Godot headless startup pass |
+| Package integrity | No kernel compile-asset leakage; shell runtime and analyzer assets are complete; `scripts/bash/validate-release-packages.sh` asserts the five-package set and the analyzer asset on the smoke's local feed, and the smoke's restore, negative compile probe, and Godot headless startup pass |
 | Compatibility matrix | Stable shell contracts pass contract tests on current kernels |
 | Godot | Headless and editor verification covers Node entry discovery, startup, save recovery, and exit cleanup |
 | API baseline | Unapproved shell API changes fail CI |

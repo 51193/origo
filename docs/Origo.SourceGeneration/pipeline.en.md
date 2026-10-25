@@ -555,7 +555,7 @@ If the framework needs to support a new type (e.g., C# `nint`, a future BCL ≤8
 1. Append `typeof(...)` to the `[SndInlineTypes]` array in `Origo.Core.Contracts/AssemblyAttributes.cs`
 2. Add the corresponding `SpecialType` match in `TypedDataGenerator.cs`'s `IsInlineCandidate` and `GenerateKindName`
 3. If the type has special read/write logic (e.g., `float`'s `BitConverter`), add handling in the `InlineTypeExprs` helper in `TypedDataGenerator.cs` (`Pack` / `Unpack` / `FromObject`) — the single source for all bit-pattern expressions, shared by the home accessor, conversion, and factory generation
-4. Run `bash scripts/test.sh` to pass full test suite + coverage gate
+4. Run `bash scripts/bash/test.sh` to pass full test suite + coverage gate
 5. Update Changelog and performance data tables in this document
 
 ### 7.2 Adding Adapter Layer Types (Register in a New Adapter Assembly)

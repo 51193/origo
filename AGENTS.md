@@ -62,7 +62,7 @@ collaboration contracts.
 
 ### 1.5 Consistent Code Format — Local Equals CI
 
-- All C# must pass `dotnet format --verify-no-changes --severity info`; `scripts/format.sh` runs analyzer dead-code checks. Format is the first gate on C# code.
+- All C# must pass `dotnet format --verify-no-changes --severity info`; `scripts/bash/format.sh` runs analyzer dead-code checks. Format is the first gate on C# code.
 - `.editorconfig` defines whitespace, `var`, and analyzer severities. Private-field `_camelCase` naming is enforced by architecture tests in `Origo.Core.Tests`, `Origo.GodotAdapter.Tests`, `Origo.ConsoleBridge.Tests`, and `Origo.SourceGeneration.Tests`.
 - Test projects use flat namespaces (`Origo.Core.Tests`, not nested); IDE0130 is suppressed for test paths. See `docs/Origo.Core.Tests/META-TEST.en.md`.
 - Do not disable `.editorconfig` rules to bypass the gate.
@@ -97,15 +97,15 @@ collaboration contracts.
 ### 1.9 Dependency Updates — Version-Coupled Packages Move as One
 
 - Dependabot PRs must pass as proposed. Version-coupled families are grouped in `.github/dependabot.yml`; never bump one member alone.
-- `xunit.v3` / `xunit.v3.extensibility.core` move together; major updates wait for the coordinated xUnit v4 migration (packages, tests, `scripts/test.sh`).
+- `xunit.v3` / `xunit.v3.extensibility.core` move together; major updates wait for the coordinated xUnit v4 migration (packages, tests, `scripts/bash/test.sh`).
 - `Microsoft.CodeAnalysis.*` is coupled to `global.json`'s Roslyn; bump it with the matching SDK.
 
 ### 1.10 Environment Bootstrap — Install the Required SDK, Never Downgrade the Request
 
 - `global.json` is authoritative; never downgrade or edit it to match an already-installed SDK.
-- Branches use `<type>/<creator>/<MMDD>/<purpose>`; validate with `scripts/work-identity.sh`.
-- Run `bash scripts/install-dotnet.sh` to install the exact SDK (an explicit `DOTNET_INSTALL_DIR` wins; an existing repository-local `.dotnet/` is refreshed; otherwise `$HOME/.dotnet`, with the repository-local directory as the read-only-HOME fallback). Scripts source `scripts/dotnet-env.sh`, which validates the selected SDK against `global.json` and fails with the fix command; use `./dotnet` only in local mode. Do not substitute per-session `PATH`/`DOTNET_ROOT`/`NUGET_PACKAGES` exports.
-- Godot binaries are separate: `scripts/download-godot.sh` reads `Godot.NET.Sdk` from `Origo.GodotAdapter/Origo.GodotAdapter.csproj` and caches under `.godot_binary/`. Full rules: `docs/META.en.md` §Environment Bootstrap.
+- Branches use `<type>/<creator>/<MMDD>/<purpose>`; validate with `scripts/bash/work-identity.sh`.
+- Run `bash scripts/bash/install-dotnet.sh` to install the exact SDK (an explicit `DOTNET_INSTALL_DIR` wins; an existing repository-local `.dotnet/` is refreshed; otherwise `$HOME/.dotnet`, with the repository-local directory as the read-only-HOME fallback). Scripts source `scripts/bash/dotnet-env.sh`, which validates the selected SDK against `global.json` and fails with the fix command; use `./dotnet` only in local mode. Do not substitute per-session `PATH`/`DOTNET_ROOT`/`NUGET_PACKAGES` exports.
+- Godot binaries are separate: `scripts/bash/download-godot.sh` reads `Godot.NET.Sdk` from `Origo.GodotAdapter/Origo.GodotAdapter.csproj` and caches under `.godot_binary/`. Full rules: `docs/META.en.md` §Environment Bootstrap.
 
 ### 1.11 Local Agent Work Buffer — `_origo_local/` (Untracked, Producer/Consumer)
 
@@ -127,18 +127,18 @@ chapters belong to one work item. Full tracked protocol:
 
 1. **Develop source** — satisfy §0/§1; read target history and collaborators first (§1.8/§1.3).
 2. **Extend/adapt tests** — behavior tests for new public API; red-first real-path regression for bug fixes (§3); sync behavior-change tests.
-3. **Iterate with tests** — use `bash scripts/check.sh quick` or `bash scripts/check.sh affected`; before commit run `bash scripts/test.sh` (full coverage).
+3. **Iterate with tests** — use `bash scripts/bash/check.sh quick` or `bash scripts/bash/check.sh affected`; before commit run `bash scripts/bash/test.sh` (full coverage).
 4. **Changelog alignment** — update `CHANGELOG.md` `[Unreleased]` per §4.
 5. **Documentation** — update the relevant English manual entries.
 6. **Commit** — source, tests, Changelog, and documentation together.
-7. **Post-commit full CI** — run `bash scripts/ci.sh` (lint-scripts → format → API baseline → test → benchmark → Godot → package consumer smoke). Fix/amend, then rerun.
-8. **Commit lint** — run `bash scripts/lint-commits.sh`; the local pre-push hook repeats it. Remote CI does not enforce commit lint.
+7. **Post-commit full CI** — run `bash scripts/bash/ci.sh` (lint-scripts → format → API baseline → test → benchmark → Godot → package consumer smoke). Fix/amend, then rerun.
+8. **Commit lint** — run `bash scripts/bash/lint-commits.sh`; the local pre-push hook repeats it. Remote CI does not enforce commit lint.
 
 State any inapplicable step in the commit message. **Partial
 completion is forbidden.** If closing an `_origo_local` book, apply §1.11
 after steps 1–8.
 
-- `lint-commits.sh` prefers `origin/main`; when unavailable it falls back to `HEAD~1` and reports it. Explicit ranges: `bash scripts/lint-commits.sh <base> <head>`.
+- `lint-commits.sh` prefers `origin/main`; when unavailable it falls back to `HEAD~1` and reports it. Explicit ranges: `bash scripts/bash/lint-commits.sh <base> <head>`.
 - Enable hooks with `git config core.hooksPath .githooks`; the pre-push hook runs commit lint locally. CI adds the OS matrix, not commit lint.
 
 ## 3. Test Requirements
@@ -158,8 +158,8 @@ unchanged; check sibling paths. A test that passes through a different code
 path is a blind spot, not a regression test. Details:
 `docs/Origo.Core.Tests/META-TEST.en.md`.
 
-- Test projects: `Origo.Core.Tests`, `Origo.GodotAdapter.Tests`, `Origo.ConsoleBridge.Tests`, `Origo.SourceGeneration.Tests`, `tools/ApiInventoryTool.Tests`, and `Origo.GodotAdapter.Integration.Tests` (Godot headless through `scripts/godot-test.sh`); `Origo.TestSupport` is a support library.
-- Coverlet enforces ≥90% line coverage for measured xUnit projects in `scripts/test.sh`; the Godot integration runner is separate and outside that gate.
+- Test projects: `Origo.Core.Tests`, `Origo.GodotAdapter.Tests`, `Origo.ConsoleBridge.Tests`, `Origo.SourceGeneration.Tests`, `tools/ApiInventoryTool.Tests`, and `Origo.GodotAdapter.Integration.Tests` (Godot headless through `scripts/bash/godot-test.sh`); `Origo.TestSupport` is a support library.
+- Coverlet enforces ≥90% line coverage for measured xUnit projects in `scripts/bash/test.sh`; the Godot integration runner is separate and outside that gate.
 - Use `test.sh` during iteration; run `ci.sh` after commit per §2.
 
 ## 4. Changelog Conventions
@@ -202,8 +202,8 @@ Full details: `docs/release-process.en.md`. Pre-tag summary:
 2. Advance the development baseline in `Directory.Build.props` to the next planned version with a `-dev` suffix and matching numeric `AssemblyVersion` / `FileVersion`; never commit the release version on `main`. The Release workflow stamps `x.y.z` on the tag-only release commit.
 3. Move analyzer rules to `AnalyzerReleases.Shipped.md` with `## Release x.y.z`; leave no unshipped rules in `AnalyzerReleases.Unshipped.md`.
 4. Commit all release metadata and documentation changes together.
-5. Run `bash scripts/release-check.sh x.y.z` on that commit (rejects a stale HEAD baseline or a target that is not newer than the latest formal `vx.y.z` tag, then checks a temporary worktree: Changelog block, empty `[Unreleased]`, analyzer tracking, stamped build properties). `docs/README.en.md` refers to the build stamp instead of copying the version.
-6. Run `bash scripts/ci.sh` and `bash scripts/lint-commits.sh` on that commit; amend and rerun if either fails.
+5. Run `bash scripts/bash/release-check.sh x.y.z` on that commit (rejects a stale HEAD baseline or a target that is not newer than the latest formal `vx.y.z` tag, then checks a temporary worktree: Changelog block, empty `[Unreleased]`, analyzer tracking, stamped build properties). `docs/README.en.md` refers to the build stamp instead of copying the version.
+6. Run `bash scripts/bash/ci.sh` and `bash scripts/bash/lint-commits.sh` on that commit; amend and rerun if either fails.
 7. Tag `vx.y.z` on the verified commit and push it; a formal tag must point at a commit reachable from `main`, or at the metadata-only release commit from an earlier run. The Release workflow verifies provenance, creates a metadata-only release commit, runs the gates, moves only the tag, and attaches the five packages, the validated source archive, and the docs snapshot to the GitHub Release; `main` is not written. Packages are not pushed to nuget.org.
 
 ## 7. Document Index
@@ -215,7 +215,7 @@ Full details: `docs/release-process.en.md`. Pre-tag summary:
 - Changes and tools: [CHANGELOG.md](CHANGELOG.md), `_origo_local/README.md`,
   [.editorconfig](.editorconfig), [.github/dependabot.yml](.github/dependabot.yml),
   [.github/workflows/](.github/workflows/),
-  [ci.sh](scripts/ci.sh).
+  [scripts/README.md](scripts/README.md), [ci.sh](scripts/bash/ci.sh).
 
 ## Agent skills
 

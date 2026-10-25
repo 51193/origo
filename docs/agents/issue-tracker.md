@@ -67,8 +67,8 @@ match the current repository rules rather than a superseded process:
 - Documentation is English-only. Do not require "bilingual docs" or DocSync in
   acceptance criteria; name the relevant `docs/**/README.en.md` entry and the
   current documentation gate instead.
-- Use current gate names (`scripts/test.sh`, post-commit `scripts/ci.sh`,
-  `scripts/lint-commits.sh`, and `scripts/validate-agent-docs.py` for
+- Use current gate names (`scripts/bash/test.sh`, post-commit `scripts/bash/ci.sh`,
+  `scripts/bash/lint-commits.sh`, and `scripts/python/validate-agent-docs.py` for
   `AGENTS.md`/agent-doc changes). A removed script is not a valid acceptance
   gate.
 - A `Blocked by` edge to a closed issue is stale. Re-triage the issue and

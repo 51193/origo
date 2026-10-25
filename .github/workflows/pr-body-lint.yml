@@ -21,11 +21,16 @@ jobs:
           # relies on a green check. Before the first merge has added the
           # linter to main, fall back to the checked-out bootstrap copy.
           git fetch --no-tags origin main:refs/remotes/origin/main
-          if git cat-file -e origin/main:scripts/lint-pr-body.py 2>/dev/null; then
+          if git cat-file -e origin/main:scripts/python/lint-pr-body.py 2>/dev/null; then
+            git show origin/main:scripts/python/lint-pr-body.py > "$RUNNER_TEMP/lint-pr-body.py"
+            echo "Using scripts/python/lint-pr-body.py from origin/main."
+          elif git cat-file -e origin/main:scripts/lint-pr-body.py 2>/dev/null; then
+            # Transitional: this PR moves the linter, but main still has the
+            # old path until the layout change merges.
             git show origin/main:scripts/lint-pr-body.py > "$RUNNER_TEMP/lint-pr-body.py"
-            echo "Using scripts/lint-pr-body.py from origin/main."
-            python3 "$RUNNER_TEMP/lint-pr-body.py"
+            echo "Using scripts/lint-pr-body.py from origin/main (transitional path)."
           else
             echo "origin/main does not contain the PR linter yet; using checked-out copy."
-            python3 scripts/lint-pr-body.py
+            cp scripts/python/lint-pr-body.py "$RUNNER_TEMP/lint-pr-body.py"
           fi
+          python3 "$RUNNER_TEMP/lint-pr-body.py"

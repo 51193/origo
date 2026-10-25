@@ -15,7 +15,7 @@ Also verifies the TypedData multi-layer inlining system: 14 Godot types resolved
 `AsXxx` / `TypedDataObjectConverter` bridge full round-trips, and no conflict with Core Kind range (< 128).
 
 `GodotTypedDataPerformanceTests` is marked `[Trait("Category","Benchmark")]` (class-level),
-run only by `scripts/benchmark.sh`; `test.sh` full test run excludes them via
+run only by `scripts/bash/benchmark.sh`; `test.sh` full test run excludes them via
 `--filter "Category!=Benchmark"`, so its 6 cases are not counted in the regular coverage gate run.
 
 ## Test File List

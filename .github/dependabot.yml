@@ -8,14 +8,14 @@
 #   Origo.GodotAdapter/Origo.GodotAdapter.csproj (authority)
 #   Origo.GodotAdapter.Integration.Tests/Origo.GodotAdapter.Integration.Tests.csproj
 #   tools/ShellPackageConsumer/OrigoShellPackageConsumer.csproj
-# scripts/godot-test.sh, scripts/package-consumer-smoke.sh, and
-# scripts/validate-release-packages.sh fail when the pins or the adapter's
+# scripts/bash/godot-test.sh, scripts/bash/package-consumer-smoke.sh, and
+# scripts/bash/validate-release-packages.sh fail when the pins or the adapter's
 # GodotSharp dependency drift.
 #
 # Dependabot generates the commit subject and body itself; it only supports
 # configuring a message prefix, not a full template. Every ecosystem below
 # sets the chore(deps) prefix so generated subjects are Conventional Commits.
-# scripts/lint-commits.sh skips Dependabot-authored commits because their
+# scripts/bash/lint-commits.sh skips Dependabot-authored commits because their
 # generated body cannot satisfy the 72-character line rule; human-authored
 # commits keep the full gate.
 version: 2
@@ -52,7 +52,7 @@ updates:
       # xunit.v3 4.0 moves test execution to Microsoft Testing Platform and
       # changes assembly parallelization attributes. Accepting the major
       # update requires one coordinated PR that also migrates test projects
-      # and scripts/test.sh, so semver-major xunit.v3 bumps are ignored
+      # and scripts/bash/test.sh, so semver-major xunit.v3 bumps are ignored
       # until that migration is performed as a single change.
       - dependency-name: "xunit.v3"
         update-types: ["version-update:semver-major"]

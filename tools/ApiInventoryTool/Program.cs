@@ -75,7 +75,7 @@ internal static class Program
 
         Console.Error.WriteLine("Shell API baseline mismatch. Update the baseline only for reviewed API changes.");
         Console.Error.WriteLine($"Baseline: {baselinePath}");
-        Console.Error.WriteLine("Run 'scripts/api-inventory.sh generate' and review the JSON diff in the same change.");
+        Console.Error.WriteLine("Run 'scripts/bash/api-inventory.sh generate' and review the JSON diff in the same change.");
         foreach (var change in changes.Take(100))
             Console.Error.WriteLine($"  {change}");
         if (changes.Count > 100)

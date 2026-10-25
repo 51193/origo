@@ -4,7 +4,7 @@
 
 ## Facts and objective
 
-Investigation date: 2026-09-18; baseline: `cdba5e4`. This proposal does not change current rules. Independent file reading and `python scripts/validate-agent-docs.py` confirmed that root `AGENTS.md` was close to its guard budget at that baseline. The guard specifies a maximum of 300 lines and 16 KiB, plus required headings, commands, and keywords; text-only compression remains constrained by that structure.
+Investigation date: 2026-09-18; baseline: `cdba5e4`. This proposal does not change current rules. Independent file reading and `python scripts/python/validate-agent-docs.py` confirmed that root `AGENTS.md` was close to its guard budget at that baseline. The guard specifies a maximum of 300 lines and 16 KiB, plus required headings, commands, and keywords; text-only compression remains constrained by that structure.
 
 This is not a 16 KiB Codex platform limit. [Official AGENTS documentation](https://developers.openai.com/codex/guides/agents-md/) describes instructions combined from repository root to the current working directory, with a default 32 KiB project-instruction budget. Nested instructions are not discovered simply because a file in that directory is being edited. Starting at the repository root does not guarantee a nested instruction file is active.
 

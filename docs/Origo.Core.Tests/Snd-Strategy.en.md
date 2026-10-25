@@ -8,7 +8,7 @@
 
 Validates the full behavior of the SND strategy system: strategy partial ordering, pool reference counting/recycling, 8 lifecycle hooks for entity strategies, ActiveStrategy Invoke calls, observer strategy mount/unmount/data change notifications/persistence/topology queries, and type-safety checks during strategy registration.
 
-The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `PerfReporter` to measure throughput/allocation with accompanying correctness assertions, carry `[Trait("Category","Benchmark")]`, and execute through `scripts/benchmark.sh` rather than the functional test pipeline.
+The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `PerfReporter` to measure throughput/allocation with accompanying correctness assertions, carry `[Trait("Category","Benchmark")]`, and execute through `scripts/bash/benchmark.sh` rather than the functional test pipeline.
 
 ## Test File List
 
@@ -22,7 +22,7 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 | `StrategyOrderingIntegrationTests.cs` | Real simulation host: Ordinal order, reentrant insertion in BeforeRemove, and rejection of late registration; verified red → green |
 | `StrategyPoolTypeSafetyAndExtensionTests.cs` | Strategy pool type-branch safety (generic GetStrategy type mismatch does not leak ref count), StackStateMachine two-phase acquisition failure rollback, abstract strategy type registration rejection, RecoverStrategiesOnly rejects non-Lifecycle strategies |
 | `SndStrategyPoolLeakDetectionTests.cs` | Strategy pool leak detection: refcounts return to zero on normal release / mid-failure teardown; LogPoolLeaks emits no residual warnings |
-| `SndStrategyPerformanceTests.cs` | Strategy pool Get/Release throughput, Process strategy count scaling, TriggerAll ToArray allocation (marked `[Trait("Category","Benchmark")]`, run by `scripts/benchmark.sh`) |
+| `SndStrategyPerformanceTests.cs` | Strategy pool Get/Release throughput, Process strategy count scaling, TriggerAll ToArray allocation (marked `[Trait("Category","Benchmark")]`, run by `scripts/bash/benchmark.sh`) |
 
 ## ActiveStrategyTests Details
 

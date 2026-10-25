@@ -47,8 +47,8 @@ source .venv/bin/activate
 uv pip install -e .
 cp .env.example .env
 # Configure .env and assets/system dependencies first; replace <task>
-./scripts/run.sh -p tasks/<task> --agent oracle
-./scripts/run.sh -p tasks/<task> --agent nop
+./scripts/bash/run.sh -p tasks/<task> --agent oracle
+./scripts/bash/run.sh -p tasks/<task> --agent nop
 ```
 
 **Terminal-Bench 2.0:** prepare uv and working Docker. Harbor automatically downloads the named dataset, avoiding an assumed source-repository runner.[Official commands](https://github.com/harbor-framework/terminal-bench-2#getting-started)
@@ -71,4 +71,4 @@ Start with **four tasks: two maintenance and two game tasks, three trials per co
 5. **Record cost and failure.** Report cold/warm startup time, time to first meaningful test, tokens, cached tokens, billed cost, CPU/GPU time, and human rescues. Classify failures as environment startup, localization, contract misuse, code/resource build, logical regression, real input, visual presentation, missing deliverables, budget exhaustion, or grading infrastructure. Preserve the first blocker and subsequent causes. Do not silently discard infrastructure failures or label them model logic failures.
 6. **Prevent leakage and support audit.** Solvers must not access reference solutions, hidden tests, previous results, or sibling trials. Grading has no model credentials or external network. Keep a private holdout excluded from tuning, splitting by task family; mark released tasks as potentially contaminated. Preserve sanitized traces, artifact hashes, input replays, reviewer rationale, and version manifests. Record asset licenses separately from evaluation-code licenses.
 
-Existing `scripts/godot-test.sh` checks SDK pairing, a positive test count, and ObjectDB leaks, providing real-engine verification infrastructure without complete GUI gameplay coverage. The [adapter console](../../Origo.GodotAdapter/Console/README.en.md) implements `press_button` through `EmitSignal(Pressed)`, which cannot establish actual click reachability. `camera_view` emits projection metadata rather than screenshots. Run the pilot before deciding whether its success/cost evidence warrants expansion.
+Existing `scripts/bash/godot-test.sh` checks SDK pairing, a positive test count, and ObjectDB leaks, providing real-engine verification infrastructure without complete GUI gameplay coverage. The [adapter console](../../Origo.GodotAdapter/Console/README.en.md) implements `press_button` through `EmitSignal(Pressed)`, which cannot establish actual click reachability. `camera_view` emits projection metadata rather than screenshots. Run the pilot before deciding whether its success/cost evidence warrants expansion.

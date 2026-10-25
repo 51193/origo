@@ -17,7 +17,7 @@ dotnet test Origo.GodotAdapter.Tests --configuration Release -p:CollectCoverage=
 dotnet test Origo.ConsoleBridge.Tests --configuration Release -p:CollectCoverage=false --filter FullyQualifiedName~ShellApiClassification_CoversEveryConsoleBridgeExport
 ```
 
-The same guards run inside `scripts/test.sh`, so the full development loop revalidates the table. `Origo.Core.Tests` runs the guard against `Origo.Core`, `Origo.Core.Contracts`, and `Origo.Core.Kernel`; the inventory is maintained in the English table.
+The same guards run inside `scripts/bash/test.sh`, so the full development loop revalidates the table. `Origo.Core.Tests` runs the guard against `Origo.Core`, `Origo.Core.Contracts`, and `Origo.Core.Kernel`; the inventory is maintained in the English table.
 
 ## Generated public members
 

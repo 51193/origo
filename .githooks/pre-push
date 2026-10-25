@@ -27,7 +27,7 @@ while read -r local_ref local_sha _remote_ref _remote_sha; do
     exit 2
   fi
 
-  bash scripts/lint-commits.sh "$base_sha" "$local_sha"
+  bash scripts/bash/lint-commits.sh "$base_sha" "$local_sha"
   CHECKED=1
 done
 

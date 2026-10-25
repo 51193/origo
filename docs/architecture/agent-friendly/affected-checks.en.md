@@ -2,11 +2,11 @@
 
 > [↑ Back to the Agent Friendly investigation](README.en.md)
 
-Investigation date: 2026-09-18; implementation checked: 2026-09-27. This report separates observations, implementation contracts, and remaining risks. `scripts/check.sh`, its planner, and the JSON evidence are implemented without weakening the complete workflow in [AGENTS.md](../../../AGENTS.md).
+Investigation date: 2026-09-18; implementation checked: 2026-09-27. This report separates observations, implementation contracts, and remaining risks. `scripts/bash/check.sh`, its planner, and the JSON evidence are implemented without weakening the complete workflow in [AGENTS.md](../../../AGENTS.md).
 
 ## 1. Current behavior and concrete costs
 
-**Observation:** [test.sh](../../../scripts/test.sh) restores and builds all of `Origo.sln` in Release, then executes non-Benchmark tests. [ci.sh](../../../scripts/ci.sh) runs script lint, formatting, tests, benchmarks, and Godot integration in order. Individual scripts already provide partial entry points during development; `scripts/check.sh` provides a consistent planner answering which projects and supporting facilities a change must check.
+**Observation:** [test.sh](../../../scripts/bash/test.sh) restores and builds all of `Origo.sln` in Release, then executes non-Benchmark tests. [ci.sh](../../../scripts/bash/ci.sh) runs script lint, formatting, tests, benchmarks, and Godot integration in order. Individual scripts already provide partial entry points during development; `scripts/bash/check.sh` provides a consistent planner answering which projects and supporting facilities a change must check.
 
 `-m:1` has a documented purpose: parallel test processes on Windows can trigger an xUnit v3 assembly-info child-process exit race. **Removing serialization is not an appropriate Agent Friendly optimization.** Reduce unrelated projects first while preserving the safe execution policy. Core and Adapter also have different coverage exclusions. Godot native calls are tested by a separate headless runner, so passing xUnit does not establish passing engine behavior. See [Core tests](../../Origo.Core.Tests/README.en.md) and [Godot integration tests](../../Origo.GodotAdapter.Integration.Tests/README.en.md).
 
@@ -26,13 +26,13 @@ Actual usage:
 
 ```bash
 # Read-only plan; by default the base is origin/main...HEAD's merge-base
-bash scripts/check.sh plan --base <commit> --output /tmp/check-plan.json
+bash scripts/bash/check.sh plan --base <commit> --output /tmp/check-plan.json
 # Real local path; project and filter are explicit
-bash scripts/check.sh quick --project Origo.Core.Tests/Origo.Core.Tests.csproj --filter 'FullyQualifiedName~Save'
+bash scripts/bash/check.sh quick --project Origo.Core.Tests/Origo.Core.Tests.csproj --filter 'FullyQualifiedName~Save'
 # Complete suites selected by impact contracts; stale/full plans stop
-bash scripts/check.sh affected --base <commit>
+bash scripts/bash/check.sh affected --base <commit>
 # Final gate: complete ci.sh plus commit-message lint
-bash scripts/check.sh full
+bash scripts/bash/check.sh full
 ```
 
 ## 3. Selection: project graph plus explicit impact contracts
@@ -79,13 +79,13 @@ stdout carries JSON; stderr carries diagnostics. Failures identify the path, rul
 
 ## 5. Evidence and how to detect omitted checks
 
-The planner's fixed samples are executable in `scripts/check_test.py`: C#
+The planner's fixed samples are executable in `scripts/python/check_test.py`: C#
 additions/deletions, generator changes and their Core/Adapter consumers, Godot
 adapter changes, documentation full-gate behavior, stale fingerprints,
 Benchmark exclusion, and empty-plan full-gate rejection. Test execution reports both `executed-tests` and
 `elapsed-seconds` on stderr; JSON remains on stdout, so a caller can record
 scope, reasons, counts, and timings without parsing human diagnostics. The
-repository's final evidence remains `bash scripts/check.sh full`, which runs
+repository's final evidence remains `bash scripts/bash/check.sh full`, which runs
 the unchanged CI pipeline and commit lint.
 
 Build historical samples with genuine regressions involving persistence, deferred queues, observer restoration, generated Kind registration, Godot startup, TestSupport, and global build configuration. Fix each baseline and patch, run affected and full, and compare **failure sets**, not merely zero exit codes. Deliberately break upstream interfaces, remove generator output, modify `.tscn` files, and change shared properties to establish that relevant downstream checks are selected. Cover renames/deletions, untracked files, zero matching tests, and stale plans too.

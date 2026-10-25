@@ -11,7 +11,7 @@ Performance baseline data and design trade-off analysis for the Origo framework,
 | File | Description |
 |------|------|
 | `baseline.en.md` | Performance baseline data and design trade-off analysis for Origo framework subsystems |
-| `baseline.json` | Machine-readable benchmark baseline (schema version, baseline machine id, per-metric throughput and allocation), captured and compared by `scripts/benchmark.sh` |
+| `baseline.json` | Machine-readable benchmark baseline (schema version, baseline machine id, per-metric throughput and allocation), captured and compared by `scripts/bash/benchmark.sh` |
 | `README.en.md` | Performance benchmark document overview (this file) |
 
 ## Benchmark Test Files
@@ -33,7 +33,7 @@ Performance baseline data and design trade-off analysis for the Origo framework,
 ## Running
 
 ```bash
-bash scripts/benchmark.sh
+bash scripts/bash/benchmark.sh
 ```
 
 This script runs three benchmark suites sequentially (all marked `[Trait("Category","Benchmark")]`, excluded from `test.sh`, and run with a detailed console logger) and verifies that every `BENCH` metric key is unique within a run before comparing baselines; duplicate keys fail immediately:

@@ -111,6 +111,8 @@ Each module directory's English entry contains:
 | Use console commands | [usage/console-commands](usage/console-commands.en.md) |
 | View interface signatures | [usage/agent-reference](usage/agent-reference.en.md) |
 | Prepare a formal release / update Changelog | [release-process](release-process.en.md) |
+| Develop on Windows | [Windows Development](usage/windows-development.en.md) |
+| Find a script entry point | [Script map](../scripts/README.md) |
 | Understand Core module implementations | [Origo.Core/](Origo.Core/README.en.md) |
 | Understand Source Generation | [Origo.SourceGeneration/](Origo.SourceGeneration/README.en.md) |
 | Understand Godot adapter | [Origo.GodotAdapter/](Origo.GodotAdapter/README.en.md) |

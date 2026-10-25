@@ -100,7 +100,7 @@ jobs:
           LATEST_FORMAL="$(git tag --list 'v[0-9]*' --sort=-version:refname \
               | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1 || true)"
           if [[ -n "$LATEST_FORMAL" ]]; then
-            bash scripts/check-weekly-base.sh "$BASE_VERSION" "${LATEST_FORMAL#v}"
+            bash scripts/bash/check-weekly-base.sh "$BASE_VERSION" "${LATEST_FORMAL#v}"
           fi
 
           DATE="$(date -u +%Y%m%d)"
@@ -172,7 +172,7 @@ jobs:
         if: steps.check.outputs.new_version != ''
         shell: bash
         run: |
-          python3 scripts/write-version-stamp.py "${{ steps.check.outputs.new_version }}"
+          python3 scripts/python/write-version-stamp.py "${{ steps.check.outputs.new_version }}"
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
