@@ -167,7 +167,7 @@ Godot._Process
               └── Console.ProcessPending() ← Core: console
 ```
 
-The frame loop entry is in the adapter layer (Godot's `_Process` callback), but control is immediately handed to the Core layer via `IOrigoFrameDriver.DriveFrame(delta)`. The adapter layer does not participate in any logical decisions within the frame, and is unaware of the three-phase ordering (entity processing, deferred queue, console) within Core.
+The frame loop entry is in the adapter layer (Godot's `_Process` callback), but control is immediately handed to the Core layer via `IOrigoFrameDriver.DriveFrame(delta)`. The adapter layer does not participate in any logical decisions within the frame, and is unaware of the internal frame ordering (entity processing, business deferred queue, pending-kill cleanup, system deferred queue, console pump) within Core.
 
 ## Project Structure
 

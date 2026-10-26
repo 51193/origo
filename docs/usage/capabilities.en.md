@@ -13,7 +13,7 @@ framework own orchestration and persistence.
 | Host facade | `OrigoHost` creates a platform-independent host and exposes the stable runtime/context surfaces | [Origo.Core](../Origo.Core/README.en.md) |
 | Bootstrap | One Core-owned startup sequence: strategy discovery/validation, alias/template loading, then entry load | [Architecture](../architecture/overview.en.md) |
 | Shutdown | Idempotent teardown that runs quit hooks, releases the progress run, and removes the temporary working area | [Generated API](../generated/contract-api.en.md) |
-| Frame ownership | Core owns frame order: entity processing, deferred queues, pending kills, then console commands | [Architecture](../architecture/overview.en.md) |
+| Frame ownership | Core owns frame order: entity processing, business deferred queue, pending-kill cleanup, system deferred queue, then console commands | [Architecture](../architecture/overview.en.md) |
 | Deferred scheduling | Thread-safe business/system queues with snapshot-and-drain execution | [Scheduling](../Origo.Core.Kernel/Scheduling/README.en.md) |
 
 ## Entities and strategies

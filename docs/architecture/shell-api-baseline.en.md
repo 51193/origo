@@ -42,7 +42,7 @@ There is no previous stable shell package before the first 0.1.0 release, so pre
 
 ## Test Capability
 
-`tools/ApiInventoryTool.Tests` verifies the tool end to end (xUnit, 15 test methods):
+`tools/ApiInventoryTool.Tests` verifies the tool end to end (xUnit):
 
 | Test File | Verification Focus |
 |-----------|-------------------|

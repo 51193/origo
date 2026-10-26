@@ -18,8 +18,8 @@ persistence.
 A runnable game demo and a getting-started walkthrough are intentionally not
 published yet; the demo is still being built. Until then, use the capability
 map, architecture documents, and the tested
-[package-consumer fixture](usage/shell-package-consumer.en.md) rather than a
-placeholder quick start.
+[package-consumer fixture](usage/shell-package-consumer.en.md) rather than an
+unverified walkthrough.
 
 ## What Origo owns
 
@@ -50,6 +50,7 @@ The framework does not require game code to duplicate its runtime wiring.
 | Release and Changelog | [release-process](release-process.en.md) |
 | Performance baselines | [benchmarks/README](benchmarks/README.en.md) |
 | Generated shell contract API | [generated/contract-api](generated/contract-api.en.md) |
+| Generated documentation conventions | [generated/README](generated/README.en.md) |
 
 ## Project Module Index
 

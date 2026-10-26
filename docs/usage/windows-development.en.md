@@ -9,7 +9,9 @@ same development gate sequence; GitHub CI runs a dedicated
 `bash-lint`/`powershell-lint` jobs; neither invokes the other. Bash-free shared
 Python validators run on both; Bash-backed POSIX self-tests remain Linux-side,
 and the Windows suite is not a release gate. On Windows, use the PowerShell scripts
-and do not call the Bash scripts from Git Bash.
+and do not call the Bash scripts from Git Bash. The optional Git pre-commit hook
+runs through Git's Bash and resolves Python via `python3`, `py`, or `python`; the
+gate commands themselves remain PowerShell.
 
 ## Prerequisites
 

@@ -85,12 +85,40 @@ class DocsGenerateTests(unittest.TestCase):
         self.assertIn("Origo.Core.Snd.ISndContext", rendered)
         self.assertIn("Origo.Core.Abstractions.Snd.ISndSaveOperations", rendered)
 
+    def test_render_rejects_unmatched_baseline_entry(self):
+        original = MODULE.BASELINE
+        with tempfile.TemporaryDirectory() as directory:
+            baseline = Path(directory) / "baseline.json"
+            baseline.write_text(
+                json.dumps(
+                    {
+                        "assemblies": [
+                            {
+                                "name": "Fixture",
+                                "api": [
+                                    "T:public sealed Class Origo.Fixture.Type : ",
+                                    "M:Origo.Fixture.Unrelated.public void Missing()",
+                                ],
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            MODULE.BASELINE = baseline
+            try:
+                with self.assertRaises(ValueError):
+                    MODULE.render_contract_api()
+            finally:
+                MODULE.BASELINE = original
+
     def test_contract_api_covers_every_baseline_type_and_member(self):
         data = json.loads(MODULE.BASELINE.read_text(encoding="utf-8"))
         rendered = MODULE.render_contract_api()
         # Parse the raw inventory independently of the generator's regex/helpers.
         raw_type_re = re.compile(r"(Origo\.[A-Za-z0-9_.]+(?:<[^>]+>)?)(?: :|$)")
         expected_types: set[str] = set()
+        expected_type_entries = 0
         expected_member_counts: dict[str, int] = {}
         for assembly in data["assemblies"]:
             entries = assembly["api"]
@@ -99,6 +127,7 @@ class DocsGenerateTests(unittest.TestCase):
                     match = raw_type_re.search(entry)
                     if match:
                         expected_types.add(match.group(1))
+                        expected_type_entries += 1
             for entry in entries:
                 if entry.startswith("T:"):
                     continue
@@ -119,6 +148,11 @@ class DocsGenerateTests(unittest.TestCase):
             )
         }
         self.assertEqual(set(sections), expected_types)
+        self.assertEqual(len(sections), expected_type_entries)
+        self.assertEqual(
+            sum(len(body.splitlines()) - 1 for body in sections.values()),
+            sum(expected_member_counts.values()),
+        )
         for type_name in expected_types:
             section_lines = sections[type_name].splitlines()
             self.assertGreaterEqual(len(section_lines), 1)
@@ -129,6 +163,18 @@ class DocsGenerateTests(unittest.TestCase):
                 type_name,
             )
 
+    def test_summary_content_rejects_quick_start_reference(self):
+        original = MODULE.SUMMARY_DOCS
+        with tempfile.TemporaryDirectory(dir=MODULE.ROOT) as directory:
+            path = Path(directory) / "summary.md"
+            path.write_text("placeholder quick start\n", encoding="utf-8")
+            MODULE.SUMMARY_DOCS = [path]
+            try:
+                errors = MODULE.validate_summary_content()
+                self.assertTrue(any("quick-start" in error for error in errors))
+            finally:
+                MODULE.SUMMARY_DOCS = original
+
     def test_current_generated_content_and_links(self):
         self.assertEqual(MODULE.check_generated(), [])
         self.assertEqual(MODULE.validate_generated_registry(), [])
@@ -136,6 +182,16 @@ class DocsGenerateTests(unittest.TestCase):
 
     def test_current_contractual_counts(self):
         self.assertEqual(MODULE.validate_counts(), [])
+
+    def test_validate_counts_rejects_missing_sources(self):
+        original = MODULE.ROOT
+        with tempfile.TemporaryDirectory() as directory:
+            MODULE.ROOT = Path(directory)
+            try:
+                errors = MODULE.validate_counts()
+                self.assertTrue(any("missing" in error for error in errors))
+            finally:
+                MODULE.ROOT = original
 
     def test_check_generated_rejects_stale_content(self):
         original_generated = MODULE.GENERATED
@@ -197,6 +253,19 @@ class DocsGenerateTests(unittest.TestCase):
                 self.assertTrue(any("not staged or tracked" in error for error in errors))
             finally:
                 MODULE.GENERATED = original_generated
+                MODULE.GENERATED_ARTIFACTS = original_artifacts
+
+    def test_check_staged_rejects_missing_registered_file(self):
+        original_artifacts = MODULE.GENERATED_ARTIFACTS
+        with tempfile.TemporaryDirectory() as directory:
+            artifact = Path(directory) / "missing.md"
+            MODULE.GENERATED_ARTIFACTS = {artifact: lambda: "expected\n"}
+            completed = subprocess.CompletedProcess([], 1, "", "")
+            try:
+                with patch.object(MODULE.subprocess, "run", return_value=completed):
+                    errors = MODULE.check_staged_generated()
+                self.assertTrue(any("not staged or tracked" in error for error in errors))
+            finally:
                 MODULE.GENERATED_ARTIFACTS = original_artifacts
 
     def test_validate_links_rejects_missing_local_target(self):

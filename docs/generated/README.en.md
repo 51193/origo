@@ -1,3 +1,5 @@
+> [↑ Back to Origo Manual](../README.en.md)
+
 # Generated documentation
 
 This directory contains generated, committed documentation artifacts.
@@ -20,7 +22,7 @@ service.
 
 1. Add a renderer/output to `scripts/python/docs_generate.py` and register it
    in `GENERATED_ARTIFACTS`.
-2. Add the artifact to the `docs.sh` and `docs.ps1` generate/check path.
+2. Both `docs.sh` and `docs.ps1` dispatch over `GENERATED_ARTIFACTS`; no per-artifact wrapper edit is needed.
 3. Document it here and link it from the manual index.
 4. Add a focused test to `scripts/python/docs_generate_test.py`.
 5. Add the script to `scripts/README.md` if a new entry point is introduced.

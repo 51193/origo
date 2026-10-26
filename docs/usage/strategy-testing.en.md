@@ -241,7 +241,7 @@ public void HealthStrategy_RequestsSave_WhenHpReachesZero()
 ## Related Documents
 
 - [SND Entity Model](snd-entity-model.en.md) — Strategy writing
-- [Agent Reference](agent-reference.en.md) — Complete interface signatures and testing patterns
+- [Agent Reference](agent-reference.en.md) — Task-oriented runtime guidance and generated API link
 
 ---
 [↑ Back to usage](README.en.md)

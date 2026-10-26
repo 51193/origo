@@ -42,7 +42,7 @@ Game developers should not execute Origo's complete maintenance workflow. Their 
 
 - [AGENTS.md](../../../AGENTS.md) supplies one authoritative entry, collaboration reading, and completion gates. Its guard holds it inside a 300-line / 16 KiB budget (`python scripts/python/validate-agent-docs.py` reports the current values); the headroom is neither a model limit nor a friendliness metric.
 - `scripts/bash/test.sh` tests the whole solution. Its `-m:1` addresses a Windows xUnit v3 discovery race. Improve scope selection rather than remove serialization without verification.
-- [Snd role documentation](../../Origo.Core.Contracts/Abstractions/Snd/README.en.md) explicitly defines nine Snd roles plus `IStateMachineContext`, giving ten companions. Capability shorthand can confuse readers; it is not an established implementation defect.
+- [Snd role documentation](../../Origo.Core.Contracts/Abstractions/Snd/README.en.md) documents the role interfaces; [generated contract API](../../generated/contract-api.en.md) is the exact public signature reference. Capability shorthand can confuse readers, but it is not an implementation defect.
 - [TCP Bridge](../../Origo.ConsoleBridge/README.en.md) has configurable ports, with documented reasons for one client and loopback binding. Parallel tasks need isolated instances/state, not concurrent writes to one session.
 - [Godot console](../../Origo.GodotAdapter/Console/README.en.md) `press_button` emits a button signal; `camera_view` reports projections. Neither establishes real input reachability or correct final rendering.
 - [Real Godot integration tests](../../Origo.GodotAdapter.Integration.Tests/README.en.md) validate host contracts, not consumer games' visual, interaction, or gameplay acceptance.
