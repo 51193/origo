@@ -107,6 +107,7 @@ Rules:
 |---|---|
 | `check.py` | Planner/executor used by `check.sh` and `check.ps1` |
 | `docs_generate.py` | Generate committed contract API and validate local documentation links |
+| `docs_generate_test.py` | Focused tests for the documentation generator and checks |
 | `check_test.py` | Regression tests for the layered-check planner |
 | `lint-pr-body.py` | PR title/body lint for squash commit messages |
 | `validate-agent-docs.py` | AGENTS.md structure and required-snippet guard |

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Reject commits that leave committed generated docs or local links stale.
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+bash scripts/bash/docs.sh check

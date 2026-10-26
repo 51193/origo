@@ -356,5 +356,37 @@ remote generation service. `docs.sh check` also validates local Markdown links.
 `scripts/bash/test-docs.sh` runs the check in the normal local lint gate; do not
 edit generated files by hand.
 
+### Extending the generated and checked documentation
+
+The generator is intentionally small but explicit. Adapt it in the same commit
+when the documentation surface changes:
+
+- **Public shell API changes** — the API baseline is the source of truth. Run
+  `scripts/bash/docs.sh generate`, review the generated diff, and commit it.
+  `docs.sh check` fails if the committed page is stale. Never hand-edit
+  `docs/generated/contract-api.en.md`.
+- **A new generated artifact** — add a renderer and output path in
+  `scripts/python/docs_generate.py`, include it in `docs.sh generate/check`,
+  document it in `docs/generated/README.en.md` and the manual index, add the
+  output to the script map, and add a focused test in
+  `scripts/python/docs_generate_test.py`.
+- **A new top-level summary document** — add its path to `SUMMARY_DOCS` in
+  `scripts/python/docs_generate.py` so the brittle-count and stale quick-start
+  checks cover it. Narrative module leaves are still covered by the all-doc
+  link check.
+- **A new exact count that cannot be replaced by names** — add a validator to
+  `validate_counts()` with an explicit source of truth and enforcement point.
+  Do not add a free-floating count to prose.
+- **A new generated-data contract** — add a test to
+  `docs_generate_test.py`; the generator's own formatting and validation
+  behavior must stay covered.
+- **Local workflow** — `.githooks/pre-commit` runs `docs.sh check`;
+  `scripts/bash/test-docs.sh` runs the generator tests and the check again in
+  the normal lint gate. Both are local because generated docs are committed and
+  the repository does not depend on a remote documentation service.
+
+The maintenance rule is: change the generator or validator and the source of
+truth together; a generated page is never the source of truth.
+
 ---
 [↑ Back to Origo Manual](README.en.md)
