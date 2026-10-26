@@ -10,7 +10,7 @@
         <!-- Development baseline. The release workflow stamps the exact tag
              version on the tag-only release commit; main never carries the
              release version. -->
-        <Version>0.1.1-dev</Version>
+        <Version>0.1.1-nightly.20261026</Version>
         <AssemblyVersion>0.1.1.0</AssemblyVersion>
         <FileVersion>0.1.1.0</FileVersion>
         <Authors>51193</Authors>
