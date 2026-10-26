@@ -30,7 +30,7 @@ They drive the stable Contracts entry surface (`OrigoHost`, `ISndContext`, `ISes
 | `ShellEntry_ObserverRecovery_IsPreservedThroughSaveLoad` | An explicitly mounted observer receives OnMounted/OnDataChanged; after save and load the persisted observer binding is recovered, and later data changes keep notifying | [shell-kernel-boundary](../architecture/shell-kernel-boundary.en.md) |
 | `ShellEntry_SystemBlackboardPersistence_IsPreservedAcrossHostRestart` | Saving and recreating `OrigoHost` over the same file system restores active/continue state from `<SaveRootPath>/system.json`, so `HasContinueData()` remains true | [Origo.Core](../Origo.Core/README.en.md) |
 | `ShellEntry_SessionStateTransitions_ArePreserved` | A background session is created, spawns an entity, and is destroyed through `ISessionManager`; BeforeQuit fires and the key leaves Keys | [session-model](../usage/session-model.en.md) |
-| `ShellEntry_ShutdownFromQuitHook_IsNotUndoneByOuterWorkflow` | BeforeQuit calls `Shutdown` while an outer main-menu load is disposing the old progress run | workflow throws; no new progress/session is installed | [session-model](../usage/session-model.en.md) |
+| `ShellEntry_ShutdownFromQuitHook_IsNotUndoneByOuterWorkflow` | BeforeQuit calls `Shutdown` while an outer main-menu load is disposing the old progress run; the workflow throws and no new progress/session is installed | [session-model](../usage/session-model.en.md) |
 
 ### Error Path
 
@@ -47,10 +47,16 @@ They drive the stable Contracts entry surface (`OrigoHost`, `ISndContext`, `ISes
 | `HostKernelPort_ShouldBeInternal_AndLiveInKernelPortsNamespace` | `HostKernelPort` and its contract stay internal and never enter the export surface | [Ports](../Origo.Core.Kernel/Ports/README.en.md) |
 | `OrigoHost_ShouldCreateStableRuntimeAndRunBackgroundWorkflow` | `OrigoHost` constructs a stable runtime/context and drives frames, strategy registration, and a session workflow | [Ports](../Origo.Core.Kernel/Ports/README.en.md) |
 | `OrigoHost_ShouldRegisterCustomConsoleHandlerThroughStableRuntime` | With injected console channels, a custom command registered through `IOrigoRuntime.RegisterConsoleCommandHandler` produces output during `DriveFrame` | [console-commands](../usage/console-commands.en.md) |
+
+| Test Method | Behavior Verified | Expected Behavior | Documentation Source |
+|---|---|---|---|---|
 | `OrigoHost_Dispose_IsIdempotentAndRejectsLaterBootstrap` | Host disposed twice; later Bootstrap | Second dispose no-op; Bootstrap throws | [Origo.Core](../Origo.Core/README.en.md) |
 | `OrigoHost_Dispose_ConsoleClearFailure_RemainsRetryable` | Console input Clear throws during Dispose | first Dispose throws; retry after recovery succeeds; Bootstrap rejected | [Origo.Core](../Origo.Core/README.en.md) |
 | `SystemBlackboard_UnregisteredCustomType_HostCreationExplainsStartupHook` | Custom type persisted without `ConfigureStartupRegistry` | host creation throws `InvalidOperationException` naming system.json and the hook | [Origo.Core](../Origo.Core/README.en.md) |
 | `OrigoHost_ShouldFailFastOnHalfConfiguredConsole` | Only one of `ConsoleInput` / `ConsoleOutputChannel` is supplied | `ArgumentException` at `OrigoHost.Create` | [Origo.Core](../Origo.Core/README.en.md) |
+
+| Test Method | Behavior Verified | Documentation Source |
+|---|---|---|
 | `AdapterHostKernelPort_ShouldBuildRuntimeAndBindSceneHost` | The port creates the runtime and default console channels, binds runtime/observer topology first, then creates and binds the SND context | [Ports](../Origo.Core.Kernel/Ports/README.en.md) |
 | `CoreShellPublicSignatures_ShouldNotExposeKernelTypes` | Every exported type of the Core shell assembly and its public members (properties, method returns/parameters, fields) avoid kernel types | [shell-kernel-boundary](../architecture/shell-kernel-boundary.en.md) |
 | `Create_ForOrigoHostOptions_MapsEveryContextParameter` | The shared context-parameters factory takes every context parameter from its own `OrigoHostOptions` member (distinct sentinels, so a transposed argument fails) and copies the infrastructure references unchanged | [Ports](../Origo.Core.Kernel/Ports/README.en.md) |

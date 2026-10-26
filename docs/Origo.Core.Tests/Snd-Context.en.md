@@ -231,6 +231,8 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `Workflow_WhenOldProgressDisposeThrows_ClearsProgressRunReference` | The old ProgressRun's session state machine throws from its quit-time pop hook during unload | The original exception propagates; `ForegroundSession` is null; the `_progressRun` reference is cleared (internal invariant asserted via InternalsVisibleTo) |
 | `Shutdown_WhenCurrentDeleteFails_RetriesCleanupWithoutReplayingHooks` | `current/` deletion fails during shutdown | The first call throws; the progress run is gone, the retry deletes `current/`, and the context becomes terminal without replaying quit hooks |
 | `Shutdown_ReenteredFromQuitHook_DoesNotCommitTerminalStateBeforeOuterCleanup` | A quit-hook strategy calls `Shutdown` while the outer shutdown is disposing the progress run, and `current/` deletion fails | The nested call is a no-op; the outer failure keeps the retry record and the next `Shutdown` deletes `current/` |
+| `Shutdown_DuringSwitchTeardown_ThrowsBeforeTouchingProgress` | `Shutdown` is requested while the level-switch foreground teardown guard is active | `InvalidOperationException` before any progress cleanup; the context is not torn down |
+| `Workflow_ShutdownFromQuitHook_WhenCurrentDeleteFails_RemainsRetryable` | A main-menu reload disposes the old progress run, its BeforeQuit hook requests shutdown, and `current/` deletion fails | The workflow throws, `current/` remains, and a later `Dispose`/`Shutdown` retries the delete without replaying hooks |
 
 ## SndArchetypeLoaderTests Details
 

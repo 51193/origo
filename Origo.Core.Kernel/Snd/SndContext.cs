@@ -46,6 +46,7 @@ public sealed class SndContext : ISndContext
     private bool _shutdownRetryCurrentDelete;
     private bool _shutdownInProgress;
     private bool _switchTeardownInProgress;
+    private bool _shutdownRequestedDuringTeardown;
     private bool _bootstrapCompleted;
     private readonly SndContextParameters _parameters;
     internal int _pendingPersistenceRequests;
@@ -173,7 +174,13 @@ public sealed class SndContext : ISndContext
         // clear the progress reference: the outer call continues and, on a
         // cleanup failure, keeps the retry record.
         if (_shutdownInProgress)
+        {
+            // A quit hook may request shutdown while RunWorkflow or an outer
+            // Shutdown owns progress teardown. Do not commit terminal state
+            // from here; the outer owner decides after its cleanup attempt.
+            _shutdownRequestedDuringTeardown = true;
             return;
+        }
 
         if (_switchTeardownInProgress)
             throw new InvalidOperationException(
@@ -651,7 +658,41 @@ public sealed class SndContext : ISndContext
         try
         {
             Runtime.ResetConsoleState();
-            ShutdownCurrentProgressAndScene();
+
+            Exception? progressTeardownFailure = null;
+            _shutdownInProgress = true;
+            try
+            {
+                ShutdownCurrentProgressAndScene();
+            }
+            catch (Exception ex)
+            {
+                progressTeardownFailure = ex;
+            }
+            finally
+            {
+                _shutdownInProgress = false;
+            }
+
+            if (_shutdownRequestedDuringTeardown)
+            {
+                _shutdownRequestedDuringTeardown = false;
+                if (progressTeardownFailure is null)
+                {
+                    _shutdown = true;
+                }
+                else
+                {
+                    // The progress run is gone but its current/ cleanup failed;
+                    // keep the retry record so a later Shutdown can finish it.
+                    _shutdownCleanupPending = true;
+                    _shutdownRetryCurrentDelete = true;
+                }
+            }
+
+            if (progressTeardownFailure is not null)
+                ExceptionDispatchInfo.Capture(progressTeardownFailure).Throw();
+
             ThrowIfShutdown();
 
             var result = body();
