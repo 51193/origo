@@ -84,8 +84,8 @@ public sealed class HealthStrategy : LifecycleStrategyBase
 public sealed class HpWatcher : ObserverStrategyBase
 {
     public override void OnDataChanged(
-        ISndEntity observer, ISndEntity target, string key,
-        TypedData oldValue, TypedData newValue, ISndContext ctx)
+        ISndEntity entity, ISndContext ctx, ISndEntity target,
+        string dataKey, TypedData oldValue, TypedData newValue)
     {
         var (found, hp) = newValue.TryGetInt32(out var value)
             ? (true, value)

@@ -192,7 +192,7 @@ void RemoveActiveStrategy(string index)
 public interface Origo.Core.Abstractions.Entity.ISndDataAccess
 (bool found, T? value) TryGetData<T>(string name)
 bool TryGetData<T>(string name, out T? value)
-T GetData<T>(string name); where T : notnull
+T GetData<T>(string name) where T : notnull
 void SetData<T>(string name, T value)
 ```
 
@@ -297,6 +297,13 @@ public interface Origo.Core.Abstractions.Logging.ILogger
 void Log(Origo.Core.Abstractions.Logging.LogLevel level, string tag, string message)
 ```
 
+### `Origo.Core.Abstractions.Logging.ILogger<TCategory>`
+
+```csharp
+public interface Origo.Core.Abstractions.Logging.ILogger<TCategory> : Origo.Core.Abstractions.Logging.ILogger
+void Log(Origo.Core.Abstractions.Logging.LogLevel level, string message)
+```
+
 ### `Origo.Core.Abstractions.Logging.LogLevel`
 
 ```csharp
@@ -358,7 +365,7 @@ Origo.Core.Snd.Metadata.SndMetaData ResolveTemplate(string templateAlias)
 System.Collections.Generic.IReadOnlyCollection<string> GetRegisteredStrategyIndices()
 System.Collections.Generic.IReadOnlyDictionary<string, Origo.Core.Snd.Metadata.TypedData> ReadTypedDataMap(Origo.Core.DataSource.DataSourceNode node)
 System.Collections.Generic.IReadOnlyList<Origo.Core.Snd.Metadata.SndMetaData> ReadMetaListNode(Origo.Core.DataSource.DataSourceNode node)
-void RegisterStrategy<TStrategy>(System.Func<TStrategy> factory); where TStrategy : Origo.Core.Snd.Strategy.BaseStrategy
+void RegisterStrategy<TStrategy>(System.Func<TStrategy> factory) where TStrategy : Origo.Core.Snd.Strategy.BaseStrategy
 void RegisterTypeMappings(System.Action<Origo.Core.Serialization.TypeStringMapping> registerMappings)
 ```
 
@@ -510,10 +517,13 @@ public void DeserializeAll(System.Collections.Generic.IReadOnlyDictionary<string
 public void SetValue<T>(string key, T value)
 ```
 
-### `Origo.Core.DataSource.DataSourceConverter`
+### `Origo.Core.DataSource.DataSourceConverter<T>`
 
 ```csharp
 public abstract class Origo.Core.DataSource.DataSourceConverter<T> : Origo.Core.DataSource.DataSourceConverterBase
+protected DataSourceConverter()
+public abstract Origo.Core.DataSource.DataSourceNode Write(T value)
+public abstract T Read(Origo.Core.DataSource.DataSourceNode node)
 ```
 
 ### `Origo.Core.DataSource.DataSourceConverterBase`
@@ -606,11 +616,11 @@ void Rename(string sourcePath, string destinationPath)
 ### `Origo.Core.Grid.GridPos`
 
 ```csharp
-public readonly Struct Origo.Core.Grid.GridPos : System.IEquatable<Origo.Core.Grid.GridPos>
+public readonly struct Origo.Core.Grid.GridPos : System.IEquatable<Origo.Core.Grid.GridPos>
 public bool Equals(Origo.Core.Grid.GridPos other)
 public GridPos(int X, int Z)
-public int X get:public init:public
-public int Z get:public init:public
+public int X { get; init; }
+public int Z { get; init; }
 public override bool Equals(object obj)
 public override int GetHashCode()
 public override string ToString()
@@ -619,10 +629,12 @@ public static bool operator ==(Origo.Core.Grid.GridPos left, Origo.Core.Grid.Gri
 public void Deconstruct(out int X, out int Z)
 ```
 
-### `Origo.Core.Logging.Logger`
+### `Origo.Core.Logging.Logger<T>`
 
 ```csharp
 public sealed class Origo.Core.Logging.Logger<T> : Origo.Core.Abstractions.Logging.ILogger, Origo.Core.Abstractions.Logging.ILogger<T>
+public Logger(Origo.Core.Abstractions.Logging.ILogger inner)
+public void Log(Origo.Core.Abstractions.Logging.LogLevel level, string message)
 ```
 
 ### `Origo.Core.Logging.LogMessageBuilder`
@@ -647,39 +659,38 @@ public void Log(Origo.Core.Abstractions.Logging.LogLevel level, string tag, stri
 
 ```csharp
 public sealed class Origo.Core.OrigoHostOptions
-public bool AutoDiscoverStrategies get:public init:public
-public Origo.Core.Abstractions.Console.IConsoleInputSource? ConsoleInput get:public init:public
-public Origo.Core.Abstractions.Console.IConsoleOutputChannel? ConsoleOutputChannel get:public init:public
-public Origo.Core.Abstractions.FileSystem.IFileSystem? FileSystem get:public init:public
-public Origo.Core.Abstractions.Logging.ILogger Logger get:public init:public
+public bool AutoDiscoverStrategies { get; init; }
+public Origo.Core.Abstractions.Console.IConsoleInputSource? ConsoleInput { get; init; }
+public Origo.Core.Abstractions.Console.IConsoleOutputChannel? ConsoleOutputChannel { get; init; }
+public Origo.Core.Abstractions.FileSystem.IFileSystem? FileSystem { get; init; }
+public Origo.Core.Abstractions.Logging.ILogger Logger { get; init; }
 public OrigoHostOptions()
-public required Origo.Core.OrigoMeta Meta get:public init:public
-public string EntryConfigPath get:public init:public
-public string InitialSaveRootPath get:public init:public
-public string SaveRootPath get:public init:public
-public string? SceneAliasMapPath get:public init:public
-public string? SndTemplateMapPath get:public init:public
-public System.Action<Origo.Core.DataSource.DataSourceConverterRegistry>? ConfigureConverters get:public init:public
-public System.Action<Origo.Core.Serialization.TypeStringMapping, Origo.Core.DataSource.DataSourceConverterRegistry>? ConfigureStartupRegistry get:public init:public
-public System.Collections.Generic.IReadOnlyList<string>? DiscoverySkipPrefixes get:public init:public
+public required Origo.Core.OrigoMeta Meta { get; init; }
+public string EntryConfigPath { get; init; }
+public string InitialSaveRootPath { get; init; }
+public string SaveRootPath { get; init; }
+public string? SceneAliasMapPath { get; init; }
+public string? SndTemplateMapPath { get; init; }
+public System.Action<Origo.Core.DataSource.DataSourceConverterRegistry>? ConfigureConverters { get; init; }
+public System.Action<Origo.Core.Serialization.TypeStringMapping, Origo.Core.DataSource.DataSourceConverterRegistry>? ConfigureStartupRegistry { get; init; }
+public System.Collections.Generic.IReadOnlyList<string>? DiscoverySkipPrefixes { get; init; }
 ```
 
 ### `Origo.Core.OrigoMeta`
 
 ```csharp
-public sealed Record Origo.Core.OrigoMeta : System.IEquatable<Origo.Core.OrigoMeta>
+public sealed record Origo.Core.OrigoMeta : System.IEquatable<Origo.Core.OrigoMeta>
 public bool Equals(Origo.Core.OrigoMeta? other)
 public const string DefaultBanner = ":3"
-public Origo.Core.OrigoMeta <Clone>$()
 public OrigoMeta(string Name, string Version, string Banner)
 public override bool Equals(object? obj)
 public override int GetHashCode()
 public override string ToString()
 public static bool operator !=(Origo.Core.OrigoMeta? left, Origo.Core.OrigoMeta? right)
 public static bool operator ==(Origo.Core.OrigoMeta? left, Origo.Core.OrigoMeta? right)
-public string Banner get:public init:public
-public string Name get:public init:public
-public string Version get:public init:public
+public string Banner { get; init; }
+public string Name { get; init; }
+public string Version { get; init; }
 public void Deconstruct(out string Name, out string Version, out string Banner)
 ```
 
@@ -687,20 +698,20 @@ public void Deconstruct(out string Name, out string Version, out string Banner)
 
 ```csharp
 public abstract class Origo.Core.Planning.PlanExecutionStrategyBase : Origo.Core.Snd.Strategy.LifecycleStrategyBase
-protected abstract string ActionKey get:protected
-protected abstract string ActionStatusKey get:protected
-protected abstract string IntentKey get:protected
-protected abstract string IntentStatusKey get:protected
-protected abstract string PlanStepKey get:protected
+protected abstract string ActionKey { protected get; }
+protected abstract string ActionStatusKey { protected get; }
+protected abstract string IntentKey { protected get; }
+protected abstract string IntentStatusKey { protected get; }
+protected abstract string PlanStepKey { protected get; }
 protected abstract string? ResolveNextStep(string intent, string currentStep, bool failed, Origo.Core.Abstractions.Entity.ISndEntity entity)
 protected abstract string? StepToActionIndex(string stepType)
 protected PlanExecutionStrategyBase()
-protected virtual string ActionStatusCompleted get:protected
-protected virtual string ActionStatusExecuting get:protected
-protected virtual string ActionStatusFailed get:protected
-protected virtual string IntentStatusActive get:protected
-protected virtual string IntentStatusCompleted get:protected
-protected virtual string IntentStatusFailed get:protected
+protected virtual string ActionStatusCompleted { protected get; }
+protected virtual string ActionStatusExecuting { protected get; }
+protected virtual string ActionStatusFailed { protected get; }
+protected virtual string IntentStatusActive { protected get; }
+protected virtual string IntentStatusCompleted { protected get; }
+protected virtual string IntentStatusFailed { protected get; }
 protected virtual void OnAfterAdd(Origo.Core.Abstractions.Entity.ISndEntity entity, Origo.Core.Snd.ISndContext ctx)
 protected virtual void OnAfterLoad(Origo.Core.Abstractions.Entity.ISndEntity entity, Origo.Core.Snd.ISndContext ctx)
 protected virtual void OnAfterSpawn(Origo.Core.Abstractions.Entity.ISndEntity entity, Origo.Core.Snd.ISndContext ctx)
@@ -728,9 +739,9 @@ public override sealed void Process(Origo.Core.Abstractions.Entity.ISndEntity en
 ```csharp
 public sealed class Origo.Core.Runtime.Console.CommandInvocation
 public CommandInvocation()
-public required string Command get:public init:public
-public required System.Collections.Generic.IReadOnlyDictionary<string, string> NamedArgs get:public init:public
-public required System.Collections.Generic.IReadOnlyList<string> PositionalArgs get:public init:public
+public required string Command { get; init; }
+public required System.Collections.Generic.IReadOnlyDictionary<string, string> NamedArgs { get; init; }
+public required System.Collections.Generic.IReadOnlyList<string> PositionalArgs { get; init; }
 ```
 
 ### `Origo.Core.Runtime.Console.ConsoleCommandHandlerBase`
@@ -767,7 +778,7 @@ System.Collections.Generic.IReadOnlyDictionary<string, string> Contribute(in Ori
 ### `Origo.Core.Save.Meta.SaveMetaBuildContext`
 
 ```csharp
-public readonly Struct Origo.Core.Save.Meta.SaveMetaBuildContext
+public readonly struct Origo.Core.Save.Meta.SaveMetaBuildContext
 public Origo.Core.Abstractions.Blackboard.IBlackboard Progress { get; }
 public Origo.Core.Abstractions.Blackboard.IBlackboard Session { get; }
 public Origo.Core.Abstractions.Scene.ISndSceneReadAccess SceneAccess { get; }
@@ -781,8 +792,8 @@ public string SaveId { get; }
 ```csharp
 public sealed class Origo.Core.Save.Meta.SaveMetaDataEntry
 public SaveMetaDataEntry()
-public string SaveId get:public init:public
-public System.Collections.Generic.IReadOnlyDictionary<string, string> MetaData get:public init:public
+public string SaveId { get; init; }
+public System.Collections.Generic.IReadOnlyDictionary<string, string> MetaData { get; init; }
 ```
 
 ### `Origo.Core.Serialization.TypeStringMapping`
@@ -896,7 +907,7 @@ public System.Collections.Generic.List<string> ObserverIndices { get; set; }
 ### `Origo.Core.Snd.Metadata.TypedData`
 
 ```csharp
-public readonly Struct Origo.Core.Snd.Metadata.TypedData : System.IEquatable<Origo.Core.Snd.Metadata.TypedData>
+public readonly struct Origo.Core.Snd.Metadata.TypedData : System.IEquatable<Origo.Core.Snd.Metadata.TypedData>
 public bool Equals(Origo.Core.Snd.Metadata.TypedData other)
 public bool IsNull { get; }
 public bool TryGetBoolean(out bool value)
@@ -942,10 +953,13 @@ protected ActiveStrategyBase()
 public abstract object? Invoke(Origo.Core.Abstractions.Entity.ISndEntity entity, Origo.Core.Snd.ISndContext ctx, object? input)
 ```
 
-### `Origo.Core.Snd.Strategy.ActiveStrategyJsonBase`
+### `Origo.Core.Snd.Strategy.ActiveStrategyJsonBase<TInput>`
 
 ```csharp
 public abstract class Origo.Core.Snd.Strategy.ActiveStrategyJsonBase<TInput> : Origo.Core.Snd.Strategy.ActiveStrategyBase
+protected abstract object? Execute(Origo.Core.Abstractions.Entity.ISndEntity entity, Origo.Core.Snd.ISndContext ctx, TInput input)
+protected ActiveStrategyJsonBase()
+public override sealed object? Invoke(Origo.Core.Abstractions.Entity.ISndEntity entity, Origo.Core.Snd.ISndContext ctx, object? input)
 ```
 
 ### `Origo.Core.Snd.Strategy.ActiveStrategyResults`
@@ -1020,7 +1034,7 @@ public virtual void OnPushRuntime(Origo.Core.StateMachine.StateMachineStrategyCo
 ### `Origo.Core.StateMachine.StateMachineStrategyContext`
 
 ```csharp
-public readonly Struct Origo.Core.StateMachine.StateMachineStrategyContext
+public readonly struct Origo.Core.StateMachine.StateMachineStrategyContext
 public StateMachineStrategyContext(string machineKey, string? beforeTop, string? afterTop)
 public string MachineKey { get; }
 public string? AfterTop { get; }
@@ -1043,9 +1057,9 @@ public static string? ExtractGlobSuffix(string searchPattern)
 
 ```csharp
 public class Origo.GodotAdapter.Bootstrap.OrigoAutoHost : Godot.Node
-protected Origo.Core.Abstractions.FileSystem.IPathResolver SharedPathResolver get:protected
-protected Origo.Core.DataSource.IDataSourceIoGateway SharedDataSourceIo get:protected
-protected Origo.Core.DataSource.IFileMetaAccess SharedMetaAccess get:protected
+protected Origo.Core.Abstractions.FileSystem.IPathResolver SharedPathResolver { protected get; }
+protected Origo.Core.DataSource.IDataSourceIoGateway SharedDataSourceIo { protected get; }
+protected Origo.Core.DataSource.IFileMetaAccess SharedMetaAccess { protected get; }
 protected override bool GetGodotClassPropertyValue(in Godot.NativeInterop.godot_string_name name, out Godot.NativeInterop.godot_variant value)
 protected override bool HasGodotClassMethod(in Godot.NativeInterop.godot_string_name method)
 protected override bool InvokeGodotClassMethod(in Godot.NativeInterop.godot_string_name method, Godot.NativeInterop.NativeVariantPtrArgs args, out Godot.NativeInterop.godot_variant ret)
@@ -1150,7 +1164,7 @@ public SignalName()
 ```csharp
 public abstract class Origo.GodotAdapter.Console.CommandHandlerBase : Origo.Core.Runtime.Console.ConsoleCommandHandlerBase
 protected CommandHandlerBase(Origo.Core.Abstractions.Runtime.IOrigoRuntime runtime)
-protected Origo.Core.Abstractions.Runtime.IOrigoRuntime Runtime get:protected
+protected Origo.Core.Abstractions.Runtime.IOrigoRuntime Runtime { protected get; }
 ```
 
 ### `Origo.GodotAdapter.FileSystem.GodotFileSystem`
@@ -1202,5 +1216,5 @@ public Origo.Core.Abstractions.Node.INodeHandle Create(string logicalName, strin
 ```csharp
 public static class Origo.GodotAdapter.SndEntityNodeExtensions
 public static Godot.Node? GetNativeNode(this Origo.Core.Abstractions.Node.INodeHandle handle)
-public static TNode? GetNodeFromSnd<TNode>(this Origo.Core.Abstractions.Entity.ISndEntity entity, string name); where TNode : Godot.Node
+public static TNode? GetNodeFromSnd<TNode>(this Origo.Core.Abstractions.Entity.ISndEntity entity, string name) where TNode : Godot.Node
 ```

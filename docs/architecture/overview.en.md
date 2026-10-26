@@ -17,7 +17,7 @@ The Origo framework follows these core design constraints:
 
 ## Project Design
 
-Origo is a **lightweight, platform-agnostic C# game framework** using the SND (Strategy + Node + Data) entity model. It ships as the packages `Origo.Core.Contracts` (stable consumer contracts), `Origo.Core.Kernel` (kernel implementation), `Origo.Core` (consumer shell), `Origo.GodotAdapter` (Godot 4.7.2 adapter layer), and `Origo.ConsoleBridge` (TCP remote console bridge); [Project Structure](#project-structure) lists their directories.
+Origo is a **lightweight, engine-agnostic C# game framework** using the SND (Strategy + Node + Data) entity model. It ships as the packages `Origo.Core.Contracts` (stable consumer contracts), `Origo.Core.Kernel` (kernel implementation), `Origo.Core` (consumer shell), `Origo.GodotAdapter` (Godot 4.7.2 adapter layer), and `Origo.ConsoleBridge` (TCP remote console bridge); [Project Structure](#project-structure) lists their directories.
 
 ## Four-Layer Runtime
 

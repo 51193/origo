@@ -19,7 +19,7 @@ Global constraints must retain clear, actionable meaning:
 - Fail-fast and strict integrity; authoritative references for strategy state, lifecycle, and Core/Adapter boundaries.
 - One access path; do not assemble lower-level operations that bypass hooks, validation, or resource lifecycle. Confirm the design of suspected backdoors.
 - Clean breaking changes in early development; no compatibility shells or test-convenience interfaces.
-- English documentation, no generated documentation artifacts, English public XML comments, and no DocFX/Sandcastle.
+- English documentation, generated docs are committed and docs-gated, English public XML comments, and no DocFX/Sandcastle.
 - Authoritative `global.json` and correct bootstrap; no SDK downgrade or temporary environment replacement.
 - Completion definition: ordered tests, Changelog alignment, docs synchronization, commit, post-commit full CI and message lint; buffer unfinished work.
 

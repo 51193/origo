@@ -4,4 +4,5 @@ set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
+bash scripts/bash/docs.sh check-staged
 bash scripts/bash/docs.sh check

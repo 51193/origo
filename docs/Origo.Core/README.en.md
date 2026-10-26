@@ -4,7 +4,7 @@
 
 ## Module Overview
 
-**Origo.Core** is the consumer shell package. It contains the platform-agnostic
+**Origo.Core** is the consumer shell package. It contains the engine-agnostic
 shell facade (`OrigoHost`), grid/random utilities, and SND
 extension helpers; runtime construction, SND internals, persistence, codecs,
 and console routing live in [Origo.Core.Kernel](../Origo.Core.Kernel/README.en.md).

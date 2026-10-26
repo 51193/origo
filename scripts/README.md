@@ -54,7 +54,7 @@ Rules:
 | Script lint | `bash/lint-scripts.sh` | `powershell/lint-scripts.ps1` |
 | Layered checks | `bash/check.sh` | `powershell/check.ps1` |
 | Commit lint | `bash/lint-commits.sh` | `powershell/lint-commits.ps1` |
-| Documentation generation/check | `bash/docs.sh` | — (Bash-local generated docs) |
+| Documentation generation/check | `bash/docs.sh` | `powershell/docs.ps1` |
 | Full pipeline | `bash/ci.sh` | `powershell/ci.ps1` |
 | Godot download | `bash/download-godot.sh` | `powershell/download-godot.ps1` |
 
@@ -63,7 +63,8 @@ Rules:
 | Script | Purpose |
 |---|---|
 | `ci.sh` | Full local gate: lint, format, API, test, benchmark, Godot, package smoke |
-| `docs.sh` | Generate or validate committed documentation artifacts |
+| `docs.sh` | Generate or validate committed documentation artifacts (Bash) |
+| `docs.ps1` | Generate or validate committed documentation artifacts (Windows) |
 | `check.sh` | Layered `plan` / `quick` / `affected` / `full` verification |
 | `test.sh` | Restore, build, `dotnet test`, Coverlet line coverage |
 | `format.sh` | `dotnet format --verify-no-changes` |

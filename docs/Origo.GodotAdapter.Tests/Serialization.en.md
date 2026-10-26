@@ -16,7 +16,7 @@ Also verifies the TypedData multi-layer inlining system: the registered Godot ty
 
 `GodotTypedDataPerformanceTests` is marked `[Trait("Category","Benchmark")]` (class-level),
 run only by `scripts/bash/benchmark.sh`; `test.sh` full test run excludes them via
-`--filter "Category!=Benchmark"`, so its 6 cases are not counted in the regular coverage gate run.
+`--filter "Category!=Benchmark"`, so its benchmark cases are not counted in the regular coverage gate run.
 
 ## Test File List
 
@@ -100,7 +100,7 @@ run only by `scripts/bash/benchmark.sh`; `test.sh` full test run excludes them v
 
 ## GodotTypedDataGeneratedCoverageTests Test Details
 
-Parametrically exercises every generated accessor (`As*`/`TryGet*`), the kind map, and the object converter bridge for all 14 registered Godot types, executing every generated branch.
+Parametrically exercises every generated accessor (`As*`/`TryGet*`), the kind map, and the object converter bridge for all registered Godot types, executing every generated branch.
 
 ### Happy Path
 

@@ -4,7 +4,7 @@
 
 ## Module Overview
 
-**Origo.GodotAdapter** is the Godot 4.7.2 adapter layer for the Origo framework. It bridges the platform-agnostic abstractions in the Core layer with Godot engine's concrete APIs, including the file system (via `FileAccess`/`DirAccess`), logging output (via `GD.Print`), node lifecycle (via `Node`/`PackedScene`), and engine type serialization (`Vector2`/`Vector2I`/`Vector3`/`Vector3I`/`Vector4`, `Quaternion`, `Basis`, `Transform2D`/`Transform3D`, `Color`, `Rect2`/`Rect2I`, `Aabb`, and `Plane`).
+**Origo.GodotAdapter** is the Godot 4.7.2 adapter layer for the Origo framework. It bridges the engine-agnostic abstractions in the Core layer with Godot engine's concrete APIs, including the file system (via `FileAccess`/`DirAccess`), logging output (via `GD.Print`), node lifecycle (via `Node`/`PackedScene`), and engine type serialization (`Vector2`/`Vector2I`/`Vector3`/`Vector3I`/`Vector4`, `Quaternion`, `Basis`, `Transform2D`/`Transform3D`, `Color`, `Rect2`/`Rect2I`, `Aabb`, and `Plane`).
 
 ## Root Files
 

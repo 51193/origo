@@ -98,5 +98,5 @@ bash scripts/bash/docs.sh generate
 bash scripts/bash/docs.sh check
 ```
 
-`docs.sh check` validates generated content and local links. The normal local
-lint gate runs it automatically.
+Windows uses `scripts/powershell/docs.ps1` with the same modes. Both local lint
+gates run the check automatically.

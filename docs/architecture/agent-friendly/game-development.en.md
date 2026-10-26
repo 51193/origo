@@ -22,7 +22,7 @@ GameDevBench incurs inference, image/video, and display-environment costs; offic
 
 ## Origo's existing foundation and gaps
 
-The [SND Entity Model](../../usage/snd-entity-model.en.md) already documents `HealthInitStrategy`, `SndMetaFluentBuilder`, `ctx.Template.CloneTemplate`, and `entity.OwningSession.Spawn`, connecting state definition, strategy, template, and execution. `OrigoDefaultEntry.Bootstrap.cs` actually calls `ConfigureStrategies` before `sndContext.Bootstrap()`; exceptions invoke `MarkBootstrapFailed` and are rethrown. Agents should use this public startup path, without manually stitching low-level initialization.[Startup contracts](../../Origo.GodotAdapter/Bootstrap/README.en.md)
+The [SND Entity Model](../../usage/snd-entity-model.en.md) defines the strategy, node, and data responsibilities plus strategy authoring. `OrigoDefaultEntry.Bootstrap.cs` actually calls `ConfigureStrategies` before `sndContext.Bootstrap()`; exceptions invoke `MarkBootstrapFailed` and are rethrown. Agents should use this public startup path, without manually stitching low-level initialization.[Startup contracts](../../Origo.GodotAdapter/Bootstrap/README.en.md)
 
 The [strategy harness](../../usage/strategy-testing.en.md) isolates data, lifecycle, and save requests, without validating real nodes, multiple entities, or full Godot scenes. [Integration tests](../../Origo.GodotAdapter.Integration.Tests/README.en.md) add real-engine behavior. The console's `tree_debug` exposes scene structure, `press_button` directly emits `Pressed`, and `camera_view` reports projection coordinates. The latter two cannot establish mouse hit testing, unobstructed UI, correct focus, or acceptable rendered output.[Console contracts](../../Origo.GodotAdapter/Console/README.en.md)
 

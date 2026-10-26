@@ -366,10 +366,10 @@ when the documentation surface changes:
   `docs.sh check` fails if the committed page is stale. Never hand-edit
   `docs/generated/contract-api.en.md`.
 - **A new generated artifact** — add a renderer and output path in
-  `scripts/python/docs_generate.py`, include it in `docs.sh generate/check`,
-  document it in `docs/generated/README.en.md` and the manual index, add the
-  output to the script map, and add a focused test in
-  `scripts/python/docs_generate_test.py`.
+  `scripts/python/docs_generate.py`, register it in `GENERATED_ARTIFACTS`,
+  include it in `docs.sh`/`docs.ps1` generate/check, document it in
+  `docs/generated/README.en.md` and the manual index, add the output to the
+  script map, and add a focused test in `scripts/python/docs_generate_test.py`.
 - **A new top-level summary document** — add its path to `SUMMARY_DOCS` in
   `scripts/python/docs_generate.py` so the brittle-count and stale quick-start
   checks cover it. Narrative module leaves are still covered by the all-doc
@@ -380,10 +380,12 @@ when the documentation surface changes:
 - **A new generated-data contract** — add a test to
   `docs_generate_test.py`; the generator's own formatting and validation
   behavior must stay covered.
-- **Local workflow** — `.githooks/pre-commit` runs `docs.sh check`;
-  `scripts/bash/test-docs.sh` runs the generator tests and the check again in
-  the normal lint gate. Both are local because generated docs are committed and
-  the repository does not depend on a remote documentation service.
+- **Local workflow** — `.githooks/pre-commit` checks both the staged generated
+  file and the working tree; `scripts/bash/test-docs.sh` runs the generator
+  tests plus the working-tree check; `scripts/powershell/docs.ps1` runs the
+  same check in the Windows lint gate.
+  These are local because generated docs are committed and the repository does
+  not depend on a remote documentation service.
 
 The maintenance rule is: change the generator or validator and the source of
 truth together; a generated page is never the source of truth.

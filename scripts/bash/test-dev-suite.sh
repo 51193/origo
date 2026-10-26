@@ -67,7 +67,8 @@ for marker in \
     "scripts/python/validate-agent-docs.py" \
     "scripts/python/validate-release-workflow.py" \
     "scripts/python/test-validate-release-workflow.py" \
-    "scripts/python/work_identity.py"; do
+    "scripts/python/work_identity.py" \
+    "docs.ps1"; do
     grep -Fq "$marker" <<<"$powershell_lint_active" \
         || FAIL "PowerShell lint gate is missing shared check: $marker"
 done

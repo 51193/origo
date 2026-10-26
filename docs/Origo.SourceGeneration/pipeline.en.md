@@ -430,7 +430,7 @@ Program start
   │    └─ ModuleInitializer runs
   │         ├─ RegisterKind(1, typeof(byte))
   │         ├─ RegisterKind(5, typeof(int))
-  │         └─ ... 13 primitive types ...
+  │         └─ ... Core primitive types ...
   │
   └─ Origo.GodotAdapter.dll loaded (depends on Core, therefore always after)
        └─ ModuleInitializer runs
