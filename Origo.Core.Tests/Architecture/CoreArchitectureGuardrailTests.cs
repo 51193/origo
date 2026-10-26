@@ -28,6 +28,9 @@ public class CoreArchitectureGuardrailTests
 
         var kernelViolations = PrivateFieldNamingConvention.FindViolations(typeof(OrigoRuntime).Assembly);
         Assert.Empty(kernelViolations);
+
+        var contractsViolations = PrivateFieldNamingConvention.FindViolations(typeof(OrigoMeta).Assembly);
+        Assert.Empty(contractsViolations);
     }
 
     [Fact]

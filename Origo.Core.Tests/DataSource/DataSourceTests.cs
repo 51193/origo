@@ -489,6 +489,28 @@ public class DataSourceTests
     }
 
     [Fact]
+    public void ComputeSha256Hash_CyclicGraph_ThrowsInsteadOfLooping()
+    {
+        var a = DataSourceNode.CreateObject();
+        var b = DataSourceNode.CreateObject();
+        a.Add("b", b);
+        b.Add("a", a);
+
+        Assert.Throws<InvalidOperationException>(() => a.ComputeSha256Hash());
+    }
+
+    [Fact]
+    public void JsonCodec_Encode_CyclicGraph_ThrowsInsteadOfOverflowing()
+    {
+        var a = DataSourceNode.CreateObject();
+        var b = DataSourceNode.CreateObject();
+        a.Add("b", b);
+        b.Add("a", a);
+
+        Assert.Throws<InvalidOperationException>(() => new JsonDataSourceCodec().Encode(a));
+    }
+
+    [Fact]
     public void ComputeSha256Hash_DeeplyNestedTree_DoesNotStackOverflow()
     {
         const int depth = 2000;

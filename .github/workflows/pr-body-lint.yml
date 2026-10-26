@@ -24,11 +24,6 @@ jobs:
           if git cat-file -e origin/main:scripts/python/lint-pr-body.py 2>/dev/null; then
             git show origin/main:scripts/python/lint-pr-body.py > "$RUNNER_TEMP/lint-pr-body.py"
             echo "Using scripts/python/lint-pr-body.py from origin/main."
-          elif git cat-file -e origin/main:scripts/lint-pr-body.py 2>/dev/null; then
-            # Transitional: this PR moves the linter, but main still has the
-            # old path until the layout change merges.
-            git show origin/main:scripts/lint-pr-body.py > "$RUNNER_TEMP/lint-pr-body.py"
-            echo "Using scripts/lint-pr-body.py from origin/main (transitional path)."
           else
             echo "origin/main does not contain the PR linter yet; using checked-out copy."
             cp scripts/python/lint-pr-body.py "$RUNNER_TEMP/lint-pr-body.py"

@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.DataSource;
 using Origo.Core.Snd;
@@ -60,6 +61,48 @@ public class SndContextShutdownFailureTests
 
         Assert.Null(ctx.Runtime.SessionManager.ForegroundSession);
         Assert.Null(ctx._progressRun);
+    }
+
+    [Fact]
+    public void Shutdown_WhenCurrentDeleteFails_RetriesCleanupWithoutReplayingHooks()
+    {
+        var logger = new TestLogger();
+        var host = new TestSndSceneHost();
+        var fs = new TestMemoryFileSystem();
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), fs);
+        var dataSourceIo = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(
+            runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json")
+        {
+            AutoDiscoverStrategies = false
+        });
+        fs.SeedFile("entry.json",
+            """{ "levels": { "main_menu": { "snd_scene": "res://levels/main_menu.json" } }, "main_menu_level": "main_menu" }""");
+        fs.SeedFile("res://levels/main_menu.json", "[]");
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.FlushFrame();
+        fs.SeedFile("root/current/retry_probe.txt", "probe");
+
+        fs.BeforeDeleteDirectory = path =>
+        {
+            if (path.EndsWith("current", StringComparison.Ordinal))
+                throw new IOException("simulated current delete failure");
+        };
+
+        Assert.Throws<IOException>(() => ctx.Shutdown());
+        Assert.Null(ctx.Blackboard.ProgressBlackboard);
+        Assert.True(fs.DirectoryExists("root/current"));
+
+        // The retry must only run idempotent cleanup: no progress run exists,
+        // and the context becomes terminal after the cleanup succeeds.
+        fs.BeforeDeleteDirectory = null;
+        ctx.Shutdown();
+
+        Assert.False(fs.DirectoryExists("root/current"));
+        ctx.Shutdown();
+        Assert.Throws<InvalidOperationException>(() => ctx.Bootstrap());
     }
 
     private const string NoopPushIndex = "shutdown.noop_push";

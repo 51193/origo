@@ -275,6 +275,9 @@ Startup belongs to the host entry node; a consumer subclasses `OrigoDefaultEntry
 public partial class MyEntry : OrigoDefaultEntry
 {
     // Runs after the runtime exists and before Bootstrap() freezes strategy registration.
+    // Manual registration must disable discovery: discovery scans every
+    // non-skipped assembly and registers every [StrategyIndex] type, so the
+    // same index would be registered twice and fail fast.
     protected override void ConfigureStrategies(ISndWorldAccess world)
         => world.RegisterStrategy(() => new MyStrategy());
 
@@ -283,13 +286,14 @@ public partial class MyEntry : OrigoDefaultEntry
     public override void _Ready()
     {
         // Export overrides must be assigned before base._Ready(); Godot re-applies scene defaults first.
+        AutoDiscoverStrategies = false;
         ConfigPath = "res://origo/entry/entry.json";
         base._Ready();   // creates runtime + scene host + ISndContext, then calls SndContext.Bootstrap()
     }
 }
 ```
 
-- What the consumer must do: supply the entry configuration (`ConfigPath`, `SaveRootPath`, `InitialSaveRootPath`, alias/template map paths) and make sure every strategy is registered before bootstrap — through `AutoDiscoverStrategies`, `ConfigureStrategies`, or `ISndWorldAccess.RegisterStrategy`; `ConfigureSaveMetadataContributors` and `RegisterCustomConverters` cover display metadata and custom converters. If a custom type is stored in the system blackboard, register its type name and converter through `OrigoHostOptions.ConfigureStartupRegistry` (Core) or the adapter entry's `ConfigureStartupRegistry` hook (Godot) so they exist before `system.json` is read.
+- What the consumer must do: supply the entry configuration (`ConfigPath`, `SaveRootPath`, `InitialSaveRootPath`, alias/template map paths) and make sure every strategy is registered before bootstrap. Use discovery (`AutoDiscoverStrategies`, the default) **or** manual registration via `ConfigureStrategies`, not both for the same index: discovery registers every `[StrategyIndex]` type in the scanned assemblies, and a duplicate index throws. Manual registration therefore requires `AutoDiscoverStrategies = false`; `ConfigureSaveMetadataContributors` and `RegisterCustomConverters` cover display metadata and custom converters. If a custom type is stored in the system blackboard, register its type name and converter through `OrigoHostOptions.ConfigureStartupRegistry` (Core) or the adapter entry's `ConfigureStartupRegistry` hook (Godot) so they exist before `system.json` is read.
 - What the consumer observes after `base._Ready()` returns: `Runtime`, `Context`, `ConsoleInput`, and `ConsoleOutputChannel` are available on the node, strategy registration is sealed, the configured scene aliases and templates are loaded, and the main-menu entry load is enqueued as a deferred action that executes when `IOrigoFrameDriver.DriveFrame(delta)` flushes the frame.
 - `_Process` drives `Runtime.DriveFrame(delta)`. A failure inside `_Ready` and any frame driven after a failed bootstrap throw instead of running a partially initialized runtime.
 

@@ -59,7 +59,9 @@ public sealed class OrigoHost : IOrigoFrameDriver
     {
         // 0 = live, 1 = shutdown in progress, 2 = successfully shut down.
         // A failed attempt returns to 0 so the caller can retry after fixing
-        // the failing teardown dependency; a successful attempt is terminal.
+        // the failing cleanup dependency. The retry only re-runs idempotent
+        // cleanup (quit hooks are not replayed); a successful attempt is
+        // terminal.
         if (Interlocked.CompareExchange(ref _disposeState, 1, 0) != 0)
             return;
 

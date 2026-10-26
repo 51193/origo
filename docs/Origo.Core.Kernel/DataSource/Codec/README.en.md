@@ -23,7 +23,7 @@ Concrete codec implementations for `IDataSourceCodec`, converting between `DataS
 - Parses `key: value` line files (lines starting with `#` are treated as comments and skipped)
 - All values are strings
 - No lazy loading (`.map` files are usually small and flat; no need for laziness)
-- Encode outputs keys in dictionary order and skips null values; only Text children are accepted — Number/Bool children would silently drift into strings on decode, so encode rejects them directly
+- Encode outputs keys in insertion order and skips null values; only Text children are accepted — Number/Bool children would silently drift into strings on decode, so encode rejects them directly
 - **Encode round-trip guard**: keys are rejected when empty, have leading/trailing whitespace, start with `#`, or contain `:`/line breaks; values are rejected when they contain line breaks or leading/trailing whitespace. The strict decoder trims both fields, treats the first colon as the separator, and treats lines starting with `#` as comments, so those inputs cannot round-trip losslessly
 - **Strict mode (`strict: true`)**: malformed lines (no colon, empty key) throw `FormatException` immediately; the Gateway wraps it as an `InvalidOperationException` carrying the file path (fail-fast); duplicate keys do not throw — they log a Warning and the later value wins. **Empty values (`key:` lines) are accepted as empty strings** — the `.map` encoder emits a `key: ` line for empty-string values, so accepting empty values guarantees encode round-trip consistency; empty keys are always rejected
 

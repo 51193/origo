@@ -85,6 +85,19 @@ public class SndMetaFluentBuilderTests
     }
 
     [Fact]
+    public void TypedDataSetters_BlankKey_Throws()
+    {
+        var builder = new SndMetaFluentBuilder("E");
+        Assert.Throws<ArgumentException>(() => builder.SetInt("", 1));
+        Assert.Throws<ArgumentException>(() => builder.SetFloat(" ", 1f));
+        Assert.Throws<ArgumentException>(() => builder.SetDouble("", 1d));
+        Assert.Throws<ArgumentException>(() => builder.SetLong("", 1L));
+        Assert.Throws<ArgumentException>(() => builder.SetBool("", true));
+        Assert.Throws<ArgumentException>(() => builder.SetString("", "v"));
+        Assert.Throws<ArgumentException>(() => builder.SetBytes("", [1]));
+    }
+
+    [Fact]
     public void SetNode_NullValue_Throws()
     {
         Assert.Throws<ArgumentNullException>(

@@ -42,6 +42,8 @@ public sealed class SndContext : ISndContext
     internal readonly List<ISaveMetaContributor> _saveMetaContributors = [];
     private bool _bootstrapped;
     private bool _shutdown;
+    private bool _shutdownCleanupPending;
+    private bool _shutdownRetryCurrentDelete;
     private bool _bootstrapCompleted;
     private readonly SndContextParameters _parameters;
     internal int _pendingPersistenceRequests;
@@ -164,11 +166,56 @@ public sealed class SndContext : ISndContext
         if (_shutdown)
             return;
 
+        // A BeforeSave hook runs inside the session-mutation guard. Tearing the
+        // progress run down here would remove sessions/current while the save
+        // workflow is still active; reject the call before any cleanup instead.
+        if (IsSessionSetMutationForbidden)
+            throw new InvalidOperationException(
+                "SndContext.Shutdown cannot run while a BeforeSave hook is executing.");
+
+        if (_progressRun is null && _shutdownCleanupPending)
+        {
+            // A previous attempt ran the quit hooks and released the progress
+            // run but failed on a cleanup dependency (typically the current/
+            // delete). Retry only the idempotent cleanup steps; never replay
+            // hooks or session teardown.
+            Exception? retryFailure = null;
+            try
+            {
+                Runtime.ResetConsoleState();
+            }
+            catch (Exception ex)
+            {
+                retryFailure = ex;
+            }
+
+            if (_shutdownRetryCurrentDelete)
+            {
+                try
+                {
+                    StorageService.DeleteCurrentDirectory();
+                }
+                catch (Exception ex)
+                {
+                    retryFailure ??= ex;
+                }
+            }
+
+            if (retryFailure is not null)
+                ExceptionDispatchInfo.Capture(retryFailure).Throw();
+
+            _shutdownCleanupPending = false;
+            _shutdownRetryCurrentDelete = false;
+            _shutdown = true;
+            return;
+        }
+
         // Both teardown steps are attempted even if the first fails. The
         // terminal flag is committed only after the whole attempt succeeds,
         // so a throwing consumer console source cannot make Shutdown a
         // permanent no-op with the progress run/current directory still live.
         Exception? firstFailure = null;
+        var hadProgressRun = _progressRun is not null;
         try
         {
             Runtime.ResetConsoleState();
@@ -195,8 +242,14 @@ public sealed class SndContext : ISndContext
         }
 
         if (firstFailure is not null)
+        {
+            _shutdownCleanupPending = true;
+            _shutdownRetryCurrentDelete = hadProgressRun;
             ExceptionDispatchInfo.Capture(firstFailure).Throw();
+        }
 
+        _shutdownCleanupPending = false;
+        _shutdownRetryCurrentDelete = false;
         _shutdown = true;
     }
 
@@ -430,7 +483,7 @@ public sealed class SndContext : ISndContext
                 StorageService.RestoreExtraFilesFromSnapshot(
                     InitialStorageService, SndDefaults.InitialSaveId);
 
-                var progressRun = CreateProgressRun(SndDefaults.InitialSaveId);
+                var progressRun = CreateProgressRun(SndDefaults.InitialSaveId, isSyntheticSave: true);
                 SetProgressRun(progressRun);
                 MountNewProgressRun(progressRun, () => progressRun.LoadFromPayload(payload));
                 _systemRun.SystemBlackboard.SetValue(WellKnownKeys.ActiveSaveId, string.Empty);
@@ -455,7 +508,7 @@ public sealed class SndContext : ISndContext
         {
             StorageService.DeleteCurrentDirectory();
 
-            var progressRun = CreateProgressRun(SndDefaults.InitialSaveId);
+            var progressRun = CreateProgressRun(SndDefaults.InitialSaveId, isSyntheticSave: true);
             SetProgressRun(progressRun);
             MountNewProgressRun(progressRun, () =>
             {
@@ -549,13 +602,14 @@ public sealed class SndContext : ISndContext
         return sndScenePath;
     }
 
-    private ProgressRun CreateProgressRun(string saveId)
+    private ProgressRun CreateProgressRun(string saveId, bool isSyntheticSave = false)
     {
         return new ProgressRun(
             _systemRun.Runtime,
             new ProgressParameters(saveId),
             StateMachineContext,
-            this);
+            this,
+            isSyntheticSave);
     }
 
     private void RunWorkflow(Action body)

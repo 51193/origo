@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-> See [AGENTS.md](AGENTS.md) for the development loop and [docs/release-process.en.md](docs/release-process.en.md) for Changelog and release rules. Changes are recorded only after passing the full loop (source -> tests -> run/fix/retest -> changelog -> documentation -> commit -> post-commit `scripts/ci.sh` -> post-commit `scripts/lint-commits.sh`).
+> See [AGENTS.md](AGENTS.md) for the development loop and [docs/release-process.en.md](docs/release-process.en.md) for Changelog and release rules. Changes are recorded only after passing the full loop (source -> tests -> run/fix/retest -> changelog -> documentation -> commit -> post-commit `scripts/bash/ci.sh` -> post-commit `scripts/bash/lint-commits.sh`).
 
 ---
 
@@ -12,14 +12,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- **Native Windows PowerShell development suite** — `scripts/windows/` implements the full development gate set without invoking the POSIX scripts: SDK install (`dotnet-install.ps1`), format, shell API baseline and previous-package comparison, build/tests/coverage, benchmarks, Godot headless integration, package consumer smoke, layered `plan`/`quick`/`affected`/`full` checks, and commit lint. `common.ps1` centralizes SDK/Python/Godot resolution and disables MSBuild node reuse for reliable output capture; `ci.ps1` mirrors `scripts/ci.sh`. A dedicated `windows-powershell` CI job verifies the suite alongside the existing Bash Windows job, and [docs/usage/windows-development.en.md](docs/usage/windows-development.en.md) documents prerequisites and usage.
+- **Native Windows PowerShell development suite** — `scripts/powershell/` implements the full development gate set without invoking the POSIX scripts: SDK install (`dotnet-install.ps1`), format, shell API baseline and previous-package comparison, build/tests/coverage, benchmarks, Godot headless integration, package consumer smoke, layered `plan`/`quick`/`affected`/`full` checks, and commit lint. `common.ps1` centralizes SDK/Python/Godot resolution and disables MSBuild node reuse for reliable output capture; `ci.ps1` mirrors `scripts/bash/ci.sh`. A dedicated `windows-powershell` CI job verifies the suite alongside the existing Bash Windows job, and [docs/usage/windows-development.en.md](docs/usage/windows-development.en.md) documents prerequisites and usage.
 - **Startup registry hook for persisted system-blackboard types** — `OrigoHostOptions.ConfigureStartupRegistry` and the adapter entry's `ConfigureStartupRegistry` run before `system.json` is read, so a custom type's name mapping and converter are available at startup; an unregistered type now fails with the `system.json` path and hook guidance instead of a bare type-name error. `ConfigureConverters` remains the Bootstrap-time hook for save payload types.
 - **Public shutdown path** — `ISndContext.Shutdown()` stops the active progress run, runs progress/session quit hooks, and deletes the temporary `current/` directory; `OrigoHost.Dispose()` and `OrigoDefaultEntry._ExitTree` invoke it. The operation is idempotent and later bootstrap and persistence mutations (save/load/delete/continue/level-switch) fail explicitly.
 - **PR title/body lint for squash-merge commit messages** — the `pr-body-lint` workflow checks the PR title as a Conventional Commit subject and the PR body lines that GitHub uses for the squash commit, running the linter from `origin/main` when available; merge commits remain exempt from the local message lint.
 - **`ORIGOSG009` rejects types that cannot appear in generated TypedData
   accessors** — `void`, ref-like types such as `Span<T>`, static classes,
-  unbound generic definitions, and special runtime types such as
-  `TypedReference` now produce an explicit compile diagnostic instead of
+  unbound generic definitions, nullable value types such as `int?`, and
+  special runtime types such as `TypedReference` now produce an explicit compile diagnostic instead of
   emitting uncompilable accessor code. The rule is tracked in
   `AnalyzerReleases.Unshipped.md` until the next formal release.
 - **Validated release source archive** — the Release workflow builds
@@ -27,13 +27,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   its `<Version>` / `AssemblyVersion` / `FileVersion` (plus the formal CHANGELOG
   and analyzer metadata) before moving the tag. The archive is attached to the
   GitHub Release as the authoritative source snapshot.
-- **Local release preflight** — `scripts/release-check.sh <x.y.z>` stamps a
+- **Local release preflight** — `scripts/bash/release-check.sh <x.y.z>` stamps a
   temporary worktree and runs the strict release verifier without modifying the
   caller's checkout, so `main` can keep a development baseline. It rejects a
   HEAD baseline that is not a newer `-dev` version, is not newer than the newest
   formal release, or carries numeric assembly stamps that do not match that
   baseline.
-- **Release provenance gate** — `scripts/verify-release-provenance.sh` rejects a
+- **Release provenance gate** — `scripts/bash/verify-release-provenance.sh` rejects a
   formal tag on unmerged feature history and a snapshot tag that is not
   `main` history or a weekly/release version-stamp commit based on `main`. It
   accepts only version element changes in the metadata commit, and the release
@@ -44,7 +44,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
-- **BREAKING: repository scripts are grouped by implementation language** — POSIX scripts live under `scripts/bash/`, the Windows PowerShell suite under `scripts/powershell/`, and cross-platform Python helpers under `scripts/python/`; `scripts/README.md` is the gate and directory map. Entry points are now `bash scripts/bash/ci.sh` and `powershell -File scripts/powershell/ci.ps1`. Automation that invoked the old `scripts/*.sh`, `scripts/*.py`, or `scripts/windows/*.ps1` paths must update; no compatibility wrappers are provided.
+- **BREAKING: repository scripts are grouped by implementation language** — POSIX scripts live under `scripts/bash/`, the Windows PowerShell suite under `scripts/powershell/`, and cross-platform Python helpers under `scripts/python/`; `scripts/README.md` is the gate and directory map. Entry points are now `bash scripts/bash/ci.sh` and `powershell -File scripts/powershell/ci.ps1`. Automation that invoked the old `scripts/*.sh`, `scripts/*.py` paths must update; no compatibility wrappers are provided.
 - **BREAKING: save and level IDs are lowercase, path-safe identifiers** — IDs must use lowercase ASCII letters, digits, `.`, `_`, and `-`, must not be dot-only, and must not end with `.`. Save/level IDs are directory names, so `Foo`/`foo` and `foo`/`foo.` alias the same directory on default Windows/macOS file systems; the previous ordinal checks could overwrite a slot, bypass active-save deletion protection, or lose a level. Legacy mixed-case or trailing-dot slots are detected and rejected with a rename instruction rather than silently merged. Rename existing IDs before upgrading.
 - **Hyphenated release tags are always pre-releases** — the Release workflow
   marks any tag containing `-` as a pre-release, not only dispatches with the
@@ -78,7 +78,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
-- **Coverage runs no longer emit a false test-host crash report in read-only-runtime sandboxes** — `scripts/test.sh` gives the test host a private writable `XDG_RUNTIME_DIR`; Coverlet's named-mutex unload path otherwise reports an unhandled `System.IO.IOException` after a fully passing run when `/run/user/<id>` is EROFS.
+- **Release metadata verification runs the trusted verifier from the correct depth** — the Release workflow now stages `verify-release.sh` at `.release-validators/scripts/verify-release.sh`, where its `../..` root resolution reaches the repository; the workflow guard requires the metadata step and its exact staging path, and the self-test executes both the correct and one-level-too-deep layouts.
+- **Normal Godot entry exit runs foreground `BeforeQuit` hooks** — `GodotSndManager._ExitTree` shuts an active `SndContext` down before its parent entry's `_ExitTree` clears the entity collection, so the documented normal-exit hook path runs once; the out-of-contract per-entity fallback still handles a context without an active progress run.
+- **Main-menu/initial runs never read a real `save_000` snapshot** — those runs use an internal synthetic working id; a level switch now resolves only from `current/`, so a user-created `save_000` cannot inject an unrelated saved level into the next boot. Real save slots retain the documented snapshot fallback.
+- **Observer teardown cleans every binding when one hook throws** — multi-binding teardown and unmount loop over all bindings, aggregate failures, and release every pool reference; a later target cannot remain subscribed to a released observer.
+- **Save payload hashes are collision-free across metadata/level boundaries** — `CustomMeta` keys/values and level keys are length-prefixed before hashing, so distinct maps such as `{"a=b":"c"}` and `{"a":"b=c"}` no longer share an idempotency hash.
+- **Save deletion removes remnants before the visible slot** — a failed backup cleanup can no longer leave a complete backup that recovery promotes and resurrects the deleted slot.
+- **State-machine restore failure releases the partially built machine** — a malformed stack no longer leaks push/pop pool references, because the new machine is registered before stack restoration and disposed by the existing catch.
+- **Plan execution terminates a plan with no first step** — a `ResolveNextStep` result of null/empty now completes the intent immediately instead of leaving it active with no action that could ever finish it; a throwing `OnAfterAdd/Load/Spawn` or `Before*` hook unwires its subscriptions so a retry is clean.
+- **Non-finite primitives cannot be loaded** — `Single`/`Double` converter reads reject NaN/Infinity/`1e999` before they poison the next save.
+- **Blank fluent data keys fail immediately** — typed `SndMetaFluentBuilder` setters validate the key like `SetNode`, so unreachable persisted values cannot be built.
+- **Cyclic `DataSourceNode` graphs fail instead of looping/overflowing** — canonical hashing and JSON encoding detect cycles; shared acyclic children remain supported.
+- **`press_button` stays inside the entity subtree and `camera_view` reports visible entities correctly** — absolute/`..` NodePaths cannot press unrelated buttons, and the no-visible-node branch is reachable and counts entities independently.
+- **Console input is bounded and drained fairly** — input lines have a configurable limit, the pending queue drops the oldest command at its bound, and the console executes a bounded number of commands per frame.
+- **Weekly snapshots require the exact nine release asset names** — completeness no longer accepts an arbitrary count of unrelated assets.
+- **Windows PowerShell parent resolution and gate dispatch are correct** — API inventory uses `~1` instead of a caret that `cmd.exe` consumes, `check.py` accepts an explicit suite and dispatches Windows Godot checks to `godot-test.ps1`, and the Windows lint/godot/package gates cover the shared release, pin, and identity checks.
+- **ConsoleBridge input caps are documented in the shell API baseline** — `ConsoleBridgeOptions.MaxInputLineLength` is part of the reviewed 0.1.x surface.
+
+- **Coverage runs no longer emit a false test-host crash report in read-only-runtime sandboxes** — `scripts/bash/test.sh` gives the test host a private writable `XDG_RUNTIME_DIR`; Coverlet's named-mutex unload path otherwise reports an unhandled `System.IO.IOException` after a fully passing run when `/run/user/<id>` is EROFS.
 - **Snapshot paths are normalized across host separator styles** — `SaveFileHandle.GetRelativePath` now normalizes `\`/`/` and scheme roots, and fails explicitly when a path is outside the save root instead of embedding an absolute path. Staged snapshots must contain the progress pair before the swap, so a broken copy cannot replace a valid slot.
 - **Case-variant legacy slots cannot be overwritten or deleted** — write/delete/load/snapshot paths and level payload writes reject a directory that differs only by case, with a migration instruction.
 - **A\* heuristic no longer overflows for large valid coordinates** — the heuristic is computed in `double`; a 46341-cell straight-line path no longer degenerates into a NaN-priority search.

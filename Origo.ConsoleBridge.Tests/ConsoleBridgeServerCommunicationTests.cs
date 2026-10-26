@@ -109,6 +109,25 @@ public class ConsoleBridgeServerCommunicationTests
     }
 
     [Fact]
+    public void ClientSendCommand_LineOverConfiguredLimit_IsRejected()
+    {
+        var input = new ConsoleInputBuffer();
+        var output = new ConsoleOutputChannel();
+        using var server = new ConsoleBridgeServer(input, output,
+            new ConsoleBridgeOptions { MaxInputLineLength = 32 });
+        server.Start();
+
+        using var client = new TcpClient();
+        client.Connect(IPAddress.Loopback, server.ActualPort);
+        using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
+
+        writer.WriteLine(new string('x', 100));
+        Thread.Sleep(250);
+
+        Assert.Equal(0, input.PendingCount);
+    }
+
+    [Fact]
     public void ClientSendCommand_Unicode_Arrives()
     {
         var (server, (input, _)) = ConsoleBridgeTestInfrastructure.CreateStartedServer();

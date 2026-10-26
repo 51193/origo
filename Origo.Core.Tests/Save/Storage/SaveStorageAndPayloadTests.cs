@@ -604,6 +604,29 @@ public class SaveStorageAndPayloadTests
     }
 
     [Fact]
+    public void SaveStorageFacade_DeleteSave_BackupDeleteFailure_DoesNotResurrectSlot()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        SeedCompleteSnapshot(fs, "root/save_slot");
+        SeedCompleteSnapshot(fs, "root/save_slot.bak");
+        fs.BeforeDeleteDirectory = path =>
+        {
+            if (path.EndsWith(".bak", StringComparison.Ordinal))
+                throw new IOException("simulated backup delete failure");
+        };
+
+        Assert.Throws<IOException>(() => SaveStorageFacade.DeleteSave(handle, "slot"));
+
+        // The real slot must still exist; the next enumeration must not
+        // promote the backup and resurrect a half-deleted slot.
+        fs.BeforeDeleteDirectory = null;
+        Assert.True(fs.DirectoryExists("root/save_slot"));
+        Assert.Contains("slot", SaveStorageFacade.EnumerateSaveIds(handle));
+    }
+
+    [Fact]
     public void SaveStorageFacade_DeleteSave_RemovesCaseVariantBackup()
     {
         var fs = new TestMemoryFileSystem();

@@ -110,6 +110,7 @@ public sealed class SndMetaFluentBuilder
     /// <summary>Sets an <see cref="int" /> data value under the given key.</summary>
     public SndMetaFluentBuilder SetInt(string key, int value)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
         EnsureDataMetaData();
         _meta.DataMetaData!.Pairs[key] = (TypedData)value;
         return this;
@@ -118,6 +119,7 @@ public sealed class SndMetaFluentBuilder
     /// <summary>Sets a <see cref="float" /> data value under the given key.</summary>
     public SndMetaFluentBuilder SetFloat(string key, float value)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
         EnsureDataMetaData();
         _meta.DataMetaData!.Pairs[key] = (TypedData)value;
         return this;
@@ -126,6 +128,7 @@ public sealed class SndMetaFluentBuilder
     /// <summary>Sets a <see cref="double" /> data value under the given key.</summary>
     public SndMetaFluentBuilder SetDouble(string key, double value)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
         EnsureDataMetaData();
         _meta.DataMetaData!.Pairs[key] = (TypedData)value;
         return this;
@@ -134,6 +137,7 @@ public sealed class SndMetaFluentBuilder
     /// <summary>Sets a <see cref="long" /> data value under the given key.</summary>
     public SndMetaFluentBuilder SetLong(string key, long value)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
         EnsureDataMetaData();
         _meta.DataMetaData!.Pairs[key] = (TypedData)value;
         return this;
@@ -142,6 +146,7 @@ public sealed class SndMetaFluentBuilder
     /// <summary>Sets a <see cref="bool" /> data value under the given key.</summary>
     public SndMetaFluentBuilder SetBool(string key, bool value)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
         EnsureDataMetaData();
         _meta.DataMetaData!.Pairs[key] = (TypedData)value;
         return this;
@@ -152,6 +157,7 @@ public sealed class SndMetaFluentBuilder
     public SndMetaFluentBuilder SetString(string key, string value)
     {
         ArgumentNullException.ThrowIfNull(value);
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
         EnsureDataMetaData();
         _meta.DataMetaData!.Pairs[key] = new TypedData(TypedData.KindMap.String, 0, value);
         return this;
@@ -162,6 +168,7 @@ public sealed class SndMetaFluentBuilder
     public SndMetaFluentBuilder SetBytes(string key, byte[] value)
     {
         ArgumentNullException.ThrowIfNull(value);
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
         EnsureDataMetaData();
         _meta.DataMetaData!.Pairs[key] = new TypedData(TypedData.UnregisteredKind, 0, value);
         return this;

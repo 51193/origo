@@ -529,6 +529,26 @@ public class SndContextWorkflowTests
         Assert.Equal("b", ctx.Runtime.SessionManager.ForegroundSession?.LevelId);
     }
 
+    [Fact]
+    public void RequestSwitchForegroundLevel_MainMenuSyntheticSave_IgnoresRuntimeSave000Snapshot()
+    {
+        var ctx = CreateContext(out var fs, out _);
+        SetupProgressRun(ctx, fs);
+
+        // A real save slot 000 may exist (the console permits "save 000").
+        // Main-menu/initial runs use 000 as an internal working id; a level
+        // switch must not read that unrelated snapshot. Corrupting its level
+        // payload makes an accidental fallback fail visibly.
+        SeedSaveSnapshot(fs, "root", "000", "town");
+        fs.SeedFile("root/save_000/level_town/snd_scene.json", "{corrupted");
+
+        ctx.Save.RequestSwitchForegroundLevel("town");
+        var ex = Record.Exception(() => ctx.FlushFrame());
+
+        Assert.Null(ex);
+        Assert.Equal("town", ctx.Runtime.SessionManager.ForegroundSession?.LevelId);
+    }
+
     // ── CloneTemplate ──
 
     [Fact]

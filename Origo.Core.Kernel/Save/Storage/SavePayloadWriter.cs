@@ -1,4 +1,5 @@
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
@@ -290,7 +291,15 @@ internal static class SavePayloadWriter
 
         void FeedString(string s)
         {
-            sha.AppendData(Encoding.UTF8.GetBytes(s));
+            // Length-prefix every variable-length segment. Concatenating raw
+            // "M:{key}={value}" bytes makes distinct maps share a hash (for
+            // example {"a=b":"c"} and {"a":"b=c"}); a length prefix keeps the
+            // feed injective without constraining metadata values.
+            var bytes = Encoding.UTF8.GetBytes(s);
+            Span<byte> length = stackalloc byte[4];
+            BinaryPrimitives.WriteInt32LittleEndian(length, bytes.Length);
+            sha.AppendData(length);
+            sha.AppendData(bytes);
         }
 
         Feed(payload.ProgressNode);
@@ -298,11 +307,16 @@ internal static class SavePayloadWriter
 
         if (payload.CustomMeta is not null)
             foreach (var kv in payload.CustomMeta.OrderBy(x => x.Key, StringComparer.Ordinal))
-                FeedString($"M:{kv.Key}={kv.Value}");
+            {
+                FeedString("M");
+                FeedString(kv.Key);
+                FeedString(kv.Value);
+            }
 
         foreach (var kv in payload.Levels.OrderBy(x => x.Key, StringComparer.Ordinal))
         {
-            FeedString($"L:{kv.Key}");
+            FeedString("L");
+            FeedString(kv.Key);
             Feed(kv.Value.SndSceneNode);
             Feed(kv.Value.SessionNode);
             Feed(kv.Value.SessionStateMachinesNode);

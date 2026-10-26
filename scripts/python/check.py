@@ -32,6 +32,20 @@ FULL_PATHS = {
 }
 DOC_PREFIXES = ("docs/",)
 GODOT_MARKERS = (".godot/", "project.godot", ".tscn", ".tres", ".gd")
+
+
+def godot_gate_command(suite: str) -> list[str]:
+    if suite == "powershell":
+        return ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass",
+                "-File", "scripts/powershell/godot-test.ps1"]
+    return ["bash", "scripts/bash/godot-test.sh"]
+
+
+def full_gate_commands(suite: str) -> list[list[str]]:
+    if suite == "powershell":
+        prefix = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File"]
+        return [prefix + ["scripts/powershell/ci.ps1"], prefix + ["scripts/powershell/lint-commits.ps1"]]
+    return [["bash", "scripts/bash/ci.sh"], ["bash", "scripts/bash/lint-commits.sh"]]
 @dataclass(frozen=True)
 class Change:
     status: str
@@ -337,12 +351,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output")
     parser.add_argument("--project", required=False)
     parser.add_argument("--filter", dest="test_filter")
+    parser.add_argument("--suite", choices=("posix", "powershell"), default="posix",
+                        help="script suite that owns the Godot/full gates")
     args = parser.parse_args(argv)
     root = repository_root(args.repository)
 
     if args.mode == "full":
-        run_command(root, ["bash", "scripts/bash/ci.sh"])
-        run_command(root, ["bash", "scripts/bash/lint-commits.sh"])
+        for command in full_gate_commands(args.suite):
+            run_command(root, command)
         return 0
 
     if args.mode == "quick" and (not args.project or not args.test_filter):
@@ -375,7 +391,7 @@ def main(argv: list[str] | None = None) -> int:
     for project in plan["selectedProjects"]:
         run_test_project(root, project, "Category!=Benchmark", coverage=True)
     if "godot" in plan["additionalGates"]:
-        run_command(root, ["bash", "scripts/bash/godot-test.sh"])
+        run_command(root, godot_gate_command(args.suite))
     return 0
 
 

@@ -265,16 +265,20 @@ internal static class SaveStorageFacade
         if (!hasReal && !hasTemp && !hasStandardBackup && !hasBackup)
             throw new InvalidOperationException($"Save slot '{saveId}' does not exist.");
 
-        // Remove the visible slot first: if a later remnant cleanup fails,
-        // the backup cannot outlive a still-valid slot.
-        if (hasReal)
-            handle.MetaAccess.DeleteDirectory(realAbs);
-        if (hasTemp)
-            handle.MetaAccess.DeleteDirectory(tempAbs);
+        // Remove remnants before the visible slot. Recovery promotes a
+        // complete .bak whenever the real slot is missing, so deleting the real
+        // slot first would let a failed backup cleanup resurrect the save on
+        // the next enumeration. With this order, a failed remnant cleanup
+        // leaves the real slot intact (the delete fails visibly) and there is
+        // no orphaned backup to recover.
         if (hasBackup)
             handle.MetaAccess.DeleteDirectory(backupAbs);
         if (!string.Equals(backupAbs, standardBackupAbs, StringComparison.Ordinal) && hasStandardBackup)
             handle.MetaAccess.DeleteDirectory(standardBackupAbs);
+        if (hasTemp)
+            handle.MetaAccess.DeleteDirectory(tempAbs);
+        if (hasReal)
+            handle.MetaAccess.DeleteDirectory(realAbs);
     }
 
     public static void WriteSavePayloadToCurrentThenSnapshot(

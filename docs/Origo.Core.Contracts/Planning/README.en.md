@@ -23,7 +23,7 @@ Intent-driven plan execution base class. Encapsulates the complete lifecycle fro
 | `PlanStepKey` | `abstract string` | Entity data key storing the current plan step type |
 | `ActionKey` | `abstract string` | Entity data key storing the current action descriptor. Every step entry always writes the canonical `"stepType"` form — re-entering the same step clears any stale `,param` suffix and re-notifies subscribers |
 | `ActionStatusKey` | `abstract string` | Entity data key storing action execution status |
-| `ResolveNextStep(intent, currentStep, failed, entity)` | `abstract string?` | Returns next step based on intent and current step; `null`/empty terminates the plan |
+| `ResolveNextStep(intent, currentStep, failed, entity)` | `abstract string?` | Returns next step based on intent and current step; `null`/empty terminates the plan (including at the first resolve: the intent completes immediately and no action is mounted) |
 | `StepToActionIndex(stepType)` | `abstract string?` | Step type → Action strategy index; `null`/empty means no strategy needs to be mounted for this step |
 
 #### Virtual Members Users May Override
@@ -51,9 +51,9 @@ The base class `sealed`s all 8 of `LifecycleStrategyBase`'s lifecycle hooks, aut
 
 | Hook | Trigger |
 |------|---------|
-| `OnAfterSpawn(entity, ctx)` | After AfterSpawn wiring completes |
-| `OnAfterLoad(entity, ctx)` | After AfterLoad wiring completes |
-| `OnAfterAdd(entity, ctx)` | After AfterAdd wiring completes |
+| `OnAfterSpawn(entity, ctx)` | After AfterSpawn wiring completes; a throw unwires the subscriptions before propagating |
+| `OnAfterLoad(entity, ctx)` | After AfterLoad wiring completes; a throw unwires the subscriptions before propagating |
+| `OnAfterAdd(entity, ctx)` | After AfterAdd wiring completes; a throw unwires the subscriptions before propagating |
 | `OnBeforeRemove(entity, ctx)` | After removing Action, before unsubscribing |
 | `OnBeforeQuit(entity, ctx)` | After removing Action, before unsubscribing |
 | `OnBeforeDead(entity, ctx)` | After removing Action, before unsubscribing |

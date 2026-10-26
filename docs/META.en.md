@@ -10,7 +10,7 @@
 
 ## Bounded Shell Compatibility Exception
 
-`Origo.Core`, `Origo.GodotAdapter`, and `Origo.ConsoleBridge` are 0.1.x shell packages that promise source/behavior compatibility; kernel packages such as `Origo.Core.Contracts` and `Origo.Core.Kernel`, and nightly builds, make no consumer compatibility promise. The exception covers only shell contracts, kernel-shell ports, and compatibility tests; it never relaxes fail-fast, single-access-path, or architectural isolation rules. See [shell-kernel-boundary](architecture/shell-kernel-boundary.en.md) for the design and [shell-api-baseline](architecture/shell-api-baseline.en.md) plus [release-process](release-process.en.md) for the gates.
+`Origo.Core`, `Origo.Core.Contracts`, `Origo.GodotAdapter`, and `Origo.ConsoleBridge` are 0.1.x shell packages that promise source/behavior compatibility; the implementation package `Origo.Core.Kernel` and nightly builds make no consumer compatibility promise. The exception covers only shell contracts, kernel-shell ports, and compatibility tests; it never relaxes fail-fast, single-access-path, or architectural isolation rules. See [shell-kernel-boundary](architecture/shell-kernel-boundary.en.md) for the design and [shell-api-baseline](architecture/shell-api-baseline.en.md) plus [release-process](release-process.en.md) for the gates.
 
 ## Writing Principles
 
@@ -287,8 +287,9 @@ every gate, both OS entry points, and the directory rules for adding or moving
 scripts.
 
 Windows development uses the native PowerShell suite under `scripts/powershell/`
-instead of the POSIX scripts; the two sets implement the same gates and never
-invoke each other. `scripts/powershell/install-dotnet.ps1` installs the pinned SDK
+instead of the POSIX scripts; the two sets implement the same development gate sequence and never
+invoke each other; shared Python validators run on both, while POSIX-only
+release-tooling self-tests remain Linux-side. `scripts/powershell/install-dotnet.ps1` installs the pinned SDK
 through `dotnet-install.ps1`, and `scripts/powershell/ci.ps1` is the Windows
 equivalent of `scripts/bash/ci.sh` (script parse/lint, format, API baseline, build
 and tests, benchmarks, Godot integration, and package consumer smoke).

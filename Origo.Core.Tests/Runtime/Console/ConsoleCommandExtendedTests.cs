@@ -27,6 +27,22 @@ public class ConsoleCommandExtendedTests
         return (runtime, consoleInput, consoleOutput, messages);
     }
 
+    [Fact]
+    public void ProcessPending_ExecutesAtMost256CommandsPerFrame()
+    {
+        var (runtime, input, _, messages) = CreateConsoleRuntime();
+        for (var i = 0; i < 300; i++)
+            input.Enqueue("help");
+
+        runtime.Console!.ProcessPending();
+
+        Assert.Equal(256, messages.FindAll(m => m.Contains("Available commands", StringComparison.Ordinal)).Count);
+        Assert.Equal(44, input.PendingCount);
+
+        runtime.Console.ProcessPending();
+        Assert.Equal(0, input.PendingCount);
+    }
+
     // ── help ──
 
     [Fact]

@@ -206,6 +206,7 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
             IsRefLikeType = typeSymbol.IsRefLikeType,
             IsStatic = typeSymbol is INamedTypeSymbol { IsStatic: true },
             IsUnboundGenericType = typeSymbol is INamedTypeSymbol { IsUnboundGenericType: true },
+            IsNullableValueType = typeSymbol is INamedTypeSymbol { OriginalDefinition.SpecialType: SpecialType.System_Nullable_T },
             IsVoid = typeSymbol.SpecialType == SpecialType.System_Void,
             IsTypedReference = typeSymbol.SpecialType == SpecialType.System_TypedReference,
             TypeKind = typeSymbol.TypeKind,
@@ -371,7 +372,8 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
         || type.IsTypedReference
         || type.IsRefLikeType
         || type.IsStatic
-        || type.IsUnboundGenericType;
+        || type.IsUnboundGenericType
+        || type.IsNullableValueType;
 
     private static List<InlineTypeInfo> RejectKindCollisions(
         List<InlineTypeInfo> types, List<Diagnostic> diagnostics)
@@ -651,6 +653,7 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
                         || tx.IsRefLikeType != ty.IsRefLikeType
                         || tx.IsStatic != ty.IsStatic
                         || tx.IsUnboundGenericType != ty.IsUnboundGenericType
+                        || tx.IsNullableValueType != ty.IsNullableValueType
                         || tx.IsVoid != ty.IsVoid
                         || tx.IsTypedReference != ty.IsTypedReference
                         || tx.TypeKind != ty.TypeKind
@@ -685,6 +688,7 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
                     hash.Add(t.IsRefLikeType);
                     hash.Add(t.IsStatic);
                     hash.Add(t.IsUnboundGenericType);
+                    hash.Add(t.IsNullableValueType);
                     hash.Add(t.IsVoid);
                     hash.Add(t.IsTypedReference);
                     hash.Add(t.TypeKind);
@@ -714,6 +718,7 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
         public bool IsRefLikeType { get; set; }
         public bool IsStatic { get; set; }
         public bool IsUnboundGenericType { get; set; }
+        public bool IsNullableValueType { get; set; }
         public bool IsVoid { get; set; }
         public bool IsTypedReference { get; set; }
         public TypeKind TypeKind { get; set; }

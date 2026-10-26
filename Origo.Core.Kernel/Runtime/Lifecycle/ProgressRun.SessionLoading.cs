@@ -7,6 +7,7 @@ using Origo.Core.Logging;
 using Origo.Core.Save;
 using Origo.Core.Save.Serialization;
 using Origo.Core.Save.Storage;
+using Origo.Core.Snd;
 using Origo.Core.StateMachine;
 using Origo.Core.Abstractions.Lifecycle;
 
@@ -117,7 +118,12 @@ internal sealed partial class ProgressRun
         {
             ValidateLevelId(levelId, nameof(levelId), "Level id cannot be null or whitespace.");
 
-            var levelPayload = _owner._progressRuntime.StorageService.ResolveLevelPayload(_owner.SaveId, levelId);
+            // Initial-save and main-menu runs use a synthetic working id. They
+            // have no loaded runtime slot, so only current/ is authoritative;
+            // falling back to save_000 would mount an unrelated older game.
+            var levelPayload = _owner.IsSyntheticSave
+                ? _owner._progressRuntime.StorageService.TryReadLevelPayloadFromCurrent(levelId)
+                : _owner._progressRuntime.StorageService.ResolveLevelPayload(_owner.SaveId, levelId);
             if (levelPayload is not null)
             {
                 try
@@ -141,6 +147,12 @@ internal sealed partial class ProgressRun
             PersistForegroundLevelState();
             PersistAndDestroyBackgroundIfExists(newLevelId);
             ResetForeground(true);
+
+            // A BeforeQuit hook may have requested shutdown while the old
+            // foreground was being disposed. Do not mount a new foreground or
+            // recreate current/ after the context was shut down.
+            ThrowIfOwnerShutdown();
+
             try
             {
                 LoadAndMountForeground(newLevelId);
@@ -168,7 +180,14 @@ internal sealed partial class ProgressRun
                 throw;
             }
 
+            ThrowIfOwnerShutdown();
             _owner.PersistProgress();
+        }
+
+        private void ThrowIfOwnerShutdown()
+        {
+            if (_owner._progressRuntime.SndContext is SndContext ctx)
+                ctx.ThrowIfShutdown();
         }
 
         private void PersistForegroundLevelState()

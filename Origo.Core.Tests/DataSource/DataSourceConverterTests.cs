@@ -28,6 +28,44 @@ public class DataSourceConverterTests
         Assert.Equal(7, value);
     }
 
+    [Theory]
+    [InlineData("NaN")]
+    [InlineData("Infinity")]
+    [InlineData("-Infinity")]
+    [InlineData("1e999")]
+    public void SingleConverter_Read_RejectsNonFinite(string raw)
+    {
+        var converter = new SingleDataSourceConverter();
+        Assert.Throws<InvalidOperationException>(() => converter.Read(DataSourceNode.CreateString(raw)));
+    }
+
+    [Theory]
+    [InlineData("NaN")]
+    [InlineData("Infinity")]
+    [InlineData("-Infinity")]
+    [InlineData("1e999")]
+    public void DoubleConverter_Read_RejectsNonFinite(string raw)
+    {
+        var converter = new DoubleDataSourceConverter();
+        Assert.Throws<InvalidOperationException>(() => converter.Read(DataSourceNode.CreateString(raw)));
+    }
+
+    [Fact]
+    public void SingleArrayConverter_Read_RejectsNonFiniteElement()
+    {
+        var node = DataSourceNode.CreateArray();
+        node.Add(DataSourceNode.CreateString("NaN"));
+        Assert.Throws<InvalidOperationException>(() => new SingleArrayDataSourceConverter().Read(node));
+    }
+
+    [Fact]
+    public void DoubleArrayConverter_Read_RejectsNonFiniteElement()
+    {
+        var node = DataSourceNode.CreateArray();
+        node.Add(DataSourceNode.CreateString("1e999"));
+        Assert.Throws<InvalidOperationException>(() => new DoubleArrayDataSourceConverter().Read(node));
+    }
+
     [Fact]
     public void Registry_ReadWrite_ByGenericType()
     {

@@ -66,13 +66,33 @@ function ConvertTo-OrigoVersion {
 }
 
 function Get-OrigoGodotSdkVersion {
-    $csproj = Join-OrigoPath @((Get-OrigoRoot), 'Origo.GodotAdapter', 'Origo.GodotAdapter.csproj')
+    param([string]$ProjectPath = '')
+    if ([string]::IsNullOrWhiteSpace($ProjectPath)) {
+        $csproj = Join-OrigoPath @((Get-OrigoRoot), 'Origo.GodotAdapter', 'Origo.GodotAdapter.csproj')
+    }
+    else {
+        $csproj = $ProjectPath
+    }
     $text = Get-Content -LiteralPath $csproj -Raw
     $match = [regex]::Match($text, 'Godot\.NET\.Sdk/([0-9]+\.[0-9]+\.[0-9]+)')
     if (-not $match.Success) {
         throw "Could not parse Godot.NET.Sdk version from $csproj."
     }
     return $match.Groups[1].Value
+}
+
+function Get-OrigoParentCommit {
+    param(
+        [Parameter(Mandatory = $true)][string]$Commit,
+        [string]$WorkingDirectory = (Get-OrigoRoot)
+    )
+    # Use ~1, not ^: Invoke-OrigoNative routes arguments through cmd.exe, which
+    # consumes an unquoted caret before git sees it.
+    $result = Invoke-OrigoNative -FilePath 'git' -Arguments @('rev-parse', ($Commit + '~1')) -WorkingDirectory $WorkingDirectory -AllowFailure
+    if ($result.ExitCode -ne 0) {
+        return $null
+    }
+    return $result.Output.Trim()
 }
 
 function Initialize-OrigoDotnetEnvironment {

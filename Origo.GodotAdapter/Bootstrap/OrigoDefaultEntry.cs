@@ -46,8 +46,10 @@ public partial class OrigoDefaultEntry : OrigoAutoHost
     /// <summary>
     ///     Called after <see cref="OrigoAutoHost.Runtime" /> is created and before
     ///     <see cref="SndContext.Bootstrap" /> seals strategy registration. Override to
-    ///     register strategies manually, for example when <see cref="AutoDiscoverStrategies" />
-    ///     is disabled or when a strategy type cannot be discovered automatically.
+    ///     register strategies manually. Manual registration requires
+    ///     <see cref="AutoDiscoverStrategies" /> to be disabled: discovery registers
+    ///     every annotated type in the scanned assemblies and rejects the duplicate
+    ///     index, including a type whose constructor cannot be used.
     /// </summary>
     /// <param name="world">The world whose strategy registry is still open for registration.</param>
     protected virtual void ConfigureStrategies(ISndWorldAccess world)

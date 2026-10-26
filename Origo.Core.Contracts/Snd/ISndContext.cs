@@ -33,6 +33,11 @@ public interface ISndContext
     ///     <c>current/</c> working directory. Session and progress quit hooks
     ///     run while their resources are still available. Idempotent; after
     ///     shutdown, bootstrap and persistence mutations (save/load/delete/continue/level-switch) fail explicitly.
+    ///     Throws <see cref="InvalidOperationException" /> when called from a
+    ///     <c>BeforeSave</c> hook (the save workflow owns the session set) or
+    ///     after a level switch has already begun tearing down the foreground;
+    ///     the context rejects that reentrant teardown before mounting or
+    ///     recreating <c>current/</c>.
     /// </summary>
     void Shutdown();
 

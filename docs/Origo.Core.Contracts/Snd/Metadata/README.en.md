@@ -125,7 +125,7 @@ var watcher = new SndMetaFluentBuilder("Watcher")
     .Build();
 ```
 
-Typed Set methods include `SetInt`, `SetFloat`, `SetDouble`, `SetLong`, `SetBool`, `SetString`, and `SetBytes`. `Build()` returns the completed `SndMetaData`.
+Typed Set methods include `SetInt`, `SetFloat`, `SetDouble`, `SetLong`, `SetBool`, `SetString`, and `SetBytes`. Every setter rejects a null, empty, or whitespace key with `ArgumentException`, matching `SetNode` and `AddObserverBinding`: a blank key cannot be retrieved later and would persist an unreachable value. `Build()` returns the completed `SndMetaData`.
 
 ## Design Decisions
 

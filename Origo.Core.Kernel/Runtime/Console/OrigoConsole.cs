@@ -66,10 +66,14 @@ public sealed class OrigoConsole
     ///     command processing is owned by <see cref="OrigoRuntime" />'s frame
     ///     driver so commands always execute in the fixed frame order.
     /// </summary>
+    private const int _maxCommandsPerFrame = 256;
+
     internal void ProcessPending()
     {
-        while (_input.TryDequeueCommand(out var line))
+        var processed = 0;
+        while (processed < _maxCommandsPerFrame && _input.TryDequeueCommand(out var line))
         {
+            processed++;
             if (string.IsNullOrWhiteSpace(line))
                 continue;
 

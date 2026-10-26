@@ -4,7 +4,7 @@
 
 Origo keeps one POSIX script set (`scripts/bash/*.sh`) for Linux/macOS and one
 Windows-native script set (`scripts/powershell/*.ps1`). The two sets implement the
-same gates; neither invokes the other. On Windows, use the PowerShell scripts
+same development gate sequence; neither invokes the other. Shared Python validators and their self-tests run on both; POSIX-only release-tooling self-tests remain Linux-side, and the Windows suite is not a release gate. On Windows, use the PowerShell scripts
 and do not call the Bash scripts from Git Bash.
 
 ## Prerequisites
@@ -13,8 +13,9 @@ and do not call the Bash scripts from Git Bash.
 - [Git for Windows](https://git-scm.com/download/win) for `git` (history and
   tags are required by `api-inventory.ps1` and `lint-commits.ps1`). Git Bash is
   not required and the PowerShell suite never invokes it.
-- Python 3 for `check.ps1`, `lint-scripts.ps1`, and the JavaScript-free
-  documentation guards. The suite resolves `python3`, `python`, or `py -3`.
+- Python 3 for `check.ps1`, `lint-scripts.ps1`, and the shared validators. The
+  suite resolves `python3`, `python`, or `py -3`, and `lint-scripts.ps1` requires
+  `PyYAML` (install with `python -m pip install pyyaml`).
 - Network access on first use for the .NET SDK, the Godot engine archive, and
   NuGet packages.
 

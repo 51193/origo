@@ -204,7 +204,7 @@ Full details: `docs/release-process.en.md`. Pre-tag summary:
 4. Commit all release metadata and documentation changes together.
 5. Run `bash scripts/bash/release-check.sh x.y.z` on that commit (rejects a stale HEAD baseline or a target that is not newer than the latest formal `vx.y.z` tag, then checks a temporary worktree: Changelog block, empty `[Unreleased]`, analyzer tracking, stamped build properties). `docs/README.en.md` refers to the build stamp instead of copying the version.
 6. Run `bash scripts/bash/ci.sh` and `bash scripts/bash/lint-commits.sh` on that commit; amend and rerun if either fails.
-7. Tag `vx.y.z` on the verified commit and push it; a formal tag must point at a commit reachable from `main`, or at the metadata-only release commit from an earlier run. The Release workflow verifies provenance, creates a metadata-only release commit, runs the gates, moves only the tag, and attaches the five packages, the validated source archive, and the docs snapshot to the GitHub Release; `main` is not written. Packages are not pushed to nuget.org.
+7. Tag `vx.y.z` on the verified commit and push it; a formal tag must point at a commit reachable from `main`, or at the metadata-only release commit from an earlier run. The Release workflow verifies provenance, creates a metadata-only release commit, runs the gates, moves only the tag, and attaches the nine release artifacts (five packages, the validated source archive, the docs tar.gz/zip, and `nuget.config`) to the GitHub Release; `main` is not written. Packages are not pushed to nuget.org.
 
 ## 7. Document Index
 

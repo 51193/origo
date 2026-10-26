@@ -853,6 +853,8 @@ public class TypedDataGeneratorTests
     [InlineData("System.Console")]
     [InlineData("System.Collections.Generic.List<>")]
     [InlineData("System.TypedReference")]
+    [InlineData("int?")]
+    [InlineData("System.Nullable<int>")]
     public void Adapter_UnsupportedType_ReportsORIGOSG009(string typeName)
     {
         var output = RunAdapter(
@@ -860,6 +862,7 @@ public class TypedDataGeneratorTests
 
         Assert.True(output.HasGeneratorDiagnostic("ORIGOSG009"));
         Assert.Empty(output.GeneratedSources);
+        Assert.Empty(output.CompileErrors);
     }
 
     [Fact]

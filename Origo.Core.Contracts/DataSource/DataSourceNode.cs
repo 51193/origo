@@ -471,33 +471,50 @@ public sealed class DataSourceNode : IDisposable
     {
         var resultMap = new Dictionary<DataSourceNode, string>();
         var order = new List<DataSourceNode>();
-        var stack = new Stack<DataSourceNode>();
-        stack.Push(this);
+        var active = new HashSet<DataSourceNode>();
+        var done = new HashSet<DataSourceNode>();
+        var stack = new Stack<(DataSourceNode Node, bool Expanded)>();
+        stack.Push((this, false));
 
         while (stack.Count > 0)
         {
-            var node = stack.Pop();
-            node.EnsureExpanded();
-            order.Add(node);
+            var (node, expanded) = stack.Pop();
+            if (expanded)
+            {
+                active.Remove(node);
+                if (done.Add(node))
+                    order.Add(node);
+                continue;
+            }
 
+            if (done.Contains(node))
+                continue;
+            if (!active.Add(node))
+                throw new InvalidOperationException(
+                    "DataSourceNode graph contains a cycle; a node tree must be acyclic. " +
+                    "Cycle detection stops canonical hashing instead of looping or overflowing.");
+
+            node.EnsureExpanded();
+            stack.Push((node, true));
             if (node._kind == DataSourceNodeKind.Map)
             {
                 for (var i = node._orderedKeys.Count - 1; i >= 0; i--)
                 {
                     var key = node._orderedKeys[i];
-                    stack.Push(node._objectChildren[key]);
+                    stack.Push((node._objectChildren[key], false));
                 }
             }
             else if (node._kind == DataSourceNodeKind.Array)
             {
                 for (var i = node._arrayChildren.Count - 1; i >= 0; i--)
-                    stack.Push(node._arrayChildren[i]);
+                    stack.Push((node._arrayChildren[i], false));
             }
         }
 
-        for (var i = order.Count - 1; i >= 0; i--)
+        // Post-order: every child is hashed before its parent. A shared DAG
+        // child is hashed once and reused; only a cycle is rejected.
+        foreach (var node in order)
         {
-            var node = order[i];
             resultMap[node] = node._kind switch
             {
                 DataSourceNodeKind.Map => "O{" + string.Join(",",

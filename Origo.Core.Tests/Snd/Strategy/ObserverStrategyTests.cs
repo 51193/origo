@@ -186,6 +186,35 @@ public class ObserverStrategyTests : IDisposable
     }
 
     [Fact]
+    public void TeardownAllBindingsFor_WhenOneBindingThrows_CleansLaterBindings()
+    {
+        var (observer, ctx, topology) = SetupWithTopology();
+        var factory = new TestNodeFactory();
+        var targetA = ctx.Runtime.SndWorld.CreateEntity(factory, ctx, ctx.Runtime.Logger, topology);
+        var targetB = ctx.Runtime.SndWorld.CreateEntity(factory, ctx, ctx.Runtime.Logger, topology);
+
+        ((IEntityLifecycle)observer).RecoverForLifecycle(CreateMeta("observer"));
+        ((IEntityLifecycle)observer).FireAfterSpawnHooks();
+        ((IEntityLifecycle)targetA).RecoverForLifecycle(CreateMeta("target_a"));
+        ((IEntityLifecycle)targetA).FireAfterSpawnHooks();
+        ((IEntityLifecycle)targetB).RecoverForLifecycle(CreateMeta("target_b"));
+        ((IEntityLifecycle)targetB).FireAfterSpawnHooks();
+
+        observer.MountObserverStrategy(targetA, _throwOnUnmountIdx);
+        observer.MountObserverStrategy(targetB, _selfWatchIdx);
+        SelfWatchObserver.DataChangedCalls.Clear();
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            ((IEntityLifecycle)observer).TeardownObserverBindings());
+        Assert.Contains("OnUnmounted boom", ex.Message);
+
+        // The first failing binding must not abort cleanup of the second one;
+        // a later target data change must not invoke the released strategy.
+        targetB.SetData("character.hp", 10);
+        Assert.Empty(SelfWatchObserver.DataChangedCalls);
+    }
+
+    [Fact]
     public void SessionDestroy_WhenOnUnmountedThrows_PoolReferenceStillReleased()
     {
         var logger = new TestLogger();
@@ -804,6 +833,7 @@ public class ObserverStrategyTests : IDisposable
         runtime.SndWorld.RegisterStrategy(() => new NoDataKeyObserver());
         runtime.SndWorld.RegisterStrategy(() => new MemoryObserver());
         runtime.SndWorld.RegisterStrategy(() => new ThrowOnMountObserver());
+        runtime.SndWorld.RegisterStrategy(() => new ThrowOnUnmountObserver());
         var fs = new TestMemoryFileSystem();
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);

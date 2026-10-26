@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Abstractions.Logging;
@@ -164,20 +165,46 @@ internal sealed class ObserverTopology
 
         RemoveBinding(binding);
 
+        Exception? firstFailure = null;
+        foreach (var (key, wrapper) in binding.DataWrappers)
+        {
+            try
+            {
+                ((ISndEntityRawSubscription)target).UnsubscribeDataRaw(key, wrapper);
+            }
+            catch (Exception ex)
+            {
+                firstFailure ??= ex;
+            }
+        }
+
         try
         {
-            foreach (var (key, wrapper) in binding.DataWrappers)
-                ((ISndEntityRawSubscription)target).UnsubscribeDataRaw(key, wrapper);
-
             binding.Strategy.OnUnmounted(observer, ctx, target);
         }
-        finally
+        catch (Exception ex)
+        {
+            firstFailure ??= ex;
+        }
+
+        try
         {
             // The pool reference must be released even when unsubscription or
             // OnUnmounted throws; the binding is already removed from the
             // topology, so nothing else would release it.
             _pool.ReleaseStrategy(observerIndex);
         }
+        catch (Exception releaseEx)
+        {
+            if (firstFailure is null)
+                throw;
+            throw new AggregateException(
+                "Observer unmount failed and the pool reference could not be released; see inner exceptions.",
+                [firstFailure, releaseEx]);
+        }
+
+        if (firstFailure is not null)
+            ExceptionDispatchInfo.Capture(firstFailure).Throw();
 
         _logger.Log(LogLevel.Debug, nameof(ObserverTopology),
             new LogMessageBuilder()
@@ -240,29 +267,39 @@ internal sealed class ObserverTopology
         if (!_outgoing.TryGetValue(observer.Name, out var list))
             return;
 
+        var failures = new List<Exception>();
         foreach (var binding in list.ToArray())
         {
-            var target = resolveTarget(binding.TargetName);
-            if (target is null)
+            try
             {
-                // The target no longer exists in the scene (it was removed
-                // without going through teardown, or the scene is partially
-                // deserialized). The binding cannot be unmounted normally;
-                // release the pool reference and drop the record. Logged so
-                // the silent drop stays observable.
-                _logger.Log(LogLevel.Debug, nameof(ObserverTopology),
-                    new LogMessageBuilder()
-                        .AddContext("observerName", observer.Name)
-                        .AddContext("targetName", binding.TargetName)
-                        .AddContext("observerIndex", binding.ObserverIndex)
-                        .Build("Observer binding removed because its target is no longer resolvable."));
-                _pool.ReleaseStrategy(binding.ObserverIndex);
-                RemoveBinding(binding);
-                continue;
-            }
+                var target = resolveTarget(binding.TargetName);
+                if (target is null)
+                {
+                    // The target no longer exists in the scene (it was removed
+                    // without going through teardown, or the scene is partially
+                    // deserialized). The binding cannot be unmounted normally;
+                    // release the pool reference and drop the record. Logged so
+                    // the silent drop stays observable.
+                    _logger.Log(LogLevel.Debug, nameof(ObserverTopology),
+                        new LogMessageBuilder()
+                            .AddContext("observerName", observer.Name)
+                            .AddContext("targetName", binding.TargetName)
+                            .AddContext("observerIndex", binding.ObserverIndex)
+                            .Build("Observer binding removed because its target is no longer resolvable."));
+                    _pool.ReleaseStrategy(binding.ObserverIndex);
+                    RemoveBinding(binding);
+                    continue;
+                }
 
-            Unmount(observer, target, binding.ObserverIndex);
+                Unmount(observer, target, binding.ObserverIndex);
+            }
+            catch (Exception ex)
+            {
+                failures.Add(ex);
+            }
         }
+
+        ThrowCollectedFailures(failures);
     }
 
     internal void TeardownAllBindingsFor(ISndEntity observer)
@@ -272,18 +309,28 @@ internal sealed class ObserverTopology
             return;
 
         var ctx = RequireContext();
+        var failures = new List<Exception>();
         foreach (var binding in list.ToArray())
         {
-            RemoveBinding(binding);
+            try
+            {
+                RemoveBinding(binding);
 
-            if (binding.TargetEntity is not null)
-                binding.FullCleanup(observer, ctx, _pool);
-            else
-                throw new InvalidOperationException(
-                    $"Observer binding '{binding.ObserverIndex}' -> '{binding.TargetName}' " +
-                    "has no TargetEntity reference. This is a framework invariant violation — " +
-                    "all live bindings must store a TargetEntity reference.");
+                if (binding.TargetEntity is not null)
+                    binding.FullCleanup(observer, ctx, _pool);
+                else
+                    throw new InvalidOperationException(
+                        $"Observer binding '{binding.ObserverIndex}' -> '{binding.TargetName}' " +
+                        "has no TargetEntity reference. This is a framework invariant violation — " +
+                        "all live bindings must store a TargetEntity reference.");
+            }
+            catch (Exception ex)
+            {
+                failures.Add(ex);
+            }
         }
+
+        ThrowCollectedFailures(failures);
     }
 
     /// <summary>
@@ -306,21 +353,31 @@ internal sealed class ObserverTopology
             return;
 
         var ctx = RequireContext();
+        var failures = new List<Exception>();
         foreach (var binding in list.ToArray())
         {
             if (!string.Equals(binding.TargetName, targetName, StringComparison.Ordinal))
                 continue;
 
-            RemoveBinding(binding);
+            try
+            {
+                RemoveBinding(binding);
 
-            if (binding.TargetEntity is not null)
-                binding.FullCleanup(observer, ctx, _pool);
-            else
-                throw new InvalidOperationException(
-                    $"Observer binding '{binding.ObserverIndex}' -> '{binding.TargetName}' " +
-                    "has no TargetEntity reference for cleanup. " +
-                    "Bindings recovered from serialization require a scene host to resolve the target.");
+                if (binding.TargetEntity is not null)
+                    binding.FullCleanup(observer, ctx, _pool);
+                else
+                    throw new InvalidOperationException(
+                        $"Observer binding '{binding.ObserverIndex}' -> '{binding.TargetName}' " +
+                        "has no TargetEntity reference for cleanup. " +
+                        "Bindings recovered from serialization require a scene host to resolve the target.");
+            }
+            catch (Exception ex)
+            {
+                failures.Add(ex);
+            }
         }
+
+        ThrowCollectedFailures(failures);
     }
 
     internal IReadOnlyList<StrategyMetaData.ObserverBinding> BuildBindingsFor(string observerName)
@@ -335,6 +392,17 @@ internal sealed class ObserverTopology
                 Target = g.Key,
                 ObserverIndices = [.. g.Select(b => b.ObserverIndex)]
             })];
+    }
+
+    private static void ThrowCollectedFailures(List<Exception> failures)
+    {
+        if (failures.Count == 0)
+            return;
+        if (failures.Count == 1)
+            ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        throw new AggregateException(
+            $"Observer teardown completed with {failures.Count} failures; later bindings were still cleaned up.",
+            failures);
     }
 
     private ISndContext RequireContext()

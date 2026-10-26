@@ -10,7 +10,7 @@ A TCP remote console bridge server. Allows connecting via telnet/nc (default por
 
 | File | Responsibility |
 |------|------|
-| `ConsoleBridgeOptions.cs` | Configuration options: port number (default 9876), output send timeout, and loopback-only behavior |
+| `ConsoleBridgeOptions.cs` | Configuration options: port number (default 9876), output send timeout, maximum input line length (default 8192), and loopback-only behavior |
 | `ConsoleBridgeServer.cs` | TCP console bridge: internal async I/O for accepting connections and reading commands |
 
 ## Architecture
@@ -23,8 +23,9 @@ telnet client ──TCP:9876──> ConsoleBridgeServer
 ```
 
 **Threading model**:
-- **Async I/O**: `AcceptTcpClientAsync` and `ReadLineAsync` run on the ThreadPool without occupying dedicated threads. CancellationToken replaces `Monitor.Wait` polling and `ReceiveTimeout`, enabling immediate cancellation response.
+- **Async I/O**: `AcceptTcpClientAsync` and the bounded line reader run on the ThreadPool without occupying dedicated threads. CancellationToken replaces `Monitor.Wait` polling and `ReceiveTimeout`, enabling immediate cancellation response.
 - **Output path is synchronous with a bounded send timeout**: `StreamWriter.WriteLine` in the `OnConsoleOutput` callback remains synchronous — console output involves short kernel calls and does not block under normal consumption. To keep a slow (or stopped-reading) client from filling the TCP send buffer and stalling the game frame thread, every connection gets a **bounded send timeout** (`ConsoleBridgeOptions.OutputSendTimeoutMs`, default 100ms): a single send that stays blocked past the timeout detaches the connection — **the detach actually closes the client connection** (releasing the single connection slot; a dead connection must not occupy it forever, otherwise the buffered lines can never reach a "next connection"), and the undelivered lines stay buffered for replay by the next connection. **The backlog replay (historic lines written when a connection is established) runs on a bounded time budget**: a slow-but-reading client drains each line below the send timeout while the cumulative wait can reach seconds (the game frame thread blocks on the writer lock meanwhile); the replay aborts at the budget (4x the send timeout, clamped to [200ms, 1000ms]) and the remaining lines stay buffered. A single-line write failure (send timeout) ends the connection.
+- **Input is bounded**: `ConsoleBridgeOptions.MaxInputLineLength` (default 8192) caps one newline-less line; a longer line disconnects the client before the reader allocates without bound. The Core `ConsoleInputBuffer` holds at most 4096 pending commands and drops the oldest when full (exposed as `DroppedCommandCount`). `OrigoConsole` executes at most 256 commands per frame, leaving the rest queued for the next frame.
 
 ## Usage
 

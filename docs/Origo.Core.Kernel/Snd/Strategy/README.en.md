@@ -16,5 +16,7 @@ Kernel strategy pool, managers, ordering, and observer topology implementation.
 | `SndStrategyManager.cs` | `internal` per-entity passive strategy container: partial-order frame iteration, hook triggering, and all-or-nothing recovery |
 | `SndStrategyPool.cs` | `internal` ref-counted strategy pool: explicit registration, generic `GetStrategy{TBase}` acquisition, and fail-fast on index/type mismatch |
 
+Observer teardown aggregates per-binding failures: if one binding's `OnUnmounted` or unsubscribe throws, the remaining bindings are still unsubscribed and their pool references released, then the first failure (or an `AggregateException` for several) is rethrown. `Unmount` applies the same rule within one binding.
+
 ---
 [↑ Back to Snd Kernel](../README.en.md)

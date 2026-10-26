@@ -37,7 +37,8 @@ internal sealed partial class ProgressRun : IDisposable
         SystemRuntime systemRuntime,
         ProgressParameters progressParams,
         IStateMachineContext stateMachineContext,
-        ISndContext sndContext)
+        ISndContext sndContext,
+        bool isSyntheticSave = false)
     {
         var watch = Stopwatch.StartNew();
         ArgumentNullException.ThrowIfNull(systemRuntime);
@@ -53,6 +54,7 @@ internal sealed partial class ProgressRun : IDisposable
             _progressRuntime.SndWorld.StrategyPool, stateMachineContext);
         ProgressScope = new RunStateScope(progressBlackboard, progressMachines);
         SaveId = progressParams.SaveId;
+        IsSyntheticSave = isSyntheticSave;
 
         _sessionManager = new SessionManager(
             _progressRuntime,
@@ -77,6 +79,14 @@ internal sealed partial class ProgressRun : IDisposable
     public ISessionManager SessionManager => _sessionManager;
 
     public string SaveId { get; private set; }
+
+    /// <summary>
+    ///     True for the initial-save and main-menu entry runs. Those runs use
+    ///     the internal <c>000</c> working id but have not loaded a runtime
+    ///     save slot, so level mounting must resolve from <c>current/</c> only
+    ///     and must never fall back to a real <c>save_000/</c> snapshot.
+    /// </summary>
+    internal bool IsSyntheticSave { get; }
 
     /// <inheritdoc/>
     public void Dispose()

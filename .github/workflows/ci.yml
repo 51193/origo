@@ -95,6 +95,8 @@ jobs:
   # two platform script sets cannot drift silently.
   windows-powershell:
     runs-on: windows-latest
+    env:
+      ORIGO_BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
 
     steps:
       - uses: actions/checkout@v7
@@ -112,6 +114,9 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install Python validation dependencies
+        run: python -m pip install pyyaml
+
       - uses: actions/cache@v6
         with:
           path: ~/.nuget/packages
@@ -123,6 +128,16 @@ jobs:
         with:
           path: .godot_binary
           key: godot-${{ runner.os }}-${{ hashFiles('Origo.GodotAdapter/Origo.GodotAdapter.csproj') }}
+
+      - name: Reject the PowerShell suite on formal release tags
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_REF_NAME}" != *-* ]]; then
+            echo "Formal tags are released by the Bash release workflow; the Windows PowerShell gate is not a release gate." >&2
+            exit 1
+          fi
 
       - name: Windows PowerShell gates
         shell: cmd

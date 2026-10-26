@@ -97,6 +97,26 @@ grep -q "Release metadata verification PASSED for 0.1.0." <<<"$POSITIVE_OUTPUT" 
     || FAIL "formal release fixture did not pass:
 $POSITIVE_OUTPUT"
 
+# The release workflow stages the trusted verifier at
+# <repo>/.release-validators/scripts/verify-release.sh. The verifier derives the
+# repository root two directories above its own location, so this exact depth
+# must be exercised; a deeper copy resolves the root to .release-validators and
+# cannot find CHANGELOG.md.
+STAGED_DIR="$FIXTURE/.release-validators/scripts"
+mkdir -p "$STAGED_DIR"
+cp "$ROOT/scripts/bash/verify-release.sh" "$STAGED_DIR/verify-release.sh"
+STAGED_OUTPUT="$(TAG_VERSION=0.1.0 bash "$STAGED_DIR/verify-release.sh")"
+grep -q "Release metadata verification PASSED for 0.1.0." <<<"$STAGED_OUTPUT" \
+    || FAIL "workflow-staged verifier depth did not pass:
+$STAGED_OUTPUT"
+
+DEEP_DIR="$FIXTURE/.release-validators/scripts/bash"
+mkdir -p "$DEEP_DIR"
+cp "$ROOT/scripts/bash/verify-release.sh" "$DEEP_DIR/verify-release.sh"
+if TAG_VERSION=0.1.0 bash "$DEEP_DIR/verify-release.sh" >/dev/null 2>&1; then
+    FAIL "a verifier staged one level too deep must not find the repository root."
+fi
+
 write_props "0.1.1" "0.1.1.0"
 expect_failure "stale <Version>" "Directory.Build.props <Version> is '0.1.1', expected '0.1.0'"
 expect_failure "stale <AssemblyVersion>" "Directory.Build.props <AssemblyVersion> is '0.1.1.0', expected '0.1.0.0'"

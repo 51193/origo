@@ -378,8 +378,11 @@ def _weekly_snapshot_errors(workflow: dict) -> list[str]:
             '"$prerelease" == "true"': (
                 "the weekly check must require a pre-release"
             ),
-            '"$assets" -ge 9': (
-                "the weekly check must require all nine expected snapshot assets"
+            'expected_snapshot_assets': (
+                "the weekly check must compare the exact nine expected snapshot asset names"
+            ),
+            '"$assets" == "$expected"': (
+                "the weekly check must require all nine expected snapshot assets by name"
             ),
             'HTTP 404': (
                 "the weekly check must distinguish a missing release (404) from other API errors"
@@ -668,10 +671,37 @@ def main() -> int:
                     f"TAG={RESOLVED_TAG}."
                 )
             source_run = str(release_steps[source_index].get("run") or "")
-            if "$PWD/.release-validators/scripts/bash/verify-release.sh" not in source_run:
+            if "$PWD/.release-validators/scripts/verify-release.sh" not in source_run:
                 errors.append(
                     "the source-archive validation step must pass the trusted "
-                    "$PWD/.release-validators/scripts/bash/verify-release.sh verifier."
+                    "$PWD/.release-validators/scripts/verify-release.sh verifier."
+                )
+
+        metadata_step = next(
+            (
+                step
+                for step in release_steps
+                if isinstance(step, dict)
+                and step.get("name") == "Verify release metadata"
+            ),
+            None,
+        )
+        if metadata_step is None:
+            errors.append(
+                "release job must define the 'Verify release metadata' step so the "
+                "formal CHANGELOG/analyzer/stamp gate actually runs."
+            )
+        else:
+            metadata_run = str(metadata_step.get("run") or "")
+            if ".release-validators/scripts/verify-release.sh" not in metadata_run:
+                errors.append(
+                    "the metadata verification step must execute the trusted "
+                    ".release-validators/scripts/verify-release.sh verifier."
+                )
+            if "TAG_VERSION=" not in metadata_run:
+                errors.append(
+                    "the metadata verification step must export TAG_VERSION for "
+                    "the trusted verifier."
                 )
 
         push_index = _step_index_with_push(release_steps)
@@ -737,6 +767,17 @@ def main() -> int:
                     "refs/remotes/origin/main so the tag tree cannot replace "
                     "the validator."
                 )
+        if not any(
+            "git show refs/remotes/origin/main:scripts/bash/verify-release.sh "
+            "> .release-validators/scripts/verify-release.sh" in command
+            for command in run_commands
+        ):
+            errors.append(
+                "release job must stage the trusted verifier at "
+                ".release-validators/scripts/verify-release.sh: the verifier "
+                "resolves the repository root as two directories above its own "
+                "path, so a deeper staging directory silently breaks it."
+            )
 
         if not any("cp Directory.Build.props" in command for command in run_commands):
             errors.append(

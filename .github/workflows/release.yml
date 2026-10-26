@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Existing v* tag to release (e.g. v0.0.10-nightly.20260914)'
+        description: 'Existing v* tag to release (e.g. v0.1.1-nightly.20261021)'
         required: true
         type: string
       snapshot:
@@ -30,6 +30,17 @@ jobs:
         with:
           # A dispatched run is based on main; the gate must still test the tag.
           ref: ${{ inputs.tag || github.ref }}
+
+      - name: Verify tag uses the current script layout
+        run: |
+          set -euo pipefail
+          for path in scripts/bash/godot-test.sh scripts/python/write-version-stamp.py; do
+            if [[ ! -e "$path" ]]; then
+              echo "ERROR: tag predates the current script layout (missing $path)." >&2
+              echo "Release tags must use the scripts/bash, scripts/powershell, scripts/python layout." >&2
+              exit 1
+            fi
+          done
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
@@ -70,6 +81,17 @@ jobs:
           # new peeled commit with the original event SHA.
           ref: ${{ inputs.tag || github.ref }}
           fetch-depth: 0
+
+      - name: Verify tag uses the current script layout
+        run: |
+          set -euo pipefail
+          for path in scripts/bash/godot-test.sh scripts/python/write-version-stamp.py; do
+            if [[ ! -e "$path" ]]; then
+              echo "ERROR: tag predates the current script layout (missing $path)." >&2
+              echo "Release tags must use the scripts/bash, scripts/powershell, scripts/python layout." >&2
+              exit 1
+            fi
+          done
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
@@ -139,10 +161,14 @@ jobs:
           # (a tag-triggered workflow still runs the workflow file at the tag;
           # tag creation remains a trusted operation).
           git fetch --force origin "refs/heads/main:refs/remotes/origin/main"
-          mkdir -p .release-validators/scripts/bash
+          # The verifier resolves its repository root as two directories above
+          # its own location, so it must be staged exactly at
+          # <repo>/.release-validators/scripts/verify-release.sh. Staging it one
+          # level deeper makes it look for CHANGELOG.md under .release-validators.
+          mkdir -p .release-validators/scripts
           git show refs/remotes/origin/main:scripts/bash/verify-release-provenance.sh > .release-validators/verify-release-provenance.sh
           git show refs/remotes/origin/main:scripts/bash/validate-release-source.sh > .release-validators/validate-release-source.sh
-          git show refs/remotes/origin/main:scripts/bash/verify-release.sh > .release-validators/scripts/bash/verify-release.sh
+          git show refs/remotes/origin/main:scripts/bash/verify-release.sh > .release-validators/scripts/verify-release.sh
 
       - name: Verify release tag provenance
         env:
@@ -211,7 +237,7 @@ jobs:
           # verify-release.sh reads TAG_VERSION from the environment. Use the
           # copy fetched from main, not the tag tree's verifier.
           export TAG_VERSION="${TAG#v}"
-          bash .release-validators/scripts/bash/verify-release.sh
+          bash .release-validators/scripts/verify-release.sh
 
       - name: Install script lint dependencies
         run: |
@@ -312,7 +338,7 @@ jobs:
           VERSION="${TAG#v}"
           bash .release-validators/validate-release-source.sh \
             "artifacts/origo-source-${VERSION}.tar.gz" "$VERSION" \
-            "$PWD/.release-validators/scripts/bash/verify-release.sh"
+            "$PWD/.release-validators/scripts/verify-release.sh"
 
       - name: Publish release commit to the tag
         env:

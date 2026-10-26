@@ -59,6 +59,48 @@ public class SaveIdempotencyTests
     }
 
     [Fact]
+    public void ComputePayloadHash_CollidingMetaEncodings_DifferentHash()
+    {
+        var a = CreateMinimalPayload("001", "default");
+        a.CustomMeta = new Dictionary<string, string> { ["a"] = "b", ["c"] = "d" };
+        var b = CreateMinimalPayload("001", "default");
+        b.CustomMeta = new Dictionary<string, string> { ["a"] = "bM:c=d" };
+
+        Assert.NotEqual(
+            SavePayloadWriter.ComputePayloadHash(a),
+            SavePayloadWriter.ComputePayloadHash(b));
+
+        var c = CreateMinimalPayload("001", "default");
+        c.CustomMeta = new Dictionary<string, string> { ["a=b"] = "c" };
+        var d = CreateMinimalPayload("001", "default");
+        d.CustomMeta = new Dictionary<string, string> { ["a"] = "b=c" };
+
+        Assert.NotEqual(
+            SavePayloadWriter.ComputePayloadHash(c),
+            SavePayloadWriter.ComputePayloadHash(d));
+    }
+
+    [Fact]
+    public void WriteSavePayloadToCurrentThenSnapshot_CollidingMeta_WritesMeta()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var logger = new TestLogger();
+        var handle = new SaveFileHandle(
+            metaAccess, dataSourceIo, pathResolver, "root", new DefaultSavePathPolicy());
+
+        var first = CreateMinimalPayload("001", "default");
+        first.CustomMeta = new Dictionary<string, string> { ["a"] = "b", ["c"] = "d" };
+        SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, first, "001", logger);
+
+        var second = CreateMinimalPayload("001", "default");
+        second.CustomMeta = new Dictionary<string, string> { ["a"] = "bM:c=d" };
+        SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, second, "001", logger);
+
+        Assert.Contains("bM:c=d", fs.ReadAllText("root/current/meta.map"));
+    }
+
+    [Fact]
     public void ComputePayloadHash_CustomMetaOrder_Independent()
     {
         var a = CreateMinimalPayload("001", "default");

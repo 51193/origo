@@ -61,7 +61,8 @@ internal sealed class CameraViewCommandHandler(IOrigoRuntime runtime) : CommandH
             $"Camera: {camera.Name} | Viewport: {viewportSize.X:F0}x{viewportSize.Y:F0}");
         sb.AppendLine();
 
-        var entityCount = 0;
+        var godotEntityCount = 0;
+        var visibleEntityCount = 0;
         var visibleCount = new NodeCount();
 
         foreach (var entity in entities)
@@ -69,15 +70,16 @@ internal sealed class CameraViewCommandHandler(IOrigoRuntime runtime) : CommandH
             if (entity is not GodotSndEntity godotEntity)
                 continue;
 
+            godotEntityCount++;
             var before = visibleCount.Total;
             WalkAndReport(godotEntity, godotEntity, cameraGlobal, cameraProj,
                 viewportSize, sb, ref visibleCount);
 
             if (visibleCount.Total > before)
-                entityCount++;
+                visibleEntityCount++;
         }
 
-        if (entityCount == 0)
+        if (godotEntityCount == 0)
         {
             outputChannel.Publish("No Godot entities available to view.");
             errorMessage = null;
@@ -93,7 +95,7 @@ internal sealed class CameraViewCommandHandler(IOrigoRuntime runtime) : CommandH
             sb.AppendLine();
             sb.AppendLine(CultureInfo.InvariantCulture,
                 $"{visibleCount.Total} nodes ({visibleCount.ThreeD} 3D, {visibleCount.Ui} UI) "
-                + $"visible from {entityCount} entities.");
+                + $"visible from {visibleEntityCount} entities.");
             outputChannel.Publish(sb.ToString().TrimEnd());
         }
 

@@ -16,6 +16,12 @@ public sealed class TestMemoryFileSystem : IFileSystem
     /// <summary>Number of times <see cref="ReadAllText" /> has been called.</summary>
     public int ReadAllTextCallCount { get; private set; }
 
+    /// <summary>
+    ///     Optional hook invoked before a directory deletion; tests use it to
+    ///     simulate an I/O failure at a specific path.
+    /// </summary>
+    public System.Action<string>? BeforeDeleteDirectory { get; set; }
+
     /// <inheritdoc/>
     public bool Exists(string path) => _inner.Exists(path);
 
@@ -63,7 +69,11 @@ public sealed class TestMemoryFileSystem : IFileSystem
         _inner.Rename(sourcePath, destinationPath);
 
     /// <inheritdoc/>
-    public void DeleteDirectory(string directoryPath) => _inner.DeleteDirectory(directoryPath);
+    public void DeleteDirectory(string directoryPath)
+    {
+        BeforeDeleteDirectory?.Invoke(directoryPath);
+        _inner.DeleteDirectory(directoryPath);
+    }
 
     /// <summary>
     ///     Writes a file, creating any missing parent directories.

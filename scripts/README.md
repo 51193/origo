@@ -13,7 +13,9 @@ the host OS; do not call a script from another platform's directory.
 | Linux / macOS | `bash scripts/bash/ci.sh` | POSIX shell, Bash 3.2+ |
 | Windows | `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\powershell\ci.ps1` | Windows PowerShell 5.1+ |
 
-Both entry points implement the same development gate set. The POSIX scripts
+Both entry points implement the same development gate sequence. Shared Python
+validators and their self-tests run on both; POSIX-only release-tooling self-tests
+remain Linux-side and the Windows suite is not a release gate. The POSIX scripts
 never invoke the PowerShell suite and vice versa.
 
 ## Layout

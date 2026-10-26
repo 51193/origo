@@ -20,5 +20,5 @@ security fixes. No backports are provided for older versions.
 ## Disclosure
 
 Once a fix is ready, it will be released as a patch version with a
-`SECURITY` changelog entry describing the impact and mitigation. Credit will
+`Security` changelog entry describing the impact and mitigation. Credit will
 be given to the reporter unless they request anonymity.

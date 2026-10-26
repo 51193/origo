@@ -152,6 +152,18 @@ if ($failures.Count -gt 0) {
     Write-Host ('BENCHMARK REGRESSION DETECTED - ' + $failures.Count + ' violation(s):')
     foreach ($failure in $failures) { Write-Host $failure }
     Write-Host ''
+
+    # Match the POSIX gate: a throughput-only comparison failure can be a
+    # transient scheduling artifact. Retry once in a fresh process before
+    # failing; allocation failures are deterministic and fail immediately.
+    $allocationFailed = @($failures | Where-Object { $_ -like '*FAIL allocation:*' }).Count -gt 0
+    if ($throughputRegressed -and -not $allocationFailed -and $env:ORIGO_BENCHMARK_RETRY -ne '1') {
+        $env:ORIGO_BENCHMARK_RETRY = '1'
+        Write-Host 'Throughput-only regression; retrying the benchmark once in a fresh process...'
+        & $PSCommandPath @PSBoundParameters
+        exit $LASTEXITCODE
+    }
+
     Write-Host 'If the change is a real improvement or the environment changed, rerun with -UpdateBaseline.'
     throw 'Benchmark regression detected.'
 }

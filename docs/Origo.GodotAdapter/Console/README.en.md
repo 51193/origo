@@ -4,7 +4,7 @@
 
 ## Overview
 
-Console command extensions for the Godot adapter layer. An adapter-layer command handler base class (providing stable runtime access through `IOrigoRuntime`), plus three Godot-specific commands — `press_button` to simulate Button clicks, `tree_debug` to print entity node trees, and `camera_view` to output camera coordinate information.
+Console command extensions for the Godot adapter layer. An adapter-layer command handler base class (providing stable runtime access through `IOrigoRuntime`), plus three Godot-specific commands — `press_button` to simulate Button clicks, `tree_debug` to print entity node trees, and `camera_view` to output camera coordinate information (reporting separately when entities exist but none of their nodes are visible).
 
 ## Files
 
@@ -30,7 +30,7 @@ press_button <entity> <path>
 
 Flow:
 1. `TryResolveGodotEntity` in `CommandHandlerBase` finds the foreground-session entity and verifies that it is a `GodotSndEntity`
-2. Uses `godotEntity.GetNodeOrNull<Button>(path)` to find the Button node
+2. Resolves `godotEntity.GetNodeOrNull<Button>(path)` and requires `godotEntity.IsAncestorOf(button)`; an absolute or `../` path that escapes the entity is rejected
 3. `button.EmitSignal(BaseButton.SignalName.Pressed)` simulates the press
 
 ### TreeDebugCommandHandler
