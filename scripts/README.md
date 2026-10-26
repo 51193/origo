@@ -83,7 +83,9 @@ Rules:
 | `validate-release-source.sh` | Validate the release source archive |
 | `work-identity.sh` | Branch/worktree identity validation |
 | `package-consumer-smoke-lib.sh` | Source-only helpers for the package smoke |
+| `test-api-inventory-parent.sh` | Bash API-inventory parent/metadata-commit regression tests |
 | `test-check-weekly-base.sh` | Weekly snapshot base/version validation |
+| `test-dev-suite.sh` | Bash/PowerShell gate parity, self-test wiring, and script-map guard |
 | `test-dotnet-env.sh` | SDK bootstrap, selection, and installer regression tests |
 | `test-download-godot-deps.sh` | Godot downloader dependency/cache tests |
 | `test-find-previous-api-baseline.sh` | Previous release baseline selection tests |

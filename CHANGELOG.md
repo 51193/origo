@@ -12,6 +12,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Bash development-suite parity gates** — `scripts/bash/test-dev-suite.sh`
+  verifies that `ci.sh` and `ci.ps1` run the same ordered gate sequence, every
+  Bash self-test is wired into `lint-scripts.sh`, the PowerShell lint gate keeps
+  its Bash-free shared checks, and every script appears in the script map.
+  `scripts/bash/test-api-inventory-parent.sh` covers the Bash counterpart of
+  the PowerShell metadata-release parent regression.
 - **Native Windows PowerShell development suite** — `scripts/powershell/` implements the full development gate set without invoking the POSIX scripts: SDK install (`dotnet-install.ps1`), format, shell API baseline and previous-package comparison, build/tests/coverage, benchmarks, Godot headless integration, package consumer smoke, layered `plan`/`quick`/`affected`/`full` checks, and commit lint. `common.ps1` centralizes SDK/Python/Godot resolution and disables MSBuild node reuse for reliable output capture; `ci.ps1` mirrors `scripts/bash/ci.sh`. A dedicated `windows-powershell` CI job verifies the suite alongside the existing Bash Windows job, and [docs/usage/windows-development.en.md](docs/usage/windows-development.en.md) documents prerequisites and usage.
 - **Startup registry hook for persisted system-blackboard types** — `OrigoHostOptions.ConfigureStartupRegistry` and the adapter entry's `ConfigureStartupRegistry` run before `system.json` is read, so a custom type's name mapping and converter are available at startup; an unregistered type now fails with the `system.json` path and hook guidance instead of a bare type-name error. `ConfigureConverters` remains the Bootstrap-time hook for save payload types.
 - **Public shutdown path** — `ISndContext.Shutdown()` stops the active progress run, runs progress/session quit hooks, and deletes the temporary `current/` directory; `OrigoHost.Dispose()`, `GodotSndManager._ExitTree` while the foreground is live, and `OrigoDefaultEntry._ExitTree` (backstop) invoke it. The operation is idempotent and later bootstrap and persistence mutations (save/load/delete/continue/level-switch) fail explicitly.
