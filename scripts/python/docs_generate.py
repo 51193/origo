@@ -133,7 +133,7 @@ def strip_code_fences(text: str) -> str:
 
 def validate_links() -> list[str]:
     errors: list[str] = []
-    markdown_files = [ROOT / "README.md", ROOT / "AGENTS.md", ROOT / "CONTRIBUTING.md"]
+    markdown_files = sorted(ROOT.glob("*.md"))
     markdown_files.extend(sorted((ROOT / "docs").rglob("*.md")))
     for path in markdown_files:
         if not path.is_file():

@@ -65,6 +65,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   documentation gate also validates local links and the contractual integration
   test/type inventories; generated files are committed because the repository
   does not depend on a remote documentation service.
+- **Documentation generation has an explicit maintenance contract** — the
+  pre-commit hook and normal lint gate run the local documentation check;
+  extension rules for generated artifacts, summary documents, checked counts,
+  and source-of-truth updates live in `docs/META.en.md` and
+  `docs/generated/README.en.md`.
 - **BREAKING: repository scripts are grouped by implementation language** — POSIX scripts live under `scripts/bash/`, the Windows PowerShell suite under `scripts/powershell/`, and cross-platform Python helpers under `scripts/python/`; `scripts/README.md` is the gate and directory map. Entry points are now `bash scripts/bash/ci.sh` and `powershell -File scripts/powershell/ci.ps1`. Automation that invoked the old `scripts/*.sh`, `scripts/*.py` paths must update; no compatibility wrappers are provided.
 - **BREAKING: save and level IDs are lowercase, path-safe identifiers** — IDs must use lowercase ASCII letters, digits, `.`, `_`, and `-`, must not be dot-only, and must not end with `.`. Save/level IDs are directory names, so `Foo`/`foo` and `foo`/`foo.` alias the same directory on default Windows/macOS file systems; the previous ordinal checks could overwrite a slot, bypass active-save deletion protection, or lose a level. Legacy mixed-case or trailing-dot slots are detected and rejected with a rename instruction rather than silently merged. Rename existing IDs before upgrading.
 - **Hyphenated release tags are always pre-releases** — the Release workflow

@@ -17,12 +17,12 @@ can focus on what the game *is* rather than how its runtime is wired.
 
 ## Documentation
 
-- [Manual](docs/README.en.md) — audience paths, module index, and documentation rules.
-- [Capabilities](docs/usage/capabilities.en.md) — what the framework provides.
-- [Architecture](docs/architecture/overview.en.md) — runtime and layer design.
-- [Agent workflow](AGENTS.md) — repository development rules for agents.
-- [Contributing](CONTRIBUTING.md) — development setup and contribution loop.
+- [Manual](https://github.com/51193/origo/blob/main/docs/README.en.md) — audience paths, module index, and documentation rules.
+- [Capabilities](https://github.com/51193/origo/blob/main/docs/usage/capabilities.en.md) — what the framework provides.
+- [Architecture](https://github.com/51193/origo/blob/main/docs/architecture/overview.en.md) — runtime and layer design.
+- [Agent workflow](https://github.com/51193/origo/blob/main/AGENTS.md) — repository development rules for agents.
+- [Contributing](https://github.com/51193/origo/blob/main/CONTRIBUTING.md) — development setup and contribution loop.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](https://github.com/51193/origo/blob/main/LICENSE).
