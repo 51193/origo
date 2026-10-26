@@ -202,7 +202,8 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `UsingStatement_DisposesAfterScope` | using scope exit | Access outside scope throws ObjectDisposedException |
 | `Dispose_DeeplyNestedTree_DoesNotStackOverflow` | 2000-level nested tree Dispose | No stack overflow |
 | `ComputeSha256Hash_DeeplyNestedTree_DoesNotStackOverflow` | 2000-level nested tree ComputeSha256Hash | No stack overflow, returns non-empty hash |
-| `DeeplyNestedTree_At10000Depth_BuildsHashesAndDisposes` | 10,000-level nested tree build, hash, and Dispose | Completes, returns a non-empty hash, and does not stack-overflow |
+| `DeeplyNestedTree_At10000Depth_BuildsHashesAndDisposes` | 10,000-level nested tree build, hash, and Dispose | Completes, returns a non-empty hash, and does not stack-overflow; child canonical strings are released after their last parent |
+| `ComputeSha256Hash_SharedChild_StableAndDoesNotThrow` | A shared acyclic child appears under two parents | Hashing is stable, does not throw, and does not release the shared child early |
 
 ## DataSourceNodeSha256Tests Details
 

@@ -346,16 +346,11 @@ public sealed class ConsoleBridgeServer : IDisposable
                 return builder.Length == 0 ? null : builder.ToString();
 
             var ch = one[0];
-            if (ch == '\r')
-            {
-                // Treat CR and CRLF as one line terminator. Peek does not
-                // consume the LF, so a lone CR still ends the line and the
-                // next read starts at the following character.
-                if (reader.Peek() == '\n')
-                    await reader.ReadAsync(one.AsMemory(0, 1), ct).ConfigureAwait(false);
-                return builder.ToString();
-            }
-            if (ch == '\n')
+            if (ch == '\r' || ch == '\n')
+                // A lone CR must dispatch immediately; Peek would block on a
+                // TCP stream until another byte arrives. With CRLF the LF is
+                // read as an empty line on the next call and ignored by the
+                // input buffer.
                 return builder.ToString();
 
             if (builder.Length >= _options.MaxInputLineLength)

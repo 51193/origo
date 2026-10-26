@@ -146,7 +146,17 @@ internal sealed partial class ProgressRun
 
             PersistForegroundLevelState();
             PersistAndDestroyBackgroundIfExists(newLevelId);
-            ResetForeground(true);
+
+            var context = _owner._progressRuntime.SndContext as SndContext;
+            context?.BeginSwitchTeardown();
+            try
+            {
+                ResetForeground(true);
+            }
+            finally
+            {
+                context?.EndSwitchTeardown();
+            }
 
             // A BeforeQuit hook may have requested shutdown while the old
             // foreground was being disposed. Do not mount a new foreground or

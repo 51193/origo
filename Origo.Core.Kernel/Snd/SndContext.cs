@@ -45,6 +45,7 @@ public sealed class SndContext : ISndContext
     private bool _shutdownCleanupPending;
     private bool _shutdownRetryCurrentDelete;
     private bool _shutdownInProgress;
+    private bool _switchTeardownInProgress;
     private bool _bootstrapCompleted;
     private readonly SndContextParameters _parameters;
     internal int _pendingPersistenceRequests;
@@ -173,6 +174,10 @@ public sealed class SndContext : ISndContext
         // cleanup failure, keeps the retry record.
         if (_shutdownInProgress)
             return;
+
+        if (_switchTeardownInProgress)
+            throw new InvalidOperationException(
+                "SndContext.Shutdown cannot run while a level switch is tearing down the foreground.");
 
         // A BeforeSave hook runs inside the session-mutation guard. Tearing the
         // progress run down here would remove sessions/current while the save
@@ -658,6 +663,10 @@ public sealed class SndContext : ISndContext
             EndWorkflow();
         }
     }
+
+    internal void BeginSwitchTeardown() => _switchTeardownInProgress = true;
+
+    internal void EndSwitchTeardown() => _switchTeardownInProgress = false;
 
     internal void ThrowIfShutdown()
     {

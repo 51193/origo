@@ -156,6 +156,25 @@ public class ConsoleBridgeServerCommunicationTests
     }
 
     [Fact]
+    public void ClientSendCommand_LoneCr_DispatchesImmediately()
+    {
+        var (server, (input, _)) = ConsoleBridgeTestInfrastructure.CreateStartedServer();
+        using var client = new TcpClient();
+        client.Connect(IPAddress.Loopback, server.ActualPort);
+        using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
+
+        writer.Write("help\r");
+
+        string? cmd = null;
+        var ok = ConsoleBridgeTestInfrastructure.SpinUntil(
+            () => input.TryDequeueCommand(out cmd), ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
+        Assert.True(ok, "A lone CR must terminate the line without waiting for another byte.");
+        Assert.Equal("help", cmd);
+
+        server.Dispose();
+    }
+
+    [Fact]
     public void ClientSendCommand_Unicode_Arrives()
     {
         var (server, (input, _)) = ConsoleBridgeTestInfrastructure.CreateStartedServer();

@@ -2,11 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Origo.Core.Abstractions.Console;
+using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Runtime;
 using Origo.Core.Serialization;
 using Origo.Core.Runtime.Console;
 using Origo.Core.Save;
 using Origo.Core.Snd;
+using Origo.Core.Snd.Metadata;
+using Origo.Core.Snd.Strategy;
 using Xunit;
 
 namespace Origo.Core.Tests;

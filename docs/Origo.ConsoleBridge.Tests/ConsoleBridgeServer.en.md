@@ -45,6 +45,7 @@ Verifies the complete TCP bridge behavior of ConsoleBridgeServer. Most integrati
 | `ClientSendCommand_LongLine_Arrives` | 4096-character long command arrives correctly | console-commands |
 | `ClientSendCommand_LineOverConfiguredLimit_IsRejected` | A line over `MaxInputLineLength` closes the connection without enqueuing a command | console-commands |
 | `ClientSendCommand_CrlfAtExactLimit_Arrives` | An exact-limit line terminated by CRLF is accepted; the terminator is not counted | console-commands |
+| `ClientSendCommand_LoneCr_DispatchesImmediately` | A lone CR terminates and dispatches the line without waiting for another byte | console-commands |
 | `ClientSendCommand_Unicode_Arrives` | "héllo 世界 🌍" Unicode command arrives | console-commands |
 | `ClientSendCommand_LeadingAndTrailingWhitespace_Trimmed` | "  \t  hello  \t  " → "hello" | console-commands |
 | `BlankLines_AreNotEnqueued` | Blank lines not enqueued | console-commands |
@@ -135,6 +136,7 @@ Verifies the complete TCP bridge behavior of ConsoleBridgeServer. Most integrati
 | Test Method | Triggered Error | Expected Behavior |
 |------------|-----------------|-------------------|
 | `Start_AfterDispose_ThrowsObjectDisposed` | Start called after Dispose | ObjectDisposedException |
+| `Start_MaxInputLineLengthNonPositive_Throws` | `MaxInputLineLength = 0` | `Start()` throws `ArgumentOutOfRangeException` |
 | `Start_Failure_RollsBackAndAllowsRetry` | Invalid port (-1) makes Start fail | Throws and rolls back the started flag; retry succeeds after fixing the port |
 | `Start_PortInUse_RollsBackListenerAndAllowsRetryAfterRelease` | Port in use makes Start fail | SocketException, listener and output subscription fully rolled back; retry succeeds after the port is released |
 

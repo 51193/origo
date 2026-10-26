@@ -65,8 +65,8 @@ They drive the stable Contracts entry surface (`OrigoHost`, `ISndContext`, `ISes
 | `AdapterHostKernelPort_ShouldRejectMissingFileSystem` | `OrigoHostOptions.FileSystem` is null | `InvalidOperationException`; no silent fallback to an empty file system |
 | `OrigoHost_ShouldFailFastWhenRegisteringConsoleHandlerWithoutConsoleChannels` | Registering a custom command without either console channel, or with a null handler | `InvalidOperationException` / `ArgumentNullException`; handler is never silently dropped |
 | `Create_WithoutOptions_Throws` | Either option record is null at the shared context-parameters factory | `ArgumentNullException` for `OrigoHostOptions` and `AdapterContextOptions` alike |
-
 | `SystemBlackboard_CustomType_RoundTripsAcrossHostRecreation` | Custom `StartupSettings` type registered in `ConfigureStartupRegistry`, written to system blackboard, host recreated | Value reloads without a startup exception |
+
 ## Test Support Strategies
 
 | Strategy | Purpose |

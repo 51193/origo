@@ -381,6 +381,9 @@ def _weekly_snapshot_errors(workflow: dict) -> list[str]:
             'expected_snapshot_assets': (
                 "the weekly check must compare the exact nine expected snapshot asset names"
             ),
+            'LC_ALL=C sort': (
+                "the weekly check must sort asset names in a locale-independent order"
+            ),
             '"$assets" == "$expected"': (
                 "the weekly check must require all nine expected snapshot assets by name"
             ),

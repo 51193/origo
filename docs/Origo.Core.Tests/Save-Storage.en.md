@@ -281,7 +281,7 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | `ComputePayloadHash_CollidingMetaEncodings_DifferentHash` | Distinct maps with delimiter-like keys/values do not collide | SavePayloadWriter |
 | `ComputePayloadHash_UnpairedSurrogateMeta_ThrowsInsteadOfColliding` | A lone UTF-16 surrogate is rejected instead of hashing as U+FFFD | SavePayloadWriter |
 | `WriteSavePayloadToCurrentThenSnapshot_CollidingMeta_WritesMeta` | A colliding metadata shape is written, not idempotent-skipped | SaveStorageFacade |
-| `SaveStorageFacade_DeleteSave_BackupDeleteFailure_DoesNotResurrectSlot` | A failed backup delete leaves the real slot intact and no recovery candidate | SaveStorageFacade.DeleteSave |
+| `SaveStorageFacade_DeleteSave_BackupDeleteFailure_DoesNotResurrectSlot` | A failed backup delete leaves the real slot intact; the unremoved backup is not promoted while the real slot exists, so the deleted slot cannot be resurrected | SaveStorageFacade.DeleteSave |
 | `ComputePayloadHash_LevelOrder_Independent` | Levels dictionary key order does not affect Hash | SavePayloadWriter |
 | `WriteToCurrent_CreatesPayloadShaFile` | WriteToCurrent writes .payload.sha file | SavePayloadWriter |
 | `WriteSavePayloadToCurrentThenSnapshot_SamePayloadTwice_SecondSkips` | Same Payload second write skipped, current/ not rebuilt | persistence-flow: Idempotent |
