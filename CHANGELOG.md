@@ -12,6 +12,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Dedicated Bash development-suite CI job** — the paired `bash-checks`/
+  `powershell-checks` and `bash-lint`/`powershell-lint` CI jobs run the Bash
+  and PowerShell suites side by side. The parity gate fails if any of the four
+  dedicated CI jobs disappears.
 - **Bash development-suite parity gates** — `scripts/bash/test-dev-suite.sh`
   verifies that `ci.sh` and `ci.ps1` run the same ordered gate sequence, every
   Bash self-test is wired into `lint-scripts.sh`, the PowerShell lint gate keeps

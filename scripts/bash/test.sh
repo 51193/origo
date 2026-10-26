@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # CI step: build + test with Coverlet line coverage gates.
 # Mirrors the "CI — build, tests, line coverage gates" step of the GitHub
-# Actions build-and-test job (restore -> build -> test, Coverlet enforced).
+# Actions bash-build-and-test job (restore -> build -> test, Coverlet enforced).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"

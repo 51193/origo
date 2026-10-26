@@ -78,6 +78,13 @@ if grep -Eq '^[[:space:]]*(bash|sh)[[:space:]]' <<<"$powershell_lint_active"; th
     FAIL "PowerShell lint gate must not invoke a shell command."
 fi
 
+# The GitHub CI must expose the dedicated Bash parity check alongside the
+# native PowerShell job; otherwise a local-only gate could silently disappear.
+for job in bash-lint bash-checks powershell-lint powershell-checks; do
+    grep -Eq "^[[:space:]]*${job}:" .github/workflows/ci.yml \
+        || FAIL "GitHub CI is missing required job: $job"
+done
+
 # Every Bash, PowerShell, and Python script must appear as a table row in
 # the script map.
 for script in scripts/bash/*.sh scripts/powershell/*.ps1 scripts/python/*.py; do
