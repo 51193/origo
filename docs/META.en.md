@@ -52,8 +52,10 @@
 `docs/` is a hand-maintained English manual co-located with the source tree.
 English documentation is the single maintained language for this manual.
 Each module entry explains its responsibility, public surface, design decisions,
-and relevant usage or test guidance. There are no generated navigation hubs,
-language-pair metadata headers, revision files, or synchronization commands.
+and relevant usage or test guidance. There are no generated navigation hubs, language-pair metadata headers, or
+revision files. The only generated documentation is the committed shell API
+reference under `docs/generated/`; it is produced from the tracked API baseline
+and checked by a local gate.
 
 When source structure, public interfaces, configuration, or design intent
 changes, update the affected English entries and their links in the same
@@ -337,9 +339,22 @@ checks the stamped build properties, not a second documentation literal.
 
 ## Generation
 
-The manual files are hand-written after analyzing source code. Quality depends
-on correct understanding of the source code and the maintainer's design
+Narrative documentation is hand-written after analyzing source code. Quality
+depends on correct understanding of the source code and the maintainer's design
 knowledge. If discrepancies are found, report to the manual maintainer.
+
+Public shell signatures are generated locally from
+`tools/ApiInventoryTool/shell-api-baseline.json`:
+
+```bash
+bash scripts/bash/docs.sh generate
+bash scripts/bash/docs.sh check
+```
+
+The generated file is committed so documentation remains available without a
+remote generation service. `docs.sh check` also validates local Markdown links.
+`scripts/bash/test-docs.sh` runs the check in the normal local lint gate; do not
+edit generated files by hand.
 
 ---
 [↑ Back to Origo Manual](README.en.md)

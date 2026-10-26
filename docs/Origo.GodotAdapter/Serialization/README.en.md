@@ -4,16 +4,16 @@
 
 ## Overview
 
-Registration of Godot engine types in the Origo serialization system. Adds support for 14 Godot built-in types to Core's `TypeStringMapping` and `DataSourceConverterRegistry`, enabling engine types like `Vector2`, `Vector3`, `Color`, `Transform3D`, etc. to be correctly serialized/deserialized in save JSON.
+Registration of Godot engine types in the Origo serialization system. Adds support for the registered Godot engine types to Core's `TypeStringMapping` and `DataSourceConverterRegistry`, enabling engine types like `Vector2`, `Vector3`, `Color`, `Transform3D`, etc. to be correctly serialized/deserialized in save JSON.
 
-Additionally, Origo.GodotAdapter registers these 14 types with the TypedData multi-layer inlining system via `[assembly: SndInlineTypes(startKind: 128, ...)]`, so that runtime `GetKindForType(typeof(Vector3))` returns a deterministic kind value (130), avoiding fallback to the `is T` runtime pattern-matching path. See [Origo.SourceGeneration](../../Origo.SourceGeneration/README.en.md) for details.
+Additionally, Origo.GodotAdapter registers these engine types with the TypedData multi-layer inlining system via `[assembly: SndInlineTypes(startKind: 128, ...)]`, so that runtime `GetKindForType(typeof(Vector3))` returns a deterministic kind value (130), avoiding fallback to the `is T` runtime pattern-matching path. See [Origo.SourceGeneration](../../Origo.SourceGeneration/README.en.md) for details.
 
 ## Files
 
 | File | Responsibility |
 |------|------|
-| `GodotEngineTypeNames.cs` | Stable string constants for 14 Godot engine types |
-| `GodotDataSourceConverters.cs` | DataSourceConverter implementations for 14 Godot types |
+| `GodotEngineTypeNames.cs` | Stable string constants for the registered Godot engine types |
+| `GodotDataSourceConverters.cs` | DataSourceConverter implementations for the registered Godot types |
 | `GodotJsonConverterRegistry.cs` | One-stop registration methods: RegisterTypeMappings + RegisterDataSourceConverters |
 
 ## Supported Godot Types

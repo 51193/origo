@@ -1,129 +1,102 @@
 # Origo Manual
 
-The complete documentation manual for the Origo framework. Uses a **bottom-up** structure — aggregating upward from source code directories level by level, ensuring any question can reach its target via multi-level directory indexing without reading source code from scratch.
+This is the entry point to the Origo documentation. Origo is a lightweight,
+engine-agnostic C# game framework whose goal is an RPG Maker-style workflow:
+define game content and scenes, and let the framework own orchestration and
+persistence.
 
-> **Development Loop (mandatory order)**: every change must follow the mandatory ordered loop owned by [AGENTS.md — Development Loop](../AGENTS.md#2-development-loop-mandatory-order); do not skip or rearrange its steps.
-> Before modifying source code, you must read the documentation of its upstream, downstream, and related facilities. Never misdiagnose cross-module collaborative design as defects. Full guidelines and document master index at repo root [AGENTS.md](../AGENTS.md).
+## Choose a path
 
-## Design Principles
+| You are... | Start with |
+|---|---|
+| Evaluating Origo | [Capabilities](usage/capabilities.en.md) and [Architecture Overview](architecture/overview.en.md) |
+| Building a game | [Usage Documentation](usage/README.en.md), then the [SND Entity Model](usage/snd-entity-model.en.md) |
+| Using an AI agent | [Agent Workflow](../AGENTS.md), [Agent Reference](usage/agent-reference.en.md), and the [generated contract API](generated/contract-api.en.md) |
+| Maintaining the framework | [Contributing](../CONTRIBUTING.md), [META](META.en.md), and [Release Process](release-process.en.md) |
+| Looking for a specific module | [Project Module Index](#project-module-index) |
 
-The Origo framework follows these core design constraints; all module implementations and interface designs are guided by them:
+A runnable game demo and a getting-started walkthrough are intentionally not
+published yet; the demo is still being built. Until then, use the capability
+map, architecture documents, and the tested
+[package-consumer fixture](usage/shell-package-consumer.en.md) rather than a
+placeholder quick start.
 
-| Principle | Description |
-|-----------|-------------|
-| **Platform-agnostic** | Origo.Core has zero engine dependencies. All game logic, persistence, and entity models use only `System.*` types |
-| **Adapter-layer isolation** | Engine integration is exclusively through `Origo.GodotAdapter` implementing Core abstraction interfaces. The adapter layer must not fire strategy hooks, manage strategy lifecycles, flush deferred pipelines, or hold Core orchestration state |
-| **Interface Segregation (ISP)** | `ISndContext` exposes 10 companion properties (9 Snd role interfaces + `IStateMachineContext`); `ISessionRun` returns an abstract `IStateMachineContainer` rather than a concrete type |
-| **Unidirectional dependency** | `Origo.GodotAdapter` → `Origo.Core` → `Origo.Core.Kernel` → `Origo.Core.Contracts`, with `Origo.ConsoleBridge` → `Origo.Core.Contracts`; reverse dependencies are strictly forbidden |
-| **public whitelist** | Do not expose interfaces preemptively for "maybe useful in the future"; every public interface must have a clear cross-assembly consumer |
-| **Explicit failure first** | Throw exceptions rather than silent degradation when interface contracts are violated; save/load strictly validate integrity |
-| **Strategy as first-class citizen** | Game logic is strategy-driven; `ISndContext` is the full-capability facade whose 10 segregated companion properties expose every framework capability to strategies without restricting what a strategy can access |
-| **Single-threaded frame model** | One frame = one logical atomic boundary; deferred actions are executed sequentially via queues |
-| **Single access path** | Every capability must have exactly one external access path. Any object or method that can simulate a dedicated interface must be sealed `internal`. Callers must not hand-stitch low-level operations to bypass interface encapsulation (which would skip the orchestrated side effects within the interface, making bugs extremely hard to diagnose) |
+## What Origo owns
 
-## How to Use This Manual
+- **Runtime orchestration**: frame driving, deferred queues, startup, and
+  shutdown.
+- **Entity lifecycle**: spawn, load, add/remove, kill, save, quit, and dead
+  transitions, with strategy hooks in one orchestrated path.
+- **Sessions**: foreground and background sessions with one lifecycle model.
+- **Persistence**: the `current/` workspace, snapshot slots, strict reads, and
+  interruption recovery.
+- **Engine boundary**: a contract layer plus the official Godot adapter; the
+  Core layer does not depend on an engine.
 
-```
-Root (this file)
-  ├── I need to know "what capabilities the framework provides overall"
-  │   └── usage/capabilities.en.md → browse all capabilities by functional domain
-  │
-  ├── I need to know "how to use Origo"
-  │   └── usage/README.en.md → choose docs by scenario
-  │
-  ├── I need to know "a module's capabilities and design decisions"
-  │   ├── Origo.Core/README.en.md → subsystem overview → dive into specific sub-modules
-  │   │   └── Snd/README.en.md → Entity/README.en.md → ...
-  │   ├── Origo.GodotAdapter/README.en.md → adapter layer sub-modules
-  │   └── Origo.ConsoleBridge/README.en.md → TCP bridge
-  │
-  ├── I need to know "what capabilities are covered by tests"
-  │   ├── Origo.Core.Tests/README.en.md → view Core tests by capability
-  │   ├── Origo.GodotAdapter.Tests/README.en.md → adapter layer capability documents
-  │   ├── Origo.ConsoleBridge.Tests/README.en.md → TCP bridge tests
-  │   └── Origo.SourceGeneration.Tests/README.en.md → source generator tests
-  │
-  └── I need to know "how this manual itself is maintained"
-      └── META.en.md
-```
+Game code supplies strategies, scene/data content, and entry configuration.
+The framework does not require game code to duplicate its runtime wiring.
 
-Each module directory's English entry contains:
-- **Sub-module links** (downward navigation)
-- **Parent module link** (upward navigation, marked `↑`)
-- **Related module links** (horizontal associations, marked `↔`)
+## Documentation map
+
+| Area | Entry |
+|---|---|
+| Usage and task guides | [usage/README](usage/README.en.md) |
+| Complete capability map | [usage/capabilities](usage/capabilities.en.md) |
+| Architecture and decisions | [architecture/README](architecture/README.en.md) |
+| Runtime, SND, save, and console internals | [Project Module Index](#project-module-index) |
+| Tests and their capabilities | [Test documentation](#test-documentation) |
+| Repository rules | [AGENTS.md](../AGENTS.md) |
+| Documentation maintenance | [META](META.en.md) |
+| Release and Changelog | [release-process](release-process.en.md) |
+| Performance baselines | [benchmarks/README](benchmarks/README.en.md) |
+| Generated shell contract API | [generated/contract-api](generated/contract-api.en.md) |
 
 ## Project Module Index
 
-| Module | Location | Description |
-|--------|----------|-------------|
-| **Origo.Core.Contracts** | [README](Origo.Core.Contracts/README.en.md) | Stable consumer contracts, pure data, strategy bases, metadata, data-source contracts, logging abstractions, and shared pure helpers |
-| **Origo.Core.Kernel** | [README](Origo.Core.Kernel/README.en.md) | Kernel implementation: runtime/SND/persistence/data-source/console, scheduling, noise, and internal kernel-shell ports |
-| **Origo.Core** | [README](Origo.Core/README.en.md) | Consumer shell: OrigoHost facade, grid/random utilities, and SND extension helpers |
-| **Origo.SourceGeneration** | [README](Origo.SourceGeneration/README.en.md) | Roslyn incremental source generator: TypedData multi-layer inline storage + strongly-typed accessors |
-| **Origo.GodotAdapter** | [README](Origo.GodotAdapter/README.en.md) | Godot 4 adapter layer: file system, logging, serialization, bootstrap |
-| **Origo.ConsoleBridge** | [README](Origo.ConsoleBridge/README.en.md) | TCP remote console bridge (port 9876) |
-| **Usage Docs** | [README](usage/README.en.md) | Usage guide from quick start to deep reference |
-| **Tests: Core** | [README](Origo.Core.Tests/README.en.md) | Behavioral test documentation for Core layer capabilities |
-| **Tests: GodotAdapter** | [README](Origo.GodotAdapter.Tests/README.en.md) | Adapter layer unit-test capability documents and engine-independent behavior |
-| **Tests: ConsoleBridge** | [README](Origo.ConsoleBridge.Tests/README.en.md) | TCP bridge server behavioral test documentation |
-| **Tests: SourceGeneration** | [README](Origo.SourceGeneration.Tests/README.en.md) | TypedData source generator driver behavioral test documentation |
-| **Tests: Godot integration** | [README](Origo.GodotAdapter.Integration.Tests/README.en.md) | Godot headless integration test documentation |
-| **Test Support** | [README](Origo.TestSupport/README.en.md) | Shared test-support library for test harnesses, file systems, observers, strategies, and reporting |
-| **Manual Meta-Instructions** | [META.md](META.en.md) | Writing and maintenance conventions for this manual |
-| **Release & Changelog** | [release-process](release-process.en.md) | Formal releases, weekly snapshots, and Changelog rules |
-| **Architecture** | [README](architecture/README.en.md) | Architecture overview, decision records, and deferred design directions |
-| **Agent skills configuration** | [README](agents/README.en.md) | GitHub and local issue management, triage labels, and domain-documentation routing |
-| **Agent Workflow** | [AGENTS.md](../AGENTS.md) | Mandatory development loop, core principles, and document master index |
-| **Performance Baselines** | [README](benchmarks/README.en.md) | TypedData inline storage + framework subsystem performance baseline and design trade-offs |
+| Module | Documentation |
+|---|---|
+| `Origo.Core.Contracts` | [Contracts](Origo.Core.Contracts/README.en.md) |
+| `Origo.Core.Kernel` | [Kernel](Origo.Core.Kernel/README.en.md) |
+| `Origo.Core` | [Consumer shell](Origo.Core/README.en.md) |
+| `Origo.SourceGeneration` | [Source generator](Origo.SourceGeneration/README.en.md) |
+| `Origo.GodotAdapter` | [Godot adapter](Origo.GodotAdapter/README.en.md) |
+| `Origo.ConsoleBridge` | [Console bridge](Origo.ConsoleBridge/README.en.md) |
+| `Origo.TestSupport` | [Test support](Origo.TestSupport/README.en.md) |
 
-## Origo.Core Subsystems
+SND is split across layers rather than owned by one directory:
 
-| Subsystem | Responsibility |
-|-----------|---------------|
-| [Abstractions](Origo.Core.Contracts/Abstractions/README.en.md) | Stable consumer contract interfaces (IBlackboard, ISndEntity, ISessionManager, IStateMachineContainer...) |
-| [Snd](Origo.Core/Snd/README.en.md) | SND entity system (Strategy + Node + Data) |
-| [Runtime](Origo.Core.Kernel/Runtime/README.en.md) | Four-layer runtime lifecycle + console |
-| [Save](Origo.Core.Kernel/Save/README.en.md) | Persistence (two-phase write + strict read) |
-| [DataSource](Origo.Core.Kernel/DataSource/README.en.md) | Data source abstraction layer (JSON/Map codec + type conversion) |
-| [Grid](Origo.Core/Grid/README.en.md) | Grid coordinate system, A* pathfinding, coordinate parsing |
-| [StateMachine](Origo.Core.Kernel/StateMachine/README.en.md) | String-stack state machine |
-| [Planning](Origo.Core.Contracts/Planning/README.en.md) | Intent-driven plan execution |
-| [Blackboard](Origo.Core.Contracts/Blackboard/README.en.md) | In-memory blackboard implementation |
-| [Random](Origo.Core/Random/README.en.md) | Random number + noise maps |
-| [Utility](Origo.Core.Contracts/Utility/README.en.md) | Path normalization and string-to-typed value inference |
-| [Serialization](Origo.Core.Contracts/Serialization/README.en.md) | Type ↔ string mapping |
-| [Logging](Origo.Core.Contracts/Logging/README.en.md) | Log builder + NullLogger |
+- [Contracts/Snd](Origo.Core.Contracts/Snd/README.en.md) — data, metadata,
+  strategy bases, and role interfaces.
+- [Kernel/Snd](Origo.Core.Kernel/Snd/README.en.md) — context, world, entity,
+  scene host, strategy pool, and observer topology.
+- [Core/Snd](Origo.Core/Snd/README.en.md) — consumer shell helpers.
 
-## Quick Navigation
+## Test documentation
 
-| I want to... | Go here |
-|-------------|---------|
-| Browse all framework capabilities | [usage/capabilities](usage/capabilities.en.md) |
-| Quickly integrate Origo | [usage/quick-start](usage/quick-start.en.md) |
-| Understand the overall architecture | [architecture/overview](architecture/overview.en.md) |
-| Write game strategies | [usage/snd-entity-model](usage/snd-entity-model.en.md) |
-| Understand the lifecycle loop | [usage/strategy-lifecycle](usage/strategy-lifecycle.en.md) |
-| Learn design patterns | [usage/design-patterns](usage/design-patterns.en.md) |
-| View extension directions and deferred designs | [architecture/extension-directions](architecture/extension-directions.en.md) |
-| Test strategies | [usage/strategy-testing](usage/strategy-testing.en.md) |
-| Use the save system | [usage/persistence-flow](usage/persistence-flow.en.md) |
-| Use state machines | [usage/state-machine](usage/state-machine.en.md) |
-| Use console commands | [usage/console-commands](usage/console-commands.en.md) |
-| View interface signatures | [usage/agent-reference](usage/agent-reference.en.md) |
-| Prepare a formal release / update Changelog | [release-process](release-process.en.md) |
-| Develop on Windows | [Windows Development](usage/windows-development.en.md) |
-| Find a script entry point | [Script map](../scripts/README.md) |
-| Understand Core module implementations | [Origo.Core/](Origo.Core/README.en.md) |
-| Understand Source Generation | [Origo.SourceGeneration/](Origo.SourceGeneration/README.en.md) |
-| Understand Godot adapter | [Origo.GodotAdapter/](Origo.GodotAdapter/README.en.md) |
+- [Core tests](Origo.Core.Tests/README.en.md)
+- [Godot adapter tests](Origo.GodotAdapter.Tests/README.en.md)
+- [Godot integration tests](Origo.GodotAdapter.Integration.Tests/README.en.md)
+- [Console bridge tests](Origo.ConsoleBridge.Tests/README.en.md)
+- [Source generator tests](Origo.SourceGeneration.Tests/README.en.md)
 
-## Version
+## Version and compatibility
 
-Current Origo framework version: see the `<Version>` value in `Directory.Build.props` at the repository root. Development checkouts use a `-dev` pre-release baseline; the release workflow stamps the exact version on the tag-only release commit. Documentation is co-located with source code in the same repository. When code directory structure changes, the manual's directory mirror and indexes should be updated accordingly.
+The source version is defined by `<Version>` in
+[Directory.Build.props](../Directory.Build.props). The release workflow stamps
+the exact release version on the tag-only release commit. The bounded 0.1.x
+shell compatibility promise is documented in
+[shell-kernel-boundary](architecture/shell-kernel-boundary.en.md); the kernel
+implementation package makes no consumer compatibility promise.
 
-- Framework source and docs: this repository [origo](https://github.com/51193/origo) (docs under `docs/`)
-- Example project: [origo.demo](https://github.com/51193/origo.demo)
+## Documentation tooling
 
-Manual maintenance rules: see [META.md](META.en.md). Top-level agent workflow entry: see [AGENTS.md](../AGENTS.md).
+Generated references are produced locally and committed, because the repository
+does not rely on a remote documentation service:
 
-[↑ Back to AGENTS.md](../AGENTS.md)
+```bash
+bash scripts/bash/docs.sh generate
+bash scripts/bash/docs.sh check
+```
+
+`docs.sh check` validates generated content and local links. The normal local
+lint gate runs it automatically.

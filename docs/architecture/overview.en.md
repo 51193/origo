@@ -8,16 +8,16 @@ The Origo framework follows these core design constraints:
 
 - **Platform-agnostic**: Core has zero engine dependencies; all I/O goes through `IDataSourceIoGateway` + `IFileMetaAccess` + `IPathResolver` (with `IFileSystem` as an adapter/host-provided implementation detail)
 - **Adapter-layer isolation**: The adapter layer only provides capability encapsulation and bridging; it must not fire strategy hooks or manage strategy lifecycles
-- **Interface Segregation (ISP)**: `ISndContext` exposes capabilities through 10 companion properties; `ISessionRun` returns an abstract `IStateMachineContainer`
+- **Interface Segregation (ISP)**: `ISndContext` exposes capabilities through typed companion properties; `ISessionRun` returns an abstract `IStateMachineContainer`
 - **Unidirectional dependency**: `Origo.GodotAdapter` → `Origo.Core` → `Origo.Core.Kernel` → `Origo.Core.Contracts`, with `Origo.ConsoleBridge` → `Origo.Core.Contracts`; reverse is strictly forbidden
 - **public whitelist**: Every public interface must have a clear cross-assembly consumer
-- **Strategy as first-class citizen**: Strategies can access all 30+ members of `ISndContext` without restricting framework capabilities
+- **Strategy as first-class citizen**: Strategies receive the full `ISndContext` facade, so game code can reach framework capabilities without bypassing the orchestration interfaces
 - **Single-threaded frame model**: One frame = one logical atomic boundary
 - **Single access path**: Every capability has exactly one external path; bypasses skip the orchestrated side effects (hooks, validation, lifecycle) and are extremely hard to diagnose
 
 ## Project Design
 
-Origo is a **lightweight, platform-agnostic C# game framework** using the SND (Strategy + Node + Data) entity model. It ships as the packages `Origo.Core.Contracts` (stable consumer contracts), `Origo.Core.Kernel` (kernel implementation), `Origo.Core` (consumer shell), `Origo.GodotAdapter` (Godot 4 adapter layer), and `Origo.ConsoleBridge` (TCP remote console bridge); [Project Structure](#project-structure) lists their directories.
+Origo is a **lightweight, platform-agnostic C# game framework** using the SND (Strategy + Node + Data) entity model. It ships as the packages `Origo.Core.Contracts` (stable consumer contracts), `Origo.Core.Kernel` (kernel implementation), `Origo.Core` (consumer shell), `Origo.GodotAdapter` (Godot 4.7.2 adapter layer), and `Origo.ConsoleBridge` (TCP remote console bridge); [Project Structure](#project-structure) lists their directories.
 
 ## Four-Layer Runtime
 
@@ -112,7 +112,7 @@ The separation of the adapter layer and Core layer is the core architectural con
 
 ### Interface Abstraction Design
 
-The Core layer follows the Interface Segregation Principle (ISP); `ISndContext` exposes capabilities through 10 companion properties:
+The Core layer follows the Interface Segregation Principle (ISP); `ISndContext` exposes capabilities through typed companion properties:
 
 | Role Interface | Responsibility |
 |---------------|---------------|
@@ -206,10 +206,10 @@ Origo.Core/           # Consumer shell package
 ├── Snd/              # SND shell extensions and archetype loader
 └── OrigoHost.cs      # Host facade over internal kernel ports
 
-Origo.SourceGeneration/  # Roslyn source generator (5 .cs files)
-└── TypedDataGenerator*.cs  # Home/Adapter dual-mode code generation (1 main file + 4 partial)
+Origo.SourceGeneration/  # Roslyn source generator
+└── TypedDataGenerator*.cs  # Home/Adapter dual-mode code generation
 
-Origo.GodotAdapter/   # Godot 4 adapter layer (22 .cs files)
+Origo.GodotAdapter/   # Godot adapter layer
 ├── Bootstrap/        # Startup orchestration
 ├── Console/          # Godot commands
 ├── FileSystem/       # Godot file system
@@ -217,7 +217,7 @@ Origo.GodotAdapter/   # Godot 4 adapter layer (22 .cs files)
 ├── Serialization/    # Godot type serialization
 └── Snd/              # Godot entities + manager + node factory
 
-Origo.ConsoleBridge/  # TCP remote console (~2 .cs files)
+Origo.ConsoleBridge/  # TCP remote console
 ```
 
 ## Testing Strategy

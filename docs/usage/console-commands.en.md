@@ -259,7 +259,7 @@ Single-connection mode: only one TCP client is allowed at a time. Console output
 
 ## Related Documents
 
-- [Quick Start](quick-start.en.md) — How to integrate Origo
+- [Capabilities](capabilities.en.md) — Framework capability map
 - [Origo.ConsoleBridge](../Origo.ConsoleBridge/README.en.md) — Bridge implementation details
 
 ---

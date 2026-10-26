@@ -30,7 +30,7 @@ as stateless via reflection at registration (rejects instance fields and writabl
 | `PrivateFields_FollowUnderscoreCamelCase` | Core, Kernel, and Contracts production private fields follow `_camelCase` naming | .editorconfig naming rule |
 | `TestSupport_PrivateFields_FollowUnderscoreCamelCase` | Origo.TestSupport private fields follow `_camelCase` naming | .editorconfig naming rule |
 | `ISndContext_ShouldBeCompositionInterface_WithCompanionProperties` | ISndContext declares only `Bootstrap()` and `Shutdown()` as methods; capabilities are companion properties | Snd Abstraction: ISP |
-| `ISndContext_ShouldExposeAllRoleInterfacesAsCompanionProperties` | ISndContext exposes all role-interface capabilities through 10 companion properties, not interface inheritance | Snd Abstraction: ISndContext composition |
+| `ISndContext_ShouldExposeAllRoleInterfacesAsCompanionProperties` | ISndContext exposes all role-interface capabilities through typed companion properties, not interface inheritance | Snd Abstraction: ISndContext composition |
 | `SndContext_ShouldNotImplementRoleInterfaces` | The SndContext concrete type implements no role interfaces (pure composition object) | Snd Abstraction: ISndContext composition |
 | `SndContext_CompanionProperties_ShareConsistentState` | Companion properties share the same blackboard instances (SystemBlackboard/ProgressBlackboard) | Snd Abstraction: ISndContext composition |
 | `IStateMachineContext_ShouldInheritSharedRoleInterfaces` | IStateMachineContext inherits ISndBlackboardAccess + ISndDeferredActions | StateMachine Abstraction |

@@ -6,11 +6,11 @@
 
 ## Behavior Under Test Overview
 
-Verifies serialization round-trips for 14 Godot engine types: Vector2 / 3 / 4, Vector2I / 3I, Quaternion,
+Verifies serialization round-trips for the registered Godot engine types: Vector2 / 3 / 4, Vector2I / 3I, Quaternion,
 Color, Basis, Transform2D / 3D, Rect2 / 2I, Aabb, Plane. All types undergo full round-trip via
 `DataSourceConverterRegistry.Write→Read`, and bidirectional type name mapping (`TypeStringMapping`) is verified.
 
-Also verifies the TypedData multi-layer inlining system: 14 Godot types resolved at runtime via
+Also verifies the TypedData multi-layer inlining system: the registered Godot types resolved at runtime via
 `TypedDataTypeMap` Kind (Kind ∈ [128, 141]), `TypedData.FromObject` / `TryGetXxx` extension methods /
 `AsXxx` / `TypedDataObjectConverter` bridge full round-trips, and no conflict with Core Kind range (< 128).
 
@@ -22,7 +22,7 @@ run only by `scripts/bash/benchmark.sh`; `test.sh` full test run excludes them v
 
 | File | Verification Focus |
 |------|-------------------|
-| `GodotDataSourceConvertersTests.cs` | 14 Godot type converter round-trips: write→read values match |
+| `GodotDataSourceConvertersTests.cs` | Godot engine type converter round-trips: write→read values match |
 | `GodotJsonConverterRegistryTests.cs` | Type name mapping registration (all 14 types) + round-trip after converter registration |
 | `GodotTypedDataLayeredTests.cs` | Multi-layer TypedData: Kind resolution, FromObject round-trip, TryGet / AsXxx extensions, DataType / Data, ObjectConverter fallback, cross-layer Kind isolation |
 | `GodotTypedDataGeneratedCoverageTests.cs` | Generated accessor per-type coverage: AsXxx / TryGetXxx / KindMap / Converter round-trips, unregistered-Kind fallback and failure paths |
@@ -81,7 +81,7 @@ run only by `scripts/bash/benchmark.sh`; `test.sh` full test run excludes them v
 | `Godot_Vector2_Extension_TryGet` | `TryGetVector2` returns true and value matches | GodotAdapter Snd |
 | `Godot_Vector3_Extension_TryGet` | `TryGetVector3` returns true and value matches | GodotAdapter Snd |
 | `Godot_Color_Extension_TryGet` | `TryGetColor` returns true and value matches | GodotAdapter Snd |
-| `All_GodotTypes_Registered` | All 14 Godot type Kinds fall within [128, 141] range | GodotAdapter Snd |
+| `All_GodotTypes_Registered` | All registered Godot type Kinds fall within [128, 141] range | GodotAdapter Snd |
 | `DataType_ForGodotType_ReturnsCorrectType` | DataType of Godot-type TypedData is correct | GodotAdapter Snd |
 | `Data_ForGodotType_ReturnsUnboxedValue` | ToObject returns the unboxed original value | GodotAdapter Snd |
 | `AsXxx_ForGodotType_Works` | `AsVector2()` returns correct value | GodotAdapter Snd |
@@ -106,7 +106,7 @@ Parametrically exercises every generated accessor (`As*`/`TryGet*`), the kind ma
 
 | Test Method | Verified Behavior | Doc Reference |
 |------------|-------------------|---------------|
-| `KindMap_ResolvesEveryRegisteredType` | All 14 Godot types resolve to their respective Kinds via `TypedDataTypeMap.GetKindForType` (128–141 one-to-one) | GodotAdapter Snd |
+| `KindMap_ResolvesEveryRegisteredType` | All the registered Godot types resolve to their respective Kinds via `TypedDataTypeMap.GetKindForType` (128–141 one-to-one) | GodotAdapter Snd |
 | `Converter_FromObject_RoundTrips` | `FromObject`→`TypedData`→`ToObject` full round-trip for all 14 types, DataType and value match | GodotAdapter Snd |
 | `Converter_UnregisteredKind_FromObjectFallsBackToRef` | Unregistered Kind(250) via `FromObject` falls back to the ref slot: inlineBits=0, same instance referenced | GodotAdapter Snd |
 | `Converter_ToObject_UnregisteredKind_FallsBackToRef` | Unregistered Kind(250) via `ToObject` falls back returning the original value; null value returns null | GodotAdapter Snd |

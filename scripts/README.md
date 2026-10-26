@@ -54,6 +54,7 @@ Rules:
 | Script lint | `bash/lint-scripts.sh` | `powershell/lint-scripts.ps1` |
 | Layered checks | `bash/check.sh` | `powershell/check.ps1` |
 | Commit lint | `bash/lint-commits.sh` | `powershell/lint-commits.ps1` |
+| Documentation generation/check | `bash/docs.sh` | — (Bash-local generated docs) |
 | Full pipeline | `bash/ci.sh` | `powershell/ci.ps1` |
 | Godot download | `bash/download-godot.sh` | `powershell/download-godot.ps1` |
 
@@ -62,6 +63,7 @@ Rules:
 | Script | Purpose |
 |---|---|
 | `ci.sh` | Full local gate: lint, format, API, test, benchmark, Godot, package smoke |
+| `docs.sh` | Generate or validate committed documentation artifacts |
 | `check.sh` | Layered `plan` / `quick` / `affected` / `full` verification |
 | `test.sh` | Restore, build, `dotnet test`, Coverlet line coverage |
 | `format.sh` | `dotnet format --verify-no-changes` |
@@ -84,6 +86,7 @@ Rules:
 | `work-identity.sh` | Branch/worktree identity validation |
 | `package-consumer-smoke-lib.sh` | Source-only helpers for the package smoke |
 | `test-api-inventory-parent.sh` | Bash API-inventory parent/metadata-commit regression tests |
+| `test-docs.sh` | Generated-document and local-link validation |
 | `test-check-weekly-base.sh` | Weekly snapshot base/version validation |
 | `test-dev-suite.sh` | Bash/PowerShell gate parity, self-test wiring, and script-map guard |
 | `test-dotnet-env.sh` | SDK bootstrap, selection, and installer regression tests |
@@ -103,6 +106,7 @@ Rules:
 | Script | Purpose |
 |---|---|
 | `check.py` | Planner/executor used by `check.sh` and `check.ps1` |
+| `docs_generate.py` | Generate committed contract API and validate local documentation links |
 | `check_test.py` | Regression tests for the layered-check planner |
 | `lint-pr-body.py` | PR title/body lint for squash commit messages |
 | `validate-agent-docs.py` | AGENTS.md structure and required-snippet guard |

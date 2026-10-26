@@ -57,9 +57,9 @@ Kind values are `byte`s, with each layer's starting value controlled by `SndInli
 
 | Layer | StartKind | Kind Range | Type Count |
 |----|-----------|----------|--------|
-| Core | 1 (default) | 1–13 | 13 BCL primitive types |
-| GodotAdapter | 128 | 128–141 | 14 Godot engine types |
-| Reserved (future adapters) | 192 | 192–254 | — (requires adding the assembly to Origo.Core.Contracts's `InternalsVisibleTo` whitelist first) |
+| Core | default | home kind range | BCL values: numeric primitives, `bool`, `char`, and `string` |
+| GodotAdapter | 128 | adapter range | registered Godot engine value types |
+| Reserved (future adapters) | 192 | reserved range | Requires adding the assembly to Origo.Core.Contracts's `InternalsVisibleTo` whitelist first |
 | Fallback | — | `TypedData.UnregisteredKind` | Fallback for unregistered types |
 
 ### Type Inlining Strategy
@@ -73,7 +73,7 @@ There are only two storage paths: system primitive value types in the home assem
 | Adapter-registered types (non-system value types) | Stored in `_ref : object?` field | Non-system value type size cannot be reliably determined at compile time, fall back to `_ref` |
 | Unregistered types | `_ref : object?` fallback | Kind=`TypedData.UnregisteredKind`, restored through `TypedDataObjectConverter.FromObject` during deserialization |
 
-> Discriminator `0` is fixed as the `Null` sentinel value (`default(TypedData)`). Inlining candidates are determined precisely by a `SpecialType` whitelist (the 12 system primitive types enumerated in the first row of the table above), not by type display name matching.
+> Discriminator `0` is fixed as the `Null` sentinel value (`default(TypedData)`). Inlining candidates are determined precisely by a `SpecialType` whitelist (the system primitive value types enumerated in the first row of the table above), not by type display name matching.
 
 ## Type Validation and Diagnostics
 

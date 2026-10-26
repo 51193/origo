@@ -61,7 +61,7 @@ Tests are grouped by **capability under test**, each document corresponding to a
 | Planning | [Planning.md](Planning.en.md) | PlanExecutionStrategyBase: intent-driven plan execution, Action strategy auto plug/unplug, step progression |
 | Type Serialization | [TypeStringMapping.md](TypeStringMapping.en.md) | TypeStringMapping bidirectional mapping, BCL pre-registration, conflict detection |
 | Scheduling | [Scheduling.md](Scheduling.en.md) | ConcurrentActionQueue enqueue/drain/concurrency safety/recursive depth protection |
-| Console | [Console.md](Console.en.md) | Command parser/router/input queue/output channel, 19 built-in command handlers (16 Core + 3 GodotAdapter), type inference |
+| Console | [Console.md](Console.en.md) | Command parser/router/input queue/output channel, built-in Core and adapter command handlers, type inference |
 | Runtime Core | [Runtime-Core.md](Runtime-Core.en.md) | OrigoRuntime construction, console injection, deferred frame action execution |
 | Shell Compatibility | [Compatibility.md](Compatibility.en.md) | Lifecycle ordering, observer recovery, fail-fast, and session transitions through the public OrigoHost entry; kernel port binding/validation is not bypassed; golden v1 save loading is in Save-Storage |
 | Session Lifecycle | [Session-Lifecycle.md](Session-Lifecycle.en.md) | Session creation/destruction/switching, Dispose semantics, foreground/background protocol consistency, topology encoding/decoding |

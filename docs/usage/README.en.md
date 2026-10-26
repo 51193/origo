@@ -2,59 +2,62 @@
 
 > [↑ Back to Origo Manual](../README.en.md)
 
-## Document Index
+Task-oriented documentation for developers and agents building games with
+Origo. The framework goal is to let game code describe content, scenes, and
+strategies while Origo owns runtime orchestration and persistence.
 
-Documentation for Origo framework users (game developers, AI agents). Organized by usage scenario, from beginner onboarding to deep reference. Architecture overview, decisions, and deferred designs live under [Architecture](../architecture/README.en.md).
+A runnable game demo and a getting-started walkthrough are not published yet.
+The demo is still being built; do not treat an incomplete sample as a supported
+entry point. Use the capability map, task documents, and the
+[package-consumer fixture](shell-package-consumer.en.md) instead.
 
-| Document | Target Audience | Description |
-|----------|----------------|-------------|
-| [quick-start](quick-start.en.md) | New users | Integrate Origo into a Godot 4 project in 5 minutes |
-| [snd-entity-model](snd-entity-model.en.md) | Strategy developers | Strategy + Node + Data model in detail, strategy writing guide |
-| [session-model](session-model.en.md) | Advanced developers | Foreground/background sessions, session lifecycle, topology codec |
-| [persistence-flow](persistence-flow.en.md) | Advanced developers | Two-phase write, strict read, file layout, save recovery |
-| [state-machine](state-machine.en.md) | Strategy developers | String-stack state machine, Push/Pop hooks, persistence |
-| [console-commands](console-commands.en.md) | Debuggers | Complete reference of built-in console commands |
-| [strategy-lifecycle](strategy-lifecycle.en.md) | Strategy developers | Lifecycle hook closed-loop pairing, RAII resource management, BeforeSave deferred sync |
-| [design-patterns](design-patterns.en.md) | Strategy developers | Naming conventions, Manager service pattern, replaceable implementations, template best practices |
-| [strategy-testing](strategy-testing.en.md) | Test authors | StrategyTestScenario usage guide |
-| [capabilities](capabilities.en.md) | All users | Complete framework capability checklist, indexed by functional domain — quickly understand what Origo can do |
-| [agent-reference](agent-reference.en.md) | AI agents | Complete runtime reference: interface signatures, lifecycle timeline, strategy writing templates |
-| [shell-package-consumer](shell-package-consumer.en.md) | Release/integration maintainers | Shell-only package consumer fixture: local-feed restore, warnings-as-errors build, kernel-leak negative probe, ConsoleBridge loopback round-trip, and Godot headless startup |
-| [windows-development](windows-development.en.md) | Windows developers | Native PowerShell development suite: SDK install, format, API baseline, tests, benchmarks, Godot integration, package consumer smoke, layered checks, and commit lint |
+## Start by task
 
-## Recommended Reading Paths
+| I need to... | Read |
+|---|---|
+| Understand what the framework provides | [Capabilities](capabilities.en.md) |
+| Learn the entity/strategy/data model | [SND Entity Model](snd-entity-model.en.md) |
+| Understand strategy hook order and teardown | [Strategy Lifecycle](strategy-lifecycle.en.md) |
+| Write and test strategies | [Strategy Testing](strategy-testing.en.md) |
+| Work with foreground/background sessions | [Session Model](session-model.en.md) |
+| Use the save system and recovery rules | [Persistence Flow](persistence-flow.en.md) |
+| Use the string-stack state machine | [State Machine](state-machine.en.md) |
+| Inspect or drive a running game | [Console Commands](console-commands.en.md) |
+| Write reusable game architecture | [Design Patterns](design-patterns.en.md) |
+| Have an agent work on runtime behavior | [Agent Reference](agent-reference.en.md) and [generated contract API](../generated/contract-api.en.md) |
+| Inspect the shell package consumer path | [Shell Package Consumer](shell-package-consumer.en.md) |
+| Develop on Windows | [Windows Development](windows-development.en.md) |
 
+## Recommended paths
+
+```text
+New to Origo:
+  Capabilities -> Architecture Overview -> SND Entity Model -> Strategy Lifecycle
+
+Writing gameplay:
+  SND Entity Model -> Strategy Lifecycle -> Design Patterns -> Strategy Testing
+
+Sessions and saving:
+  Session Model -> Persistence Flow -> Capabilities (security and limits)
+
+Agent work:
+  Agent Reference -> generated contract API -> the task-specific usage page
 ```
-New users:
-  quick-start → capabilities (browse all capabilities) → Architecture Overview → snd-entity-model
 
-Strategy developers:
-  snd-entity-model → strategy-lifecycle → design-patterns → state-machine → strategy-testing
+## Documentation boundaries
 
-Facing architecture problems / need design inspiration:
-  Architecture Overview → design-patterns → Extension Directions and Deferred Designs
+The usage pages describe **how to build with the framework**. Module pages
+describe **how the framework is implemented**. Generated API pages are the
+source of truth for the public shell signatures; hand-written task pages link
+to them rather than copying full interface declarations.
 
-Save system users:
-  Architecture Overview → persistence-flow → session-model
-
-Console debuggers:
-  quick-start → console-commands
-
-AI agents:
-  agent-reference (complete reference)
-```
-
-## Related Module Documentation
-
-The usage docs describe "how to use Origo"; the module docs describe "Origo's internal implementation". When you need to deeply understand a subsystem's internal code structure, consult the corresponding module docs:
-
-| System in Usage Docs | Corresponding Module Docs |
-|---------------------|---------------------------|
-| SND entity model | [Origo.Core/Snd/](../Origo.Core/Snd/README.en.md) |
-| State machine system | [Origo.Core.Kernel/StateMachine/](../Origo.Core.Kernel/StateMachine/README.en.md) |
-| Persistence system | [Origo.Core.Kernel/Save/](../Origo.Core.Kernel/Save/README.en.md) |
-| Console commands | [Origo.Core.Kernel/Runtime/Console/](../Origo.Core.Kernel/Runtime/Console/README.en.md) |
-| Godot adapter | [Origo.GodotAdapter/](../Origo.GodotAdapter/README.en.md) |
+| System | Usage entry | Implementation entry |
+|---|---|---|
+| SND entity model | [SND Entity Model](snd-entity-model.en.md) | [Contracts/Snd](../Origo.Core.Contracts/Snd/README.en.md), [Kernel/Snd](../Origo.Core.Kernel/Snd/README.en.md) |
+| State machine | [State Machine](state-machine.en.md) | [Kernel/StateMachine](../Origo.Core.Kernel/StateMachine/README.en.md) |
+| Persistence | [Persistence Flow](persistence-flow.en.md) | [Kernel/Save](../Origo.Core.Kernel/Save/README.en.md) |
+| Console | [Console Commands](console-commands.en.md) | [Kernel/Console](../Origo.Core.Kernel/Runtime/Console/README.en.md) |
+| Godot adapter | [Capabilities](capabilities.en.md) | [Origo.GodotAdapter](../Origo.GodotAdapter/README.en.md) |
 
 ---
 [↑ Back to Origo Manual](../README.en.md)

@@ -436,7 +436,7 @@ Program start
        └─ ModuleInitializer runs
             ├─ RegisterKind(128, typeof(Vector2))
             ├─ RegisterKind(130, typeof(Vector3))
-            └─ ... 14 Godot types ...
+            └─ ... registered Godot types ...
             ├─ RegisterKindResolver(if-else chain for Godot types)
             ├─ RegisterFromObjectFallback(switch for Godot types)
             └─ RegisterToObjectFallback(switch for Godot types)

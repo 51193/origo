@@ -11,7 +11,7 @@ adapter-layer console command extensions, bootstrap orchestration, and log proxy
 
 Since GodotAdapter depends on the Godot engine runtime, **any Godot API call (including `new Node()` and `GD.Print`) SIGSEGVs the test process** in the engine-less unit-test host, so source files that call engine APIs directly are excluded by coverlet (configured in `.csproj` via `ExcludeByFile`). Every excluded file has a documented technical reason (see the csproj comment): `GodotSndEntity.cs` / `GodotSndManager.cs` / `OrigoAutoHost.cs` / `OrigoDefaultEntry*.cs` (Godot Node subclasses; node creation and scene-tree operations are unreachable), `FileSystem/` (every member body is a `FileAccess` / `DirAccess` static call), `GodotNodeHandle.cs` / `GodotPackedSceneNodeFactory.cs` (require live nodes/resources), `CameraViewCommandHandler.cs` (`ExecuteCore`'s first statement is `Engine.GetMainLoop()`).
 
-To shrink the exclusion surface, `GodotSndManager`'s entity-collection orchestration (add/remove, lookup, batch recovery rollback, frame processing, kill marking) is extracted into pure C# `SndEntityCollection<T>` (`Origo.GodotAdapter/Snd/SndEntityCollection.cs`), covered by `SndEntityCollectionTests`; the 14 Godot-type accessors in the generated `TypedData.g.cs` are covered per-type by `GodotTypedDataGeneratedCoverageTests`. The gate is Coverlet total line coverage ≥ 90% over the non-excluded `[Origo.GodotAdapter]*` files (`Threshold=90`, `ThresholdStat=total` in `Origo.GodotAdapter.Tests.csproj`), so the build fails below the threshold.
+To shrink the exclusion surface, `GodotSndManager`'s entity-collection orchestration (add/remove, lookup, batch recovery rollback, frame processing, kill marking) is extracted into pure C# `SndEntityCollection<T>` (`Origo.GodotAdapter/Snd/SndEntityCollection.cs`), covered by `SndEntityCollectionTests`; the Godot-type accessors in the generated `TypedData.g.cs` are covered per-type by `GodotTypedDataGeneratedCoverageTests`. The gate is Coverlet total line coverage ≥ 90% over the non-excluded `[Origo.GodotAdapter]*` files (`Threshold=90`, `ThresholdStat=total` in `Origo.GodotAdapter.Tests.csproj`), so the build fails below the threshold.
 
 Behavior verification for engine-dependent files is performed by
 [Origo.GodotAdapter.Integration.Tests](../Origo.GodotAdapter.Integration.Tests/README.en.md)
@@ -35,15 +35,15 @@ runtime behavior (real file system, Node lifecycle, bootstrap orchestration).
 
 ## Capability Document Index
 
-| Capability | Document | Files | Tests | Verification Focus |
-|------------|----------|-------|-------|--------------------|
-| Architecture Guardrails | [Architecture.md](Architecture.en.md) | 1 | 10 | SndContext public role interface completeness, session creation/destruction, CommandHandlerBase public visibility, GodotSndEntity internal lifecycle guard, GodotSndManager write-path sealing, private `_camelCase` field naming, shell API classification completeness, shell public signatures do not expose kernel types |
-| SND Entities | [Snd.md](Snd.en.md) | 4 | 27 | SndEntityCollection full capability with batch recovery rollback, assembly-load-triggered kind registration, node extension contracts, GodotPackedSceneNodeFactory constructor guard |
-| Console | [Console.md](Console.en.md) | 5 | 28 | press_button / camera_view / tree_debug commands, CommandHandlerBase argument validation and guards, ProjectionHelper world→screen projection |
-| File System | [FileSystem.md](FileSystem.en.md) | 1 | 3 | GodotFileSystem res:// / user:// path handling (delegated to PathUtility) |
-| Logging | [Logging.md](Logging.en.md) | 1 | 9 | GodotLogger delegate injection, null handler safety and level filtering |
-| Serialization | [Serialization.md](Serialization.en.md) | 5 | 57 (incl. 6 Benchmark) | 14 Godot type serialization round-trips + per-type generated accessor coverage + TypedData multi-layer inlining + performance benchmarks |
-| Test Support | [TestSupport.md](TestSupport.en.md) | 2 | — (infrastructure, no [Fact]) | NullFileSystem, TestSndSceneHost, InMemorySndEntity, TestLogger, TestRuntimeHelper |
+| Capability | Document | Verification Focus |
+|------------|----------|--------------------|
+| Architecture Guardrails | [Architecture.md](Architecture.en.md) | SndContext public role interface completeness, session creation/destruction, CommandHandlerBase public visibility, GodotSndEntity internal lifecycle guard, GodotSndManager write-path sealing, private `_camelCase` field naming, shell API classification completeness, shell public signatures do not expose kernel types |
+| SND Entities | [Snd.md](Snd.en.md) | SndEntityCollection full capability with batch recovery rollback, assembly-load-triggered kind registration, node extension contracts, GodotPackedSceneNodeFactory constructor guard |
+| Console | [Console.md](Console.en.md) | press_button / camera_view / tree_debug commands, CommandHandlerBase argument validation and guards, ProjectionHelper world→screen projection |
+| File System | [FileSystem.md](FileSystem.en.md) | GodotFileSystem res:// / user:// path handling (delegated to PathUtility) |
+| Logging | [Logging.md](Logging.en.md) | GodotLogger delegate injection, null handler safety and level filtering |
+| Serialization | [Serialization.md](Serialization.en.md) | Godot type serialization round-trips + per-type generated accessor coverage + TypedData multi-layer inlining + performance benchmarks |
+| Test Support | [TestSupport.md](TestSupport.en.md) | NullFileSystem, TestSndSceneHost, InMemorySndEntity, TestLogger, TestRuntimeHelper |
 
 ---
 

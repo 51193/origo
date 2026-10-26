@@ -72,18 +72,18 @@ Origo's game frame loop is single-threaded. Multiple connections mean multiple c
 
 ### Why async I/O instead of manual threading
 
-`AcceptTcpClientAsync` and `ReadLineAsync` wait at the OS level via IOCP without occupying dedicated thread stacks. 
+`AcceptTcpClientAsync` and the bounded line reader wait at the OS level via IOCP without occupying dedicated thread stacks.
 
 - Zero CPU overhead when idle (no 100ms wake-up to check state)
 - `Dispose()` shutdown latency reduced from worst-case 6 seconds (two `Thread.Join(3000)`); `Dispose` joins the accept loop with a worst-case timeout of 3 seconds (`_disposeJoinTimeoutMs`), logging a warning if the loop has not stopped
 - `Dispose()` cancels active reads, wakes a pending accept with a loopback connection, and joins the accept loop. On the normal path the listener is closed only after the loop stops, so a connection accepted in the teardown race is returned and closed instead of being discarded half-open. If the 3-second bound expires, the listener is torn down anyway to release the port; the remaining pending accept/peer from the stuck loop is an accepted best-effort shutdown edge
-- No `ReceiveTimeout` read timeout fallback is needed — cancellation tokens directly interrupt `ReadLineAsync`
+- No `ReceiveTimeout` read timeout fallback is needed — cancellation tokens directly interrupt pending reads
 
 The output path keeps synchronous `StreamWriter.WriteLine` to avoid changing the `Action<string>` callback to `Func<string, Task>` (which would cascade into polluting the `IConsoleOutputChannel` interface).
 
 ### Exception propagation strategy (fail-fast)
 
-`ConsoleBridgeServer` does not swallow I/O exceptions for silent degradation, but distinguishes fault levels: connection-level exceptions (client disconnect, `ReadLineAsync` I/O errors) are isolated and logged as `Warning` (with the full stack trace) before the server continues accepting; a non-cancellation system-level socket error in the accept loop is logged as `Error` and stops the listener (to be restarted by the host process); `Dispose` checks the accept task state and logs an `Error` instead of swallowing a fault. A failed `Start` (e.g. port in use) rolls back its internal state, so the same instance can be retried once the cause is resolved.
+`ConsoleBridgeServer` does not swallow I/O exceptions for silent degradation, but distinguishes fault levels: connection-level exceptions (client disconnect, read I/O errors) are isolated and logged as `Warning` (with the full stack trace) before the server continues accepting; a non-cancellation system-level socket error in the accept loop is logged as `Error` and stops the listener (to be restarted by the host process); `Dispose` checks the accept task state and logs an `Error` instead of swallowing a fault. A failed `Start` (e.g. port in use) rolls back its internal state, so the same instance can be retried once the cause is resolved.
 
 ### Output buffer overflow
 
