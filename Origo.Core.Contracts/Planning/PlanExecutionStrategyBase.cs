@@ -70,7 +70,15 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
     {
         ArgumentNullException.ThrowIfNull(entity);
         Wire(entity, true);
-        OnAfterSpawn(entity, ctx);
+        try
+        {
+            OnAfterSpawn(entity, ctx);
+        }
+        catch
+        {
+            Unwire(entity);
+            throw;
+        }
     }
 
     /// <inheritdoc />
@@ -78,7 +86,15 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
     {
         ArgumentNullException.ThrowIfNull(entity);
         Wire(entity, false);
-        OnAfterLoad(entity, ctx);
+        try
+        {
+            OnAfterLoad(entity, ctx);
+        }
+        catch
+        {
+            Unwire(entity);
+            throw;
+        }
     }
 
     /// <inheritdoc />
@@ -86,34 +102,60 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
     {
         ArgumentNullException.ThrowIfNull(entity);
         Wire(entity, true);
-        OnAfterAdd(entity, ctx);
+        try
+        {
+            OnAfterAdd(entity, ctx);
+        }
+        catch
+        {
+            Unwire(entity);
+            throw;
+        }
     }
 
     /// <inheritdoc />
     public sealed override void BeforeRemove(ISndEntity entity, ISndContext ctx)
     {
         ArgumentNullException.ThrowIfNull(entity);
-        RemoveCurrentAction(entity);
-        OnBeforeRemove(entity, ctx);
-        Unwire(entity);
+        try
+        {
+            RemoveCurrentAction(entity);
+            OnBeforeRemove(entity, ctx);
+        }
+        finally
+        {
+            Unwire(entity);
+        }
     }
 
     /// <inheritdoc />
     public sealed override void BeforeQuit(ISndEntity entity, ISndContext ctx)
     {
         ArgumentNullException.ThrowIfNull(entity);
-        RemoveCurrentAction(entity);
-        OnBeforeQuit(entity, ctx);
-        Unwire(entity);
+        try
+        {
+            RemoveCurrentAction(entity);
+            OnBeforeQuit(entity, ctx);
+        }
+        finally
+        {
+            Unwire(entity);
+        }
     }
 
     /// <inheritdoc />
     public sealed override void BeforeDead(ISndEntity entity, ISndContext ctx)
     {
         ArgumentNullException.ThrowIfNull(entity);
-        RemoveCurrentAction(entity);
-        OnBeforeDead(entity, ctx);
-        Unwire(entity);
+        try
+        {
+            RemoveCurrentAction(entity);
+            OnBeforeDead(entity, ctx);
+        }
+        finally
+        {
+            Unwire(entity);
+        }
     }
 
     /// <inheritdoc />
@@ -260,7 +302,21 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
 
         var step = ResolveNextStep(intent, "", false, entity);
         if (!string.IsNullOrEmpty(step))
+        {
             PushAction(entity, step);
+            return;
+        }
+
+        // A plan whose first resolve returns null/empty is already complete
+        // according to the ResolveNextStep contract. Do not leave it stuck in
+        // "active" with no action: no ActionStatus event could ever finish it.
+        RemoveCurrentAction(entity);
+        entity.SetData(PlanStepKey, "");
+        entity.SetData(ActionKey, "");
+        entity.SetData(ActionStatusKey, "");
+        entity.SetData(IntentKey, "");
+        entity.SetData(IntentStatusKey, IntentStatusCompleted);
+        OnPlanCompleted(entity);
     }
 
     private void AdvancePlan(ISndEntity entity, bool failed)

@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 
 namespace Origo.Core.DataSource.Converters;
@@ -170,7 +171,13 @@ internal sealed class SingleArrayDataSourceConverter : DataSourceConverter<float
         var result = new float[node.Count];
         var i = 0;
         foreach (var element in node.Elements)
-            result[i++] = element.As<float>();
+        {
+            var value = element.As<float>();
+            if (!float.IsFinite(value))
+                throw new InvalidOperationException(
+                    $"Single array element '{value}' is not finite; JSON number nodes cannot represent NaN or Infinity.");
+            result[i++] = value;
+        }
         return result;
     }
 
@@ -190,7 +197,13 @@ internal sealed class DoubleArrayDataSourceConverter : DataSourceConverter<doubl
         var result = new double[node.Count];
         var i = 0;
         foreach (var element in node.Elements)
-            result[i++] = element.As<double>();
+        {
+            var value = element.As<double>();
+            if (!double.IsFinite(value))
+                throw new InvalidOperationException(
+                    $"Double array element '{value}' is not finite; JSON number nodes cannot represent NaN or Infinity.");
+            result[i++] = value;
+        }
         return result;
     }
 

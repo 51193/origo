@@ -6,8 +6,10 @@
 
 - [ ] Added
 - [ ] Changed (includes BREAKING)
+- [ ] Deprecated
 - [ ] Fixed
 - [ ] Removed
+- [ ] Security
 - [ ] Internal (refactor, chore, test, docs — no user-facing change)
 
 ## AI Agent Usage
@@ -31,6 +33,7 @@
 - [ ] Bug fix has regression test (red → green)
 - [ ] English documentation updated where interface lists, design
       decisions, or usage docs changed
-- [ ] `CHANGELOG.md` updated under `[Unreleased]`
+- [ ] `CHANGELOG.md` updated under `[Unreleased]` for every
+      user-visible change
 - [ ] Breaking changes are prefixed `BREAKING:` and the migration path
       is documented

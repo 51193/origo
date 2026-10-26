@@ -118,6 +118,9 @@ public partial class OrigoAutoHost : Node
             throw new InvalidOperationException(
                 "OrigoAutoHost bootstrap failed in _Ready; frame driving is disabled. " +
                 "Fix the bootstrap error before running the scene.");
+        if (!GodotObject.IsInstanceValid(SndManager) || !SndManager.IsInsideTree())
+            throw new InvalidOperationException(
+                "The GodotSndManager scene host is not mounted; frame driving would bypass Core scene orchestration.");
         Runtime.DriveFrame(delta);
     }
 

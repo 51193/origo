@@ -13,7 +13,9 @@ the host OS; do not call a script from another platform's directory.
 | Linux / macOS | `bash scripts/bash/ci.sh` | POSIX shell, Bash 3.2+ |
 | Windows | `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\powershell\ci.ps1` | Windows PowerShell 5.1+ |
 
-Both entry points implement the same development gate set. The POSIX scripts
+Both entry points implement the same development gate sequence. Bash-free shared Python
+validators run on both; Bash-backed POSIX self-tests remain Linux-side and the
+Windows suite is not a release gate. The POSIX scripts
 never invoke the PowerShell suite and vice versa.
 
 ## Layout
@@ -81,7 +83,9 @@ Rules:
 | `validate-release-source.sh` | Validate the release source archive |
 | `work-identity.sh` | Branch/worktree identity validation |
 | `package-consumer-smoke-lib.sh` | Source-only helpers for the package smoke |
+| `test-api-inventory-parent.sh` | Bash API-inventory parent/metadata-commit regression tests |
 | `test-check-weekly-base.sh` | Weekly snapshot base/version validation |
+| `test-dev-suite.sh` | Bash/PowerShell gate parity, self-test wiring, and script-map guard |
 | `test-dotnet-env.sh` | SDK bootstrap, selection, and installer regression tests |
 | `test-download-godot-deps.sh` | Godot downloader dependency/cache tests |
 | `test-find-previous-api-baseline.sh` | Previous release baseline selection tests |
@@ -126,6 +130,7 @@ standalone platform entry points.
 | `package-consumer-smoke.ps1` | Packed-package consumer restore/build/startup smoke |
 | `lint-scripts.ps1` | PowerShell parse check and Python guard scripts |
 | `lint-commits.ps1` | Conventional Commit message lint |
+| `test-api-inventory-parent.ps1` | Git parent-resolution regression for the API inventory |
 | `install-dotnet.ps1` | Install the `global.json` SDK |
 | `download-godot.ps1` | Resolve/cache the Godot mono binary |
 | `common.ps1` | Source-only SDK/Python/Godot/process helpers |

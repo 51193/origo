@@ -96,14 +96,28 @@ internal sealed class UInt64DataSourceConverter : DataSourceConverter<ulong>
 
 internal sealed class SingleDataSourceConverter : DataSourceConverter<float>
 {
-    public override float Read(DataSourceNode node) => node.As<float>();
+    public override float Read(DataSourceNode node)
+    {
+        var value = node.As<float>();
+        if (!float.IsFinite(value))
+            throw new InvalidOperationException(
+                $"Single value '{value}' is not finite; JSON number nodes cannot represent NaN or Infinity.");
+        return value;
+    }
 
     public override DataSourceNode Write(float value) => DataSourceNode.CreateNumber(value);
 }
 
 internal sealed class DoubleDataSourceConverter : DataSourceConverter<double>
 {
-    public override double Read(DataSourceNode node) => node.As<double>();
+    public override double Read(DataSourceNode node)
+    {
+        var value = node.As<double>();
+        if (!double.IsFinite(value))
+            throw new InvalidOperationException(
+                $"Double value '{value}' is not finite; JSON number nodes cannot represent NaN or Infinity.");
+        return value;
+    }
 
     public override DataSourceNode Write(double value) => DataSourceNode.CreateNumber(value);
 }

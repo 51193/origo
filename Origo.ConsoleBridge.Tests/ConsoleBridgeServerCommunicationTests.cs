@@ -109,6 +109,72 @@ public class ConsoleBridgeServerCommunicationTests
     }
 
     [Fact]
+    public void ClientSendCommand_LineOverConfiguredLimit_IsRejected()
+    {
+        var input = new ConsoleInputBuffer();
+        var output = new ConsoleOutputChannel();
+        using var server = new ConsoleBridgeServer(input, output,
+            new ConsoleBridgeOptions { MaxInputLineLength = 32 });
+        server.Start();
+
+        using var client = new TcpClient();
+        client.Connect(IPAddress.Loopback, server.ActualPort);
+        using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
+
+        writer.WriteLine(new string('x', 100));
+
+        // The server must close the connection rather than enqueue the
+        // over-limit line. Reading blocks until close; a timeout means the
+        // connection stayed open and the line was accepted.
+        client.GetStream().ReadTimeout = 2000;
+        var buffer = new byte[1];
+        Assert.Equal(0, client.GetStream().Read(buffer, 0, 1));
+        Assert.False(input.TryDequeueCommand(out _));
+    }
+
+    [Fact]
+    public void ClientSendCommand_CrlfAtExactLimit_Arrives()
+    {
+        var input = new ConsoleInputBuffer();
+        var output = new ConsoleOutputChannel();
+        using var server = new ConsoleBridgeServer(input, output,
+            new ConsoleBridgeOptions { MaxInputLineLength = 32 });
+        server.Start();
+
+        using var client = new TcpClient();
+        client.Connect(IPAddress.Loopback, server.ActualPort);
+        using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
+
+        var line = new string('x', 32);
+        writer.Write(line + "\r\n");
+
+        string? cmd = null;
+        var ok = ConsoleBridgeTestInfrastructure.SpinUntil(
+            () => input.TryDequeueCommand(out cmd), ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
+        Assert.True(ok, "An exact-limit CRLF line should be accepted.");
+        Assert.Equal(line, cmd);
+    }
+
+    [Fact]
+    public void ClientSendCommand_LoneCr_DispatchesImmediately()
+    {
+        var (server, (input, _)) = ConsoleBridgeTestInfrastructure.CreateStartedServer();
+        using var client = new TcpClient();
+        client.Connect(IPAddress.Loopback, server.ActualPort);
+        using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
+
+        writer.Write("help\r");
+
+        string? cmd = null;
+        var ok = ConsoleBridgeTestInfrastructure.SpinUntil(
+            () => input.TryDequeueCommand(out cmd), ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
+        Assert.True(ok, "A lone CR must terminate the line without waiting for another byte.");
+        Assert.Equal("help", cmd);
+
+        server.Dispose();
+    }
+
+    [Fact]
     public void ClientSendCommand_Unicode_Arrives()
     {
         var (server, (input, _)) = ConsoleBridgeTestInfrastructure.CreateStartedServer();

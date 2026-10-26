@@ -202,21 +202,46 @@ public class OrigoHostTests
                     case FieldInfo field:
                         AssertNotKernel(field.FieldType);
                         break;
+                    case ConstructorInfo constructor:
+                        foreach (var parameter in constructor.GetParameters())
+                            AssertNotKernel(parameter.ParameterType);
+                        break;
+                    case EventInfo evt when evt.EventHandlerType is not null:
+                        AssertNotKernel(evt.EventHandlerType);
+                        break;
                 }
             }
         }
     }
 
-    private static void AssertNotKernel(Type type)
-    {
-        var current = type;
-        while (current.HasElementType)
-            current = current.GetElementType()!;
+    private static void AssertNotKernel(Type type) => AssertNotKernel(type, []);
 
-        var assemblyName = current.Assembly.GetName().Name;
+    private static void AssertNotKernel(Type type, HashSet<Type> visited)
+    {
+        if (!visited.Add(type))
+            return;
+
+        if (type.IsGenericParameter)
+        {
+            foreach (var constraint in type.GetGenericParameterConstraints())
+                AssertNotKernel(constraint, visited);
+            return;
+        }
+
+        if (type.HasElementType)
+        {
+            AssertNotKernel(type.GetElementType()!, visited);
+            return;
+        }
+
+        var assemblyName = type.Assembly.GetName().Name;
         Assert.False(
             string.Equals(assemblyName, "Origo.Core.Kernel", StringComparison.Ordinal),
-            $"Kernel type '{current.FullName}' leaked into the Core shell public signature.");
+            $"Kernel type '{type.FullName}' leaked into the Core shell public signature.");
+
+        if (type.IsGenericType)
+            foreach (var argument in type.GetGenericArguments())
+                AssertNotKernel(argument, visited);
     }
 
     private sealed class HostProbeCommandHandler : ConsoleCommandHandlerBase

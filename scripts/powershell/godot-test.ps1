@@ -4,6 +4,11 @@
 
 $root = Get-OrigoRoot
 $project = Join-Path $root 'Origo.GodotAdapter.Integration.Tests'
+$adapterSdk = Get-OrigoGodotSdkVersion
+$integrationSdk = Get-OrigoGodotSdkVersion -ProjectPath (Join-Path $project 'Origo.GodotAdapter.Integration.Tests.csproj')
+if ($adapterSdk -ne $integrationSdk) {
+    throw ('Godot.NET.Sdk pin mismatch: adapter=' + $adapterSdk + ' integration=' + $integrationSdk + '. Update both projects in the same change.')
+}
 $godot = Get-OrigoGodotBinary
 Set-OrigoGodotUserData
 

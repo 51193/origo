@@ -25,6 +25,7 @@ res://origo/
 ├── maps/
 │   ├── scene_aliases.map      # Scene alias mapping
 │   └── snd_templates.map      # Template definitions
+├── templates/                 # Entity template JSON files
 └── initial/                   # Initial save data
     └── ...                    # Initial level JSON
 ```

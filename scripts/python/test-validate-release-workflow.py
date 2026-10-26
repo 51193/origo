@@ -409,7 +409,7 @@ class ReleaseWorkflowGuardTests(unittest.TestCase):
 
     def test_source_validation_trusted_verifier_is_pinned(self):
         text = self.mutated(
-            '            "$PWD/.release-validators/scripts/bash/verify-release.sh"',
+            '            "$PWD/.release-validators/scripts/verify-release.sh"',
             '            "scripts/bash/verify-release.sh"',
         )
         code, _, stderr = self.run_guard(text)
@@ -436,12 +436,30 @@ class ReleaseWorkflowGuardTests(unittest.TestCase):
 
     def test_missing_trusted_validator_fetch_is_rejected(self):
         text = self.mutated(
-            "          git show refs/remotes/origin/main:scripts/bash/verify-release.sh > .release-validators/scripts/bash/verify-release.sh",
+            "          git show refs/remotes/origin/main:scripts/bash/verify-release.sh > .release-validators/scripts/verify-release.sh",
             "          true",
         )
         code, _, stderr = self.run_guard(text)
         self.assertEqual(code, 1)
         self.assertIn("must fetch scripts/bash/verify-release.sh", stderr)
+
+    def test_missing_metadata_step_is_rejected(self):
+        text = self.mutated(
+            '      - name: Verify release metadata\n',
+            '      - name: Metadata step removed\n',
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("Verify release metadata", stderr)
+
+    def test_wrong_staged_verifier_depth_is_rejected(self):
+        text = self.mutated(
+            "git show refs/remotes/origin/main:scripts/bash/verify-release.sh > .release-validators/scripts/verify-release.sh",
+            "git show refs/remotes/origin/main:scripts/bash/verify-release.sh > .release-validators/scripts/bash/verify-release.sh",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("two directories above", stderr)
 
     def test_missing_provenance_step_is_rejected(self):
         text = self.mutated(
@@ -680,11 +698,18 @@ class ReleaseWorkflowGuardTests(unittest.TestCase):
         self.assertIn("consume the complete orphan tag file", stderr)
 
     def test_weekly_partial_release_completeness_is_rejected(self):
-        old = '[[ "$draft" == "false" && "$prerelease" == "true" && "$assets" -ge 9 ]]'
+        old = '[[ "$draft" == "false" && "$prerelease" == "true" && "$assets" == "$expected" ]]'
         weekly = self.mutated_weekly(old, '[[ "$assets" -ge 9 ]]')
         code, _, stderr = self.run_guard(WORKFLOW.read_text(encoding="utf-8"), weekly)
         self.assertEqual(code, 1)
         self.assertIn("reject draft releases", stderr)
+
+    def test_weekly_missing_expected_asset_name_is_rejected(self):
+        old = '              "nuget.config" \\\n'
+        weekly = self.mutated_weekly(old, '              "unexpected.config" \\\n')
+        code, _, stderr = self.run_guard(WORKFLOW.read_text(encoding="utf-8"), weekly)
+        self.assertEqual(code, 1)
+        self.assertIn("nuget.config", stderr)
 
     def test_weekly_missing_new_tag_output_is_rejected(self):
         old = '          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"\n'

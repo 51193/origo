@@ -44,7 +44,7 @@ Integration tests use a custom lightweight runner rather than xUnit:
 | GodotSndManagerCreationIntegrationTests | `Tests/GodotSndManagerCreationIntegrationTests.cs` | 5 | `GodotSndManager` (CreateEntity/RemoveEntity/BuildMetaList/RequestKillEntity/GetEntities) |
 | GodotPackedSceneNodeFactoryIntegrationTests | `Tests/GodotPackedSceneNodeFactoryIntegrationTests.cs` | 6 | `GodotPackedSceneNodeFactory` (valid/invalid scene loading, child node adding, cache reuse, up-front rejection of blank and Godot-invalid node names) |
 | OrigoAutoHostBootstrapIntegrationTests | `Tests/OrigoAutoHostBootstrapIntegrationTests.cs` | 3 | `OrigoAutoHost` full `_Ready()` startup (Runtime/SndManager/ConsoleChannels, Runtime.Meta.Version aligned with the assembly informational version) |
-| AdapterCommandHandlerIntegrationTests | `Tests/AdapterCommandHandlerIntegrationTests.cs` | 5 | `TreeDebugCommandHandler`, `PressButtonCommandHandler`, `CameraViewCommandHandler` |
+| AdapterCommandHandlerIntegrationTests | `Tests/AdapterCommandHandlerIntegrationTests.cs` | 7 | `TreeDebugCommandHandler`, `PressButtonCommandHandler`, `CameraViewCommandHandler`; subtree/press boundary and visible-none diagnostics |
 | OrigoDefaultEntryBootstrapIntegrationTests | `Tests/OrigoDefaultEntryBootstrapIntegrationTests.cs` | 1 | `OrigoDefaultEntry` complete default property values |
 | BootstrapIntegrationTests | `Tests/BootstrapIntegrationTests.cs` | 2 | `OrigoAutoHost` / `OrigoDefaultEntry` property defaults and instantiation |
 | SndEntityNodeExtensionsIntegrationTests | `Tests/SndEntityNodeExtensionsIntegrationTests.cs` | 3 | `SndEntityNodeExtensions` (GetNativeNode/GetNodeFromSnd type guards) |
@@ -52,11 +52,12 @@ Integration tests use a custom lightweight runner rather than xUnit:
 | ObserverSaveReloadIntegrationTests | `Tests/ObserverSaveReloadIntegrationTests.cs` | 3 | Observer bindings restored across save/load; session destroy fires OnUnmounted |
 | UserDataCleanupIntegrationTests | `Tests/UserDataCleanupIntegrationTests.cs` | 5 | Pre-test user:// cleanup: leftover write markers / prefixed artifacts removed, non-test and Godot system content preserved, idempotent |
 | GodotSndManagerExitTreeIntegrationTests | `Tests/GodotSndManagerExitTreeIntegrationTests.cs` | 2 | `GodotSndManager._ExitTree` out-of-contract cleanup: removing the manager node directly leaves no strategy-pool reference leaks on the Core side, and strategy release still runs when `OnUnmounted` throws |
+| OrigoDefaultEntryExitTreeIntegrationTests | `Tests/OrigoDefaultEntryExitTreeIntegrationTests.cs` | 1 | Normal `OrigoDefaultEntry` exit must run the foreground entity `BeforeQuit` hook exactly once |
 | OrigoDefaultEntryBootstrapFailureTests | `Tests/OrigoDefaultEntryBootstrapFailureTests.cs` | 1 | `OrigoDefaultEntry` derived entry failure after base._Ready(): the next frame must fail fast instead of driving a half-initialized runtime |
 | OrigoDefaultEntryContextIntegrationTests | `Tests/OrigoDefaultEntryContextIntegrationTests.cs` | 1 | `OrigoDefaultEntry.Context` exposes the SndContext after successful startup and shares the same instance with `ConfigureSaveMetadataContributors` |
 | OrigoDefaultEntryStrategyRegistrationIntegrationTests | `Tests/OrigoDefaultEntryStrategyRegistrationIntegrationTests.cs` | 1 | A derived entry overrides `ConfigureStrategies` to register a strategy manually before `Bootstrap` seals the registry |
 
-The table currently sums to 98 tests. `IntegrationTestRunner` pins that floor and
+The table currently sums to 101 tests. `IntegrationTestRunner` pins that floor and
 fails the run when fewer tests are discovered, so a silently lost class cannot
 pass CI; update the floor and this table together on intentional additions or
 removals.
@@ -120,6 +121,7 @@ Origo.GodotAdapter.Integration.Tests/
 │   ├── UserDataCleanupIntegrationTests.cs # Test-process user:// cleanup tests
 │   ├── OrigoDefaultEntryBootstrapFailureTests.cs # Derived entry bootstrap failure fail-fast test
 │   ├── OrigoDefaultEntryContextIntegrationTests.cs # Context exposure / shared-instance test
+│   ├── OrigoDefaultEntryExitTreeIntegrationTests.cs # Normal entry exit runs BeforeQuit exactly once
 │   └── OrigoDefaultEntryStrategyRegistrationIntegrationTests.cs # ConfigureStrategies manual-registration test
 ├── TestSupport/
 │   ├── StubConsoleOutput.cs

@@ -90,9 +90,9 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   snapshot as the repository's Latest release. Only a formal `vx.y.z` tag pushed
   by hand keeps the release state chosen on GitHub.
 - An already-pushed snapshot tag is complete only when its GitHub Release is
-  published (not a draft), marked pre-release, and carries at least the nine
-  expected assets (five packages, the source archive, two documentation
-  archives, and `nuget.config`). A run scans all nightly tags for the current
+  published (not a draft), marked pre-release, and carries exactly the nine
+  expected asset names (five packages, the source archive, two documentation
+  archives, and `nuget.config`); an extra or misnamed asset is incomplete. A run scans all nightly tags for the current
   base; every missing/draft/partial release is dispatched, and the current
   week's tag is still created when the window has commits. GitHub API errors
   other than 404 fail the job instead of being mistaken for an orphan. This
@@ -150,7 +150,7 @@ The Release workflow starts from a pushed `v*` tag or from `workflow_dispatch`
 with the `tag` input, which is how weekly snapshots start it. The tag is resolved
 first; every step below then applies to that tag:
 
-- Before stamping, fetch the validators from `origin/main` and verify tag provenance with `scripts/bash/verify-release-provenance.sh`: a formal tag must point at main history or the metadata-only release commit from an earlier run; a snapshot tag must point at main history or at a weekly/release version-stamp commit based on main. The metadata commit's subject must name the tag's exact version, may change only the three version elements in `Directory.Build.props`, and cannot smuggle extra MSBuild logic. The validators are not executed from the tag tree. Tag creation remains a trusted operation: a tag-triggered workflow still uses the workflow file at the tag, so the gate prevents accidental unmerged tags rather than a malicious tag writer;
+- Before stamping, fetch the validators from `origin/main` and verify tag provenance with `scripts/bash/verify-release-provenance.sh`: a formal tag must point at main history or the metadata-only release commit from an earlier run; a snapshot tag must point at main history or at a weekly/release version-stamp commit based on main. The metadata commit's subject must name the tag's exact version, may change only the three version elements in `Directory.Build.props`, and cannot smuggle extra MSBuild logic. The validators are not executed from the tag tree. `verify-release.sh` resolves the repository root as two directories above itself, so the workflow stages it at `<repo>/.release-validators/scripts/verify-release.sh`; staging it one level deeper would make it search for `CHANGELOG.md` under `.release-validators`. Tag creation remains a trusted operation: a tag-triggered workflow still uses the workflow file at the tag, so the gate prevents accidental unmerged tags rather than a malicious tag writer;
 - Rewrite `Directory.Build.props` from the tag through the shared `scripts/python/write-version-stamp.py` helper (also used by the weekly snapshot workflow): accept exactly `x.y.z` or `x.y.z-<suffix>`, strip only the leading `v` for `<Version>`, and derive `AssemblyVersion` / `FileVersion` from `x.y.z.0` (a `-nightly` / `-alpha` suffix stays only in `<Version>`). If anything changed, the pipeline creates a `chore(release): sync version stamps to <tag>` commit whose parent is the tagged main commit. The tag-recheck step runs even when no rewrite was needed, so a stale tag can never survive a rerun; a hyphenated tag is always published as a pre-release;
 - Run `verify-release.sh`, `scripts/bash/lint-scripts.sh`, and the full test suite. The automatic rewrite covers only the version stamps; the formal metadata (CHANGELOG version block, empty `[Unreleased]`, and analyzer shipped block) must still be present in the tagged commit;
 - Run all compatibility gates: `scripts/bash/lint-scripts.sh` (script, workflow, and instruction guards),
@@ -181,7 +181,7 @@ first; every step below then applies to that tag:
   workflow run -- including a GitHub re-run, whose checkout now uses an
   explicit ref -- resolves the tag's current target first, so a tag already
   moved by this pipeline does not produce a duplicate release commit;
-- Attach the five packages, the source archive, and the documentation snapshot to
+- Attach the nine release artifacts (five packages, the source archive, the two documentation archives, and `nuget.config`) to
   the GitHub Release; pass `prerelease` when the run was started as a snapshot
   (the `snapshot` input, which the weekly job sets) or when the tag contains `-`.
   Only a formal `x.y.z` tag pushed by hand keeps the release state chosen on

@@ -34,6 +34,12 @@ Lazy expansion holds child nodes and closure resources. `Dispose()` uses an
 iterative traversal so deeply nested trees do not overflow the stack; callers
 own node trees at save boundaries and must release them.
 
+The graph contract is an acyclic, parent-owned tree. A child must have one
+owning parent; `Add` does not detach a child from a previous parent. Canonical
+hashing and JSON encoding detect cycles and fail explicitly instead of looping
+or overflowing. Shared acyclic children are tolerated by those two operations,
+but they still have one disposal owner; do not dispose the same subtree twice.
+
 ### Why converter bases live in Contracts
 
 `DataSourceConverter<T>` / `DataSourceConverterBase` are consumer and adapter

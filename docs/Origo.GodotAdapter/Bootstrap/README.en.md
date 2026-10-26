@@ -40,7 +40,7 @@ Startup logic (`OrigoDefaultEntry.Bootstrap.cs`) is separated from exported prop
 
 ### Why strategy registration must finish before Bootstrap
 
-Lifecycle strategy `Before` / `After` constraints are validated over the complete registration graph, and the registry must be frozen before any entity is created. `SndContext.Bootstrap()` calls `SndStrategyPool.SealRegistration()` after strategy discovery: unknown targets, non-lifecycle targets, self references, or cycles throw immediately, and later `SndWorld.RegisterStrategy` calls throw. `AutoDiscoverStrategies` scans `[StrategyIndex]`-annotated types by default; strategies that need manual registration can override `ConfigureStrategies(ISndWorldAccess)` in a derived entry, which runs before `Bootstrap()`. The full ordering contract is in [Snd/Strategy](../../Origo.Core/Snd/Strategy/README.en.md).
+Lifecycle strategy `Before` / `After` constraints are validated over the complete registration graph, and the registry must be frozen before any entity is created. `SndContext.Bootstrap()` calls `SndStrategyPool.SealRegistration()` after strategy discovery: unknown targets, non-lifecycle targets, self references, or cycles throw immediately, and later `SndWorld.RegisterStrategy` calls throw. `AutoDiscoverStrategies` scans every non-skipped loaded assembly for `[StrategyIndex]`-annotated types by default and registers each one; a non-parameterless constructor or duplicate index fails fast. Strategies that need manual registration must set `AutoDiscoverStrategies = false` and override `ConfigureStrategies(ISndWorldAccess)` in a derived entry, which runs before `Bootstrap()`. The full ordering contract is in [Snd/Strategy](../../Origo.Core/Snd/Strategy/README.en.md).
 
 ### Why the startup registry hook exists
 
@@ -48,8 +48,7 @@ Lifecycle strategy `Before` / `After` constraints are validated over the complet
 inside `CreateRuntime` before `PersistentBlackboard.LoadFromDisk()`. A custom
 type stored in `system.json` must be registered here (mapping plus converter);
 `RegisterCustomConverters` runs during `Bootstrap`, after that initial read.
-`OrigoDefaultEntry._ExitTree` calls `Context.Shutdown()` so normal scene teardown
-runs the same quit hooks/current-directory cleanup as `OrigoHost.Dispose`.
+Godot calls the child `GodotSndManager._ExitTree` before the entry's: the manager calls `Context.Shutdown()` while the entity collection is still populated, so normal scene teardown runs the same quit hooks/current-directory cleanup as `OrigoHost.Dispose`. `OrigoDefaultEntry._ExitTree` calls `Shutdown()` again as an idempotent backstop.
 
 ### Why Context Is Public
 
@@ -57,7 +56,7 @@ runs the same quit hooks/current-directory cleanup as `OrigoHost.Dispose`.
 
 ### Why startup orchestration is centralized in SndContext.Bootstrap()
 
-The adapter layer should not directly call `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`, `LoadSceneAliases()`, `LoadTemplates()`, or `RequestLoadMainMenuEntrySave()`; strategy discovery and JSON entity-list spawning are now compiler-level `internal` and reachable only by `SndContext.Bootstrap`. Runtime template/alias map reloads should use the public companion: `ctx.Template.LoadTemplates(...)` / `ctx.Template.LoadSceneAliases(...)`. These are Core-internal orchestration operations — strategy discovery and ordering validation must execute in the Core layer, alias/template loading is Core configuration parsing, and entry save loading is the Core lifecycle entry point. The adapter layer only passes configuration through `AdapterContextOptions`; the port constructs and binds the context, and `Bootstrap()` ensures these operations complete in the correct layer with the correct dependency order.
+The adapter layer should not directly call `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`, `LoadSceneAliases()`, `LoadTemplates()`, or `RequestLoadMainMenuEntrySave()`; strategy discovery and JSON entity-list spawning are compiler-level `internal` and reachable only by `SndContext.Bootstrap`. Runtime template/alias map reloads should use the public companion: `ctx.Template.LoadTemplates(...)` / `ctx.Template.LoadSceneAliases(...)`. These are Core-internal orchestration operations — strategy discovery and ordering validation must execute in the Core layer, alias/template loading is Core configuration parsing, and entry save loading is the Core lifecycle entry point. The adapter layer only passes configuration through `AdapterContextOptions`; the port constructs and binds the context, and `Bootstrap()` ensures these operations complete in the correct layer with the correct dependency order.
 
 ---
 [↑ Back to Origo.GodotAdapter](../README.en.md)

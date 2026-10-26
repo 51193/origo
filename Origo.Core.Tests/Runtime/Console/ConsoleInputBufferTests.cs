@@ -1,3 +1,4 @@
+using System;
 using Origo.Core.Runtime.Console;
 using Xunit;
 
@@ -57,6 +58,28 @@ public class ConsoleInputBufferTests
         queue.TryDequeueCommand(out var line2);
         Assert.Equal("first", line1);
         Assert.Equal("second", line2);
+    }
+
+    [Fact]
+    public void ConsoleInputBuffer_BoundedQueue_DropsOldestAndCountsDrop()
+    {
+        var queue = new ConsoleInputBuffer(maxPendingCommands: 2);
+        queue.Enqueue("a");
+        queue.Enqueue("b");
+        queue.Enqueue("c");
+
+        Assert.Equal(1, queue.DroppedCommandCount);
+        Assert.True(queue.TryDequeueCommand(out var first));
+        Assert.Equal("b", first);
+        Assert.True(queue.TryDequeueCommand(out var second));
+        Assert.Equal("c", second);
+        Assert.False(queue.TryDequeueCommand(out _));
+    }
+
+    [Fact]
+    public void ConsoleInputBuffer_NonPositiveBound_Throws()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => new ConsoleInputBuffer(0));
     }
 
     [Fact]

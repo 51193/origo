@@ -66,6 +66,18 @@ class PlannerTests(unittest.TestCase):
             self.assertEqual(plan["selectedProjects"], [])
             self.assertNotIn("docs gate", " ".join(plan["reasons"]))
 
+    def test_powershell_suite_never_dispatches_bash(self):
+        command = MODULE.godot_gate_command("powershell")
+        self.assertEqual(command[-1], "scripts/powershell/godot-test.ps1")
+        self.assertNotIn("bash", command)
+        full = MODULE.full_gate_commands("powershell")
+        self.assertTrue(all("powershell" in part[0] for part in full))
+        self.assertFalse(any("bash" in " ".join(part) for part in full))
+        self.assertEqual(MODULE.full_gate_hint("powershell"), "scripts/powershell/check.ps1 full")
+
+    def test_posix_suite_keeps_bash_dispatch(self):
+        self.assertEqual(MODULE.godot_gate_command("posix"), ["bash", "scripts/bash/godot-test.sh"])
+
     def test_integration_project_is_run_by_godot_gate_not_vstest(self):
         self.assertFalse(MODULE.test_project("Origo.GodotAdapter.Integration.Tests/Origo.GodotAdapter.Integration.Tests.csproj"))
 

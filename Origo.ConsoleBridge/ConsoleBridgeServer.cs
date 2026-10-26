@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Origo.Core.Abstractions.Console;
@@ -170,6 +171,9 @@ public sealed class ConsoleBridgeServer : IDisposable
                 throw new ArgumentOutOfRangeException(nameof(_options), _options.OutputSendTimeoutMs,
                     "OutputSendTimeoutMs must be positive; zero or negative values disable the " +
                     "bounded send timeout (Socket.SendTimeout semantics).");
+            if (_options.MaxInputLineLength <= 0)
+                throw new ArgumentOutOfRangeException(nameof(_options), _options.MaxInputLineLength,
+                    "MaxInputLineLength must be positive.");
 
             _listener = new TcpListener(IPAddress.Loopback, _options.Port);
             _listener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
@@ -331,6 +335,36 @@ public sealed class ConsoleBridgeServer : IDisposable
         }
     }
 
+    private async Task<string?> ReadLineBoundedAsync(StreamReader reader, CancellationToken ct)
+    {
+        var builder = new StringBuilder();
+        var one = new char[1];
+        while (true)
+        {
+            var read = await reader.ReadAsync(one.AsMemory(0, 1), ct).ConfigureAwait(false);
+            if (read == 0)
+                return builder.Length == 0 ? null : builder.ToString();
+
+            var ch = one[0];
+            if (ch == '\r' || ch == '\n')
+                // A lone CR must dispatch immediately; Peek would block on a
+                // TCP stream until another byte arrives. With CRLF the LF is
+                // read as an empty line on the next call and ignored by the
+                // input buffer.
+                return builder.ToString();
+
+            if (builder.Length >= _options.MaxInputLineLength)
+            {
+                _logger.Log(LogLevel.Warning, nameof(ConsoleBridgeServer),
+                    new LogMessageBuilder().Build(
+                        $"Console input line exceeded the configured {_options.MaxInputLineLength}-character limit; closing the connection."));
+                return null;
+            }
+
+            builder.Append(ch);
+        }
+    }
+
     private async Task HandleConnectionAsync(TcpClient client, CancellationToken ct)
     {
         try
@@ -408,7 +442,7 @@ public sealed class ConsoleBridgeServer : IDisposable
                 string? line;
                 try
                 {
-                    line = await reader.ReadLineAsync(ct).ConfigureAwait(false);
+                    line = await ReadLineBoundedAsync(reader, ct).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException)
                 {

@@ -511,6 +511,38 @@ public partial class RandomAndStateMachineTests
         Assert.Throws<InvalidOperationException>(() => c.DeserializeFromNode(node, TestFactory.CreateRegistry()));
     }
 
+    [Fact]
+    public void StateMachineContainer_DeserializeFromNode_BlankStackEntry_DoesNotLeakPoolReferences()
+    {
+        var logger = new TestLogger();
+        var host = new TestSndSceneHost();
+        var runtime = TestFactory.CreateRuntime(logger, host);
+        var fs = new TestMemoryFileSystem();
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "r", "i", "e.json"));
+        var pool = runtime.SndWorld.StrategyPool;
+        pool.Register(() => new SmPushStrategy());
+        pool.Register(() => new SmPopStrategy());
+        var json =
+            """
+            {
+              "machines": [
+                { "key": "nav", "pushIndex": "sm.push.test", "popIndex": "sm.pop.test", "stack": [""] }
+              ]
+            }
+            """;
+        using var node = TestFactory.NodeFromJson(json);
+        var container = new StateMachineContainer(pool, ctx.StateMachineContext);
+
+        Assert.Throws<InvalidOperationException>(() =>
+            container.DeserializeFromNode(node, TestFactory.CreateRegistry()));
+
+        pool.LogPoolLeaks();
+        Assert.DoesNotContain(logger.Warnings, w => w.Contains("refCount", StringComparison.Ordinal));
+    }
+
     [StrategyIndex("sm.swap.push")]
     private sealed class SwapTestPushStrategy : StateMachineStrategyBase
     {

@@ -46,8 +46,10 @@ public partial class OrigoDefaultEntry : OrigoAutoHost
     /// <summary>
     ///     Called after <see cref="OrigoAutoHost.Runtime" /> is created and before
     ///     <see cref="SndContext.Bootstrap" /> seals strategy registration. Override to
-    ///     register strategies manually, for example when <see cref="AutoDiscoverStrategies" />
-    ///     is disabled or when a strategy type cannot be discovered automatically.
+    ///     register strategies manually. Manual registration requires
+    ///     <see cref="AutoDiscoverStrategies" /> to be disabled: discovery registers
+    ///     every annotated type in the scanned assemblies and rejects the duplicate
+    ///     index, including a type whose constructor cannot be used.
     /// </summary>
     /// <param name="world">The world whose strategy registry is still open for registration.</param>
     protected virtual void ConfigureStrategies(ISndWorldAccess world)
@@ -66,10 +68,10 @@ public partial class OrigoDefaultEntry : OrigoAutoHost
     }
 
     /// <summary>
-    ///     Normal scene-tree exit: stop the framework progress run so session
-    ///     and progress quit hooks run and the temporary current/ directory is
-    ///     cleaned. The manager's _ExitTree remains the out-of-contract
-    ///     fallback for hosts that never created a context.
+    ///     Idempotent scene-tree-exit backstop: stop the framework progress run
+    ///     if the child GodotSndManager's _ExitTree did not already do so.
+    ///     Godot calls the manager first, while the entity collection is still
+    ///     populated, so normal exit runs entity BeforeQuit hooks there.
     /// </summary>
     public override void _ExitTree()
     {

@@ -105,6 +105,7 @@ else
 fi
 
 bash scripts/bash/test-verify-release.sh
+bash scripts/bash/test-api-inventory-parent.sh
 bash scripts/bash/test-find-previous-api-baseline.sh
 bash scripts/bash/test-check-weekly-base.sh
 bash scripts/bash/test-verify-release-provenance.sh
@@ -112,5 +113,6 @@ bash scripts/bash/test-package-consumer-smoke-lib.sh
 bash scripts/bash/test-download-godot-deps.sh
 bash scripts/bash/test-pre-push-hook.sh
 bash scripts/bash/test-dotnet-env.sh
+bash scripts/bash/test-dev-suite.sh
 
 echo "Script lint: OK"

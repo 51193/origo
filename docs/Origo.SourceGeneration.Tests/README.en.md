@@ -58,7 +58,7 @@
 | `Attribute_NullArrayElement_ReportsORIGOSG008_AndEmitsNoSources` | Type arguments contain a null element | Reports `ORIGOSG008` (Error) and emits no sources; a null placeholder would renumber the following types |
 | `Home_NullArrayRegistration_ReportsORIGOSG008_WithoutCrash` | The `params` type array itself is null | Reports `ORIGOSG008` (Error), emits no source, and does not crash the generator |
 | `Incremental_DiagnosticOnSecondRun_IsReportedWithCurrentLocation` | A diagnostic-producing input is run twice with a fresh compilation | Both runs report `ORIGOSG002`; no CS8785 and no lost generated state |
-| `Adapter_UnsupportedType_ReportsORIGOSG009` | Adapter registers void, `Span<T>`, a static class, an unbound generic, or `TypedReference` | Reports `ORIGOSG009` (Error), emits no source |
+| `Adapter_UnsupportedType_ReportsORIGOSG009` | Adapter registers void, `Span<T>`, a static class, an unbound generic, `int?`/`Nullable<int>`, or `TypedReference`; generated source compiles without errors | Reports `ORIGOSG009` (Error), emits no source |
 | `Home_TypeNamedKindMap_ReportsORIGOSG005_AndEmitsNoSources` | Home registers a type sanitizing to `KindMap` | Reports `ORIGOSG005` (Error), no CS0542 |
 | `Adapter_WithoutFriendAccess_ReportsAtTheAttributeLine` | ORIGOSG007 location | Diagnostic points at the attribute line |
 | `SameKindDuplicate_IsSilentlyDeduplicated` | The same type registered with the same kind | No diagnostic; one generated registration |

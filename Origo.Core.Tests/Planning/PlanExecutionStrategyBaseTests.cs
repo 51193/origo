@@ -64,6 +64,7 @@ public class PlanExecutionStrategyBaseTests
                 ("test", "step_a", false) => "step_b",
                 ("test", "step_b", false) => null,
                 ("step_refuses_action", "" or null, false) => "no_action_step",
+                ("empty", "" or null, false) => null,
                 _ => null,
             };
         }
@@ -76,6 +77,14 @@ public class PlanExecutionStrategyBaseTests
                 "step_b" => "test.action.fake2",
                 _ => null,
             };
+        }
+
+        public static readonly AsyncLocal<bool> ThrowOnAfterAdd = new();
+
+        protected override void OnAfterAdd(ISndEntity entity, ISndContext ctx)
+        {
+            if (ThrowOnAfterAdd.Value)
+                throw new InvalidOperationException("AfterAdd boom");
         }
     }
 
@@ -192,6 +201,48 @@ public class PlanExecutionStrategyBaseTests
         var (foundStep, step) = entity.TryGetData<string>(_planStepKey);
         Assert.True(foundStep);
         Assert.Equal("step_a", step);
+    }
+
+    [Fact]
+    public void StartIntent_NoFirstStep_CompletesImmediately()
+    {
+        var strategy = new SimplePlanStrategy();
+        var entity = new StubSndEntity("e");
+        entity.SetData(_intentKey, "empty");
+
+        strategy.AfterSpawn(entity, NullSndContext.Instance);
+
+        Assert.Equal("", entity.GetData<string>(_intentKey));
+        Assert.Equal("", entity.GetData<string>(_planStepKey));
+        Assert.Equal("", entity.GetData<string>(_actionKey));
+        Assert.Equal("", entity.GetData<string>(_actionStatusKey));
+        Assert.Equal("completed", entity.GetData<string>(_intentStatusKey));
+    }
+
+    [Fact]
+    public void AfterAdd_WhenUserHookThrows_UnwiresAndAllowsRetry()
+    {
+        var strategy = new SimplePlanStrategy();
+        var tracking = new SubscriptionTrackingEntity(new StubSndEntity("e"));
+        tracking.SetData(_intentKey, "test");
+
+        SimplePlanStrategy.ThrowOnAfterAdd.Value = true;
+        try
+        {
+            var ex = Assert.Throws<InvalidOperationException>(() =>
+                strategy.AfterAdd(tracking, NullSndContext.Instance));
+            Assert.Contains("AfterAdd boom", ex.Message, StringComparison.Ordinal);
+            Assert.Equal(0, tracking.GetSubCount(_intentKey));
+            Assert.Equal(0, tracking.GetSubCount(_actionStatusKey));
+
+            SimplePlanStrategy.ThrowOnAfterAdd.Value = false;
+            strategy.AfterAdd(tracking, NullSndContext.Instance);
+            Assert.Equal(1, tracking.GetSubCount(_intentKey));
+        }
+        finally
+        {
+            SimplePlanStrategy.ThrowOnAfterAdd.Value = false;
+        }
     }
 
     [Fact]

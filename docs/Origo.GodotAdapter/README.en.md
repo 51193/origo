@@ -48,7 +48,8 @@ OrigoDefaultEntry._Ready()
   ├── AdapterHostKernelPort.CreateContext(...)  // creates SndContext + ISndContextAttachableSceneHost.BindContext(context)
   ├── Context = sndContext                   // exposed to presentation/game code
   ├── ConfigureSaveMetadataContributors(context)  // hook for extra save metadata contributors
-  ├── (normal exit) _ExitTree → Context.Shutdown()  // quit hooks + current/ cleanup
+  ├── (normal exit) GodotSndManager._ExitTree → Context.Shutdown()  // quit hooks + current/ cleanup
+  ├── OrigoDefaultEntry._ExitTree → Context.Shutdown()              // idempotent backstop
   └── sndContext.Bootstrap()                 // Core-internal sequence:
         ├── scene-host readiness check (observer topology bound to a context)
         ├── ConfigureConverters hook

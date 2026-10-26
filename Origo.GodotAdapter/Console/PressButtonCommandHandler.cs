@@ -27,9 +27,9 @@ internal sealed class PressButtonCommandHandler(IOrigoRuntime runtime) : Command
             return false;
 
         var button = godotEntity.GetNodeOrNull<Button>(buttonPath);
-        if (button is null)
+        if (button is null || !godotEntity.IsAncestorOf(button))
         {
-            errorMessage = $"Button not found at path '{buttonPath}' in entity '{entityName}'.";
+            errorMessage = $"Button not found under entity '{entityName}' at path '{buttonPath}'.";
             return false;
         }
 

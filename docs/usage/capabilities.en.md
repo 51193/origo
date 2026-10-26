@@ -36,7 +36,7 @@ All capabilities of the Origo framework, organized by functional domain. Each en
 | Capability | Description | Doc Entry |
 |------------|-------------|-----------|
 | Two-phase write | Write `current/` first (with .write_in_progress marker), atomically copy to `save_{id}/` after validation | [Persistence Flow](persistence-flow.en.md) |
-| Strict read validation | .write_in_progress marker detection, level three-file integrity check, progress.json mandatory presence | [Persistence Flow](persistence-flow.en.md) |
+| Strict read validation | .write_in_progress marker detection, level three-file integrity check, progress.json mandatory for payload reads; `ReadProgressNodeFromSnapshot` is the nullable existence probe used by strict load | [Persistence Flow](persistence-flow.en.md) |
 | Snapshot management | `ctx.Save.ListSaves()` / `ListSavesWithMetaData()`, supports save-selection UI | [Persistence Flow](persistence-flow.en.md) |
 | Save-slot deletion | `ctx.Save.DeleteSave(saveId)` deletes an inactive slot and its `.tmp`/`.bak` remnants while protecting the active slot and pending workflows | [Persistence Flow](persistence-flow.en.md) |
 | Persistence completion state | `ctx.Deferred.IsPersistenceIdle` and `ctx.Lifecycle.IsBootstrapCompleted` expose frame-driven completion observation | [Persistence Flow](persistence-flow.en.md) |

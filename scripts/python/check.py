@@ -32,6 +32,26 @@ FULL_PATHS = {
 }
 DOC_PREFIXES = ("docs/",)
 GODOT_MARKERS = (".godot/", "project.godot", ".tscn", ".tres", ".gd")
+
+
+def godot_gate_command(suite: str) -> list[str]:
+    if suite == "powershell":
+        return ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass",
+                "-File", "scripts/powershell/godot-test.ps1"]
+    return ["bash", "scripts/bash/godot-test.sh"]
+
+
+def full_gate_hint(suite: str) -> str:
+    if suite == "powershell":
+        return "scripts/powershell/check.ps1 full"
+    return "scripts/bash/check.sh full"
+
+
+def full_gate_commands(suite: str) -> list[list[str]]:
+    if suite == "powershell":
+        prefix = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File"]
+        return [prefix + ["scripts/powershell/ci.ps1"], prefix + ["scripts/powershell/lint-commits.ps1"]]
+    return [["bash", "scripts/bash/ci.sh"], ["bash", "scripts/bash/lint-commits.sh"]]
 @dataclass(frozen=True)
 class Change:
     status: str
@@ -141,13 +161,13 @@ def evaluated_references(root: Path, projects: dict[str, Path]) -> dict[str, set
         if result.returncode:
             raise RuntimeError(
                 f"MSBuild project graph failed for {name}: {result.stderr.strip()}; "
-                "run scripts/bash/check.sh full explicitly"
+                "run scripts/bash/check.sh full or scripts/powershell/check.ps1 full explicitly"
             )
         try:
             payload = json.loads(result.stdout)
         except json.JSONDecodeError as exc:
             raise RuntimeError(
-                f"MSBuild returned invalid graph JSON for {name}; run scripts/bash/check.sh full explicitly"
+                f"MSBuild returned invalid graph JSON for {name}; run scripts/bash/check.sh full or scripts/powershell/check.ps1 full explicitly"
             ) from exc
         for item in payload.get("Items", {}).get("ProjectReference", []):
             identity = item.get("FullPath")
@@ -245,7 +265,7 @@ def classify(root: Path, changes: list[Change], base: str) -> dict:
         reasons.append("TestSupport is shared by test projects")
     selected = {name for name in selected if test_project(name)}
     if not paths:
-        reasons.append("no tracked or working-tree changes; run scripts/bash/check.sh full explicitly")
+        reasons.append("no tracked or working-tree changes; run scripts/bash/check.sh full or scripts/powershell/check.ps1 full explicitly")
         requires_full = True
     if not selected and paths:
         reasons.append("no test project is attributable; use full for a complete answer")
@@ -337,12 +357,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output")
     parser.add_argument("--project", required=False)
     parser.add_argument("--filter", dest="test_filter")
+    parser.add_argument("--suite", choices=("posix", "powershell"), default="posix",
+                        help="script suite that owns the Godot/full gates")
     args = parser.parse_args(argv)
     root = repository_root(args.repository)
 
     if args.mode == "full":
-        run_command(root, ["bash", "scripts/bash/ci.sh"])
-        run_command(root, ["bash", "scripts/bash/lint-commits.sh"])
+        for command in full_gate_commands(args.suite):
+            run_command(root, command)
         return 0
 
     if args.mode == "quick" and (not args.project or not args.test_filter):
@@ -369,13 +391,13 @@ def main(argv: list[str] | None = None) -> int:
         print("coverage: not-measured", file=sys.stderr)
         return 0
     if plan["requiresFull"]:
-        raise RuntimeError("plan is stale, unknown, or repository-wide; stop and run scripts/bash/check.sh full explicitly")
+        raise RuntimeError(f"plan is stale, unknown, or repository-wide; stop and run {full_gate_hint(args.suite)} explicitly")
     if not plan["selectedProjects"]:
-        raise RuntimeError("affected found no test projects; run scripts/bash/check.sh full explicitly")
+        raise RuntimeError(f"affected found no test projects; run {full_gate_hint(args.suite)} explicitly")
     for project in plan["selectedProjects"]:
         run_test_project(root, project, "Category!=Benchmark", coverage=True)
     if "godot" in plan["additionalGates"]:
-        run_command(root, ["bash", "scripts/bash/godot-test.sh"])
+        run_command(root, godot_gate_command(args.suite))
     return 0
 
 

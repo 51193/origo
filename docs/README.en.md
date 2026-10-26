@@ -90,7 +90,7 @@ Each module directory's English entry contains:
 | [Planning](Origo.Core.Contracts/Planning/README.en.md) | Intent-driven plan execution |
 | [Blackboard](Origo.Core.Contracts/Blackboard/README.en.md) | In-memory blackboard implementation |
 | [Random](Origo.Core/Random/README.en.md) | Random number + noise maps |
-| [Utility](Origo.Core.Contracts/Utility/README.en.md) | Path normalization, collection diffing, and string-to-typed value inference |
+| [Utility](Origo.Core.Contracts/Utility/README.en.md) | Path normalization and string-to-typed value inference |
 | [Serialization](Origo.Core.Contracts/Serialization/README.en.md) | Type ↔ string mapping |
 | [Logging](Origo.Core.Contracts/Logging/README.en.md) | Log builder + NullLogger |
 

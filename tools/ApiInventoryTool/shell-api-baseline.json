@@ -10,6 +10,7 @@
         "M:Origo.ConsoleBridge.ConsoleBridgeServer.public ConsoleBridgeServer(Origo.Core.Abstractions.Console.IConsoleInputSource input, Origo.Core.Abstractions.Console.IConsoleOutputChannel output, Origo.ConsoleBridge.ConsoleBridgeOptions? options = null, Origo.Core.Abstractions.Logging.ILogger? logger = null)",
         "M:Origo.ConsoleBridge.ConsoleBridgeServer.public void Dispose()",
         "M:Origo.ConsoleBridge.ConsoleBridgeServer.public void Start()",
+        "P:Origo.ConsoleBridge.ConsoleBridgeOptions.public int MaxInputLineLength get:public set:public",
         "P:Origo.ConsoleBridge.ConsoleBridgeOptions.public int OutputSendTimeoutMs get:public set:public",
         "P:Origo.ConsoleBridge.ConsoleBridgeOptions.public int Port get:public set:public",
         "P:Origo.ConsoleBridge.ConsoleBridgeServer.public int ActualPort get:public",

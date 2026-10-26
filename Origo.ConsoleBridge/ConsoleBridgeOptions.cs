@@ -24,4 +24,11 @@ public sealed class ConsoleBridgeOptions
     ///     <see cref="DefaultOutputSendTimeoutMs" />.
     /// </summary>
     public int OutputSendTimeoutMs { get; set; } = DefaultOutputSendTimeoutMs;
+
+    /// <summary>
+    ///     Maximum number of characters in one console input line. A client
+    ///     that sends a longer newline-less line is disconnected instead of
+    ///     letting the reader allocate without bound.
+    /// </summary>
+    public int MaxInputLineLength { get; set; } = 8192;
 }

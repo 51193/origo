@@ -59,7 +59,7 @@ Complete implementation of the save storage layer. Responsible for file I/O (rea
 
 - **`.write_in_progress` exists under `current/`** → refuse to read, throw exception (previous write was interrupted)
 - **Per-level three-piece set incomplete** → refuse to read (partial existence = corruption)
-- **progress.json missing** → refuse to read
+- **progress.json missing** → payload reads refuse to read; `ReadProgressNodeFromSnapshot` is the nullable existence probe that returns null when the file is absent, and `LoadOrContinueStrict` turns that null into the actionable missing-`progress.json` error
 - **Background level referenced by the topology has no payload** → refuse to load (consistent with the foreground: a topology referencing level data that does not exist must fail explicitly; silently mounting an empty session would hide data loss)
 - **Payload level not referenced by the topology** → refuse to load (an unreferenced level would be silently ignored, losing its state; the topology and level set must describe the same sessions)
 - **Format version marker** → written to `meta.map` whenever display metadata exists or the framework format is newer than v1; a no-metadata v1 save may omit it, and the reader maps the missing key to version 1.
@@ -79,7 +79,7 @@ Complete implementation of the save storage layer. Responsible for file I/O (rea
 
 - The save ID is first validated as a lowercase, path-safe token (ASCII lowercase letters, digits, `.`, `_`, `-`; no dot-only value and no trailing `.`) and must not end in the reserved `.tmp`/`.bak` suffixes, matching the write/read path. Level IDs use the same identity rule because they name `level_{id}/`.
 - When neither the slot, the temp directory, nor any backup directory exists, the method throws `InvalidOperationException` rather than silently succeeding.
-- The real slot is removed before the `.tmp`/backup remnants, so a remnant-cleanup failure cannot leave a readable real slot whose backup was already deleted. Two case-variant backups are both removed rather than leaving one to be recovered after the delete.
+- The `.tmp`/backup remnants are removed before the real slot. Recovery promotes a complete `.bak` when the real slot is missing, so deleting the real slot first would let a failed backup cleanup resurrect the deleted save on the next enumeration. With this order, a failed remnant cleanup leaves the real slot intact and there is no orphaned backup to recover. Two case-variant backups are both removed rather than leaving one to be recovered after the delete.
 - Active-save protection belongs to the `ISndSaveOperations` business layer; the storage layer deletes exactly the slot it is given.
 
 ## Design Decisions
@@ -130,7 +130,7 @@ When the same game state is written to the same save slot multiple times, SHA-25
 `ComputePayloadHash` computes SHA individually for each component's node tree and combines them, ensuring:
 - Progress blackboard change → hash differs → rewrite
 - Any level data change → hash differs → rewrite
-- CustomMeta key-value change → hash differs → rewrite
+- CustomMeta key-value change → hash differs → rewrite (map and level segments are length-prefixed, so values/keys containing `=` cannot make two distinct maps collide)
 - Only SaveId differs (writing to a different slot) → always write (new slot has no .sha to compare)
 
 The `current/.payload.sha` writes follow three deliberate, non-conflicting semantics: the snapshot path (`WriteSavePayloadToCurrentThenSnapshot`) writes the **combined hash** (payload + the policy's extra directory), which the next idempotency comparison consumes; the test path (`SaveStorageAndPayloadTests.WritePayloadWithPayloadSha`, which calls `SavePayloadWriter.WriteToCurrent` then `SaveAtomicWriter.WritePayloadSha`) writes the **payload-only hash** (tests have no extra side channel, so a combined hash would be inaccurate); the load-recovery path (`DefaultSaveStorageService.WriteSavePayloadToCurrent`) writes **no hash** — a recovery write has no idempotency contract, and only the snapshot phase performs deduplication. The only consumer of `.payload.sha` is `TryIdempotentSkip` comparing against the snapshot directory; the `current/` hash itself is consumed only indirectly when it is copied into a snapshot.

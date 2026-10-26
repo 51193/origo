@@ -166,20 +166,35 @@ internal partial class GodotSndManager
     }
 
     /// <summary>
-    ///     Last-resort cleanup when this manager leaves the scene tree without
-    ///     going through the framework's session teardown (a scene switch, or
-    ///     business code removing/freeing the node directly). The engine is
-    ///     already tearing down the child node tree, so only the Core-side
-    ///     state must be released here: observer bindings (full teardown:
-    ///     unsubscribe + OnUnmounted + pool release) and entity strategies,
-    ///     then the collection is detached. Hook failures are logged and
-    ///     dropped — this path exists for out-of-contract use, and the node
-    ///     tree is already going away. Idempotent: the framework teardown
-    ///     path (session dispose → RemoveAllEntities) empties the collection
-    ///     before the node is freed, so nothing runs here in that case.
+    ///     Normal-exit teardown for the adapter host. Godot calls a child's
+    ///     <c>_ExitTree</c> before its parent's, so this manager runs before
+    ///     <see cref="OrigoDefaultEntry._ExitTree" />. When a progress run is
+    ///     active, shut the SndContext down here while the entity collection is
+    ///     still populated, so entity <c>BeforeQuit</c> hooks run; the parent
+    ///     call is then idempotent. If no context/progress run is bound (or the
+    ///     context is being torn down out of contract), fall back to the
+    ///     per-entity cleanup below. Hook/cleanup failures are logged and
+    ///     dropped because the node tree is already going away.
     /// </summary>
     public override void _ExitTree()
     {
+        if (Context is not null && Context.Blackboard.ProgressBlackboard is not null)
+        {
+            try
+            {
+                Context.Shutdown();
+            }
+            catch (Exception ex)
+            {
+                if (_runtimeDepsBound)
+                {
+                    SharedLogger.Log(LogLevel.Warning, nameof(GodotSndManager),
+                        new LogMessageBuilder()
+                            .Build($"SndContext shutdown during manager _ExitTree failed: {ex.Message}"));
+                }
+            }
+        }
+
         // Snapshot the collection: teardown triggers OnUnmounted hooks whose
         // handlers may mutate the collection, which would abort a live
         // enumeration and skip the remaining entities' cleanup.

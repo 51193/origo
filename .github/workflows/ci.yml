@@ -91,10 +91,15 @@ jobs:
         run: bash scripts/bash/benchmark.sh
 
   # Native Windows suite: scripts/powershell/*.ps1, independent of the Bash
-  # scripts above. This job runs the same gates on Windows PowerShell so the
-  # two platform script sets cannot drift silently.
+  # scripts above. This job runs the same gate sequence on Windows PowerShell
+  # so the two platform script sets cannot drift silently.
   windows-powershell:
     runs-on: windows-latest
+    env:
+      ORIGO_BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+      # Fork pull request branches are outside the repository owners' control;
+      # only same-repository branches are validated against the naming rule.
+      ORIGO_FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
 
     steps:
       - uses: actions/checkout@v7
@@ -111,6 +116,9 @@ jobs:
         uses: actions/setup-python@v7
         with:
           python-version: '3.12'
+
+      - name: Install Python validation dependencies
+        run: python -m pip install pyyaml
 
       - uses: actions/cache@v6
         with:

@@ -217,6 +217,81 @@ public class AdapterCommandHandlerIntegrationTests : IDeferredTestFixture, IDisp
         IntegrationTestRunner.AssertNotEmpty(output.PublishedLines, "output.PublishedLines");
     }
 
+    [DeferredTest(Description = "CameraView reports an existing entity with no visible nodes as visible-none, not entity-none")]
+    public void CameraView_EntityWithNoVisibleNodes_ReportsVisibleNone()
+    {
+        _root = ((SceneTree)Engine.GetMainLoop()).Root;
+
+        using var harness = new IntegrationTestHarness();
+        harness.BindRuntimeDependencies();
+        harness.BindContext();
+        var entity = GodotSndEntity.Create(
+            harness.SndWorld, harness.SndManager.Context!, harness.Logger,
+            harness.SndManager.GetObserverTopology(), _ => new StubNodeFactory());
+        SetupEntity(entity, "empty_cam_entity");
+        _root.AddChild(entity);
+        TrackNode(entity);
+
+        var camera = new Camera3D { Name = "EmptyTestCamera", Current = true, Position = Vector3.Zero };
+        _root.AddChild(camera);
+        TrackNode(camera);
+
+        var runtime = CreateRuntimeWithMockSession(entity);
+        var handler = new CameraViewCommandHandler(runtime);
+        var output = new StubConsoleOutput();
+
+        var invocation = new CommandInvocation
+        {
+            Command = "camera_view",
+            PositionalArgs = [],
+            NamedArgs = new Dictionary<string, string>()
+        };
+
+        var success = handler.TryExecute(invocation, output, out _);
+        var text = string.Join("\n", output.PublishedLines);
+        IntegrationTestRunner.Assert(success, "TryExecute should succeed in headless.");
+        IntegrationTestRunner.AssertContains("No visible entity nodes under the current camera.", text, "output");
+        IntegrationTestRunner.Assert(!text.Contains("No Godot entities available", StringComparison.Ordinal),
+            "an existing entity must not be reported as absent");
+    }
+
+    [DeferredTest(Description = "PressButton rejects a button outside the target entity's subtree")]
+    public void PressButton_OutsideEntity_Rejected()
+    {
+        _root = ((SceneTree)Engine.GetMainLoop()).Root;
+
+        using var harness = new IntegrationTestHarness();
+        harness.BindRuntimeDependencies();
+        harness.BindContext();
+        var entity = GodotSndEntity.Create(
+            harness.SndWorld, harness.SndManager.Context!, harness.Logger,
+            harness.SndManager.GetObserverTopology(), _ => new StubNodeFactory());
+        SetupEntity(entity, "bounded_button_entity");
+        _root.AddChild(entity);
+        TrackNode(entity);
+
+        var outside = new Button { Name = "OutsideButton" };
+        _root.AddChild(outside);
+        TrackNode(outside);
+        var pressed = false;
+        outside.Pressed += () => pressed = true;
+
+        var runtime = CreateRuntimeWithMockSession(entity);
+        var handler = new PressButtonCommandHandler(runtime);
+        var output = new StubConsoleOutput();
+        var invocation = new CommandInvocation
+        {
+            Command = "press_button",
+            PositionalArgs = ["bounded_button_entity", outside.GetPath().ToString()],
+            NamedArgs = new Dictionary<string, string>()
+        };
+
+        var success = handler.TryExecute(invocation, output, out var error);
+        IntegrationTestRunner.Assert(!success, "a button outside the entity must be rejected.");
+        IntegrationTestRunner.Assert(!pressed, "the outside button must not be pressed.");
+        IntegrationTestRunner.AssertContains("under entity", error ?? string.Empty, "error");
+    }
+
     private sealed class StubSessionManager(ISndEntity? entity) : ISessionManager
     {
         public ISessionRun? ForegroundSession => entity != null ? new StubForegroundSession(entity) : null;

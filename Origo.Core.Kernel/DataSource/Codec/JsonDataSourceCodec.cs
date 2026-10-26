@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.Json;
@@ -18,7 +20,7 @@ internal sealed class JsonDataSourceCodec(bool writeIndented = true) : IDataSour
         using var stream = new MemoryStream();
         using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = _writeIndented });
 
-        WriteNode(writer, node);
+        WriteNode(writer, node, []);
         writer.Flush();
 
         return Encoding.UTF8.GetString(stream.ToArray());
@@ -88,45 +90,58 @@ internal sealed class JsonDataSourceCodec(bool writeIndented = true) : IDataSour
         return node;
     }
 
-    private static void WriteNode(Utf8JsonWriter writer, DataSourceNode node)
+    private static void WriteNode(
+        Utf8JsonWriter writer, DataSourceNode node, HashSet<DataSourceNode> active)
     {
-        switch (node.Kind)
+        if (!active.Add(node))
+            throw new InvalidOperationException(
+                "DataSourceNode graph contains a cycle; a node tree must be acyclic and cannot be encoded.");
+
+        try
         {
-            case DataSourceNodeKind.Map:
-                writer.WriteStartObject();
-                foreach (var key in node.Keys)
-                    WriteProperty(writer, key, node[key]);
-                writer.WriteEndObject();
-                break;
+            switch (node.Kind)
+            {
+                case DataSourceNodeKind.Map:
+                    writer.WriteStartObject();
+                    foreach (var key in node.Keys)
+                        WriteProperty(writer, key, node[key], active);
+                    writer.WriteEndObject();
+                    break;
 
-            case DataSourceNodeKind.Array:
-                writer.WriteStartArray();
-                foreach (var element in node.Elements)
-                    WriteNode(writer, element);
-                writer.WriteEndArray();
-                break;
+                case DataSourceNodeKind.Array:
+                    writer.WriteStartArray();
+                    foreach (var element in node.Elements)
+                        WriteNode(writer, element, active);
+                    writer.WriteEndArray();
+                    break;
 
-            case DataSourceNodeKind.Text:
-                writer.WriteStringValue(node.AsString());
-                break;
+                case DataSourceNodeKind.Text:
+                    writer.WriteStringValue(node.AsString());
+                    break;
 
-            case DataSourceNodeKind.Number:
-                writer.WriteRawValue(node.AsString());
-                break;
+                case DataSourceNodeKind.Number:
+                    writer.WriteRawValue(node.AsString());
+                    break;
 
-            case DataSourceNodeKind.Bool:
-                writer.WriteBooleanValue(node.As<bool>());
-                break;
+                case DataSourceNodeKind.Bool:
+                    writer.WriteBooleanValue(node.As<bool>());
+                    break;
 
-            case DataSourceNodeKind.Null:
-                writer.WriteNullValue();
-                break;
+                case DataSourceNodeKind.Null:
+                    writer.WriteNullValue();
+                    break;
+            }
+        }
+        finally
+        {
+            active.Remove(node);
         }
     }
 
-    private static void WriteProperty(Utf8JsonWriter writer, string key, DataSourceNode node)
+    private static void WriteProperty(
+        Utf8JsonWriter writer, string key, DataSourceNode node, HashSet<DataSourceNode> active)
     {
         writer.WritePropertyName(key);
-        WriteNode(writer, node);
+        WriteNode(writer, node, active);
     }
 }

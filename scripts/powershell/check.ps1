@@ -26,7 +26,7 @@ if ($Mode -eq 'full') {
     exit 0
 }
 
-$arguments = @('scripts/python/check.py', $Mode)
+$arguments = @('scripts/python/check.py', $Mode, '--suite', 'powershell')
 if (-not [string]::IsNullOrWhiteSpace($Project)) { $arguments += @('--project', $Project) }
 if (-not [string]::IsNullOrWhiteSpace($Filter)) { $arguments += @('--filter', $Filter) }
 if (-not [string]::IsNullOrWhiteSpace($Base)) { $arguments += @('--base', $Base) }

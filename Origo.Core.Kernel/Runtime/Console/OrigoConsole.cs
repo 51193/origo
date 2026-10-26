@@ -66,10 +66,24 @@ public sealed class OrigoConsole
     ///     command processing is owned by <see cref="OrigoRuntime" />'s frame
     ///     driver so commands always execute in the fixed frame order.
     /// </summary>
+    private const int _maxCommandsPerFrame = 256;
+    private long _lastDroppedCommandCount;
+
     internal void ProcessPending()
     {
-        while (_input.TryDequeueCommand(out var line))
+        if (_input is ConsoleInputBuffer buffer
+            && buffer.DroppedCommandCount > _lastDroppedCommandCount)
         {
+            _logger.Log(LogLevel.Warning, nameof(OrigoConsole),
+                new LogMessageBuilder().Build(
+                    $"Console input queue dropped {buffer.DroppedCommandCount - _lastDroppedCommandCount} command(s) at its pending bound."));
+            _lastDroppedCommandCount = buffer.DroppedCommandCount;
+        }
+
+        var processed = 0;
+        while (processed < _maxCommandsPerFrame && _input.TryDequeueCommand(out var line))
+        {
+            processed++;
             if (string.IsNullOrWhiteSpace(line))
                 continue;
 

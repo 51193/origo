@@ -12,6 +12,10 @@ $root = Get-OrigoRoot
 $version = Get-OrigoBuildVersion
 $versionArg = '-p:OrigoShellPackageVersion=' + $version
 $sdkVersion = Get-OrigoGodotSdkVersion
+$consumerSdkVersion = Get-OrigoGodotSdkVersion -ProjectPath (Join-OrigoPath @($root, 'tools', 'ShellPackageConsumer', 'OrigoShellPackageConsumer.csproj'))
+if ($sdkVersion -ne $consumerSdkVersion) {
+    throw ('Godot.NET.Sdk pin mismatch: adapter=' + $sdkVersion + ' consumer=' + $consumerSdkVersion + '. Update both projects in the same change.')
+}
 $work = New-OrigoTempDirectory
 $feed = Join-Path $work 'feed'
 $consumer = Join-Path $work 'consumer'

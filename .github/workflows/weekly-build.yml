@@ -115,16 +115,32 @@ jobs:
           # the whole run and dropping today's window.
           ORPHAN_TAGS_FILE="${RUNNER_TEMP}/origo-orphan-tags.txt"
           : > "$ORPHAN_TAGS_FILE"
+          expected_snapshot_assets() {
+            local version="$1"
+            printf '%s\n' \
+              "Origo.ConsoleBridge.${version}.nupkg" \
+              "Origo.Core.${version}.nupkg" \
+              "Origo.Core.Contracts.${version}.nupkg" \
+              "Origo.Core.Kernel.${version}.nupkg" \
+              "Origo.GodotAdapter.${version}.nupkg" \
+              "origo-docs-${version}.tar.gz" \
+              "origo-docs-${version}.zip" \
+              "origo-source-${version}.tar.gz" \
+              "nuget.config" \
+              | LC_ALL=C sort | paste -sd, -
+          }
           release_is_complete() {
             local release_tag="$1"
-            local state draft prerelease assets
-            if state="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${release_tag}"                 --jq '[.draft, .prerelease, (.assets | length)] | @tsv' 2>&1)"; then
+            local version="${release_tag#v}"
+            local state draft prerelease assets expected
+            expected="$(expected_snapshot_assets "$version")"
+            if state="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${release_tag}"                 --jq '[.draft, .prerelease, ([.assets[].name] | sort | join(","))] | @tsv' 2>&1)"; then
               IFS=$'\t' read -r draft prerelease assets <<< "$state"
               # softprops creates the prerelease before uploading; a failed
               # upload can leave a published prerelease with only some assets.
-              # The snapshot has five packages, the source archive, two docs
-              # archives, and nuget.config.
-              [[ "$draft" == "false" && "$prerelease" == "true" && "$assets" -ge 9 ]]
+              # Check the exact identities, not just the count: nine unrelated
+              # assets would otherwise mark a release complete.
+              [[ "$draft" == "false" && "$prerelease" == "true" && "$assets" == "$expected" ]]
               return
             fi
             if [[ "$state" == *"HTTP 404"* || "$state" == *"Not Found"* ]]; then

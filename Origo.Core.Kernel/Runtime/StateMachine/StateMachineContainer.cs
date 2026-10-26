@@ -203,9 +203,12 @@ internal sealed class StateMachineContainer : IStateMachineContainer
                     throw new InvalidOperationException($"StateMachineEntry '{entry.Key}' stack is required.");
 
                 var sm = new StackStateMachine(entry.Key, entry.PushIndex, entry.PopIndex, _pool, _ctx);
-                ((IStateMachine)sm).RestoreStackWithoutHooks(entry.Stack);
+                // Register before restoring: a corrupt stack must not leave the
+                // newly created machine (and its two pool references) outside
+                // the catch cleanup below.
                 newMachines[entry.Key] = sm;
                 newOrder.Add(entry.Key);
+                ((IStateMachine)sm).RestoreStackWithoutHooks(entry.Stack);
             }
         }
         catch

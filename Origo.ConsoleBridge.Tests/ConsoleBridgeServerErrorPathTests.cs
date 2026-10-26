@@ -271,6 +271,15 @@ public class ConsoleBridgeServerErrorPathTests
     }
 
     [Fact]
+    public void Start_MaxInputLineLengthNonPositive_Throws()
+    {
+        var options = new ConsoleBridgeOptions { MaxInputLineLength = 0 };
+        using var server = new ConsoleBridgeServer(
+            new ConsoleInputBuffer(), new ConsoleOutputChannel(), options);
+        Assert.Throws<ArgumentOutOfRangeException>(() => server.Start());
+    }
+
+    [Fact]
     public void Start_Failure_RollsBackAndAllowsRetry()
     {
         // An invalid port fails during listener construction inside Start;
