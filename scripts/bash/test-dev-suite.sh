@@ -53,27 +53,30 @@ fi
 for self_test in scripts/bash/test-*.sh; do
     name="$(basename "$self_test")"
     [[ "$name" == "test-dev-suite.sh" ]] && continue
-    grep -Fq "bash scripts/bash/$name" scripts/bash/lint-scripts.sh \
+    grep -Eq "^[[:space:]]*bash scripts/bash/${name//./\\.}([[:space:]]|$)" scripts/bash/lint-scripts.sh \
         || FAIL "Bash self-test is not wired into lint-scripts.sh: $name"
 done
 
 # Bash-free shared Python gates that the PowerShell lint gate relies on.
+powershell_lint_active="$(grep -v '^[[:space:]]*#' scripts/powershell/lint-scripts.ps1)"
 for marker in \
     "scripts/python/check_test.py" \
     "scripts/python/validate-agent-docs.py" \
     "scripts/python/validate-release-workflow.py" \
     "scripts/python/test-validate-release-workflow.py" \
     "scripts/python/work_identity.py"; do
-    grep -Fq "$marker" scripts/powershell/lint-scripts.ps1 \
+    grep -Fq "$marker" <<<"$powershell_lint_active" \
         || FAIL "PowerShell lint gate is missing shared check: $marker"
 done
+grep -Fq "test-api-inventory-parent.ps1" <<<"$powershell_lint_active" \
+    || FAIL "PowerShell lint gate is missing its API-inventory self-test."
 # Keep the native-Windows suite free of Bash-backed Python self-tests.
-if grep -Eq 'work_identity_test\.py|test-validate-release-packages\.py' scripts/powershell/lint-scripts.ps1; then
+if grep -Eq 'work_identity_test\.py|test-validate-release-packages\.py' <<<"$powershell_lint_active"; then
     FAIL "PowerShell lint gate must not invoke Bash-backed Python self-tests."
 fi
 
 # Every Bash/PowerShell script must appear in the script map.
-for script in scripts/bash/*.sh scripts/powershell/*.ps1; do
+for script in scripts/bash/*.sh scripts/powershell/*.ps1 scripts/python/*.py; do
     name="$(basename "$script")"
     grep -Fq "\`$name\`" scripts/README.md \
         || FAIL "script is missing from scripts/README.md: $name"

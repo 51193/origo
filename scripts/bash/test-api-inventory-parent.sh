@@ -2,7 +2,7 @@
 # Regression tests for the Bash counterpart of the PowerShell API-inventory
 # parent/metadata-commit check. The helper must resolve a release commit's
 # parent and accept only a metadata-only `chore(release)` commit as a release
-# tag when the tag is not an ancestor of the current HEAD.
+# tag when the tag is a sibling of the current HEAD.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 FIXTURE="$(mktemp -d "${TMPDIR:-/tmp}/origo-api-parent.XXXXXX")"
@@ -16,46 +16,51 @@ FAIL() {
     exit 1
 }
 
-new_repo() {
-    local dir="$1"
-    mkdir -p "$dir/tools/ApiInventoryTool"
-    git -C "$dir" init -q
-    git -C "$dir" config user.name "Origo Test"
-    git -C "$dir" config user.email "origo-test@example.invalid"
-    printf '%s\n' '<Version>0.1.0</Version>' > "$dir/Directory.Build.props"
-    printf '%s\n' 'first-baseline' > "$dir/tools/ApiInventoryTool/shell-api-baseline.json"
-    git -C "$dir" add -A
-    git -C "$dir" commit -qm "release 0.1.0"
-    git -C "$dir" tag v0.1.0
-}
+repo="$FIXTURE/repo"
+mkdir -p "$repo/tools/ApiInventoryTool"
+git -C "$repo" init -q
+git -C "$repo" config user.name "Origo Test"
+git -C "$repo" config user.email "origo-test@example.invalid"
 
-# A metadata-only release commit is a child of the previous main commit, not an
-# ancestor of HEAD's branch when the tag is a sibling. The helper must select
-# the previous release baseline through the metadata tag.
-repo_metadata="$FIXTURE/metadata-only"
-new_repo "$repo_metadata"
-printf '%s\n' '<Version>0.1.1</Version>' > "$repo_metadata/Directory.Build.props"
-git -C "$repo_metadata" commit -qam "chore(release): sync version stamps to v0.1.1"
-git -C "$repo_metadata" tag v0.1.1
+# v0.1.0: the older fallback baseline.
+printf '%s\n' '<Version>0.1.0</Version>' > "$repo/Directory.Build.props"
+printf '%s\n' 'first-baseline' > "$repo/tools/ApiInventoryTool/shell-api-baseline.json"
+git -C "$repo" add -A
+git -C "$repo" commit -qm "release 0.1.0"
+git -C "$repo" tag v0.1.0
 
-output="$(cd "$repo_metadata" && ORIGO_CURRENT_RELEASE_TAG=v0.1.1 bash "$ROOT/scripts/bash/find-previous-api-baseline.sh")"
-[[ -n "$output" ]] || FAIL "metadata-only tag did not yield a previous baseline."
-[[ "$(cat "$output")" == "first-baseline" ]] || FAIL "metadata-only tag selected the wrong baseline."
+# Main advances to a development version with a distinct baseline. The
+# release tags below are detached children of this commit, so they are
+# siblings of HEAD rather than ancestors.
+printf '%s\n' '<Version>0.1.4-dev</Version>' > "$repo/Directory.Build.props"
+printf '%s\n' 'second-baseline' > "$repo/tools/ApiInventoryTool/shell-api-baseline.json"
+git -C "$repo" add -A
+git -C "$repo" commit -qm "develop 0.1.4"
+main_commit="$(git -C "$repo" rev-parse HEAD)"
+
+# v0.1.3: a valid metadata-only release commit; its baseline is the one the
+# helper must select.
+git -C "$repo" checkout -q --detach "$main_commit"
+printf '%s\n' '<Version>0.1.3</Version>' > "$repo/Directory.Build.props"
+git -C "$repo" commit -qam "chore(release): sync version stamps to v0.1.3"
+git -C "$repo" tag v0.1.3
+
+# v0.1.4: metadata-looking but with an extra changed file. It must be rejected,
+# and its intentionally wrong baseline must not be selected.
+git -C "$repo" checkout -q --detach "$main_commit"
+printf '%s\n' '<Version>0.1.4</Version>' > "$repo/Directory.Build.props"
+printf '%s\n' 'wrong-baseline' > "$repo/tools/ApiInventoryTool/shell-api-baseline.json"
+printf '%s\n' 'not metadata' > "$repo/README.md"
+git -C "$repo" add -A
+git -C "$repo" commit -qm "chore(release): sync version stamps to v0.1.4"
+git -C "$repo" tag v0.1.4
+git -C "$repo" checkout -q "$main_commit"
+
+output="$(cd "$repo" && bash "$ROOT/scripts/bash/find-previous-api-baseline.sh")"
+[[ -n "$output" ]] || FAIL "sibling metadata tags did not yield a previous baseline."
+actual="$(cat "$output")"
 rm -f "$output"
-
-# A metadata-looking commit with another changed file must not be treated as a
-# release commit. The older tagged baseline must still be selected.
-repo_extra="$FIXTURE/extra-file"
-new_repo "$repo_extra"
-printf '%s\n' '<Version>0.2.0</Version>' > "$repo_extra/Directory.Build.props"
-printf '%s\n' 'not metadata' > "$repo_extra/README.md"
-git -C "$repo_extra" add -A
-git -C "$repo_extra" commit -qm "chore(release): sync version stamps to v0.2.0"
-git -C "$repo_extra" tag v0.2.0
-
-output="$(cd "$repo_extra" && ORIGO_CURRENT_RELEASE_TAG=v0.2.0 bash "$ROOT/scripts/bash/find-previous-api-baseline.sh")"
-[[ -n "$output" ]] || FAIL "extra-file metadata tag did not yield the older baseline."
-[[ "$(cat "$output")" == "first-baseline" ]] || FAIL "a metadata-looking commit with an extra file was accepted."
-rm -f "$output"
+[[ "$actual" == "second-baseline" ]] ||
+    FAIL "expected the valid sibling metadata baseline; got '$actual'."
 
 echo "Bash API-inventory parent/metadata regression: OK"
