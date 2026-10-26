@@ -74,12 +74,16 @@ grep -Fq "test-api-inventory-parent.ps1" <<<"$powershell_lint_active" \
 if grep -Eq 'work_identity_test\.py|test-validate-release-packages\.py' <<<"$powershell_lint_active"; then
     FAIL "PowerShell lint gate must not invoke Bash-backed Python self-tests."
 fi
+if grep -Eq '^[[:space:]]*(bash|sh)[[:space:]]' <<<"$powershell_lint_active"; then
+    FAIL "PowerShell lint gate must not invoke a shell command."
+fi
 
-# Every Bash/PowerShell script must appear in the script map.
+# Every Bash, PowerShell, and Python script must appear as a table row in
+# the script map.
 for script in scripts/bash/*.sh scripts/powershell/*.ps1 scripts/python/*.py; do
     name="$(basename "$script")"
-    grep -Fq "\`$name\`" scripts/README.md \
-        || FAIL "script is missing from scripts/README.md: $name"
+    grep -Eq "^\|[[:space:]]*\`${name//./\\.}\`" scripts/README.md \
+        || FAIL "script is missing from the scripts/README.md table: $name"
 done
 
 if ((failures > 0)); then
