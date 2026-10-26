@@ -44,6 +44,7 @@ public sealed class SndContext : ISndContext
     private bool _shutdown;
     private bool _shutdownCleanupPending;
     private bool _shutdownRetryCurrentDelete;
+    private bool _shutdownInProgress;
     private bool _bootstrapCompleted;
     private readonly SndContextParameters _parameters;
     internal int _pendingPersistenceRequests;
@@ -166,6 +167,13 @@ public sealed class SndContext : ISndContext
         if (_shutdown)
             return;
 
+        // A nested Shutdown from a quit hook runs while the outer call still
+        // owns ProgressRun disposal. It must not commit the terminal flag or
+        // clear the progress reference: the outer call continues and, on a
+        // cleanup failure, keeps the retry record.
+        if (_shutdownInProgress)
+            return;
+
         // A BeforeSave hook runs inside the session-mutation guard. Tearing the
         // progress run down here would remove sessions/current while the save
         // workflow is still active; reject the call before any cleanup instead.
@@ -173,84 +181,92 @@ public sealed class SndContext : ISndContext
             throw new InvalidOperationException(
                 "SndContext.Shutdown cannot run while a BeforeSave hook is executing.");
 
-        if (_progressRun is null && _shutdownCleanupPending)
+        _shutdownInProgress = true;
+        try
         {
-            // A previous attempt ran the quit hooks and released the progress
-            // run but failed on a cleanup dependency (typically the current/
-            // delete). Retry only the idempotent cleanup steps; never replay
-            // hooks or session teardown.
-            Exception? retryFailure = null;
+            if (_progressRun is null && _shutdownCleanupPending)
+            {
+                // A previous attempt ran the quit hooks and released the progress
+                // run but failed on a cleanup dependency (typically the current/
+                // delete). Retry only the idempotent cleanup steps; never replay
+                // hooks or session teardown.
+                Exception? retryFailure = null;
+                try
+                {
+                    Runtime.ResetConsoleState();
+                }
+                catch (Exception ex)
+                {
+                    retryFailure = ex;
+                }
+
+                if (_shutdownRetryCurrentDelete)
+                {
+                    try
+                    {
+                        StorageService.DeleteCurrentDirectory();
+                    }
+                    catch (Exception ex)
+                    {
+                        retryFailure ??= ex;
+                    }
+                }
+
+                if (retryFailure is not null)
+                    ExceptionDispatchInfo.Capture(retryFailure).Throw();
+
+                _shutdownCleanupPending = false;
+                _shutdownRetryCurrentDelete = false;
+                _shutdown = true;
+                return;
+            }
+
+            // Both teardown steps are attempted even if the first fails. The
+            // terminal flag is committed only after the whole attempt succeeds,
+            // so a throwing consumer console source cannot make Shutdown a
+            // permanent no-op with the progress run/current directory still live.
+            Exception? firstFailure = null;
+            var hadProgressRun = _progressRun is not null;
             try
             {
                 Runtime.ResetConsoleState();
             }
             catch (Exception ex)
             {
-                retryFailure = ex;
+                firstFailure = ex;
             }
 
-            if (_shutdownRetryCurrentDelete)
+            try
             {
-                try
-                {
-                    StorageService.DeleteCurrentDirectory();
-                }
-                catch (Exception ex)
-                {
-                    retryFailure ??= ex;
-                }
+                // ProgressRun.Dispose runs the session/progress quit hooks and
+                // deletes current/. A host that never started a progress run has
+                // nothing to clean and no file-system access requirement here.
+                ShutdownCurrentProgressAndScene();
+            }
+            catch (Exception ex)
+            {
+                firstFailure ??= ex;
+            }
+            finally
+            {
+                _progressRun = null;
             }
 
-            if (retryFailure is not null)
-                ExceptionDispatchInfo.Capture(retryFailure).Throw();
+            if (firstFailure is not null)
+            {
+                _shutdownCleanupPending = true;
+                _shutdownRetryCurrentDelete = hadProgressRun;
+                ExceptionDispatchInfo.Capture(firstFailure).Throw();
+            }
 
             _shutdownCleanupPending = false;
             _shutdownRetryCurrentDelete = false;
             _shutdown = true;
-            return;
-        }
-
-        // Both teardown steps are attempted even if the first fails. The
-        // terminal flag is committed only after the whole attempt succeeds,
-        // so a throwing consumer console source cannot make Shutdown a
-        // permanent no-op with the progress run/current directory still live.
-        Exception? firstFailure = null;
-        var hadProgressRun = _progressRun is not null;
-        try
-        {
-            Runtime.ResetConsoleState();
-        }
-        catch (Exception ex)
-        {
-            firstFailure = ex;
-        }
-
-        try
-        {
-            // ProgressRun.Dispose runs the session/progress quit hooks and
-            // deletes current/. A host that never started a progress run has
-            // nothing to clean and no file-system access requirement here.
-            ShutdownCurrentProgressAndScene();
-        }
-        catch (Exception ex)
-        {
-            firstFailure ??= ex;
         }
         finally
         {
-            _progressRun = null;
+            _shutdownInProgress = false;
         }
-
-        if (firstFailure is not null)
-        {
-            _shutdownCleanupPending = true;
-            _shutdownRetryCurrentDelete = hadProgressRun;
-            ExceptionDispatchInfo.Capture(firstFailure).Throw();
-        }
-
-        _shutdownCleanupPending = false;
-        _shutdownRetryCurrentDelete = false;
-        _shutdown = true;
     }
 
     /// <summary>

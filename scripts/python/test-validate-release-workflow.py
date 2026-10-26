@@ -704,6 +704,13 @@ class ReleaseWorkflowGuardTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("reject draft releases", stderr)
 
+    def test_weekly_missing_expected_asset_name_is_rejected(self):
+        old = '              "nuget.config" \\\n'
+        weekly = self.mutated_weekly(old, '              "unexpected.config" \\\n')
+        code, _, stderr = self.run_guard(WORKFLOW.read_text(encoding="utf-8"), weekly)
+        self.assertEqual(code, 1)
+        self.assertIn("nuget.config", stderr)
+
     def test_weekly_missing_new_tag_output_is_rejected(self):
         old = '          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"\n'
         weekly = self.mutated_weekly(old, "")

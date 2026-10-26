@@ -384,6 +384,33 @@ def _weekly_snapshot_errors(workflow: dict) -> list[str]:
             '"$assets" == "$expected"': (
                 "the weekly check must require all nine expected snapshot assets by name"
             ),
+            'Origo.ConsoleBridge.${version}.nupkg': (
+                "the weekly check must expect Origo.ConsoleBridge.${version}.nupkg"
+            ),
+            'Origo.Core.${version}.nupkg': (
+                "the weekly check must expect Origo.Core.${version}.nupkg"
+            ),
+            'Origo.Core.Contracts.${version}.nupkg': (
+                "the weekly check must expect Origo.Core.Contracts.${version}.nupkg"
+            ),
+            'Origo.Core.Kernel.${version}.nupkg': (
+                "the weekly check must expect Origo.Core.Kernel.${version}.nupkg"
+            ),
+            'Origo.GodotAdapter.${version}.nupkg': (
+                "the weekly check must expect Origo.GodotAdapter.${version}.nupkg"
+            ),
+            'origo-docs-${version}.tar.gz': (
+                "the weekly check must expect origo-docs-${version}.tar.gz"
+            ),
+            'origo-docs-${version}.zip': (
+                "the weekly check must expect origo-docs-${version}.zip"
+            ),
+            'origo-source-${version}.tar.gz': (
+                "the weekly check must expect origo-source-${version}.tar.gz"
+            ),
+            'nuget.config': (
+                "the weekly check must expect nuget.config"
+            ),
             'HTTP 404': (
                 "the weekly check must distinguish a missing release (404) from other API errors"
             ),

@@ -34,10 +34,11 @@ public interface ISndContext
     ///     run while their resources are still available. Idempotent; after
     ///     shutdown, bootstrap and persistence mutations (save/load/delete/continue/level-switch) fail explicitly.
     ///     Throws <see cref="InvalidOperationException" /> when called from a
-    ///     <c>BeforeSave</c> hook (the save workflow owns the session set) or
-    ///     after a level switch has already begun tearing down the foreground;
-    ///     the context rejects that reentrant teardown before mounting or
-    ///     recreating <c>current/</c>.
+    ///     <c>BeforeSave</c> hook (the save workflow owns the session set).
+    ///     During a level switch, a <c>BeforeQuit</c> hook may still call
+    ///     <see cref="Shutdown" />; the switch then observes the terminal state
+    ///     and aborts before mounting a new foreground or recreating
+    ///     <c>current/</c>.
     /// </summary>
     void Shutdown();
 

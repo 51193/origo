@@ -470,6 +470,7 @@ public sealed class DataSourceNode : IDisposable
     private string BuildCanonicalString()
     {
         var resultMap = new Dictionary<DataSourceNode, string>();
+        var parentUseCount = new Dictionary<DataSourceNode, int>();
         var order = new List<DataSourceNode>();
         var active = new HashSet<DataSourceNode>();
         var done = new HashSet<DataSourceNode>();
@@ -501,13 +502,19 @@ public sealed class DataSourceNode : IDisposable
                 for (var i = node._orderedKeys.Count - 1; i >= 0; i--)
                 {
                     var key = node._orderedKeys[i];
-                    stack.Push((node._objectChildren[key], false));
+                    var child = node._objectChildren[key];
+                    parentUseCount[child] = parentUseCount.GetValueOrDefault(child) + 1;
+                    stack.Push((child, false));
                 }
             }
             else if (node._kind == DataSourceNodeKind.Array)
             {
                 for (var i = node._arrayChildren.Count - 1; i >= 0; i--)
-                    stack.Push((node._arrayChildren[i], false));
+                {
+                    var child = node._arrayChildren[i];
+                    parentUseCount[child] = parentUseCount.GetValueOrDefault(child) + 1;
+                    stack.Push((child, false));
+                }
             }
         }
 
@@ -528,9 +535,34 @@ public sealed class DataSourceNode : IDisposable
                 DataSourceNodeKind.Null => "X",
                 _ => "X"
             };
+
+            // Release child strings once their last parent has consumed them.
+            // Keeping every postorder string alive is quadratic in depth for a
+            // linear tree (the 10k-depth regression otherwise peaks near 1.6 GB).
+            if (node._kind == DataSourceNodeKind.Map)
+            {
+                foreach (var key in node._orderedKeys)
+                    ReleaseChild(node._objectChildren[key], resultMap, parentUseCount);
+            }
+            else if (node._kind == DataSourceNodeKind.Array)
+            {
+                foreach (var child in node._arrayChildren)
+                    ReleaseChild(child, resultMap, parentUseCount);
+            }
         }
 
         return resultMap[this];
+    }
+
+    private static void ReleaseChild(
+        DataSourceNode child,
+        Dictionary<DataSourceNode, string> resultMap,
+        Dictionary<DataSourceNode, int> parentUseCount)
+    {
+        var remaining = parentUseCount[child] - 1;
+        parentUseCount[child] = remaining;
+        if (remaining == 0)
+            resultMap.Remove(child);
     }
 
     private static string EscapeCanonical(string? value)

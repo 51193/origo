@@ -346,8 +346,17 @@ public sealed class ConsoleBridgeServer : IDisposable
                 return builder.Length == 0 ? null : builder.ToString();
 
             var ch = one[0];
+            if (ch == '\r')
+            {
+                // Treat CR and CRLF as one line terminator. Peek does not
+                // consume the LF, so a lone CR still ends the line and the
+                // next read starts at the following character.
+                if (reader.Peek() == '\n')
+                    await reader.ReadAsync(one.AsMemory(0, 1), ct).ConfigureAwait(false);
+                return builder.ToString();
+            }
             if (ch == '\n')
-                return builder.ToString().TrimEnd('\r');
+                return builder.ToString();
 
             if (builder.Length >= _options.MaxInputLineLength)
             {

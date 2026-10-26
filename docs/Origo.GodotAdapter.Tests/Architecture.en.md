@@ -41,7 +41,7 @@ and guards the public visibility of the adapter-layer `CommandHandlerBase`, allo
 
 | Test Method | Verified Behavior | Doc Reference |
 |-------------|-------------------|---------------|
-| `AdapterShellPublicSignatures_ShouldNotExposeKernelTypes` | No exported Adapter type, property, method return/parameter, or field exposes an `Origo.Core.Kernel` type | architecture/shell-kernel-boundary |
+| `AdapterShellPublicSignatures_ShouldNotExposeKernelTypes` | No exported Adapter type, property/method/constructor return/parameter, field, event handler, or generic argument exposes an `Origo.Core.Kernel` type | architecture/shell-kernel-boundary |
 
 ## Test Support Strategy
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.DataSource;
 using Origo.Core.Save;
@@ -98,6 +99,19 @@ public class SaveIdempotencyTests
         SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, second, "001", logger);
 
         Assert.Contains("bM:c=d", fs.ReadAllText("root/current/meta.map"));
+    }
+
+    [Fact]
+    public void ComputePayloadHash_UnpairedSurrogateMeta_ThrowsInsteadOfColliding()
+    {
+        var replacement = CreateMinimalPayload("001", "default");
+        replacement.CustomMeta = new Dictionary<string, string> { ["note"] = "\uFFFD" };
+        var unpaired = CreateMinimalPayload("001", "default");
+        unpaired.CustomMeta = new Dictionary<string, string> { ["note"] = "\uD800" };
+
+        Assert.NotEmpty(SavePayloadWriter.ComputePayloadHash(replacement));
+        Assert.Throws<EncoderFallbackException>(() =>
+            SavePayloadWriter.ComputePayloadHash(unpaired));
     }
 
     [Fact]

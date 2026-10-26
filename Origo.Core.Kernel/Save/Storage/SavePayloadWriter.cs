@@ -15,6 +15,11 @@ namespace Origo.Core.Save.Storage;
 /// </summary>
 internal static class SavePayloadWriter
 {
+    // CustomMeta is arbitrary contributor text. Reject unpaired UTF-16
+    // surrogates instead of letting the replacement encoder collapse them
+    // into U+FFFD, which would make distinct metadata hash-equal.
+    private static readonly UTF8Encoding _strictUtf8 = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
+
     public static void WriteProgressOnlyToCurrent(
         SaveFileHandle handle,
         DataSourceNode progressNode,
@@ -295,7 +300,7 @@ internal static class SavePayloadWriter
             // "M:{key}={value}" bytes makes distinct maps share a hash (for
             // example {"a=b":"c"} and {"a":"b=c"}); a length prefix keeps the
             // feed injective without constraining metadata values.
-            var bytes = Encoding.UTF8.GetBytes(s);
+            var bytes = _strictUtf8.GetBytes(s);
             Span<byte> length = stackalloc byte[4];
             BinaryPrimitives.WriteInt32LittleEndian(length, bytes.Length);
             sha.AppendData(length);

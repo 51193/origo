@@ -29,6 +29,7 @@ ensuring Action strategy mount/unmount goes through the real `SndStrategyManager
 | `StartIntent_WritesActiveIntentStatus` | When an intent starts executing, `IntentStatusKey` is written as `"active"` (the active state corresponding to the terminal completed/failed states) | Planning |
 | `AfterLoad_IntentPresent_DoesNotRestartPlan` | AfterLoad does not reset existing plan steps (save restoration) | Planning |
 | `StartIntent_ClearsPreviousPlanState` | Starting new intent clears old step/Action data | Planning |
+| `StartIntent_NoFirstStep_CompletesImmediately` | A null/empty first `ResolveNextStep` completes the intent immediately; no action is mounted | Planning |
 | `ActionCompletion_InSndEntity_AdvancesToNextStep` | After ActionStatus="completed", advances to next step via data subscription, unmounts old Action and mounts new Action | Planning |
 | `ActionCompletion_LastStep_CompletesPlan` | After last step completes, clears intent, intent_status="completed" | Planning |
 | `StepWithoutAction_DoesNotAddStrategy` | When StepToActionIndex returns null, does not mount Action strategy but still records step | Planning |
@@ -46,6 +47,7 @@ ensuring Action strategy mount/unmount goes through the real `SndStrategyManager
 | `AdvancePlan_ActionCompletesWithoutIntent_ThrowsAndCleansUpAction` | Action marked completed after intent cleared | InvalidOperationException (contains "no intent is active"), Action unmounted and plan step cleared |
 | `Wire_SecondPlanStrategyOnSameEntity_Throws` | Mounting a second plan strategy on the same entity | InvalidOperationException (contains "plan strategy") |
 | `Wire_StartIntentThrows_RollsBackWiringAndAllowsRetry` | ResolveNextStep throws during StartIntent | InvalidOperationException propagates, subscriptions rolled back to zero, retry succeeds |
+| `AfterAdd_WhenUserHookThrows_UnwiresAndAllowsRetry` | `OnAfterAdd` throws after wiring | Original exception propagates; both subscriptions are removed and a retry re-wires cleanly |
 
 ### Boundary Path
 

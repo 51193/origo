@@ -127,7 +127,7 @@ jobs:
               "origo-docs-${version}.zip" \
               "origo-source-${version}.tar.gz" \
               "nuget.config" \
-              | sort | paste -sd, -
+              | LC_ALL=C sort | paste -sd, -
           }
           release_is_complete() {
             local release_tag="$1"

@@ -145,7 +145,7 @@ Destroy:
     → Release the levelId held by that session
 
 Exit:
-  SndContext.Shutdown() (or OrigoHost.Dispose / OrigoDefaultEntry._ExitTree)
+  SndContext.Shutdown() (or OrigoHost.Dispose / GodotSndManager._ExitTree / OrigoDefaultEntry._ExitTree)
     → ProgressRun dispose
     → Destroy all background sessions and foreground session in order
     → Clean up current/ temp directory

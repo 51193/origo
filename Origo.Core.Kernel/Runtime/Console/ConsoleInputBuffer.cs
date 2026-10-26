@@ -31,16 +31,6 @@ public sealed class ConsoleInputBuffer : IConsoleInputSource
         _maxPendingCommands = maxPendingCommands;
     }
 
-    /// <summary>Number of commands currently waiting to be processed.</summary>
-    public int PendingCount
-    {
-        get
-        {
-            lock (_lock)
-                return _queue.Count;
-        }
-    }
-
     /// <summary>Number of commands dropped because the pending bound was reached.</summary>
     public long DroppedCommandCount { get; private set; }
 

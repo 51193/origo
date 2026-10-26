@@ -68,12 +68,12 @@ public class ConsoleInputBufferTests
         queue.Enqueue("b");
         queue.Enqueue("c");
 
-        Assert.Equal(2, queue.PendingCount);
         Assert.Equal(1, queue.DroppedCommandCount);
         Assert.True(queue.TryDequeueCommand(out var first));
         Assert.Equal("b", first);
         Assert.True(queue.TryDequeueCommand(out var second));
         Assert.Equal("c", second);
+        Assert.False(queue.TryDequeueCommand(out _));
     }
 
     [Fact]

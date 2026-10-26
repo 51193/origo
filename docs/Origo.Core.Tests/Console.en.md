@@ -16,9 +16,9 @@ input queue (polling dequeue, FIFO, trim, clear), `IConsoleInputSource` interfac
 |------|-------------------|
 | `ConsoleCommandParserTests.cs` | Command parsing: empty/whitespace lines, single commands, positional args, named args, invalid named args |
 | `ConsoleCommandRouterTests.cs` | Command routing: register/dispatch/unregistered commands/case-insensitive/duplicate rejected/null handler |
-| `ConsoleInputBufferTests.cs` | Input queue: Enqueue/Dequeue/FIFO/trim/whitespace ignored/clear |
+| `ConsoleInputBufferTests.cs` | Input queue: Enqueue/Dequeue/FIFO/trim/whitespace ignored/clear/bounded-drop accounting |
 | `ConsoleOutputChannelTests.cs` | Output channel: Subscribe/Publish/Unsubscribe/multiple subscribers/null rejected/exception propagation |
-| `ConsoleCommandExtendedTests.cs` | Built-in command end-to-end: help/find_entity/kill_all/bb_*, late registration, parameter validation, spawn |
+| `ConsoleCommandExtendedTests.cs` | Built-in command end-to-end: help/find_entity/kill_all/bb_*, late registration, parameter validation, spawn, and the 256-command per-frame budget |
 | `ConsoleTypeInferenceTests.cs` | Type inference: bb_set Int32/Single/Boolean/String, entity_set_data new key inference + existing key type preservation |
 | `OrigoConsoleLoggingTests.cs` | Console logging: correct log level, message order, Tag consistency, content integrity (behavioral verification, no coupling to format strings) |
 | `ConsoleInputSourceContractTests.cs` | IConsoleInputSource interface contract: round-trip/FIFO/trim/whitespace ignored/clear/null ignored |
@@ -73,6 +73,8 @@ input queue (polling dequeue, FIFO, trim, clear), `IConsoleInputSource` interfac
 |-------------|-----------------|-----------|
 | `ConsoleInputBuffer_Enqueue_And_TryDequeue` | Enqueue then TryDequeueCommand retrieves original value | console-commands |
 | `ConsoleInputBuffer_Enqueue_TrimsInput` | "  hello  " is trimmed to "hello" on enqueue | console-commands |
+| `ConsoleInputBuffer_BoundedQueue_DropsOldestAndCountsDrop` | At the bound the oldest command is dropped and `DroppedCommandCount` increments | console-commands |
+| `ConsoleInputBuffer_NonPositiveBound_Throws` | A non-positive pending bound is rejected | console-commands |
 | `ConsoleInputBuffer_FIFO_Order` | Multiple commands dequeued in FIFO order | console-commands |
 
 ### Boundary Path

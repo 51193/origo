@@ -43,6 +43,8 @@ Verifies the complete TCP bridge behavior of ConsoleBridgeServer. Most integrati
 | `ClientSendMultipleCommands_ArriveInFifoOrder` | Three commands arrive in FIFO order | console-commands |
 | `ClientSendCommand_ManyCommands_StressTest` | 100 commands all arrive | console-commands |
 | `ClientSendCommand_LongLine_Arrives` | 4096-character long command arrives correctly | console-commands |
+| `ClientSendCommand_LineOverConfiguredLimit_IsRejected` | A line over `MaxInputLineLength` closes the connection without enqueuing a command | console-commands |
+| `ClientSendCommand_CrlfAtExactLimit_Arrives` | An exact-limit line terminated by CRLF is accepted; the terminator is not counted | console-commands |
 | `ClientSendCommand_Unicode_Arrives` | "héllo 世界 🌍" Unicode command arrives | console-commands |
 | `ClientSendCommand_LeadingAndTrailingWhitespace_Trimmed` | "  \t  hello  \t  " → "hello" | console-commands |
 | `BlankLines_AreNotEnqueued` | Blank lines not enqueued | console-commands |

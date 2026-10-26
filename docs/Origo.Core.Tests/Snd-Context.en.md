@@ -13,7 +13,7 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | File | Verification Focus |
 |------|-------------------|
 | `SndContextWorkflowTests.cs` | SndContext save/load/continue/switch full-chain workflows |
-| `SndContextShutdownFailureTests.cs` | Cleanup invariant when unloading the old ProgressRun throws: both the ProgressRun reference and the foreground session are cleared |
+| `SndContextShutdownFailureTests.cs` | Cleanup invariant when unloading the old ProgressRun throws: both the ProgressRun reference and the foreground session are cleared; failed `current/` cleanup remains retryable without replaying hooks; nested `Shutdown` from a quit hook cannot commit terminal state before the outer cleanup |
 | `SndContextEntryFlowTests.cs` | SndContext workflow starting from entry configuration |
 | `SndContextBootstrapTests.cs` | Bootstrap startup flow: order of strategy discovery, ordering validation and registration freeze, alias/template loading, entry save loading, and configuration switches |
 | `PersistenceRequestTrackingTests.cs` | Persistence requests (save/continue/initial/main menu entry/switch level) tracked as pending count until flushed |
@@ -33,6 +33,7 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `ListSavesWithMetaData_ReturnsEmptyWhenNoSaves` | ListSavesWithMetaData returns empty when no saves exist | ISndSaveOperations |
 | `DeleteSave_RemovesInactiveSlot` | After deleting an inactive slot ListSaves no longer returns it while other slots remain | ISndSaveOperations.DeleteSave |
 | `DeleteSave_MainMenuProgressRun_DoesNotBlockMatchingRealSlot` | The main-menu ProgressRun uses an internal working SaveId that is not the active save; a real slot with the same id remains deletable | ISndSaveOperations.DeleteSave |
+| `RequestSwitchForegroundLevel_MainMenuSyntheticSave_IgnoresRuntimeSave000Snapshot` | A synthetic initial/main-menu run switches from `current/` only; a user-created `save_000` level payload is never mounted | ISndSaveOperations.RequestSwitchForegroundLevel |
 | `RequestSaveGame_PersistsAndSetsActiveSaveSlot` | After save the file exists and ActiveSaveId is correctly set | persistence-flow |
 | `RequestSaveGame_IncrementsThenDecrementsPendingCount` | Save request increments then decrements pending count | ISndDeferredActions |
 | `RequestSaveGameAuto_WithExplicitId_UsesIt` | RequestSaveGameAuto uses the provided ID | ISndSaveOperations |
@@ -228,6 +229,8 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | Test Method | Triggered Error | Expected Behavior |
 |------------|-----------------|-------------------|
 | `Workflow_WhenOldProgressDisposeThrows_ClearsProgressRunReference` | The old ProgressRun's session state machine throws from its quit-time pop hook during unload | The original exception propagates; `ForegroundSession` is null; the `_progressRun` reference is cleared (internal invariant asserted via InternalsVisibleTo) |
+| `Shutdown_WhenCurrentDeleteFails_RetriesCleanupWithoutReplayingHooks` | `current/` deletion fails during shutdown | The first call throws; the progress run is gone, the retry deletes `current/`, and the context becomes terminal without replaying quit hooks |
+| `Shutdown_ReenteredFromQuitHook_DoesNotCommitTerminalStateBeforeOuterCleanup` | A quit-hook strategy calls `Shutdown` while the outer shutdown is disposing the progress run, and `current/` deletion fails | The nested call is a no-op; the outer failure keeps the retry record and the next `Shutdown` deletes `current/` |
 
 ## SndArchetypeLoaderTests Details
 

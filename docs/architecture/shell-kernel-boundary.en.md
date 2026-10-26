@@ -178,9 +178,10 @@ orchestration path.
 ## Meta-instruction exception
 
 The stable boundary needs one bounded exception: `Origo.Core`,
-`Origo.GodotAdapter`, and `Origo.ConsoleBridge` promise shell contract and
-behavior compatibility within 0.1.x; kernel packages keep the early-development
-rule of no compatibility burden. The exception covers shell contracts, port
+`Origo.Core.Contracts`, `Origo.GodotAdapter`, and `Origo.ConsoleBridge` promise
+shell contract and behavior compatibility within 0.1.x; the implementation
+package `Origo.Core.Kernel` keeps the early-development rule of no compatibility
+burden. The exception covers shell contracts, port
 contracts, and compatibility tests only. It does not relax single access paths,
 fail-fast behavior, or architectural isolation.
 
@@ -285,7 +286,7 @@ the kernel runtime assembly, and starts `OrigoDefaultEntry` headlessly; the
 five-package set, analyzer asset, and Godot SDK pin of the packed feed are
 asserted by `scripts/bash/validate-release-packages.sh`, which the smoke runs
 against the same feed. It runs in the normal CI Godot job and local `scripts/bash/ci.sh`.
-The release pipeline (#43) is implemented in `.github/workflows/release.yml`: the workflow packs the five shell/kernel packages, validates the set with `scripts/bash/validate-release-packages.sh`, builds and validates the source archive with `scripts/bash/validate-release-source.sh`, and attaches the packages, source archive, and documentation snapshot to the GitHub Release. The version-stamp commit exists only as the tag target; `main` stays on its development baseline.
+The release pipeline (#43) is implemented in `.github/workflows/release.yml`: the workflow packs the five shell/kernel packages, validates the set with `scripts/bash/validate-release-packages.sh`, builds and validates the source archive with `scripts/bash/validate-release-source.sh`, and attaches the nine release artifacts (five packages, the source archive, the documentation tar.gz/zip, and `nuget.config`) to the GitHub Release. The version-stamp commit exists only as the tag target; `main` stays on its development baseline.
 
 ## Verification and gates
 

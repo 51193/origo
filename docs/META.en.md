@@ -288,8 +288,8 @@ scripts.
 
 Windows development uses the native PowerShell suite under `scripts/powershell/`
 instead of the POSIX scripts; the two sets implement the same development gate sequence and never
-invoke each other; shared Python validators run on both, while POSIX-only
-release-tooling self-tests remain Linux-side. `scripts/powershell/install-dotnet.ps1` installs the pinned SDK
+invoke each other; Bash-free shared Python validators run on both, while Bash-backed POSIX
+self-tests remain Linux-side. `scripts/powershell/install-dotnet.ps1` installs the pinned SDK
 through `dotnet-install.ps1`, and `scripts/powershell/ci.ps1` is the Windows
 equivalent of `scripts/bash/ci.sh` (script parse/lint, format, API baseline, build
 and tests, benchmarks, Godot integration, and package consumer smoke).

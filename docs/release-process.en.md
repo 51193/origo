@@ -90,9 +90,9 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   snapshot as the repository's Latest release. Only a formal `vx.y.z` tag pushed
   by hand keeps the release state chosen on GitHub.
 - An already-pushed snapshot tag is complete only when its GitHub Release is
-  published (not a draft), marked pre-release, and carries at least the nine
-  expected assets (five packages, the source archive, two documentation
-  archives, and `nuget.config`). A run scans all nightly tags for the current
+  published (not a draft), marked pre-release, and carries exactly the nine
+  expected asset names (five packages, the source archive, two documentation
+  archives, and `nuget.config`); an extra or misnamed asset is incomplete. A run scans all nightly tags for the current
   base; every missing/draft/partial release is dispatched, and the current
   week's tag is still created when the window has commits. GitHub API errors
   other than 404 fail the job instead of being mistaken for an orphan. This

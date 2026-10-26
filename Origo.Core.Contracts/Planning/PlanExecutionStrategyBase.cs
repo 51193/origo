@@ -313,6 +313,7 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
         RemoveCurrentAction(entity);
         entity.SetData(PlanStepKey, "");
         entity.SetData(ActionKey, "");
+        entity.SetData(ActionStatusKey, "");
         entity.SetData(IntentKey, "");
         entity.SetData(IntentStatusKey, IntentStatusCompleted);
         OnPlanCompleted(entity);

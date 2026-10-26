@@ -215,6 +215,7 @@ public class PlanExecutionStrategyBaseTests
         Assert.Equal("", entity.GetData<string>(_intentKey));
         Assert.Equal("", entity.GetData<string>(_planStepKey));
         Assert.Equal("", entity.GetData<string>(_actionKey));
+        Assert.Equal("", entity.GetData<string>(_actionStatusKey));
         Assert.Equal("completed", entity.GetData<string>(_intentStatusKey));
     }
 

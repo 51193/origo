@@ -8,7 +8,7 @@
 
 Verifies Origo's architectural constraints: Core assembly does not reference Godot (layer isolation),
 ISndContext is a pure composition interface (Interface Segregation Principle), strategies are validated
-as stateless via reflection at registration (rejects instance fields and writable properties), private-field naming is checked for both Core and Origo.TestSupport, and the build settings that make the IDE dead-code analyzers run are pinned.
+as stateless via reflection at registration (rejects instance fields and writable properties), private-field naming is checked for Core, Kernel, Contracts, and Origo.TestSupport, and the build settings that make the IDE dead-code analyzers run are pinned.
 
 ## Test File List
 
@@ -27,7 +27,7 @@ as stateless via reflection at registration (rejects instance fields and writabl
 | `CoreAssembly_ShouldNotReferenceGodot` | Core assembly does not reference any Godot assemblies | architecture/overview: platform independence |
 | `CoreAssembly_ShouldNotContainTestOnlyStubOrLevelBuilder` | The Core production assembly contains no test/offline stubs (StubSndSceneHost/StubSndEntity/LevelBuilder); they belong in Origo.TestSupport | AGENTS.md: early-development rule |
 | `SceneWriteInterfacesAndSpawnFactory_AreInternal` | `ISndSceneHost`/`ISndSceneAccess`/`ISndContextAttachableSceneHost`/`IOwningSessionBindable` and `SndEntityFactory` are internal | architecture/overview: single access path |
-| `PrivateFields_FollowUnderscoreCamelCase` | Core production private fields follow `_camelCase` naming | .editorconfig naming rule |
+| `PrivateFields_FollowUnderscoreCamelCase` | Core, Kernel, and Contracts production private fields follow `_camelCase` naming | .editorconfig naming rule |
 | `TestSupport_PrivateFields_FollowUnderscoreCamelCase` | Origo.TestSupport private fields follow `_camelCase` naming | .editorconfig naming rule |
 | `ISndContext_ShouldBeCompositionInterface_WithCompanionProperties` | ISndContext declares only `Bootstrap()` and `Shutdown()` as methods; capabilities are companion properties | Snd Abstraction: ISP |
 | `ISndContext_ShouldExposeAllRoleInterfacesAsCompanionProperties` | ISndContext exposes all role-interface capabilities through 10 companion properties, not interface inheritance | Snd Abstraction: ISndContext composition |

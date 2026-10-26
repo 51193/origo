@@ -105,12 +105,74 @@ public class SndContextShutdownFailureTests
         Assert.Throws<InvalidOperationException>(() => ctx.Bootstrap());
     }
 
+    [Fact]
+    public void Shutdown_ReenteredFromQuitHook_DoesNotCommitTerminalStateBeforeOuterCleanup()
+    {
+        var logger = new TestLogger();
+        var host = new TestSndSceneHost();
+        var fs = new TestMemoryFileSystem();
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), fs);
+        runtime.SndWorld.RegisterStrategy(() => new NoopPushStrategy());
+        runtime.SndWorld.RegisterStrategy(() => new ShutdownOnQuitPopStrategy());
+        var dataSourceIo = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(
+            runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json")
+        {
+            AutoDiscoverStrategies = false
+        });
+        fs.SeedFile("entry.json",
+            """{ "levels": { "main_menu": { "snd_scene": "res://levels/main_menu.json" } }, "main_menu_level": "main_menu" }""");
+        fs.SeedFile("res://levels/main_menu.json", "[]");
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.FlushFrame();
+        var foreground = ctx.Runtime.SessionManager.ForegroundSession
+            ?? throw new InvalidOperationException("Test setup failed: no foreground session after entry load.");
+        var machine = foreground.GetSessionStateMachines().CreateOrGet(
+            "reentrant", NoopPushIndex, ShutdownPopIndex);
+        machine.Push("armed");
+        fs.SeedFile("root/current/reentrant_probe.txt", "probe");
+        ShutdownOnQuitPopStrategy.Context = ctx;
+
+        fs.BeforeDeleteDirectory = path =>
+        {
+            if (path.EndsWith("current", StringComparison.Ordinal))
+                throw new IOException("simulated current delete failure");
+        };
+        try
+        {
+            Assert.Throws<IOException>(() => ctx.Shutdown());
+            Assert.True(fs.DirectoryExists("root/current"));
+
+            fs.BeforeDeleteDirectory = null;
+            ctx.Shutdown();
+            Assert.False(fs.DirectoryExists("root/current"));
+            ctx.Shutdown();
+            Assert.Throws<InvalidOperationException>(() => ctx.Bootstrap());
+        }
+        finally
+        {
+            ShutdownOnQuitPopStrategy.Context = null;
+        }
+    }
+
     private const string NoopPushIndex = "shutdown.noop_push";
+    private const string ShutdownPopIndex = "shutdown.shutdown_pop";
     private const string ThrowOnQuitPopIndex = "shutdown.throw_quit_pop";
 
     [StrategyIndex(NoopPushIndex)]
     private sealed class NoopPushStrategy : StateMachineStrategyBase
     {
+    }
+
+    [StrategyIndex(ShutdownPopIndex)]
+    private sealed class ShutdownOnQuitPopStrategy : StateMachineStrategyBase
+    {
+        public static ISndContext? Context;
+
+        public override void OnPopBeforeQuit(StateMachineStrategyContext context, IStateMachineContext ctx) =>
+            Context?.Shutdown();
     }
 
     [StrategyIndex(ThrowOnQuitPopIndex)]

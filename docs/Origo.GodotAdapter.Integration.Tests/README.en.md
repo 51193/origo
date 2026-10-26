@@ -121,6 +121,7 @@ Origo.GodotAdapter.Integration.Tests/
 │   ├── UserDataCleanupIntegrationTests.cs # Test-process user:// cleanup tests
 │   ├── OrigoDefaultEntryBootstrapFailureTests.cs # Derived entry bootstrap failure fail-fast test
 │   ├── OrigoDefaultEntryContextIntegrationTests.cs # Context exposure / shared-instance test
+│   ├── OrigoDefaultEntryExitTreeIntegrationTests.cs # Normal entry exit runs BeforeQuit exactly once
 │   └── OrigoDefaultEntryStrategyRegistrationIntegrationTests.cs # ConfigureStrategies manual-registration test
 ├── TestSupport/
 │   ├── StubConsoleOutput.cs

@@ -68,10 +68,10 @@ public partial class OrigoDefaultEntry : OrigoAutoHost
     }
 
     /// <summary>
-    ///     Normal scene-tree exit: stop the framework progress run so session
-    ///     and progress quit hooks run and the temporary current/ directory is
-    ///     cleaned. The manager's _ExitTree remains the out-of-contract
-    ///     fallback for hosts that never created a context.
+    ///     Idempotent scene-tree-exit backstop: stop the framework progress run
+    ///     if the child GodotSndManager's _ExitTree did not already do so.
+    ///     Godot calls the manager first, while the entity collection is still
+    ///     populated, so normal exit runs entity BeforeQuit hooks there.
     /// </summary>
     public override void _ExitTree()
     {

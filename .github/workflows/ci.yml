@@ -91,12 +91,15 @@ jobs:
         run: bash scripts/bash/benchmark.sh
 
   # Native Windows suite: scripts/powershell/*.ps1, independent of the Bash
-  # scripts above. This job runs the same gates on Windows PowerShell so the
-  # two platform script sets cannot drift silently.
+  # scripts above. This job runs the same gate sequence on Windows PowerShell
+  # so the two platform script sets cannot drift silently.
   windows-powershell:
     runs-on: windows-latest
     env:
       ORIGO_BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+      # Fork pull request branches are outside the repository owners' control;
+      # only same-repository branches are validated against the naming rule.
+      ORIGO_FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
 
     steps:
       - uses: actions/checkout@v7
@@ -128,16 +131,6 @@ jobs:
         with:
           path: .godot_binary
           key: godot-${{ runner.os }}-${{ hashFiles('Origo.GodotAdapter/Origo.GodotAdapter.csproj') }}
-
-      - name: Reject the PowerShell suite on formal release tags
-        if: startsWith(github.ref, 'refs/tags/')
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [[ "${GITHUB_REF_NAME}" != *-* ]]; then
-            echo "Formal tags are released by the Bash release workflow; the Windows PowerShell gate is not a release gate." >&2
-            exit 1
-          fi
 
       - name: Windows PowerShell gates
         shell: cmd

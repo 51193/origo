@@ -73,6 +73,7 @@ class PlannerTests(unittest.TestCase):
         full = MODULE.full_gate_commands("powershell")
         self.assertTrue(all("powershell" in part[0] for part in full))
         self.assertFalse(any("bash" in " ".join(part) for part in full))
+        self.assertEqual(MODULE.full_gate_hint("powershell"), "scripts/powershell/check.ps1 full")
 
     def test_posix_suite_keeps_bash_dispatch(self):
         self.assertEqual(MODULE.godot_gate_command("posix"), ["bash", "scripts/bash/godot-test.sh"])

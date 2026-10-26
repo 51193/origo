@@ -37,10 +37,9 @@ public class ConsoleCommandExtendedTests
         runtime.Console!.ProcessPending();
 
         Assert.Equal(256, messages.FindAll(m => m.Contains("Available commands", StringComparison.Ordinal)).Count);
-        Assert.Equal(44, input.PendingCount);
 
         runtime.Console.ProcessPending();
-        Assert.Equal(0, input.PendingCount);
+        Assert.Equal(300, messages.FindAll(m => m.Contains("Available commands", StringComparison.Ordinal)).Count);
     }
 
     // ── help ──

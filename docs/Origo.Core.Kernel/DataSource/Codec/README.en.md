@@ -17,7 +17,7 @@ Concrete codec implementations for `IDataSourceCodec`, converting between `DataS
 
 ### JsonDataSourceCodec
 - **Lazy expansion on decode**: child nodes of objects/arrays are wrapped as `DataSourceNode.CreateLazy(rawText, ExpandOneLevel)`, avoiding a full parse of large JSON into an in-memory tree at once; the next level is expanded only when accessed via `node[key]` or iteration
-- **Encode**: recursive traversal of the DataSourceNode tree via `Utf8JsonWriter`, supports indentation control
+- **Encode**: recursive traversal of the DataSourceNode tree via `Utf8JsonWriter`, supports indentation control. The JSON codec uses `System.Text.Json` defaults: decoding accepts up to 64 nested containers and encoding up to 1000. Deeper trees fail explicitly at the codec boundary instead of silently truncating; canonical hashing itself is iterative and has no fixed depth limit.
 
 ### MapDataSourceCodec
 - Parses `key: value` line files (lines starting with `#` are treated as comments and skipped)

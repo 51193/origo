@@ -95,6 +95,27 @@ function Get-OrigoParentCommit {
     return $result.Output.Trim()
 }
 
+function Test-OrigoMetadataReleaseCommit {
+    param(
+        [Parameter(Mandatory = $true)][string]$Commit,
+        [string]$WorkingDirectory = (Get-OrigoRoot)
+    )
+    $parent = Get-OrigoParentCommit -Commit $Commit -WorkingDirectory $WorkingDirectory
+    if ([string]::IsNullOrWhiteSpace($parent)) { return $false }
+    $ancestor = Invoke-OrigoNative -FilePath 'git' -Arguments @('merge-base', '--is-ancestor', $parent, 'HEAD') -WorkingDirectory $WorkingDirectory -AllowFailure
+    if ($ancestor.ExitCode -ne 0) { return $false }
+    $subject = Invoke-OrigoNative -FilePath 'git' -Arguments @('log', '-1', '--format=%s', $Commit) -WorkingDirectory $WorkingDirectory -AllowFailure
+    if ($subject.ExitCode -ne 0 -or $subject.Output.Trim() -notmatch '^chore\(release\): sync version stamps to v[0-9]+\.[0-9]+\.[0-9]+$') {
+        return $false
+    }
+    $changed = Invoke-OrigoNative -FilePath 'git' -Arguments @('diff', '--name-only', $parent, $Commit) -WorkingDirectory $WorkingDirectory -AllowFailure
+    if ($changed.ExitCode -ne 0) { return $false }
+    foreach ($path in ($changed.Output -split "`r?`n")) {
+        if ($path.Trim() -ne '' -and $path.Trim() -ne 'Directory.Build.props') { return $false }
+    }
+    return $true
+}
+
 function Initialize-OrigoDotnetEnvironment {
     param([Parameter(Mandatory = $true)][string]$DotnetPath)
     $sdkRoot = Split-Path -Parent $DotnetPath

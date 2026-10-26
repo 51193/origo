@@ -41,6 +41,12 @@ def godot_gate_command(suite: str) -> list[str]:
     return ["bash", "scripts/bash/godot-test.sh"]
 
 
+def full_gate_hint(suite: str) -> str:
+    if suite == "powershell":
+        return "scripts/powershell/check.ps1 full"
+    return "scripts/bash/check.sh full"
+
+
 def full_gate_commands(suite: str) -> list[list[str]]:
     if suite == "powershell":
         prefix = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File"]
@@ -155,13 +161,13 @@ def evaluated_references(root: Path, projects: dict[str, Path]) -> dict[str, set
         if result.returncode:
             raise RuntimeError(
                 f"MSBuild project graph failed for {name}: {result.stderr.strip()}; "
-                "run scripts/bash/check.sh full explicitly"
+                "run scripts/bash/check.sh full or scripts/powershell/check.ps1 full explicitly"
             )
         try:
             payload = json.loads(result.stdout)
         except json.JSONDecodeError as exc:
             raise RuntimeError(
-                f"MSBuild returned invalid graph JSON for {name}; run scripts/bash/check.sh full explicitly"
+                f"MSBuild returned invalid graph JSON for {name}; run scripts/bash/check.sh full or scripts/powershell/check.ps1 full explicitly"
             ) from exc
         for item in payload.get("Items", {}).get("ProjectReference", []):
             identity = item.get("FullPath")
@@ -259,7 +265,7 @@ def classify(root: Path, changes: list[Change], base: str) -> dict:
         reasons.append("TestSupport is shared by test projects")
     selected = {name for name in selected if test_project(name)}
     if not paths:
-        reasons.append("no tracked or working-tree changes; run scripts/bash/check.sh full explicitly")
+        reasons.append("no tracked or working-tree changes; run scripts/bash/check.sh full or scripts/powershell/check.ps1 full explicitly")
         requires_full = True
     if not selected and paths:
         reasons.append("no test project is attributable; use full for a complete answer")
@@ -385,9 +391,9 @@ def main(argv: list[str] | None = None) -> int:
         print("coverage: not-measured", file=sys.stderr)
         return 0
     if plan["requiresFull"]:
-        raise RuntimeError("plan is stale, unknown, or repository-wide; stop and run scripts/bash/check.sh full explicitly")
+        raise RuntimeError(f"plan is stale, unknown, or repository-wide; stop and run {full_gate_hint(args.suite)} explicitly")
     if not plan["selectedProjects"]:
-        raise RuntimeError("affected found no test projects; run scripts/bash/check.sh full explicitly")
+        raise RuntimeError(f"affected found no test projects; run {full_gate_hint(args.suite)} explicitly")
     for project in plan["selectedProjects"]:
         run_test_project(root, project, "Category!=Benchmark", coverage=True)
     if "godot" in plan["additionalGates"]:
