@@ -23,7 +23,7 @@ run only by `scripts/bash/benchmark.sh`; `test.sh` full test run excludes them v
 | File | Verification Focus |
 |------|-------------------|
 | `GodotDataSourceConvertersTests.cs` | Godot engine type converter round-trips: write→read values match |
-| `GodotJsonConverterRegistryTests.cs` | Type name mapping registration (all 14 types) + round-trip after converter registration |
+| `GodotJsonConverterRegistryTests.cs` | Type name mapping registration (all registered types) + round-trip after converter registration |
 | `GodotTypedDataLayeredTests.cs` | Multi-layer TypedData: Kind resolution, FromObject round-trip, TryGet / AsXxx extensions, DataType / Data, ObjectConverter fallback, cross-layer Kind isolation |
 | `GodotTypedDataGeneratedCoverageTests.cs` | Generated accessor per-type coverage: AsXxx / TryGetXxx / KindMap / Converter round-trips, unregistered-Kind fallback and failure paths |
 | `GodotTypedDataPerformanceTests.cs` | (Benchmark) Multi-layer dispatch performance: registered vs unregistered write / read throughput, ObjectConverter switch vs fallback, Factory path, entity frame simulation |
@@ -55,8 +55,8 @@ run only by `scripts/bash/benchmark.sh`; `test.sh` full test run excludes them v
 
 | Test Method | Verified Behavior | Doc Reference |
 |------------|-------------------|---------------|
-| `RegisterTypeMappings_RegistersAll14TypeNames` | After registration, all 14 types resolve to names (type→name) | GodotAdapter Serialization |
-| `RegisterTypeMappings_AllTypesCanBeResolvedByName` | After registration, all 14 types resolve from names (name→type) | GodotAdapter Serialization |
+| `RegisterTypeMappings_RegistersAll14TypeNames` | After registration, all registered types resolve to names (type→name) | GodotAdapter Serialization |
+| `RegisterTypeMappings_AllTypesCanBeResolvedByName` | After registration, all registered types resolve from names (name→type) | GodotAdapter Serialization |
 | `RegisterDataSourceConverters_AllowsVectorRoundTrip` | After converter registration, Vector3 round-trips correctly | GodotAdapter Serialization |
 | `RegisterDataSourceConverters_AllowsTransformAndPlaneConverters` | Transform3D and Plane round-trips correctly | GodotAdapter Serialization |
 | `RegisterDataSourceConverters_Vector2IAnd3IRoundTrip` | Vector2I / Vector3I round-trip correctly | GodotAdapter Serialization |
@@ -107,10 +107,10 @@ Parametrically exercises every generated accessor (`As*`/`TryGet*`), the kind ma
 | Test Method | Verified Behavior | Doc Reference |
 |------------|-------------------|---------------|
 | `KindMap_ResolvesEveryRegisteredType` | All the registered Godot types resolve to their respective Kinds via `TypedDataTypeMap.GetKindForType` (128–141 one-to-one) | GodotAdapter Snd |
-| `Converter_FromObject_RoundTrips` | `FromObject`→`TypedData`→`ToObject` full round-trip for all 14 types, DataType and value match | GodotAdapter Snd |
+| `Converter_FromObject_RoundTrips` | `FromObject`→`TypedData`→`ToObject` full round-trip for all registered types, DataType and value match | GodotAdapter Snd |
 | `Converter_UnregisteredKind_FromObjectFallsBackToRef` | Unregistered Kind(250) via `FromObject` falls back to the ref slot: inlineBits=0, same instance referenced | GodotAdapter Snd |
 | `Converter_ToObject_UnregisteredKind_FallsBackToRef` | Unregistered Kind(250) via `ToObject` falls back returning the original value; null value returns null | GodotAdapter Snd |
-| `Accessors_AsAndTryGet_ReturnValue` | `As*` and `TryGet*` accessors for all 14 types return matching values | GodotAdapter Snd |
+| `Accessors_AsAndTryGet_ReturnValue` | `As*` and `TryGet*` accessors for all registered types return matching values | GodotAdapter Snd |
 
 ### Error Path
 
