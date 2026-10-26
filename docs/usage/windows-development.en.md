@@ -5,7 +5,8 @@
 Origo keeps one POSIX script set (`scripts/bash/*.sh`) for Linux/macOS and one
 Windows-native script set (`scripts/powershell/*.ps1`). The two sets implement the
 same development gate sequence; GitHub CI runs a dedicated
-`bash-development-suite` job beside `windows-powershell`; neither invokes the other. Bash-free shared
+`bash-checks` job beside `powershell-checks`, with paired
+`bash-lint`/`powershell-lint` jobs; neither invokes the other. Bash-free shared
 Python validators run on both; Bash-backed POSIX self-tests remain Linux-side,
 and the Windows suite is not a release gate. On Windows, use the PowerShell scripts
 and do not call the Bash scripts from Git Bash.
@@ -95,8 +96,8 @@ from the shell packages. No Bash or shell pipeline is involved.
 ## CI and Platform Parity
 
 `.github/workflows/ci.yml` runs the PowerShell suite in a dedicated
-`windows-powershell` job with `fetch-depth: 0` (the API baseline selects the
-previous formal release tag). The `build-and-test (windows-latest)` matrix job
+`powershell-checks` job with `fetch-depth: 0` (the API baseline selects the
+previous formal release tag). The `bash-build-and-test (windows-latest)` matrix job
 also runs the POSIX script set, so both implementations are verified on
 Windows.
 

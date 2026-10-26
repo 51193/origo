@@ -80,7 +80,7 @@ fi
 
 # The GitHub CI must expose the dedicated Bash parity check alongside the
 # native PowerShell job; otherwise a local-only gate could silently disappear.
-for job in bash-development-suite windows-powershell; do
+for job in bash-lint bash-checks powershell-lint powershell-checks; do
     grep -Eq "^[[:space:]]*${job}:" .github/workflows/ci.yml \
         || FAIL "GitHub CI is missing required job: $job"
 done

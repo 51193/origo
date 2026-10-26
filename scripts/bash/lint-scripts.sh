@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # CI step: shell and embedded-tooling lint for repository scripts.
-# Mirrors the "lint-scripts" job of the GitHub Actions workflow.
+# Mirrors the "bash-lint" job of the GitHub Actions workflow.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"

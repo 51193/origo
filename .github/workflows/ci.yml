@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint-scripts:
+  bash-lint:
     runs-on: ubuntu-latest
     env:
       ORIGO_BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
@@ -31,7 +31,7 @@ jobs:
       - name: Lint repository scripts
         run: bash scripts/bash/lint-scripts.sh
 
-  build-and-test:
+  bash-build-and-test:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
@@ -90,11 +90,9 @@ jobs:
       - name: Benchmarks — TypedData + subsystem baselines
         run: bash scripts/bash/benchmark.sh
 
-  # Dedicated Bash development-suite parity check, run alongside the native
-  # Windows PowerShell suite below. The full Bash lint job already exercises
-  # these scripts locally; this job makes the cross-platform parity contract a
-  # first-class, independently reported CI check.
-  bash-development-suite:
+  # Dedicated Bash development-suite parity check. Paired with the
+  # PowerShell check below.
+  bash-checks:
     runs-on: ubuntu-latest
 
     steps:
@@ -106,10 +104,31 @@ jobs:
       - name: Bash API-inventory parent regression
         run: bash scripts/bash/test-api-inventory-parent.sh
 
-  # Native Windows suite: scripts/powershell/*.ps1, independent of the Bash
-  # scripts above. This job runs the same gate sequence on Windows PowerShell
-  # so the two platform script sets cannot drift silently.
-  windows-powershell:
+  # PowerShell lint check paired with bash-lint.
+  powershell-lint:
+    runs-on: windows-latest
+    env:
+      ORIGO_BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+      ORIGO_FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Install Python validation dependencies
+        run: python -m pip install pyyaml
+
+      - name: Lint PowerShell scripts
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File scripts\powershell\lint-scripts.ps1
+
+  # Full Windows PowerShell suite, paired with the Bash checks above. It runs
+  # the same gate sequence on Windows PowerShell so the two platform script
+  # sets cannot drift silently.
+  powershell-checks:
     runs-on: windows-latest
     env:
       ORIGO_BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
@@ -153,7 +172,7 @@ jobs:
         run: powershell -NoProfile -ExecutionPolicy Bypass -File scripts\powershell\ci.ps1
 
   godot-integration-tests:
-    needs: build-and-test
+    needs: bash-build-and-test
     strategy:
       matrix:
         os: [ubuntu-latest]
