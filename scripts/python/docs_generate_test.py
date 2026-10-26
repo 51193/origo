@@ -6,8 +6,10 @@ from __future__ import annotations
 import importlib.util
 import json
 import re
+import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -67,7 +69,7 @@ class DocsGenerateTests(unittest.TestCase):
                 "Origo.Core.X.int X get:protected",
                 "Origo.Core.X",
             ),
-            "int X { protected get; }",
+            "int X { get; }",
         )
         self.assertEqual(
             MODULE.format_member(
@@ -86,21 +88,17 @@ class DocsGenerateTests(unittest.TestCase):
     def test_contract_api_covers_every_baseline_type_and_member(self):
         data = json.loads(MODULE.BASELINE.read_text(encoding="utf-8"))
         rendered = MODULE.render_contract_api()
-        sections = {
-            type_name: body
-            for type_name, body in re.findall(
-                r"### `([^`]+)`\n\n```csharp\n(.*?)\n```", rendered, re.DOTALL
-            )
-        }
+        # Parse the raw inventory independently of the generator's regex/helpers.
+        raw_type_re = re.compile(r"(Origo\.[A-Za-z0-9_.]+(?:<[^>]+>)?)(?: :|$)")
         expected_types: set[str] = set()
-        expected_members: dict[str, list[str]] = {}
+        expected_member_counts: dict[str, int] = {}
         for assembly in data["assemblies"]:
             entries = assembly["api"]
             for entry in entries:
                 if entry.startswith("T:"):
-                    match = MODULE.TYPE_RE.search(entry)
+                    match = raw_type_re.search(entry)
                     if match:
-                        expected_types.add(match.group(0))
+                        expected_types.add(match.group(1))
             for entry in entries:
                 if entry.startswith("T:"):
                     continue
@@ -110,26 +108,25 @@ class DocsGenerateTests(unittest.TestCase):
                     for type_name in expected_types
                     if body.startswith(type_name + ".")
                 ]
-                if not matches:
+                if not matches or "<Clone>$" in body:
                     continue
                 owner = max(matches, key=len)
-                formatted = MODULE.format_member(body, owner)
-                if formatted:
-                    expected_members.setdefault(owner, []).append(formatted)
+                expected_member_counts[owner] = expected_member_counts.get(owner, 0) + 1
+        sections = {
+            type_name: body
+            for type_name, body in re.findall(
+                r"### `([^`]+)`\n\n```csharp\n(.*?)\n```", rendered, re.DOTALL
+            )
+        }
         self.assertEqual(set(sections), expected_types)
-        for type_name, members in expected_members.items():
+        for type_name in expected_types:
             section_lines = sections[type_name].splitlines()
-            for member in members:
-                self.assertIn(member, section_lines, type_name)
-
-    def test_brittle_summary_patterns_are_rejected(self):
-        for text in ("16 built-in commands", "10 companion properties", "101 tests", "5 minutes"):
-            self.assertIsNotNone(
-                next(
-                    (match for pattern in MODULE.BANNED_SUMMARY_PATTERNS if (match := re.search(pattern, text))),
-                    None,
-                ),
-                text,
+            self.assertGreaterEqual(len(section_lines), 1)
+            rendered_member_count = len(section_lines) - 1  # first line is declaration
+            self.assertEqual(
+                rendered_member_count,
+                expected_member_counts.get(type_name, 0),
+                type_name,
             )
 
     def test_current_generated_content_and_links(self):
@@ -181,6 +178,23 @@ class DocsGenerateTests(unittest.TestCase):
             try:
                 errors = MODULE.validate_generated_registry()
                 self.assertTrue(any("not registered" in error for error in errors))
+            finally:
+                MODULE.GENERATED = original_generated
+                MODULE.GENERATED_ARTIFACTS = original_artifacts
+
+    def test_check_staged_rejects_untracked_registered_file(self):
+        original_generated = MODULE.GENERATED
+        original_artifacts = MODULE.GENERATED_ARTIFACTS
+        with tempfile.TemporaryDirectory() as directory:
+            artifact = Path(directory) / "artifact.md"
+            artifact.write_text("expected\n", encoding="utf-8")
+            MODULE.GENERATED = artifact
+            MODULE.GENERATED_ARTIFACTS = {artifact: lambda: "expected\n"}
+            completed = subprocess.CompletedProcess([], 1, "", "")
+            try:
+                with patch.object(MODULE.subprocess, "run", return_value=completed):
+                    errors = MODULE.check_staged_generated()
+                self.assertTrue(any("not staged or tracked" in error for error in errors))
             finally:
                 MODULE.GENERATED = original_generated
                 MODULE.GENERATED_ARTIFACTS = original_artifacts

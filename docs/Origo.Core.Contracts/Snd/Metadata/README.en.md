@@ -41,7 +41,7 @@ The core type-preserving inline storage mechanism of the SND system. Value types
 
 Type discrimination is implemented via the `_kind` field. Discriminant value `0` is the `Null` sentinel (`default(TypedData)`). The `DataType` property returns the corresponding `System.Type` from the generated lookup table based on `_kind`.
 
-`TypedData.RegisterKind(byte kind, Type type)` allows adapter layers to register their own types into the global `KindTypeMap[256]` via `[ModuleInitializer]`. Core primitive types and GodotAdapter engine types reside in distinct Kind ranges (`1`–`13` and `128`–`141`) with no conflict.
+`TypedData.RegisterKind(byte kind, Type type)` allows adapter layers to register their own types into the global `KindTypeMap[256]` via `[ModuleInitializer]`. Core primitive types and GodotAdapter engine types reside in distinct, non-overlapping Kind ranges with no conflict.
 
 At serialization boundaries (during deserialization), construction occurs through internal pipelines of `TypedDataConverter.Read()`, `TypedDataTypeMap.GetKindForType`, and `TypedDataObjectConverter.FromObject`. Registered types go through inline storage; unregistered types and adapter-layer types fall back to `_ref`. `TypedDataLayeredRegistry` provides a chained callback mechanism, enabling adapter-layer conversion logic to be inserted into `TypedDataObjectConverter.ToObject` / `FromObject` switch dispatch.
 
@@ -137,7 +137,7 @@ As a value type, inline storage eliminates heap allocations. `Dictionary<string,
 
 ### Why use Source Generator to generate type members
 
-Each BC primitive type needs consistent constructor, accessor, factory method, and serialization bridge code. Manually maintaining boilerplate for 13+ types is error-prone and leads to inter-type inconsistency. The Source Generator reads `[assembly: SndInlineTypes]` attributes and auto-generates optimal implementations for all registered types, ensuring zero-boxing reads and writes.
+Each BC primitive type needs consistent constructor, accessor, factory method, and serialization bridge code. Manually maintaining boilerplate for many types is error-prone and leads to inter-type inconsistency. The Source Generator reads `[assembly: SndInlineTypes]` attributes and auto-generates optimal implementations for all registered types, ensuring zero-boxing reads and writes.
 
 ### Why TypedData.DataType is a Type rather than a string
 

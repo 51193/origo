@@ -65,7 +65,14 @@ def format_member(text: str, owner: str) -> str:
         rendered = []
         for index in range(0, len(parts), 2):
             kind, level = parts[index], parts[index + 1]
-            rendered.append(kind if level == "public" else f"{level} {kind}")
+            # A single non-public accessor is expressed by the property's own
+            # accessibility (e.g. `protected abstract string Key { get; }`);
+            # repeating the modifier on the accessor is invalid C# for those
+            # protected getters.
+            if len(parts) == 2 and level != "public":
+                rendered.append(kind)
+            else:
+                rendered.append(kind if level == "public" else f"{level} {kind}")
         return f"{head} {{ " + " ".join(f"{item};" for item in rendered) + " }"
     return body.replace("; where ", " where ")
 
@@ -301,7 +308,7 @@ def check_staged_generated() -> list[str]:
     for path, render in GENERATED_ARTIFACTS.items():
         try:
             staged = subprocess.run(
-                ["git", "show", f":{path.relative_to(ROOT)}"],
+                ["git", "show", f":{display_path(path)}"],
                 cwd=ROOT,
                 check=False,
                 capture_output=True,
@@ -311,6 +318,11 @@ def check_staged_generated() -> list[str]:
             errors.append(f"could not read staged generated file: {exc}")
             continue
         if staged.returncode != 0:
+            if path.exists():
+                errors.append(
+                    f"generated file is not staged or tracked: {display_path(path)}; "
+                    "stage it before commit"
+                )
             continue
         if staged.stdout != render():
             errors.append(

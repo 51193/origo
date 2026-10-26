@@ -64,7 +64,6 @@ Rules:
 |---|---|
 | `ci.sh` | Full local gate: lint, format, API, test, benchmark, Godot, package smoke |
 | `docs.sh` | Generate or validate committed documentation artifacts (Bash) |
-| `docs.ps1` | Generate or validate committed documentation artifacts (Windows) |
 | `check.sh` | Layered `plan` / `quick` / `affected` / `full` verification |
 | `test.sh` | Restore, build, `dotnet test`, Coverlet line coverage |
 | `format.sh` | `dotnet format --verify-no-changes` |
@@ -136,6 +135,7 @@ standalone platform entry points.
 | `package-consumer-smoke.ps1` | Packed-package consumer restore/build/startup smoke |
 | `lint-scripts.ps1` | PowerShell parse check and Python guard scripts |
 | `lint-commits.ps1` | Conventional Commit message lint |
+| `docs.ps1` | Generate or validate committed documentation artifacts |
 | `test-api-inventory-parent.ps1` | Git parent-resolution regression for the API inventory |
 | `install-dotnet.ps1` | Install the `global.json` SDK |
 | `download-godot.ps1` | Resolve/cache the Godot mono binary |

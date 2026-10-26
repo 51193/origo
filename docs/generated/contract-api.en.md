@@ -698,20 +698,20 @@ public void Deconstruct(out string Name, out string Version, out string Banner)
 
 ```csharp
 public abstract class Origo.Core.Planning.PlanExecutionStrategyBase : Origo.Core.Snd.Strategy.LifecycleStrategyBase
-protected abstract string ActionKey { protected get; }
-protected abstract string ActionStatusKey { protected get; }
-protected abstract string IntentKey { protected get; }
-protected abstract string IntentStatusKey { protected get; }
-protected abstract string PlanStepKey { protected get; }
+protected abstract string ActionKey { get; }
+protected abstract string ActionStatusKey { get; }
+protected abstract string IntentKey { get; }
+protected abstract string IntentStatusKey { get; }
+protected abstract string PlanStepKey { get; }
 protected abstract string? ResolveNextStep(string intent, string currentStep, bool failed, Origo.Core.Abstractions.Entity.ISndEntity entity)
 protected abstract string? StepToActionIndex(string stepType)
 protected PlanExecutionStrategyBase()
-protected virtual string ActionStatusCompleted { protected get; }
-protected virtual string ActionStatusExecuting { protected get; }
-protected virtual string ActionStatusFailed { protected get; }
-protected virtual string IntentStatusActive { protected get; }
-protected virtual string IntentStatusCompleted { protected get; }
-protected virtual string IntentStatusFailed { protected get; }
+protected virtual string ActionStatusCompleted { get; }
+protected virtual string ActionStatusExecuting { get; }
+protected virtual string ActionStatusFailed { get; }
+protected virtual string IntentStatusActive { get; }
+protected virtual string IntentStatusCompleted { get; }
+protected virtual string IntentStatusFailed { get; }
 protected virtual void OnAfterAdd(Origo.Core.Abstractions.Entity.ISndEntity entity, Origo.Core.Snd.ISndContext ctx)
 protected virtual void OnAfterLoad(Origo.Core.Abstractions.Entity.ISndEntity entity, Origo.Core.Snd.ISndContext ctx)
 protected virtual void OnAfterSpawn(Origo.Core.Abstractions.Entity.ISndEntity entity, Origo.Core.Snd.ISndContext ctx)
@@ -1057,9 +1057,9 @@ public static string? ExtractGlobSuffix(string searchPattern)
 
 ```csharp
 public class Origo.GodotAdapter.Bootstrap.OrigoAutoHost : Godot.Node
-protected Origo.Core.Abstractions.FileSystem.IPathResolver SharedPathResolver { protected get; }
-protected Origo.Core.DataSource.IDataSourceIoGateway SharedDataSourceIo { protected get; }
-protected Origo.Core.DataSource.IFileMetaAccess SharedMetaAccess { protected get; }
+protected Origo.Core.Abstractions.FileSystem.IPathResolver SharedPathResolver { get; }
+protected Origo.Core.DataSource.IDataSourceIoGateway SharedDataSourceIo { get; }
+protected Origo.Core.DataSource.IFileMetaAccess SharedMetaAccess { get; }
 protected override bool GetGodotClassPropertyValue(in Godot.NativeInterop.godot_string_name name, out Godot.NativeInterop.godot_variant value)
 protected override bool HasGodotClassMethod(in Godot.NativeInterop.godot_string_name method)
 protected override bool InvokeGodotClassMethod(in Godot.NativeInterop.godot_string_name method, Godot.NativeInterop.NativeVariantPtrArgs args, out Godot.NativeInterop.godot_variant ret)
@@ -1164,7 +1164,7 @@ public SignalName()
 ```csharp
 public abstract class Origo.GodotAdapter.Console.CommandHandlerBase : Origo.Core.Runtime.Console.ConsoleCommandHandlerBase
 protected CommandHandlerBase(Origo.Core.Abstractions.Runtime.IOrigoRuntime runtime)
-protected Origo.Core.Abstractions.Runtime.IOrigoRuntime Runtime { protected get; }
+protected Origo.Core.Abstractions.Runtime.IOrigoRuntime Runtime { get; }
 ```
 
 ### `Origo.GodotAdapter.FileSystem.GodotFileSystem`
