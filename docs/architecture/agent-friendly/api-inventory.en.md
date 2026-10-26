@@ -12,7 +12,7 @@ A concrete example must not be mislabeled a defect: capability summaries name th
 
 Another example is [TypedData](../../Origo.Core.Contracts/Snd/Metadata/README.en.md): public accessors such as `TryGetInt32` and conversion operators are generator outputs. Searching handwritten `.cs` files for `public` misses them. Conversely, [generator documentation](../../Origo.SourceGeneration/README.en.md) states that Adapter's entire `TypedDataLayeredExtensions` class is internal; public methods inside it are not game-facing public API. The tool must determine **effective external accessibility**.
 
-Agent Reference uses `[Test]` templates while this repository uses xUnit `[Fact]`. The reference targets game developers, and the strategy test framework can work with different assertion frameworks; this alone does not prove a repository testing error. Examples should identify consumer/maintainer audiences and runners, with compilable checks for the corresponding combinations. Inventories establish signatures; example tests establish usage.
+The strategy-testing page uses illustrative test templates; the repository tests use xUnit. Different assertion frameworks are valid for game developers, so that alone does not establish a repository testing error. Examples should identify consumer/maintainer audiences and runners, with compilable checks for the corresponding combinations. Inventories establish signatures; example tests establish usage.
 
 ## 2. What to generate and what to preserve
 
