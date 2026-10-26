@@ -51,6 +51,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\powershell\ci.ps1
 | Godot integration | `scripts\powershell\godot-test.ps1` | `scripts/bash/godot-test.sh` |
 | Package consumer smoke | `scripts\powershell\package-consumer-smoke.ps1` | `scripts/bash/package-consumer-smoke.sh` |
 | Script lint | `scripts\powershell\lint-scripts.ps1` | `scripts/bash/lint-scripts.sh` |
+| Documentation check | `scripts\powershell\docs.ps1` | `scripts/bash/docs.sh` |
 | Layered checks | `scripts\powershell\check.ps1 <plan\|quick\|affected\|full>` | `scripts/bash/check.sh` |
 | Commit lint | `scripts\powershell\lint-commits.ps1` | `scripts/bash/lint-commits.sh` |
 | Full local pipeline | `scripts\powershell\ci.ps1` | `scripts/bash/ci.sh` |

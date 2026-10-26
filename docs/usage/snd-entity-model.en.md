@@ -22,10 +22,10 @@ The SND model decomposes game entities into three orthogonal dimensions:
 
 ```
 BaseStrategy (abstract, base class for all strategies)
-├── LifecycleStrategyBase     → 8 entity lifecycle hooks
+├── LifecycleStrategyBase     → full entity lifecycle hooks
 ├── ActiveStrategyBase     → Invoke(entity, ctx, input)
 ├── ObserverStrategyBase   → OnMounted / OnDataChanged / OnUnmounted
-└── StateMachineStrategyBase → 4 state machine hooks
+└── StateMachineStrategyBase → state machine hooks
 ```
 
 ### Observer Strategies
@@ -195,7 +195,7 @@ public readonly partial struct TypedData : IEquatable<TypedData>
 - **On write**: Generic `SetData<T>` inline-writes the value into `_inlineBits` via `TypedDataFactory<T>.Create(value)` (system types) or bridges into `_ref` via `TypedDataObjectConverter` (adapter-layer registered types), with zero boxing and zero heap allocation
 - **On read**: `TypedDataFactory<T>.TryExtract(td, out var value)` dispatches by discriminant; registered types use direct field reading or Kind checks, unregistered types fall back to `is T`
 - **On serialization**: The `TypedData.Data` property boxes the value on demand; `TypedDataConverter` converts types to strings and maps bidirectionally via `TypeStringMapping`
-- **Multi-adapter support**: GodotAdapter registers 14 engine types via `[assembly: SndInlineTypes(startKind: 128, ...)]`; the runtime resolves Kind values through the `TypedDataLayeredRegistry` delegate chain. `TypedDataTypeMap.GetKindForType(typeof(Vector3))` returns the deterministic value 130, avoiding `is T` pattern matching
+- **Multi-adapter support**: GodotAdapter registers its engine types via `[assembly: SndInlineTypes(startKind: 128, ...)]`; the runtime resolves Kind values through the `TypedDataLayeredRegistry` delegate chain. `TypedDataTypeMap.GetKindForType(typeof(Vector3))` returns a deterministic registered Kind, avoiding `is T` pattern matching
 - **Unregistered types**: Fall back to the `_ref` path (kind=`TypedData.UnregisteredKind`), with performance equivalent to the class-based approach
 
 ### Safe Reading

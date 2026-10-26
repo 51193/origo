@@ -105,6 +105,7 @@ else
 fi
 
 bash scripts/bash/test-verify-release.sh
+bash scripts/bash/test-docs.sh
 bash scripts/bash/test-api-inventory-parent.sh
 bash scripts/bash/test-find-previous-api-baseline.sh
 bash scripts/bash/test-check-weekly-base.sh

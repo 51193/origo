@@ -75,7 +75,7 @@ collaboration contracts.
   contract, or module structure changes.
 - Keep links pointed at existing English manual entries and root files.
 - Documentation is reviewed and tested through the normal format, test, and CI
-  gates; no generated documentation artifacts are required.
+  gates; generated docs are committed and docs-gated.
 
 ### 1.7 Source Code Comments — English Only, IntelliSense-Ready
 

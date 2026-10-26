@@ -4,13 +4,13 @@
 
 ## Module Overview
 
-**Origo.GodotAdapter** is the Godot 4 adapter layer for the Origo framework. It bridges the platform-agnostic abstractions in the Core layer with Godot engine's concrete APIs, including the file system (via `FileAccess`/`DirAccess`), logging output (via `GD.Print`), node lifecycle (via `Node`/`PackedScene`), and engine type serialization (14 types including `Vector2`, `Transform3D`, etc.).
+**Origo.GodotAdapter** is the Godot 4.7.2 adapter layer for the Origo framework. It bridges the engine-agnostic abstractions in the Core layer with Godot engine's concrete APIs, including the file system (via `FileAccess`/`DirAccess`), logging output (via `GD.Print`), node lifecycle (via `Node`/`PackedScene`), and engine type serialization (`Vector2`/`Vector2I`/`Vector3`/`Vector3I`/`Vector4`, `Quaternion`, `Basis`, `Transform2D`/`Transform3D`, `Color`, `Rect2`/`Rect2I`, `Aabb`, and `Plane`).
 
 ## Root Files
 
 | File | Responsibility |
 |------|----------------|
-| `AssemblyAttributes.cs` | `[assembly: SndInlineTypes(startKind: 128, ...)]`: registers 14 Godot engine types in the adapter kind range (128–141) of TypedData |
+| `AssemblyAttributes.cs` | `[assembly: SndInlineTypes(startKind: 128, ...)]`: registers the Godot engine types in the adapter TypedData kind range |
 | `SndEntityNodeExtensions.cs` | `GetNativeNode()` / `GetNodeFromSnd<T>()` adapter convenience extensions in namespace `Origo.GodotAdapter` |
 
 ## Subsystem Overview
@@ -21,9 +21,9 @@
 | [Console](Console/README.en.md) | Godot console commands | press_button / tree_debug / camera_view commands + adapter layer CommandHandlerBase |
 | [FileSystem](FileSystem/README.en.md) | Godot file system | IFileSystem implementation: FileAccess/DirAccess + res:// and user:// support |
 | [Logging](Logging/README.en.md) | Godot logging | ILogger implementation: delegate-injected GD.Print/PushWarning/PushError |
-| [Serialization](Serialization/README.en.md) | Godot type serialization | 14 Godot types → DataSourceNode converters |
+| [Serialization](Serialization/README.en.md) | Godot type serialization | Godot engine values → DataSourceNode converters |
 | [Snd](Snd/README.en.md) | Godot SND entities | internal ISndSceneHost implementation: GodotSndManager + GodotSndEntity + PackedSceneNodeFactory |
-| — | TypedData inline | Source Generator generates extension methods and Kind registrations for 14 Godot types |
+| — | TypedData inline | Source Generator generates extension methods and Kind registrations for the registered Godot types |
 
 ## Startup Flow
 
@@ -132,10 +132,10 @@ Verified integration notes for embedding Origo into a Godot project:
 
 ## TypedData Multi-Layer Inlining
 
-Origo.GodotAdapter references the `Origo.SourceGeneration` source generator and registers 14 Godot engine types at the assembly level via `[assembly: SndInlineTypes(startKind: 128, ...)]`. At compile time, the SG automatically generates extension methods (`TryGetVector2` / `AsVector3`, etc., inside the `internal` `TypedDataLayeredExtensions` class), `[ModuleInitializer]` registration logic, and KindResolver/Converter bridges.
+Origo.GodotAdapter references the `Origo.SourceGeneration` source generator and registers the Godot engine types at the assembly level via `[assembly: SndInlineTypes(startKind: 128, ...)]`. At compile time, the SG automatically generates extension methods (`TryGetVector2` / `AsVector3`, etc., inside the `internal` `TypedDataLayeredExtensions` class), `[ModuleInitializer]` registration logic, and KindResolver/Converter bridges.
 
 - **Assembly load registers**: When the GodotAdapter assembly is referenced or loaded, its generated `[ModuleInitializer]` methods automatically perform Kind / Converter / TypeMap registration; no extra initialization entry point is needed. Tests force assembly loading by referencing a public type.
-- **Kind range 128–141**: Does not conflict with Core layer's 1–13, ensuring that `(TypedData)42` created in Core won't be misinterpreted as `Vector2` in GodotAdapter.
+- **Separate adapter kind range**: Does not conflict with the Core layer's home-kind range, ensuring that `(TypedData)42` created in Core won't be misinterpreted as `Vector2` in GodotAdapter.
 
 See [Origo.SourceGeneration documentation](../Origo.SourceGeneration/README.en.md) for details.
 

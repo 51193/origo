@@ -21,7 +21,7 @@ Role interface decomposition of ISndContext. 9 Snd role interfaces + `IStateMach
 
 ## ISndContext Companion Properties
 
-Beyond its 10 companion properties, ISndContext directly exposes the following members:
+Beyond its typed companion properties, ISndContext directly exposes the following members:
 
 | Member | Description |
 |------|------|
@@ -31,7 +31,7 @@ Beyond its 10 companion properties, ISndContext directly exposes the following m
 | `InitialSaveRootPath` | Initial save root path |
 | `EntryConfigPath` | Entry configuration file path |
 
-ISndContext does not inherit any role interfaces; all capabilities are accessed through 10 companion properties:
+ISndContext does not inherit any role interfaces; all capabilities are accessed through typed companion properties:
 
 | Companion Property | Type | Responsibility |
 |---------------|------|------|

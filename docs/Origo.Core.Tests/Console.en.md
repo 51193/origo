@@ -8,7 +8,7 @@
 
 Validates the full chain of the console command system: command parsing (positional/named/mixed arguments), command routing (register/dispatch/not found/case-insensitive/duplicate rejected),
 input queue (polling dequeue, FIFO, trim, clear), `IConsoleInputSource` interface contract, output channel (publish-subscribe, exception propagation, null rejected),
-19 built-in command handlers (16 Core + 3 GodotAdapter), type inference (bb_set/entity_set_data), console logging (level/order/Tag/content integrity).
+built-in Core and adapter command handlers, type inference (bb_set/entity_set_data), console logging (level/order/Tag/content integrity).
 
 ## Test File List
 

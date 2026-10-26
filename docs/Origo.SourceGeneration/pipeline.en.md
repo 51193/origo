@@ -430,13 +430,13 @@ Program start
   │    └─ ModuleInitializer runs
   │         ├─ RegisterKind(1, typeof(byte))
   │         ├─ RegisterKind(5, typeof(int))
-  │         └─ ... 13 primitive types ...
+  │         └─ ... Core primitive types ...
   │
   └─ Origo.GodotAdapter.dll loaded (depends on Core, therefore always after)
        └─ ModuleInitializer runs
             ├─ RegisterKind(128, typeof(Vector2))
             ├─ RegisterKind(130, typeof(Vector3))
-            └─ ... 14 Godot types ...
+            └─ ... registered Godot types ...
             ├─ RegisterKindResolver(if-else chain for Godot types)
             ├─ RegisterFromObjectFallback(switch for Godot types)
             └─ RegisterToObjectFallback(switch for Godot types)

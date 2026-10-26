@@ -20,7 +20,7 @@ capability contracts, and the `ISndContext` unified business facade interface.
 
 | File | Responsibility |
 |------|----------------|
-| `ISndContext.cs` | Unified SND business facade: Bootstrap + 10 companion properties |
+| `ISndContext.cs` | Unified SND business facade: Bootstrap + typed companion properties |
 
 This directory also contains the Entity, Metadata, and Strategy sub-directories.
 

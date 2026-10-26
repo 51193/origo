@@ -224,7 +224,7 @@ public void HealthStrategy_RequestsSave_WhenHpReachesZero()
 
 - Entity data read/write (SetData / GetData / TryGetData)
 - Three-level blackboard access (System / Progress / Session)
-- EntityStrategy: all 8 lifecycle hooks + Process frame update
+- EntityStrategy: the full strategy lifecycle hooks + Process frame update
 - ActiveStrategy: Invoke invocation + delegation verification via entity InvokeStrategy
 - Deferred actions (BusinessDeferred)
 - Persistence request recording (Save/Load/LevelSwitch)

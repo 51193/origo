@@ -52,8 +52,10 @@
 `docs/` is a hand-maintained English manual co-located with the source tree.
 English documentation is the single maintained language for this manual.
 Each module entry explains its responsibility, public surface, design decisions,
-and relevant usage or test guidance. There are no generated navigation hubs,
-language-pair metadata headers, revision files, or synchronization commands.
+and relevant usage or test guidance. There are no generated navigation hubs, language-pair metadata headers, or
+revision files. The only generated documentation is the committed shell API
+reference under `docs/generated/`; it is produced from the tracked API baseline
+and checked by a local gate.
 
 When source structure, public interfaces, configuration, or design intent
 changes, update the affected English entries and their links in the same
@@ -337,9 +339,56 @@ checks the stamped build properties, not a second documentation literal.
 
 ## Generation
 
-The manual files are hand-written after analyzing source code. Quality depends
-on correct understanding of the source code and the maintainer's design
+Narrative documentation is hand-written after analyzing source code. Quality
+depends on correct understanding of the source code and the maintainer's design
 knowledge. If discrepancies are found, report to the manual maintainer.
+
+Public shell signatures are generated locally from
+`tools/ApiInventoryTool/shell-api-baseline.json`:
+
+```bash
+bash scripts/bash/docs.sh generate
+bash scripts/bash/docs.sh check
+```
+
+The generated file is committed so documentation remains available without a
+remote generation service. `docs.sh check` also validates local Markdown links.
+`scripts/bash/test-docs.sh` runs the check in the normal local lint gate; do not
+edit generated files by hand.
+
+### Extending the generated and checked documentation
+
+The generator is intentionally small but explicit. Adapt it in the same commit
+when the documentation surface changes:
+
+- **Public shell API changes** — the API baseline is the source of truth. Run
+  `scripts/bash/docs.sh generate`, review the generated diff, and commit it.
+  `docs.sh check` fails if the committed page is stale. Never hand-edit
+  `docs/generated/contract-api.en.md`.
+- **A new generated artifact** — add a renderer and output path in
+  `scripts/python/docs_generate.py`, register it in `GENERATED_ARTIFACTS`,
+  include it in `docs.sh`/`docs.ps1` generate/check, document it in
+  `docs/generated/README.en.md` and the manual index, add the output to the
+  script map, and add a focused test in `scripts/python/docs_generate_test.py`.
+- **A new top-level summary document** — add its path to `SUMMARY_DOCS` in
+  `scripts/python/docs_generate.py` so the brittle-count and stale quick-start
+  checks cover it. Narrative module leaves are still covered by the all-doc
+  link check.
+- **A new exact count that cannot be replaced by names** — add a validator to
+  `validate_counts()` with an explicit source of truth and enforcement point.
+  Do not add a free-floating count to prose.
+- **A new generated-data contract** — add a test to
+  `docs_generate_test.py`; the generator's own formatting and validation
+  behavior must stay covered.
+- **Local workflow** — `.githooks/pre-commit` checks both the staged generated
+  file and the working tree; `scripts/bash/test-docs.sh` runs the generator
+  tests plus the working-tree check; `scripts/powershell/docs.ps1` runs the
+  same check in the Windows lint gate.
+  These are local because generated docs are committed and the repository does
+  not depend on a remote documentation service.
+
+The maintenance rule is: change the generator or validator and the source of
+truth together; a generated page is never the source of truth.
 
 ---
 [↑ Back to Origo Manual](README.en.md)

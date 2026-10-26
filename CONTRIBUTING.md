@@ -10,7 +10,9 @@ process.
 - The script map in [`scripts/README.md`](scripts/README.md) explains the
   `bash/`, `powershell/`, and `python/` layout and every gate.
 - Enable the repository hooks once per clone with
-  `git config core.hooksPath .githooks`.
+  `git config core.hooksPath .githooks`. The pre-commit hook runs the
+  generated-document and link check; regenerate and commit docs instead of
+  bypassing it.
 - Read the commit message convention in [`docs/META.en.md`](docs/META.en.md#git-commit-message-format). The local pre-push hook runs `scripts/bash/lint-commits.sh` before Git uploads branch commits (type, 72-character subject limit, no trailing period, body lines no longer than 72 characters). Dependabot-authored commits are skipped because Dependabot generates their message and supports only a prefix; `.github/dependabot.yml` sets that prefix to `chore(deps)` for every ecosystem.
 - Read [`docs/release-process.en.md`](docs/release-process.en.md) before touching `CHANGELOG.md` or cutting a release.
 - Use the [pull request template](PULL_REQUEST_TEMPLATE.md) when opening a PR.

@@ -2,121 +2,111 @@
 
 > [↑ Back to Usage Documentation](README.en.md)
 
-All capabilities of the Origo framework, organized by functional domain. Each entry includes a capability description and documentation entry point, making it easy for developers to look up as needed.
+What Origo provides, by capability area. The framework goal is an RPG
+Maker-style division of labour: describe game content and scenes, and let the
+framework own orchestration and persistence.
 
-## Entities & Strategies
+## Host and runtime
 
-| Capability | Description | Doc Entry |
-|------------|-------------|-----------|
-| SND entity model | Strategy (behavior), Node (presentation), Data (state) — ternary decoupled model | [SND Entity Model](snd-entity-model.en.md) |
-| 8 lifecycle hooks | AfterSpawn / AfterLoad / AfterAdd / Process / BeforeRemove / BeforeSave / BeforeQuit / BeforeDead | [SND Entity Model](snd-entity-model.en.md) |
-| Stateless strategy pool | Strategy instances are shared and reused; registration validates statelessness via reflection; ref-counted management | [↔ Snd/Strategy](../Origo.Core.Kernel/Snd/Strategy/README.en.md) |
-| Strategy partial ordering | Before / After complete registry projection; Process and batch hooks follow the same order, candidates use Ordinal | [SND Entity Model](snd-entity-model.en.md) |
-| TypedData type preservation | Read-only partial struct inline storage; Source Generator generates typed conversions; JSON round-trip preserves precision | [SND Entity Model](snd-entity-model.en.md) |
-| Data observers | Observer strategies (`ObserverStrategyBase` + `[ObserveData]` attribute) respond to entity data changes; mount/unmount via `MountObserverStrategy`/`UnmountObserverStrategy`; bindings persist with saves, auto-restore on load, auto-cleanup on entity death | [SND Entity Model](snd-entity-model.en.md) |
-| Cross-entity observation | `MountObserverStrategy(target, observerIndex)` supports self-observation and cross-entity observation; `OnMounted`/`OnUnmounted` carries lifecycle awareness | [SND Entity Model](snd-entity-model.en.md) |
-| Active strategies | Externally invoked by index via Invoke; independently managed container separate from passive strategies; O(1) lookup | [Strategy Testing](strategy-testing.en.md) |
-| Generic active strategy invocation | `InvokeStrategy<TInput, TOutput>` extension methods; type-safe, eliminating JSON serialization boilerplate | [↔ Snd](../Origo.Core/Snd/README.en.md) |
-| SndMetaFluentBuilder | Fluent API for building entity metadata, eliminating `??= new DataMetaData()` boilerplate | [↔ Snd/Metadata](../Origo.Core.Contracts/Snd/Metadata/README.en.md) |
-| TryGetNumeric | Compatible numeric reads from entity data, bridging the type mismatch between `SetData("k", 5)` (int) and `TryGetData<float>("k")` | [↔ Snd](../Origo.Core/Snd/README.en.md) |
-| Numeric recipe loading | SndArchetypeLoader loads archetypes from key-value pair files and infers types to write into entities | [↔ Snd/Archetype](../Origo.Core/Snd/Archetype/README.en.md) |
-| Lazy strategy attachment | EnsureStrategy extension methods, lazy strategy layer initialization with idempotent guard | [SND Entity Model](snd-entity-model.en.md), [↔ Snd](../Origo.Core/Snd/README.en.md) |
+| Capability | Description | Documentation |
+|---|---|---|
+| Host facade | `OrigoHost` creates a platform-independent host and exposes the stable runtime/context surfaces | [Origo.Core](../Origo.Core/README.en.md) |
+| Bootstrap | One Core-owned startup sequence: strategy discovery/validation, alias/template loading, then entry load | [Architecture](../architecture/overview.en.md) |
+| Shutdown | Idempotent teardown that runs quit hooks, releases the progress run, and removes the temporary working area | [Generated API](../generated/contract-api.en.md) |
+| Frame ownership | Core owns frame order: entity processing, deferred queues, pending kills, then console commands | [Architecture](../architecture/overview.en.md) |
+| Deferred scheduling | Thread-safe business/system queues with snapshot-and-drain execution | [Scheduling](../Origo.Core.Kernel/Scheduling/README.en.md) |
 
-## Session Management
+## Entities and strategies
 
-| Capability | Description | Doc Entry |
-|------------|-------------|-----------|
-| Four-layer runtime | SystemRun → ProgressRun → SessionManager → SessionRun layered lifecycle | [Architecture Overview](../architecture/overview.en.md) |
-| Foreground/background session isomorphism | Background sessions share the same ISessionRun interface and strategy pipeline as the foreground | [Session Model](session-model.en.md) |
-| Session topology encoding | SessionTopology text-format codec, recording key/levelId/syncProcess for all active sessions | [Session Model](session-model.en.md) |
-| LevelId global uniqueness | At most one session per levelId at any given time; throws on conflict | [Session Model](session-model.en.md) |
+| Capability | Description | Documentation |
+|---|---|---|
+| SND model | Strategy (behavior), Node (presentation), and Data (state) are separate concerns | [SND Entity Model](snd-entity-model.en.md) |
+| Strategy hooks | `AfterSpawn`, `AfterLoad`, `AfterAdd`, `Process`, `BeforeRemove`, `BeforeSave`, `BeforeQuit`, `BeforeDead` | [Strategy Lifecycle](strategy-lifecycle.en.md) |
+| Strategy pool | Stateless shared strategies, validated at registration and released by reference counting | [Kernel/Snd/Strategy](../Origo.Core.Kernel/Snd/Strategy/README.en.md) |
+| Strategy ordering | Relative `Before`/`After` ordering projected over the complete registry | [Architecture](../architecture/overview.en.md) |
+| TypedData | Generated typed accessors and layered registrations; deserialization preserves the registered type | [SND Entity Model](snd-entity-model.en.md) |
+| Data observation | Observer strategies react to entity data changes; bindings persist across saves and are restored on load | [SND Entity Model](snd-entity-model.en.md) |
+| Cross-entity observation | Mount an observer against a target entity with lifecycle-aware mount/unmount | [SND Entity Model](snd-entity-model.en.md) |
+| Active strategies | Indexed, externally invoked services with typed generic helpers | [Strategy Testing](strategy-testing.en.md) |
+| Runtime strategy changes | Add/remove passive, active, and observer strategies with orchestrated lifecycle side effects | [Strategy Lifecycle](strategy-lifecycle.en.md) |
+| Metadata builder | `SndMetaFluentBuilder` for entity metadata, lifecycle/active indices, and observer bindings | [Metadata](../Origo.Core.Contracts/Snd/Metadata/README.en.md) |
+| Numeric reads | `TryGetNumeric`/`GetNumeric` bridge compatible numeric types without string serialization | [Core/Snd](../Origo.Core/Snd/README.en.md) |
+| Archetypes and templates | Load key-value entity recipes and clone scene templates through the data-source boundary | [Core/Snd](../Origo.Core/Snd/README.en.md) |
+
+## Sessions
+
+| Capability | Description | Documentation |
+|---|---|---|
+| Foreground/background sessions | Both use `ISessionRun` and the same strategy pipeline; no parallel entity model | [Session Model](session-model.en.md) |
+| Session topology | The active session set, keys, levels, and processing flags are encoded in the progress data | [Session Model](session-model.en.md) |
+| Level identity | A level is held by at most one session; conflicts fail before mounting | [Session Model](session-model.en.md) |
+| Level switching | Foreground switches persist the old level, resolve the target, mount it, and persist the new topology as one ordered operation | [Persistence Flow](persistence-flow.en.md) |
 
 ## Persistence
 
-| Capability | Description | Doc Entry |
-|------------|-------------|-----------|
-| Two-phase write | Write `current/` first (with .write_in_progress marker), atomically copy to `save_{id}/` after validation | [Persistence Flow](persistence-flow.en.md) |
-| Strict read validation | .write_in_progress marker detection, level three-file integrity check, progress.json mandatory for payload reads; `ReadProgressNodeFromSnapshot` is the nullable existence probe used by strict load | [Persistence Flow](persistence-flow.en.md) |
-| Snapshot management | `ctx.Save.ListSaves()` / `ListSavesWithMetaData()`, supports save-selection UI | [Persistence Flow](persistence-flow.en.md) |
-| Save-slot deletion | `ctx.Save.DeleteSave(saveId)` deletes an inactive slot and its `.tmp`/`.bak` remnants while protecting the active slot and pending workflows | [Persistence Flow](persistence-flow.en.md) |
-| Persistence completion state | `ctx.Deferred.IsPersistenceIdle` and `ctx.Lifecycle.IsBootstrapCompleted` expose frame-driven completion observation | [Persistence Flow](persistence-flow.en.md) |
-| meta.map display metadata | Display metadata system separated from business data, ISaveMetaContributor pluggable contributor pattern | [Persistence Flow](persistence-flow.en.md) |
-| Idempotent deduplication | SHA256 hash comparison; same game state skips I/O write | [↔ Save/Storage](../Origo.Core.Kernel/Save/Storage/README.en.md) |
+| Capability | Description | Documentation |
+|---|---|---|
+| Two-phase write | Write the active `current/` workspace under a marker, then install a snapshot after validation | [Persistence Flow](persistence-flow.en.md) |
+| Strict reads | Marker/three-file/format checks fail explicitly instead of accepting partial state | [Persistence Flow](persistence-flow.en.md) |
+| Snapshot operations | Enumerate, inspect metadata, delete inactive slots, and choose a continue target | [Persistence Flow](persistence-flow.en.md) |
+| Idempotent writes | Payload hashing avoids rewriting an unchanged snapshot | [Storage](../Origo.Core.Kernel/Save/Storage/README.en.md) |
+| Display metadata | `ISaveMetaContributor` adds display-only metadata without mixing it into gameplay state | [Persistence Flow](persistence-flow.en.md) |
+| Completion observation | `IsPersistenceIdle` and `IsBootstrapCompleted` expose frame-driven completion | [Persistence Flow](persistence-flow.en.md) |
 
-## State Machine
+## State machines and planning
 
-| Capability | Description | Doc Entry |
-|------------|-------------|-----------|
-| String-stack state machine | Stack holds only string identifiers; behavior is defined by associated Push/Pop strategies | [State Machine](state-machine.en.md) |
-| Push/Pop strategy hooks | OnPushRuntime / OnPushAfterLoad / OnPopRuntime / OnPopBeforeQuit, with BeforeTop/AfterTop migration context | [State Machine](state-machine.en.md) |
-| Two-phase load recovery | On load, the framework restores the stack via internal `RestoreStackWithoutHooks` (silent restore) → `FlushAfterLoad` (replay hooks in order) | [State Machine](state-machine.en.md) |
+| Capability | Description | Documentation |
+|---|---|---|
+| String-stack state machine | A stack of identifiers whose behavior is supplied by push/pop strategies | [State Machine](state-machine.en.md) |
+| Lifecycle-aware stack hooks | Runtime, after-load, and before-quit hooks with explicit stack-top context | [State Machine](state-machine.en.md) |
+| Plan execution | `PlanExecutionStrategyBase` runs action sequences with explicit completion/failure and hook teardown | [Planning](../Origo.Core.Contracts/Planning/README.en.md) |
 
-## Console System
+## Console
 
-| Capability | Description | Doc Entry |
-|------------|-------------|-----------|
-| 16 built-in commands | help / bb_get / bb_set / bb_keys / spawn / find_entity / kill_all / snd_count / entity_get_data / entity_set_data / invoke_strategy / list_saves / save / load / delete_save / switch_level | [Console Commands](console-commands.en.md) |
-| Custom command registration | Core layer inherits ConsoleCommandHandlerBase; adapter layer inherits CommandHandlerBase; both register through `IOrigoRuntime.RegisterConsoleCommandHandler` | [Console Commands](console-commands.en.md) |
-| TCP remote console bridge | ConsoleBridgeServer listens on localhost:9876, single-connection mode, bidirectional I/O via pub-sub | [Console Commands](console-commands.en.md) |
-| Command type inference | bb_set / entity_set_data auto-infers int/float/bool/string types; existing keys preserve their original type | [Console Commands](console-commands.en.md) |
+| Capability | Description | Documentation |
+|---|---|---|
+| Built-in commands | Entity inspection, data access, strategy invocation, save-slot operations, and help (the command reference is authoritative) | [Console Commands](console-commands.en.md) |
+| Custom commands | Register command handlers through the public runtime surface | [Console Commands](console-commands.en.md) |
+| TCP bridge | Loopback-only, single-connection console bridge; no authentication or encryption, intended for local debugging and automation | [ConsoleBridge](../Origo.ConsoleBridge/README.en.md) |
+| Bounded input | The bridge bounds line length and the Core queue bounds pending commands and per-frame work | [ConsoleBridge](../Origo.ConsoleBridge/README.en.md) |
 
-## Data & Serialization
+## Data and serialization
 
-| Capability | Description | Doc Entry |
-|------------|-------------|-----------|
-| DataSource abstraction layer | Unified tree data model DataSourceNode (Map/Array/Text/Number/Bool/Null + Lazy), with IDataSourceIoGateway as Core layer's sole file entry point | [↔ DataSource](../Origo.Core.Kernel/DataSource/README.en.md) |
-| JSON + .map codec | JsonDataSourceCodec (lazy expansion), MapDataSourceCodec (key:value flat structure) | [↔ DataSource/Codec](../Origo.Core.Kernel/DataSource/Codec/README.en.md) |
-| Lazy JSON expansion | Nested objects/arrays are parsed only on first access, amortizing large save parsing costs | [↔ DataSource](../Origo.Core.Kernel/DataSource/README.en.md) |
-| Type-string bidirectional mapping | TypeStringMapping maintains bidirectional mapping between CLR types and stable string identifiers, avoiding FullName version coupling | [↔ Serialization](../Origo.Core.Contracts/Serialization/README.en.md) |
-| Godot 14 type serialization | Vector2/3/4, Vector2I/3I, Quaternion, Color, Basis, Transform2D/3D, Rect2/2I, Aabb, Plane — full JSON round-trip | [↔ GodotAdapter/Serialization](../Origo.GodotAdapter/Serialization/README.en.md) |
-| Converter registration & inheritance backtracking | DataSourceConverterRegistry backtracks along base class and interface chains when no exact type converter is registered | [↔ DataSource/Converters](../Origo.Core.Kernel/DataSource/Converters/README.en.md) |
-| Strategy file access (ISndFileAccess) | Strategies read/write JSON/Map files via ISndContext, automatically parsed through the IDataSourceIoGateway boundary into DataSourceNode trees or strongly-typed objects | [Architecture Overview](../architecture/overview.en.md), [↔ Abstractions/Snd](../Origo.Core.Contracts/Abstractions/Snd/README.en.md) |
-| In-save file access (ISndArchiveFileAccess) | Strategies read/write files (including deletion) in the save's extra/ subdirectory via ISndContext; files follow save lifecycle: included in save snapshots after writes, auto-restored on load | [Architecture Overview](../architecture/overview.en.md), [↔ Abstractions/Snd](../Origo.Core.Contracts/Abstractions/Snd/README.en.md) |
+| Capability | Description | Documentation |
+|---|---|---|
+| DataSource tree | A single tree model over map/array/text/number/bool/null values with lazy expansion | [DataSource](../Origo.Core.Kernel/DataSource/README.en.md) |
+| Codecs | JSON and `.map` codecs behind the gateway; no direct file-content bypass | [Codec](../Origo.Core.Kernel/DataSource/Codec/README.en.md) |
+| Type-string mapping | Stable CLR type names for persistence and adapter registration | [Serialization](../Origo.Core.Contracts/Serialization/README.en.md) |
+| Godot types | Godot engine values round-trip through registered converters and TypedData layers | [GodotAdapter/Serialization](../Origo.GodotAdapter/Serialization/README.en.md) |
+| File access | Strategies use `ISndFileAccess` for resources and `ISndArchiveFileAccess` for save-scoped files | [Generated API](../generated/contract-api.en.md) |
 
-## Godot Adapter
+## Godot adapter
 
-| Capability | Description | Doc Entry |
-|------------|-------------|-----------|
-| res:// + user:// file system | GodotFileSystem implements IFileSystem, supporting virtual paths and path traversal protection | [↔ GodotAdapter/FileSystem](../Origo.GodotAdapter/FileSystem/README.en.md) |
-| Log proxy | GodotLogger injects GD.Print / PushWarning / PushError via delegates, no internal formatting | [↔ GodotAdapter/Logging](../Origo.GodotAdapter/Logging/README.en.md) |
-| PackedScene node instantiation | GodotPackedSceneNodeFactory loads scenes from resource paths and instantiates them as GodotNodeHandle | [↔ GodotAdapter/Snd](../Origo.GodotAdapter/Snd/README.en.md) |
-| GodotEntity + StableName | internal GodotSndEntity bridges ISndEntity with the Godot Node lifecycle; independent StableName avoids Godot auto-rename interference | [↔ GodotAdapter/Snd](../Origo.GodotAdapter/Snd/README.en.md) |
-| Scene alias resolution | Resolves logical aliases to res:// resource paths via SndMappings | [↔ GodotAdapter/Bootstrap](../Origo.GodotAdapter/Bootstrap/README.en.md) |
-| Adapter-layer console commands | press_button (simulate button click), tree_debug (print entity node tree), camera_view (show screen coordinates and depth of entity nodes visible through the active Camera3D) | [↔ GodotAdapter/Console](../Origo.GodotAdapter/Console/README.en.md) |
+| Capability | Description | Documentation |
+|---|---|---|
+| File system | `res://` and `user://` access with path traversal protection | [GodotAdapter/FileSystem](../Origo.GodotAdapter/FileSystem/README.en.md) |
+| Logging bridge | Core logging forwarded to Godot output facilities | [GodotAdapter/Logging](../Origo.GodotAdapter/Logging/README.en.md) |
+| Packed scenes | Logical scene aliases resolve to instantiated engine nodes | [GodotAdapter/Snd](../Origo.GodotAdapter/Snd/README.en.md) |
+| Entity bridge | `GodotSndEntity` connects the Core entity lifecycle to Godot nodes without owning lifecycle decisions | [GodotAdapter/Snd](../Origo.GodotAdapter/Snd/README.en.md) |
+| Adapter console | `tree_debug`, `camera_view`, and `press_button` expose engine-side diagnostics | [GodotAdapter/Console](../Origo.GodotAdapter/Console/README.en.md) |
 
-## Testing Infrastructure
+## Random, grid, and utilities
 
-| Capability | Description | Doc Entry |
-|------------|-------------|-----------|
-| StrategyTestScenario | Declarative strategy unit testing framework, three-phase pattern (Configure → Simulate → Inspect) | [Strategy Testing](strategy-testing.en.md) |
-| ActiveStrategy testing | Standalone ActiveStrategy test harness, Invoke / InvokeViaEntity / data read-write | [Strategy Testing](strategy-testing.en.md) |
-| Architecture guardrail tests | Core / Adapter / ConsoleBridge each verify architectural constraints such as dependency direction, interface composition, and strategy statelessness | [↔ Core.Tests](../Origo.Core.Tests/README.en.md), [↔ GodotAdapter.Tests](../Origo.GodotAdapter.Tests/README.en.md), [↔ ConsoleBridge.Tests](../Origo.ConsoleBridge.Tests/README.en.md) |
+| Capability | Description | Documentation |
+|---|---|---|
+| Deterministic PRNG | `XorShift128+` and save-safe `PersistentRandom` | [Random](../Origo.Core/Random/README.en.md) |
+| Noise | OpenSimplex2 and Worley-based noise maps for procedural content | [Random](../Origo.Core/Random/README.en.md) |
+| Grid and pathfinding | Grid coordinates, coordinate parsing, and A* pathfinding | [Grid](../Origo.Core/Grid/README.en.md) |
+| Blackboard | Case-sensitive in-memory key-value state with serialization | [Blackboard](../Origo.Core.Contracts/Blackboard/README.en.md) |
 
-## Auxiliary Capabilities
+## Design properties
 
-| Capability | Description | Doc Entry |
-|------------|-------------|-----------|
-| XorShift128+ random | Period 2^128-1, no global state, caller explicitly passes seed, cross-platform consistency | [↔ Random](../Origo.Core/Random/README.en.md) |
-| PersistentRandom | Blackboard-persisted random state: InitSeed → TryNextInt32/NextInt32/NextFloat, save-safe and recoverable | [↔ Random](../Origo.Core/Random/README.en.md) |
-| 2D noise map generation | OpenSimplex2 (70%) + Worley Cellular (30%) mixed noise, basic + extended overloads (custom octaves/lacunarity/gain) | [↔ Random](../Origo.Core/Random/README.en.md) |
-| Grid coordinate system | GridPos type, GridCoordinateSystem single/dual-axis conversion, A* pathfinding, GridParser coordinate parsing | [↔ Grid](../Origo.Core/Grid/README.en.md) |
-| In-memory blackboard | IBlackboard default implementation, SetValue/TryGet/SerializeAll/DeserializeAll, key case-sensitive | [↔ Blackboard](../Origo.Core.Contracts/Blackboard/README.en.md) |
-| Deferred action scheduling | ConcurrentActionQueue thread-safe queue, snapshot-drain pattern, supports re-enqueue during execution | [↔ Scheduling](../Origo.Core.Kernel/Scheduling/README.en.md) |
-| Structured log builder | LogMessageBuilder fluent API (SetElapsedMs / AddContext / Build) | [↔ Logging](../Origo.Core.Contracts/Logging/README.en.md) |
-
-## Framework Design Properties
-
-| Property | Description | Doc Entry |
-|----------|-------------|-----------|
-| Platform-agnostic | Origo.Core depends only on System.\*, references no engine-specific code | [Architecture Overview](../architecture/overview.en.md) |
-| Adapter-layer isolation | Engine code only implements Core abstractions in Origo.GodotAdapter; adapter layer does not participate in strategy lifecycle management | [Architecture Overview](../architecture/overview.en.md) |
-| Interface Segregation (ISP) | ISndContext exposes 10 companion properties (9 Snd role interfaces + IStateMachineContext); ISessionRun returns abstract IStateMachineContainer | [Architecture Overview](../architecture/overview.en.md) |
-| Single-threaded frame model | One frame = one logical atomic boundary; deferred actions execute sequentially through queues. The host (e.g., Godot `_Process`) drives the frame via `IOrigoFrameDriver.DriveFrame(double delta)`; Core internal order: entity Process → business queue → Kill pending → system queue → console | [Architecture Overview](../architecture/overview.en.md) |
+| Property | Description |
+|---|---|
+| Engine isolation | Core has no engine dependency; the adapter implements Core abstractions and never owns lifecycle decisions |
+| Fail-fast validation | Invalid IDs, partial saves, unknown strategies, and contract violations fail explicitly |
+| Single access path | Capabilities are reached through their public interfaces and framework orchestration, not hand-stitched low-level calls |
+| Public boundary | Stable consumer contracts are separated from kernel implementation details and checked by the shell API baseline |
 
 ---
-
-> **Usage suggestion**: New users can start from [Quick Start](quick-start.en.md), then browse this checklist and pick capabilities of interest for deeper reading.
->
-> **AI agents**: Please consult [Agent Reference](agent-reference.en.md) directly for complete interface signatures and runtime reference.
-
 [↑ Back to Usage Documentation](README.en.md)

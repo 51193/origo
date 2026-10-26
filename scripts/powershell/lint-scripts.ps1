@@ -23,6 +23,7 @@ if ($failed) {
 Write-Host ('PowerShell syntax OK (' + $files.Count + ' scripts).')
 
 Invoke-OrigoPython -Arguments @('scripts/python/check_test.py')
+& (Join-Path $PSScriptRoot 'docs.ps1')
 Invoke-OrigoPython -Arguments @('scripts/python/validate-agent-docs.py')
 & (Join-Path $PSScriptRoot 'test-api-inventory-parent.ps1')
 Invoke-OrigoPython -Arguments @('scripts/python/validate-release-workflow.py')

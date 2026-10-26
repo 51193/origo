@@ -6,7 +6,7 @@
 
 ## Behavior Under Test Overview
 
-Validates the full behavior of the SND strategy system: strategy partial ordering, pool reference counting/recycling, 8 lifecycle hooks for entity strategies, ActiveStrategy Invoke calls, observer strategy mount/unmount/data change notifications/persistence/topology queries, and type-safety checks during strategy registration.
+Validates the full behavior of the SND strategy system: strategy partial ordering, pool reference counting/recycling, full lifecycle hooks for entity strategies, ActiveStrategy Invoke calls, observer strategy mount/unmount/data change notifications/persistence/topology queries, and type-safety checks during strategy registration.
 
 The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `PerfReporter` to measure throughput/allocation with accompanying correctness assertions, carry `[Trait("Category","Benchmark")]`, and execute through `scripts/bash/benchmark.sh` rather than the functional test pipeline.
 
@@ -316,7 +316,7 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 
 None — the following boundaries are part of the current contract rather than uncovered gaps:
 
-- `ActiveStrategyBase` and `ObserverStrategyBase` are strategy branches parallel to `LifecycleStrategyBase`; they intentionally do not participate in frame updates or the passive strategy 8 lifecycle hooks. ActiveStrategy invocation/recovery/release is covered in this document, and ObserverStrategy lifecycle ordering is covered by [Integration.en.md](Testing/Integration/Integration.en.md).
+- `ActiveStrategyBase` and `ObserverStrategyBase` are strategy branches parallel to `LifecycleStrategyBase`; they intentionally do not participate in frame updates or the passive strategy lifecycle hooks. ActiveStrategy invocation/recovery/release is covered in this document, and ObserverStrategy lifecycle ordering is covered by [Integration.en.md](Testing/Integration/Integration.en.md).
 - `SndStrategyPool` reference counting only promises the single-threaded frame model; concurrent access is not part of the current contract.
 - The cross-entity observer Save/Recover full chain (including whole-session rollback when a target is missing) is covered by `ObserverTopologyIntegrationTests` and `SessionRunLoadRollbackMaskingTests`.
 

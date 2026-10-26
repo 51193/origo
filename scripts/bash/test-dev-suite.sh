@@ -30,6 +30,9 @@ require_file scripts/powershell/ci.ps1
 require_file scripts/bash/test-api-inventory-parent.sh
 require_file scripts/powershell/test-api-inventory-parent.ps1
 require_file scripts/powershell/common.ps1
+require_file .githooks/pre-commit
+grep -Fq "scripts/bash/docs.sh check" .githooks/pre-commit \
+    || FAIL "pre-commit hook must run the documentation check"
 
 # The two full-gate entry points must run the same ordered gate sequence.
 bash_steps=()
@@ -64,7 +67,8 @@ for marker in \
     "scripts/python/validate-agent-docs.py" \
     "scripts/python/validate-release-workflow.py" \
     "scripts/python/test-validate-release-workflow.py" \
-    "scripts/python/work_identity.py"; do
+    "scripts/python/work_identity.py" \
+    "docs.ps1"; do
     grep -Fq "$marker" <<<"$powershell_lint_active" \
         || FAIL "PowerShell lint gate is missing shared check: $marker"
 done
