@@ -109,15 +109,26 @@ def render_contract_api() -> str:
                     types.append(match.group(0))
         types = sorted(set(types), key=str.casefold)
         members_by_type: dict[str, list[str]] = {type_name: [] for type_name in types}
+        unmatched: list[str] = []
         for entry in entries:
             if entry.startswith("T:"):
                 continue
             body = entry.split(":", 1)[-1]
+            if "<Clone>$" in body:
+                # Compiler-generated record clone methods are not part of the
+                # documented consumer surface.
+                continue
             matches = [type_name for type_name in types if body.startswith(type_name + ".")]
             if not matches:
+                unmatched.append(entry)
                 continue
             owner = max(matches, key=len)
             members_by_type[owner].append(body)
+        if unmatched:
+            raise ValueError(
+                "baseline entries could not be attributed to a type: "
+                + ", ".join(unmatched)
+            )
         lines.extend([f"## {name}", ""])
         for type_name in types:
             declaration = next(
@@ -200,7 +211,11 @@ def validate_counts() -> list[str]:
     errors: list[str] = []
     integration_doc = ROOT / "docs" / "Origo.GodotAdapter.Integration.Tests" / "README.en.md"
     runner = ROOT / "Origo.GodotAdapter.Integration.Tests" / "Runner" / "IntegrationTestRunner.cs"
-    if integration_doc.is_file() and runner.is_file():
+    if not integration_doc.is_file() or not runner.is_file():
+        errors.append(
+            "integration inventory validation is missing its document or runner source"
+        )
+    else:
         match = re.search(r"_minimumTestCount\s*=\s*(\d+)", runner.read_text(encoding="utf-8"))
         if not match:
             errors.append("could not read _minimumTestCount from IntegrationTestRunner.cs")
@@ -227,7 +242,11 @@ def validate_counts() -> list[str]:
 
     assembly = ROOT / "Origo.GodotAdapter" / "AssemblyAttributes.cs"
     serialization_doc = ROOT / "docs" / "Origo.GodotAdapter" / "Serialization" / "README.en.md"
-    if assembly.is_file() and serialization_doc.is_file():
+    if not assembly.is_file() or not serialization_doc.is_file():
+        errors.append(
+            "Godot type inventory validation is missing its assembly or documentation source"
+        )
+    else:
         registered = set(re.findall(r"typeof\(([A-Za-z0-9_]+)\)", assembly.read_text(encoding="utf-8")))
         doc_text = serialization_doc.read_text(encoding="utf-8")
         missing = sorted(name for name in registered if f"`{name}`" not in doc_text)
@@ -265,7 +284,7 @@ def validate_summary_content() -> list[str]:
         if not path.is_file():
             continue
         text = path.read_text(encoding="utf-8")
-        if "quick-start" in text:
+        if "quick-start" in text.lower() or "quick start" in text.lower():
             errors.append(f"{path.relative_to(ROOT)}: stale quick-start reference")
         for pattern in BANNED_SUMMARY_PATTERNS:
             match = re.search(pattern, text)
@@ -318,11 +337,10 @@ def check_staged_generated() -> list[str]:
             errors.append(f"could not read staged generated file: {exc}")
             continue
         if staged.returncode != 0:
-            if path.exists():
-                errors.append(
-                    f"generated file is not staged or tracked: {display_path(path)}; "
-                    "stage it before commit"
-                )
+            errors.append(
+                f"generated file is not staged or tracked: {display_path(path)}; "
+                "generate and stage it before commit"
+            )
             continue
         if staged.stdout != render():
             errors.append(

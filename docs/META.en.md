@@ -216,6 +216,7 @@ docs/                            # Documentation root (inside the origo reposito
 ├── README.en.md                # Top-level English index
 ├── META.en.md                  # Maintenance meta-instructions
 ├── release-process.en.md       # Formal releases and Changelog rules
+├── generated/                  # Generated, committed signature references
 ├── usage/                      # System usage documentation
 ├── architecture/               # Architecture overview, decisions, and deferred designs
 ├── agents/                     # Matt Pocock skills configuration and manual entry
@@ -366,8 +367,8 @@ when the documentation surface changes:
   `docs.sh check` fails if the committed page is stale. Never hand-edit
   `docs/generated/contract-api.en.md`.
 - **A new generated artifact** — add a renderer and output path in
-  `scripts/python/docs_generate.py`, register it in `GENERATED_ARTIFACTS`,
-  include it in `docs.sh`/`docs.ps1` generate/check, document it in
+  `scripts/python/docs_generate.py`, register it in `GENERATED_ARTIFACTS`
+  (the wrappers dispatch over that registry), document it in
   `docs/generated/README.en.md` and the manual index, add the output to the
   script map, and add a focused test in `scripts/python/docs_generate_test.py`.
 - **A new top-level summary document** — add its path to `SUMMARY_DOCS` in

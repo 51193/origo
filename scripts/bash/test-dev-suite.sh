@@ -31,8 +31,10 @@ require_file scripts/bash/test-api-inventory-parent.sh
 require_file scripts/powershell/test-api-inventory-parent.ps1
 require_file scripts/powershell/common.ps1
 require_file .githooks/pre-commit
-grep -Fq "scripts/bash/docs.sh check" .githooks/pre-commit \
-    || FAIL "pre-commit hook must run the documentation check"
+grep -Fxq 'bash scripts/bash/docs.sh check-staged' .githooks/pre-commit \
+    || FAIL "pre-commit hook must check the staged generated documentation"
+grep -Fxq 'bash scripts/bash/docs.sh check' .githooks/pre-commit \
+    || FAIL "pre-commit hook must check the worktree documentation"
 
 # The two full-gate entry points must run the same ordered gate sequence.
 bash_steps=()
@@ -68,6 +70,7 @@ for marker in \
     "scripts/python/validate-release-workflow.py" \
     "scripts/python/test-validate-release-workflow.py" \
     "scripts/python/work_identity.py" \
+    "scripts/python/docs_generate_test.py" \
     "docs.ps1"; do
     grep -Fq "$marker" <<<"$powershell_lint_active" \
         || FAIL "PowerShell lint gate is missing shared check: $marker"
@@ -96,6 +99,17 @@ for script in scripts/bash/*.sh scripts/powershell/*.ps1 scripts/python/*.py; do
     grep -Eq "^\|[[:space:]]*\`${name//./\\.}\`" scripts/README.md \
         || FAIL "script is missing from the scripts/README.md table: $name"
 done
+
+# Documentation scripts must be in their platform-specific map section.
+bash_map="$(sed -n '/^## Bash (`scripts\/bash`)/,/^## PowerShell (`scripts\/powershell`)/p' scripts/README.md)"
+powershell_map="$(sed -n '/^## PowerShell (`scripts\/powershell`)/,/^## Adding or Moving Scripts/p' scripts/README.md)"
+grep -Fq '`docs.sh`' <<<"$bash_map" \
+    || FAIL "docs.sh is missing from the Bash script-map section"
+grep -Fq '`docs.ps1`' <<<"$powershell_map" \
+    || FAIL "docs.ps1 is missing from the PowerShell script-map section"
+if grep -Fq '`docs.ps1`' <<<"$bash_map"; then
+    FAIL "docs.ps1 must not be listed in the Bash script-map section"
+fi
 
 if ((failures > 0)); then
     echo "Development-suite parity: FAILED ($failures issue(s))." >&2

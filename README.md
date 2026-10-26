@@ -12,7 +12,7 @@ ordering, scene startup, session orchestration, or save/load plumbing. They
 define the game's strategies, scenes, and data; Origo provides the frame loop,
 entity lifecycle, sessions, persistence, console access, and the engine adapter.
 
-The framework keeps those responsibilities behind stable contracts, so a game
+The framework keeps those responsibilities behind public contracts, so a game
 can focus on what the game *is* rather than how its runtime is wired.
 
 ## Documentation
