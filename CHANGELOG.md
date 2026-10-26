@@ -12,6 +12,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Dedicated Bash development-suite CI job** — the `bash-development-suite`
+  GitHub job runs the Bash/PowerShell parity gate and the Bash API-inventory
+  parent regression alongside the `windows-powershell` job. The parity gate
+  now fails if either dedicated CI job disappears.
 - **Bash development-suite parity gates** — `scripts/bash/test-dev-suite.sh`
   verifies that `ci.sh` and `ci.ps1` run the same ordered gate sequence, every
   Bash self-test is wired into `lint-scripts.sh`, the PowerShell lint gate keeps

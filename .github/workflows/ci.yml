@@ -90,6 +90,22 @@ jobs:
       - name: Benchmarks — TypedData + subsystem baselines
         run: bash scripts/bash/benchmark.sh
 
+  # Dedicated Bash development-suite parity check, run alongside the native
+  # Windows PowerShell suite below. The full Bash lint job already exercises
+  # these scripts locally; this job makes the cross-platform parity contract a
+  # first-class, independently reported CI check.
+  bash-development-suite:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Bash/PowerShell development-suite parity
+        run: bash scripts/bash/test-dev-suite.sh
+
+      - name: Bash API-inventory parent regression
+        run: bash scripts/bash/test-api-inventory-parent.sh
+
   # Native Windows suite: scripts/powershell/*.ps1, independent of the Bash
   # scripts above. This job runs the same gate sequence on Windows PowerShell
   # so the two platform script sets cannot drift silently.
