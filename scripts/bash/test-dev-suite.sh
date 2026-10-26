@@ -32,12 +32,14 @@ require_file scripts/powershell/test-api-inventory-parent.ps1
 require_file scripts/powershell/common.ps1
 
 # The two full-gate entry points must run the same ordered gate sequence.
-mapfile -t bash_steps < <(
-    sed -nE 's|^bash scripts/bash/([a-z-]+)\.sh$|\1|p' scripts/bash/ci.sh
-)
-mapfile -t powershell_steps < <(
-    sed -nE "s|^[[:space:]]*'([a-z-]+)\\.ps1',?$|\\1|p" scripts/powershell/ci.ps1
-)
+bash_steps=()
+while IFS= read -r step; do
+    bash_steps+=("$step")
+done < <(sed -nE 's|^bash scripts/bash/([a-z-]+)\.sh$|\1|p' scripts/bash/ci.sh)
+powershell_steps=()
+while IFS= read -r step; do
+    powershell_steps+=("$step")
+done < <(sed -nE "s|^[[:space:]]*'([a-z-]+)\\.ps1',?$|\\1|p" scripts/powershell/ci.ps1)
 expected_steps="lint-scripts format api-inventory test benchmark godot-test package-consumer-smoke"
 if [[ "${bash_steps[*]}" != "$expected_steps" ]]; then
     FAIL "Bash CI gate sequence drifted: ${bash_steps[*]}"
