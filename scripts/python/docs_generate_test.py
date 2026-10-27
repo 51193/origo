@@ -66,10 +66,17 @@ class DocsGenerateTests(unittest.TestCase):
         )
         self.assertEqual(
             MODULE.format_member(
-                "Origo.Core.X.int X get:protected",
+                "Origo.Core.X.protected int X get:protected",
                 "Origo.Core.X",
             ),
-            "int X { get; }",
+            "protected int X { get; }",
+        )
+        self.assertEqual(
+            MODULE.format_member(
+                "Origo.Core.X.public int X get:protected",
+                "Origo.Core.X",
+            ),
+            "public int X { protected get; }",
         )
         self.assertEqual(
             MODULE.format_member(

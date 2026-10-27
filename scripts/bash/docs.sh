@@ -6,7 +6,11 @@ cd "$ROOT"
 
 PYTHON_BIN="${ORIGO_PYTHON:-}"
 if [[ -z "$PYTHON_BIN" ]]; then
-    for candidate in python3 py python; do
+    python_candidates=(python3 py python)
+    case "$(uname -s)" in
+        MINGW*|MSYS*|CYGWIN*) python_candidates=(py python python3) ;;
+    esac
+    for candidate in "${python_candidates[@]}"; do
         if command -v "$candidate" >/dev/null 2>&1 \
             && "$candidate" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 10) else 1)' >/dev/null 2>&1; then
             PYTHON_BIN="$candidate"

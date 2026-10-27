@@ -69,7 +69,10 @@ def format_member(text: str, owner: str) -> str:
             # accessibility (e.g. `protected abstract string Key { get; }`);
             # repeating the modifier on the accessor is invalid C# for those
             # protected getters.
-            if len(parts) == 2 and level != "public":
+            property_is_non_public = head.startswith(
+                ("protected ", "internal ", "private ")
+            )
+            if len(parts) == 2 and level != "public" and property_is_non_public:
                 rendered.append(kind)
             else:
                 rendered.append(kind if level == "public" else f"{level} {kind}")
@@ -248,6 +251,8 @@ def validate_counts() -> list[str]:
         )
     else:
         registered = set(re.findall(r"typeof\(([A-Za-z0-9_]+)\)", assembly.read_text(encoding="utf-8")))
+        if not registered:
+            errors.append("no registered Godot types found in AssemblyAttributes.cs")
         doc_text = serialization_doc.read_text(encoding="utf-8")
         missing = sorted(name for name in registered if f"`{name}`" not in doc_text)
         if missing:
