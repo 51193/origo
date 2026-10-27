@@ -90,7 +90,7 @@ Origo uses a single-threaded frame loop model:
 ## I/O Boundary
 
 All file operations in the Core layer go through three interfaces:
-- `IDataSourceIoGateway`: Content read/write, only 2 methods — `ReadTree(filePath)` and `WriteTree(filePath, node, overwrite)`. All file content I/O is routed through codecs, with zero bypass.
+- `IDataSourceIoGateway`: Content read/write through `ReadTree(filePath)` and `WriteTree(filePath, node, overwrite)`. All file content I/O is routed through codecs, with zero bypass.
 - `IFileMetaAccess`: File metadata operations (FileExists, directory management, enumeration, deletion, copy)
 - `IPathResolver`: Platform path operations (CombinePath, GetParentDirectory)
 

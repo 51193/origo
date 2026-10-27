@@ -157,7 +157,7 @@ The two-phase separation ensures that hook-triggering during stack structure adj
 |-------|------|------|
 | Mount location | Entity (SndEntity) | State machine (StackStateMachine) |
 | Data access | `entity.SetData/TryGetData` | `ctx.SessionBlackboard` |
-| Lifecycle | 8 hooks (Spawn→Dead) | 4 hooks (Push/Pop) |
+| Lifecycle | Spawn-to-Dead strategy hooks | Push/Pop stack hooks |
 | Applicable scenario | Entity behavior (movement, health, rendering) | Flow control (menu stack, level switching) |
 
 ## Related Documents
