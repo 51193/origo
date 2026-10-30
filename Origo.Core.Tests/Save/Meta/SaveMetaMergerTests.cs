@@ -86,6 +86,47 @@ public class SaveMetaMergerTests
             () => SaveMetaMerger.Merge(contributors, DummyContext()));
     }
 
+    [Theory]
+    [InlineData("player:name", "value")]
+    [InlineData("#comment", "value")]
+    [InlineData("key", "line1\nline2")]
+    [InlineData("key", " padded ")]
+    [InlineData("key", "trailing ")]
+    public void Merge_UnrepresentableMapEntry_ThrowsWithContributorContext(string key, string value)
+    {
+        var contributors = new ISaveMetaContributor[]
+        {
+            new FuncContributor(_ => new Dictionary<string, string> { [key] = value })
+        };
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => SaveMetaMerger.Merge(contributors, DummyContext()));
+
+        Assert.Contains("FuncContributor", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("meta.map", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Merge_MapSafeEntriesWithSpecialValueCharacters_MergeNormally()
+    {
+        // Values may contain ':' (only the key/value separator is reserved) and
+        // ordinary interior spaces; the round-trip guard must not over-reject.
+        var contributors = new ISaveMetaContributor[]
+        {
+            new FuncContributor(_ => new Dictionary<string, string>
+            {
+                ["play_time"] = "2h 30m",
+                ["endpoint"] = "http://example.com:8080/path"
+            })
+        };
+
+        var merged = SaveMetaMerger.Merge(contributors, DummyContext());
+
+        Assert.NotNull(merged);
+        Assert.Equal("2h 30m", merged!["play_time"]);
+        Assert.Equal("http://example.com:8080/path", merged["endpoint"]);
+    }
+
     private sealed class FuncContributor(Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>> func) : ISaveMetaContributor
     {
         private readonly Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>> _func = func;

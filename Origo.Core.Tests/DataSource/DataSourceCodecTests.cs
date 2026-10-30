@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Origo.Core.DataSource;
+using Origo.Core.DataSource.Codec;
 using Origo.Core.DataSource.Converters;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.StateMachine;
@@ -41,6 +42,20 @@ public class DataSourceCodecTests
         Assert.Equal("a", decoded["tags"][0].AsString());
         Assert.Equal("b", decoded["tags"][1].AsString());
         Assert.Equal(3.14, decoded["nested"]["inner"].As<double>(), 0.001);
+    }
+
+    [Fact]
+    public void JsonCodec_RoundTrip_WellFormedSurrogatePairText()
+    {
+        var codec = TestFactory.CreateJsonCodec();
+        var original = DataSourceNode.CreateObject()
+            .Add("emoji", DataSourceNode.CreateString("A\U0001F600B"));
+
+        var json = codec.Encode(original);
+        var decoded = codec.Decode(json);
+
+        Assert.Equal("A\U0001F600B", decoded["emoji"].AsString());
+        Assert.Equal(original.ComputeSha256Hash(), decoded.ComputeSha256Hash());
     }
 
     [Fact]
@@ -148,6 +163,79 @@ public class DataSourceCodecTests
 
         Assert.Contains("keep: yes", encoded);
         Assert.DoesNotContain("drop", encoded);
+    }
+
+    [Fact]
+    public void MapCodec_Encode_WritesKeysInOrdinalSortOrder()
+    {
+        // The manual documents the output order; the encoder sorts keys with
+        // StringComparer.Ordinal (not node insertion order), so the reader can
+        // rely on a stable byte layout for the same tree.
+        var codec = TestFactory.CreateMapCodec();
+        var node = DataSourceNode.CreateObject()
+            .Add("zeta", DataSourceNode.CreateString("1"))
+            .Add("alpha", DataSourceNode.CreateString("2"))
+            .Add("Beta", DataSourceNode.CreateString("3"));
+
+        var encoded = codec.Encode(node);
+
+        var keys = encoded
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Select(line => line[..line.IndexOf(':')])
+            .ToArray();
+        Assert.Equal(["Beta", "alpha", "zeta"], keys);
+    }
+
+    [Fact]
+    public void MapCodec_Decode_IsAlwaysStrict_EmptyKeyThrows()
+    {
+        // Decode has no lenient mode: an empty key cannot round-trip and must
+        // fail immediately, matching the codec contract.
+        var codec = TestFactory.CreateMapCodec();
+
+        Assert.Throws<FormatException>(() => codec.Decode(": value"));
+    }
+
+    [Fact]
+    public void JsonCodec_Encode_UnpairedSurrogateText_Throws()
+    {
+        var codec = TestFactory.CreateJsonCodec();
+        var node = DataSourceNode.CreateObject()
+            .Add("name", DataSourceNode.CreateString("A\uD800B"));
+
+        var ex = Assert.Throws<InvalidOperationException>(() => codec.Encode(node));
+        Assert.Contains("UTF-16", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void JsonCodec_Encode_UnpairedSurrogateKey_Throws()
+    {
+        var codec = TestFactory.CreateJsonCodec();
+        var node = DataSourceNode.CreateObject()
+            .Add("key\uDC00", DataSourceNode.CreateString("value"));
+
+        Assert.Throws<InvalidOperationException>(() => codec.Encode(node));
+    }
+
+    [Fact]
+    public void MapCodec_Encode_UnpairedSurrogateKeyOrValue_Throws()
+    {
+        var codec = TestFactory.CreateMapCodec();
+
+        Assert.Throws<InvalidOperationException>(() => codec.Encode(
+            DataSourceNode.CreateObject().Add("key\uD800", DataSourceNode.CreateString("value"))));
+        Assert.Throws<InvalidOperationException>(() => codec.Encode(
+            DataSourceNode.CreateObject().Add("key", DataSourceNode.CreateString("a\uDC00"))));
+    }
+
+    [Fact]
+    public void RawTextCodec_Encode_UnpairedSurrogate_Throws()
+    {
+        var codec = new RawStringDataSourceCodec();
+
+        Assert.Throws<InvalidOperationException>(
+            () => codec.Encode(DataSourceNode.CreateString("raw\uD800")));
+        Assert.Equal("raw text", codec.Encode(DataSourceNode.CreateString("raw text")));
     }
 
     /// <summary>Verifies that JSON encoding and decoding cover every declared data-source node kind.</summary>

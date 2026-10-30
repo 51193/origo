@@ -73,7 +73,7 @@ public sealed class PersistentBlackboard : IBlackboard
     ///     Attempts to get the value of the specified key; found is false
     ///     when not found.
     /// </summary>
-    public (bool found, T value) TryGet<T>(string key)
+    public (bool found, T? value) TryGet<T>(string key)
     {
         lock (_lock)
         {

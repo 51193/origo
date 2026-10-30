@@ -2,8 +2,18 @@
 # Locate the newest formal release tag not newer than the current source version,
 # excluding the commit HEAD is currently on and an explicit current release
 # tag, whose tree contains the tracked shell API baseline. On success, writes
-# that baseline to a temporary file and prints its path. Prints nothing when no
-# previous baseline is available.
+# that baseline to a temporary file and prints its path.
+#
+# Resolution is fail-closed: when formal release tags exist but no usable
+# previous baseline can be resolved (a baseline-bearing tag that is neither an
+# ancestor nor the recognized metadata-only release commit), the helper reports
+# an error and exits non-zero instead of silently disabling the previous-package
+# comparison. A formal tag newer than the current source version is skipped by
+# the version ceiling (its changes are not a valid comparison baseline); if no
+# older usable baseline remains, the helper fails closed. The only silent skip
+# is the documented first-release state: no formal release tag contains the
+# tracked baseline because those releases predate the baseline tool (or no
+# formal tag exists at all).
 #
 # Release tags are selected by version, not only by ancestry. A tag-only release
 # commit is a child of the main commit it was cut from, so it is a sibling of the
@@ -73,6 +83,9 @@ is_release_metadata_commit() {
 }
 
 previous_tag=""
+newer_formal_tags=()
+eligible_formal_tag_seen=0
+baseline_tag_unresolvable=0
 while IFS= read -r tag; do
     [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || continue
 
@@ -81,18 +94,33 @@ while IFS= read -r tag; do
 
     tag_version="${tag#v}"
     if [[ -n "$current_version" ]] && version_is_newer "$tag_version" "$current_version"; then
+        # A formal release newer than the source version means the development
+        # baseline was not advanced. It cannot be the comparison baseline, so
+        # skip it; the tag is recorded so the helper fails closed below when no
+        # older usable baseline remains.
+        newer_formal_tags+=("$tag")
         continue
     fi
 
+    eligible_formal_tag_seen=1
+
     tag_commit="$(git rev-list -n 1 "$tag" 2>/dev/null || true)"
-    [[ -n "$tag_commit" ]] || continue
+    if [[ -z "$tag_commit" ]]; then
+        baseline_tag_unresolvable=1
+        continue
+    fi
 
     # A release workflow normally checks out the current tag's commit; skip
     # that tag so the comparison does not compare the release with itself.
     [[ "$tag_commit" != "$current_commit" ]] || continue
 
     if ! git merge-base --is-ancestor "$tag_commit" HEAD 2>/dev/null; then
-        is_release_metadata_commit "$tag_commit" || continue
+        if ! is_release_metadata_commit "$tag_commit"; then
+            if git cat-file -e "${tag}:${baseline_path}" 2>/dev/null; then
+                baseline_tag_unresolvable=1
+            fi
+            continue
+        fi
     fi
 
     git cat-file -e "${tag}:${baseline_path}" 2>/dev/null || continue
@@ -100,8 +128,32 @@ while IFS= read -r tag; do
     break
 done < <(git tag --list 'v*' --sort=-version:refname)
 
-[[ -n "$previous_tag" ]] || exit 0
+if [[ -n "$previous_tag" ]]; then
+    output="$(mktemp)"
+    git show "${previous_tag}:${baseline_path}" > "$output"
+    printf '%s\n' "$output"
+    exit 0
+fi
 
-output="$(mktemp)"
-git show "${previous_tag}:${baseline_path}" > "$output"
-printf '%s\n' "$output"
+if [[ "${#newer_formal_tags[@]}" -gt 0 ]]; then
+    echo "ERROR: formal release tag(s) newer than the current source version: ${newer_formal_tags[*]}." >&2
+    echo "Advance <Version> in Directory.Build.props past the latest formal release before comparing." >&2
+    exit 1
+fi
+
+if [[ "$baseline_tag_unresolvable" -eq 1 ]]; then
+    echo "ERROR: a formal release tag carries the tracked shell API baseline but is neither an ancestor" >&2
+    echo "of HEAD nor a recognized metadata-only release commit; refusing to skip the previous-package comparison." >&2
+    exit 1
+fi
+
+if [[ "$eligible_formal_tag_seen" -eq 1 ]]; then
+    # Documented first-release exception: every eligible formal release predates
+    # the baseline tool, so there is nothing to compare against. Stay silent;
+    # the caller prints the explicit skip notice.
+    exit 0
+fi
+
+# No formal release tag exists at all (for example a shallow local checkout):
+# there is no previous-package contract to compare against.
+exit 0

@@ -15,6 +15,9 @@ public interface IBlackboard
     /// <typeparam name="T">The value type; preserved across serialization.</typeparam>
     /// <param name="key">The key to store under.</param>
     /// <param name="value">The value to store.</param>
+    /// <exception cref="System.ArgumentException">
+    ///     Thrown when <paramref name="key" /> is null or whitespace.
+    /// </exception>
     /// <exception cref="System.ArgumentNullException">
     ///     Thrown when <paramref name="value" /> is null and <typeparamref name="T" />
     ///     has no registered TypedData kind, because the type cannot be recovered
@@ -22,10 +25,19 @@ public interface IBlackboard
     /// </exception>
     void SetValue<T>(string key, T value);
 
-    /// <summary>Gets a typed value; reports whether the key exists with a matching type.</summary>
+    /// <summary>
+    ///     Gets a typed value; reports whether the key exists with a matching type.
+    ///     The value is returned as <c>T?</c> because a stored null of a registered
+    ///     reference kind (for example <c>string</c>) is legal: the entry exists, so
+    ///     <c>found</c> is true while the returned value is null. Callers must handle
+    ///     the nullable result instead of assuming a found value is non-null.
+    /// </summary>
     /// <typeparam name="T">The expected value type.</typeparam>
     /// <param name="key">The key to read.</param>
-    (bool found, T value) TryGet<T>(string key);
+    /// <exception cref="System.ArgumentException">
+    ///     Thrown when <paramref name="key" /> is null or whitespace.
+    /// </exception>
+    (bool found, T? value) TryGet<T>(string key);
 
     /// <summary>Removes all entries from the blackboard.</summary>
     void Clear();

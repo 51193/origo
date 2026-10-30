@@ -26,7 +26,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `SaveAndSwitchForegroundTests.cs` | Combined save + switch level operations, collision handling, deferred queue orchestration, old foreground auto-persist (incl. progress) |
 | `SaveAndSwitchForegroundIntegrationTests.cs` | Scene host contract boundary: FindByName hook intermediate state + save background→switch entity/blackboard/level conflicts |
 | `SessionDecouplingTests.cs` | Sessions run independently without interference (SessionStateMachineContext, SceneHost, path policy) |
-| `SessionManagerTests.cs` | ISessionManager: create/find/destroy/enumerate/ProcessAll/KillPending |
+| `SessionManagerTests.cs` | ISessionManager: create/find/destroy/enumerate/ProcessAll/KillPending, and `Clear` multi-failure isolation (all sessions removed, first failure rethrown, later failures logged) |
 | `SessionTopologyCodecTests.cs` | SessionTopology codec round-trip |
 | `TopologyInvariantTests.cs` | Topology invariant validation: EnsureActiveLevel happy/missing/empty/whitespace/mismatched topologies (fail-fast) |
 | `BackgroundSessionTests.cs` | Independent background session tests (entities/Process/serialization/persistence round-trip) |
@@ -329,6 +329,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `SessionRun_SpawnMany_CreatesMultipleEntities` | ISessionRun.SpawnMany creates multiple entities | ISessionRun |
 | `SessionRun_RequestKillEntity_MarksEntityPending` | RequestKillEntity marks IsPendingKill | ISessionRun |
 | `KillPendingAllSessions_ProcessesForegroundPendingKill` | KillPendingAllSessions executes cleanup of pending-kill entities | ISessionRun |
+| `Clear_WithTwoFailingSessions_RemovesAllAndRethrowsFirstFailure` | Two background sessions' `BeforeQuit` hooks both throw during `SessionManager.Clear`: every session (including the foreground) is removed, the first background failure propagates, and the later failure is logged as a warning | ISessionManager |
 
 ### Error Path
 

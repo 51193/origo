@@ -95,6 +95,7 @@ if command -v python3 >/dev/null 2>&1; then
     python3 scripts/python/test-validate-release-packages.py
     bash scripts/bash/test-write-version-stamp.sh
     bash scripts/bash/test-validate-release-source.sh
+    bash scripts/bash/test-validate-release-artifacts.sh
     bash scripts/bash/test-release-check.sh
     bash scripts/bash/test-lint-pr-body.sh
 elif [[ -n "${CI:-}" || -n "${GITHUB_ACTIONS:-}" ]]; then

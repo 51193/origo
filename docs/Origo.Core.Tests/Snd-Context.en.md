@@ -6,17 +6,17 @@
 
 ## Behavior Under Test Overview
 
-Validates the full workflows of SndContext as the central orchestrator of the SND system: save/load/continue operations, console command submission, template cloning, deferred action queues, NullSndContext no-op behavior, TestSupport LevelBuilder level construction, Archetype loading and attribute parsing, entry config startup flow, and template alias resolution and caching.
+Validates the full workflows of SndContext as the central orchestrator of the SND system: save/load/continue operations, console command submission, template cloning, deferred action queues (including shutdown cancellation of queued persistence requests), payload mounts clearing adapter-scene remnants, NullSndContext no-op behavior, TestSupport LevelBuilder level construction, Archetype loading and attribute parsing, entry config startup flow, and template alias resolution and caching.
 
 ## Test File List
 
 | File | Verification Focus |
 |------|-------------------|
 | `SndContextWorkflowTests.cs` | SndContext save/load/continue/switch full-chain workflows |
-| `SndContextShutdownFailureTests.cs` | Cleanup invariant when unloading the old ProgressRun throws: both the ProgressRun reference and the foreground session are cleared; failed `current/` cleanup remains retryable without replaying hooks; nested `Shutdown` from a quit hook cannot commit terminal state before the outer cleanup |
+| `SndContextShutdownFailureTests.cs` | Cleanup invariant when unloading the old ProgressRun throws: both the ProgressRun reference and the foreground session are cleared; failed `current/` cleanup remains retryable without replaying hooks; nested `Shutdown` from a quit hook cannot commit terminal state before the outer cleanup; a quit hook that queues a persistence request and then requests shutdown during workflow teardown has that queued work cancelled before the terminal flag; `Shutdown` requested from a load/save/level-switch workflow hook or from a `BeforeSave` hook is rejected without tearing the run down; a throwing deferred switch releases the lifecycle-workflow guard for later workflows |
 | `SndContextEntryFlowTests.cs` | SndContext workflow starting from entry configuration |
 | `SndContextBootstrapTests.cs` | Bootstrap startup flow: order of strategy discovery, ordering validation and registration freeze, alias/template loading, entry save loading, and configuration switches |
-| `PersistenceRequestTrackingTests.cs` | Persistence requests (save/continue/initial/main menu entry/switch level) tracked as pending count until flushed |
+| `PersistenceRequestTrackingTests.cs` | Persistence requests (save/continue/initial/main menu entry/switch level) tracked as pending count until flushed; concurrent auto-save id allocation stays unique; shutdown cancels queued requests, runs their discard accounting, and stays retryable when a discard callback throws |
 | `LevelBuilderExtendedTests.cs` | LevelBuilder building and writing level data |
 | `SndArchetypeLoaderTests.cs` | SndArchetypeLoader.TryLoad parsing and ApplyAttributes type inference |
 | `SndTemplateResolverTests.cs` | Template alias resolution, caching, clone does not affect cache |
@@ -44,11 +44,13 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `RequestContinueGame_ReturnsTrueAndLoadsWhenContinueSet` | Continue correctly loads the save | ISndLifecycleOperations |
 | `Shutdown_ClearsProgressAndCurrent_IsIdempotentAndRejectsBootstrap` | progress cleared, current/ removed, second Shutdown no-op, Bootstrap/persistence rejected | [ISndContext](../Origo.Core.Contracts/Abstractions/Snd/README.en.md) |
 | `Shutdown_ConsoleClearFailure_RemainsRetryable` | first Shutdown throws on Clear failure; retry after recovery completes | [ISndContext](../Origo.Core.Contracts/Abstractions/Snd/README.en.md) |
+| `Shutdown_Retry_ConsoleClearQueuesRequest_CancelsItBeforeCommittingTerminalState` | first Shutdown fails on console Clear; the retried Clear enqueues a save request, and the retry cancels it before committing the terminal flag: pending count 0, `IsPersistenceIdle` true, no save snapshot, and no deferred action throws on a later frame | [ISndContext](../Origo.Core.Contracts/Abstractions/Snd/README.en.md) |
 | `ContinueLookup_LegacyMixedCaseActiveId_FindsRenamedLowercaseSlot` | case-insensitive lookup uses the storage slot ID | [session-model](../usage/session-model.en.md) |
 | `DeleteSave_ActiveSaveMixedCase_Throws` | active-save protection is case-insensitive | [persistence-flow](../usage/persistence-flow.en.md) |
 | `DeleteSave_LegacyCaseVariantSlot_ThrowsMigrationError` | ArgumentException with rename guidance; directory preserved | [persistence-flow](../usage/persistence-flow.en.md) |
 | `RequestLoadAndContinue_LegacyCaseVariantSlot_ThrowMigrationError` | load/continue/save rejected before enqueue | [persistence-flow](../usage/persistence-flow.en.md) |
 | `RequestLoadInitialSave_LoadsFromInitialRoot` | Loads initial save from the initial path | ISndLifecycleOperations |
+| `RequestLoadInitialSave_PayloadMount_ClearsForeignAdapterEntities` | The full-memory adapter host holds a foreign entity before `RequestLoadInitialSave` mounts the restored payload foreground: the entity is gone from the mounted session and the adapter host, and the next snapshot's `snd_scene.json` does not contain it | ISndLifecycleOperations |
 | `RequestLoadInitialSave_RestoresExtraFilesFromInitialRoot` | Initial-save extra/ files are restored from the initial storage root into runtime current/extra | ISndArchiveFileAccess |
 | `RequestSwitchForegroundLevel_SwitchesLevel` | After level switch, ForegroundSession.LevelId is correct | ISndLifecycleOperations |
 | `CloneTemplate_ClonesAndOverridesName` | Clones a template and overrides the name | ISndTemplateAccess |
@@ -112,6 +114,9 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `RequestSwitchForegroundLevel_IsTrackedUntilFlushed` | RequestSwitchForegroundLevel queues and the pending count is 1, returning to 0 after Flush | ISndDeferredActions |
 | `FailedTrackedRequest_DiscardingLaterTrackedRequest_ReturnsPendingCountToZero` | An earlier persistence request fails and a later request in the same batch is discarded by fail-fast; the pending count returns to 0 | ISndDeferredActions |
 | `IsPersistenceIdle_ReflectsPendingRequestTracking` | Idle state matches the pending count initially, around entry loading, and before/after a save request | ISndDeferredActions |
+| `Shutdown_CancelsQueuedPersistenceRequests_AndRunsDiscardCallbacks` | A save and a system action with a discard callback are queued, then `Shutdown` runs before any frame: the queued action's `onDiscard` ran, the pending count is back to 0, `IsPersistenceIdle` is true, no snapshot was written, and a later frame drive does not throw from the cancelled queue | ISndDeferredActions / ISndContext |
+| `Shutdown_WhenDiscardCallbackThrows_ClearsQueueAndRemainsRetryable` | A queued action's discard callback throws during `Shutdown` | The first `Shutdown` throws that callback failure; the queue is already cleared, and the retry commits the terminal state without replaying the action |
+| `RequestSaveGameAuto_ConcurrentCalls_ProduceUniqueIds` | 8 threads enqueue two auto-save requests each after a common start signal, then one sequential allocation follows: all 16 concurrent ids are distinct, the later sequential allocation is greater than every concurrent id (atomic monotonic counter), and the test drains the queued requests leaving the pending count at 0 | ISndSaveOperations |
 
 ## SndTemplateResolverTests Details
 
@@ -233,6 +238,11 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `Shutdown_ReenteredFromQuitHook_DoesNotCommitTerminalStateBeforeOuterCleanup` | A quit-hook strategy calls `Shutdown` while the outer shutdown is disposing the progress run, and `current/` deletion fails | The nested call is a no-op; the outer failure keeps the retry record and the next `Shutdown` deletes `current/` |
 | `Shutdown_DuringSwitchTeardown_ThrowsBeforeTouchingProgress` | `Shutdown` is requested while the level-switch foreground teardown guard is active | `InvalidOperationException` before any progress cleanup; the context is not torn down |
 | `Workflow_ShutdownFromQuitHook_WhenCurrentDeleteFails_RemainsRetryable` | A main-menu reload disposes the old progress run, its BeforeQuit hook requests shutdown, and `current/` deletion fails | The workflow throws, `current/` remains, and a later `Dispose`/`Shutdown` retries the delete without replaying hooks |
+| `Workflow_QuitHookQueuesRequestThenShutdown_CancelsQueuedWorkBeforeTerminalState` | A quit hook queues `RequestSaveGameAuto` and then requests shutdown while the workflow tears the old progress run down | The workflow cancels the queued request before committing shutdown: pending count 0, `IsPersistenceIdle` true, no save snapshot is written, the following frame does not throw, and persistence mutations are rejected as terminal |
+| `Shutdown_FromAfterSpawnHookDuringWorkflow_IsRejectedAndDoesNotTearDownWorkflow` | An entry-workflow AfterSpawn hook requests `Shutdown` while the lifecycle workflow body owns the new ProgressRun | `InvalidOperationException` naming the in-progress lifecycle workflow; the workflow aborts and cleans up, the context does not commit shutdown (persistence mutations still accepted), and a later `Shutdown` is clean |
+| `Shutdown_FromBeforeSaveHookDuringSaveWorkflow_IsRejectedAndSaveIsNotWritten` | A `BeforeSave` hook requests `Shutdown` during `RequestSaveGame` | `InvalidOperationException` naming the BeforeSave hook; no snapshot is written, the foreground session and its entity survive, and a later `Shutdown` is clean |
+| `Shutdown_FromSwitchAfterLoadHook_IsRejectedAndSwitchCompletes` | An `AfterLoad` hook of the level being mounted requests `Shutdown` during `RequestSwitchForegroundLevel` (and catches the rejection) | `InvalidOperationException` naming the in-progress lifecycle workflow; the switch completes, the foreground is the requested level with its entity, the context stays live, and a later `Shutdown` is clean |
+| `Switch_WhenDeferredActionThrows_ReleasesWorkflowGuardForLaterWorkflows` | A deferred level switch fails while loading the target level (scene references an unregistered strategy) | The switch failure propagates without an "already in progress" error; a subsequent switch, save, and clean `Shutdown` all succeed because the workflow guard was released on the failure path |
 
 ## SndArchetypeLoaderTests Details
 

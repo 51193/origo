@@ -140,6 +140,24 @@ public class SndMetaFluentBuilderTests
     }
 
     [Fact]
+    public void AddStrategyIndices_BlankIndex_Throws()
+    {
+        // A blank index cannot resolve in the strategy pool; failing here keeps
+        // the builder's eager validation consistent with SetNode and the typed
+        // data setters instead of deferring the error to spawn/recovery.
+        Assert.Throws<ArgumentException>(
+            () => new SndMetaFluentBuilder("E").AddLifecycleStrategy(""));
+        Assert.Throws<ArgumentException>(
+            () => new SndMetaFluentBuilder("E").AddLifecycleStrategy("   "));
+        Assert.Throws<ArgumentNullException>(
+            () => new SndMetaFluentBuilder("E").AddLifecycleStrategy(null!));
+        Assert.Throws<ArgumentException>(
+            () => new SndMetaFluentBuilder("E").AddActiveStrategy(""));
+        Assert.Throws<ArgumentNullException>(
+            () => new SndMetaFluentBuilder("E").AddActiveStrategy(null!));
+    }
+
+    [Fact]
     public void AddObserverBinding_StoresTopologyShape()
     {
         var meta = new SndMetaFluentBuilder("Watcher")

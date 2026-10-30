@@ -21,6 +21,8 @@ Runtime wrapper for the state machine container. `StateMachineContainer` impleme
 
 **Batch Operations**: `FlushAllAfterLoad`, `PopAllRuntime`, `PopAllOnQuit`
 
+`PopAllOnQuit` failure isolation is per stack level, not only per machine: a throwing `OnPopBeforeQuit` hook leaves its level on the stack, so the level identified by a snapshot taken **before** the hook ran is dropped without replaying hooks and the remaining levels of the same machine still receive their quit hooks. Basing the drop on the pre-hook snapshot also keeps the loop terminating when a hook mutates the stack before throwing, instead of re-running the same level or skipping one. A hook that pushes a level and returns normally is detected the same way: `TryPopOnQuit` then removes the pushed level and reports success while the original stack did not shrink, so the no-progress iteration drops the level identified by the pre-hook snapshot (without re-running its hook) and continues with the lower levels — quit terminates, the hook that pushed runs once for its level, and the lower levels still run once each. Failures across levels and machines are aggregated (single failure rethrown as-is, several as `AggregateException`).
+
 **Deserialization Strategy**:
 1. Parse payload, validate entries
 2. Create new machines and RestoreStackWithoutHooks
@@ -39,7 +41,7 @@ Full replacement ensures each state machine's reference count is consistent. Par
 Push/Pop strategy indices are the core behavior definition. Silently returning different behavior would be dangerous.
 
 ### Why PopAllRuntime remains an internal batch operation
-`PopAllOnQuit` is invoked by the session-quit pipeline and visits every machine even when a quit hook throws; failures are aggregated. `PopAllRuntime` provides the matching runtime bulk-clear semantic. It is intentionally absent from `IStateMachineContainer` and remains an internal batch utility on the concrete container for framework orchestration and tests, preventing business code from mistaking "pop all machines" for a cross-session cleanup shortcut.
+`PopAllOnQuit` is invoked by the session-quit pipeline and visits every machine and every stack level even when a quit hook throws; failures are aggregated. `PopAllRuntime` provides the matching runtime bulk-clear semantic. It is intentionally absent from `IStateMachineContainer` and remains an internal batch utility on the concrete container for framework orchestration and tests, preventing business code from mistaking "pop all machines" for a cross-session cleanup shortcut.
 
 ---
 [↑ Back to Runtime](../README.en.md)

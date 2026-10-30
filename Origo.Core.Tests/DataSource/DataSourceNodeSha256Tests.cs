@@ -128,6 +128,42 @@ public class DataSourceNodeSha256Tests
     }
 
     [Fact]
+    public void UnpairedSurrogateText_ThrowsInsteadOfCollidingWithReplacementChar()
+    {
+        // A replacement-fallback UTF-8 encoder would collapse an unpaired
+        // surrogate into U+FFFD, so these two trees would hash equally. The
+        // canonical hash must reject the ill-formed text instead, otherwise a
+        // save idempotency check could treat a changed value as unchanged.
+        var loneSurrogate = DataSourceNode.CreateString("A\uD800B");
+        var replacementChar = DataSourceNode.CreateString("A\uFFFDB");
+
+        Assert.NotEmpty(replacementChar.ComputeSha256Hash());
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => loneSurrogate.ComputeSha256Hash());
+        Assert.Contains("UTF-16", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void UnpairedSurrogateMapKey_ThrowsInsteadOfColliding()
+    {
+        var node = DataSourceNode.CreateObject()
+            .Add("key\uDC00", DataSourceNode.CreateString("value"));
+
+        Assert.Throws<InvalidOperationException>(() => node.ComputeSha256Hash());
+    }
+
+    [Fact]
+    public void WellFormedSurrogatePair_HashesNormally()
+    {
+        // A valid surrogate pair (astral plane character) is well-formed UTF-16
+        // and must keep hashing, so the new guard only rejects malformed text.
+        var node = DataSourceNode.CreateString("emoji \U0001F600");
+
+        Assert.Matches("^[0-9a-f]{64}$", node.ComputeSha256Hash());
+    }
+
+    [Fact]
     public void EmptyObjectVsEmptyArray_DifferentHashes()
     {
         var obj = DataSourceNode.CreateObject();

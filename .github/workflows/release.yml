@@ -24,6 +24,7 @@ concurrency:
 jobs:
   godot-integration-tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v7
@@ -61,8 +62,8 @@ jobs:
 
       - name: Install Godot headless dependencies
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq libxcursor1 libxinerama1 libxrandr2 libasound2t64 libpulse0 libgl1 libfontconfig1
+          timeout 300 sudo apt-get -o Acquire::Retries=3 update -qq
+          timeout 300 sudo apt-get -o Acquire::Retries=3 install -y -qq libxcursor1 libxinerama1 libxrandr2 libasound2t64 libpulse0 libgl1 libfontconfig1
 
       - name: Godot headless integration tests
         run: bash scripts/bash/godot-test.sh
@@ -70,6 +71,7 @@ jobs:
   release:
     needs: godot-integration-tests
     runs-on: ubuntu-latest
+    timeout-minutes: 180
     permissions:
       contents: write
 
@@ -169,6 +171,7 @@ jobs:
           git show refs/remotes/origin/main:scripts/bash/verify-release-provenance.sh > .release-validators/verify-release-provenance.sh
           git show refs/remotes/origin/main:scripts/bash/validate-release-source.sh > .release-validators/validate-release-source.sh
           git show refs/remotes/origin/main:scripts/bash/verify-release.sh > .release-validators/scripts/verify-release.sh
+          git show refs/remotes/origin/main:scripts/bash/validate-release-artifacts.sh > .release-validators/validate-release-artifacts.sh
 
       - name: Verify release tag provenance
         env:
@@ -241,8 +244,8 @@ jobs:
 
       - name: Install script lint dependencies
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq shellcheck python3-yaml
+          timeout 300 sudo apt-get -o Acquire::Retries=3 update -qq
+          timeout 300 sudo apt-get -o Acquire::Retries=3 install -y -qq shellcheck python3-yaml
 
       - name: Lint scripts and workflows
         env:
@@ -339,6 +342,11 @@ jobs:
           bash .release-validators/validate-release-source.sh \
             "artifacts/origo-source-${VERSION}.tar.gz" "$VERSION" \
             "$PWD/.release-validators/scripts/verify-release.sh"
+
+      - name: Validate release artifact set
+        env:
+          TAG: ${{ steps.resolve-tag.outputs.tag }}
+        run: bash .release-validators/validate-release-artifacts.sh ./artifacts "${TAG#v}"
 
       - name: Publish release commit to the tag
         env:

@@ -135,7 +135,9 @@ output="$(cd "$repo_five" && ORIGO_CURRENT_RELEASE_TAG=v0.3.0 bash "$ROOT/script
 rm -f "$output"
 
 
-# Case 6: a tag newer than the props-derived source version is skipped.
+# Case 6: a tag newer than the props-derived source version is skipped so an
+# older usable baseline is selected; the helper succeeds (the hard-error path is
+# only when no older usable baseline remains, Case 10).
 repo_six="$FIXTURE/version-ceiling"
 new_repo "$repo_six"
 MAIN_BRANCH="$(git -C "$repo_six" branch --show-current)"
@@ -228,6 +230,78 @@ git -C "$repo_nine" checkout -q "$MAIN_BRANCH"
 
 output="$(cd "$repo_nine" && bash "$ROOT/scripts/bash/find-previous-api-baseline.sh")"
 [[ "$(cat "$output")" == "equal-baseline" ]] || FAIL "an equal-version metadata release commit was not selected via props."
+rm -f "$output"
+
+# Case 10: fail closed when the only formal release tag is newer than the
+# source version. Silently comparing against nothing would hide the release.
+repo_ten="$FIXTURE/fail-closed-newer-tag"
+new_repo "$repo_ten"
+mkdir -p "$repo_ten/tools/ApiInventoryTool"
+printf '<Version>0.1.0</Version>\n' > "$repo_ten/Directory.Build.props"
+printf 'first-baseline\n' > "$repo_ten/tools/ApiInventoryTool/shell-api-baseline.json"
+commit_all "$repo_ten" "develop 0.1.0"
+git -C "$repo_ten" tag v0.1.2
+
+if (cd "$repo_ten" && bash "$ROOT/scripts/bash/find-previous-api-baseline.sh" >/dev/null 2>"$FIXTURE/case10.err"); then
+    FAIL "a formal tag newer than the source version must fail closed, not skip silently."
+fi
+grep -q "newer than the current source version" "$FIXTURE/case10.err" \
+    || FAIL "the newer-tag fail-closed error must name the newer formal tag."
+
+# Case 11: fail closed when a baseline-bearing formal tag is neither an ancestor
+# nor the recognized metadata-only release commit, and no older baseline exists.
+repo_eleven="$FIXTURE/fail-closed-unresolvable-tag"
+new_repo "$repo_eleven"
+MAIN_BRANCH="$(git -C "$repo_eleven" branch --show-current)"
+mkdir -p "$repo_eleven/tools/ApiInventoryTool"
+printf '<Version>0.1.2-dev</Version>\n' > "$repo_eleven/Directory.Build.props"
+printf 'main-baseline\n' > "$repo_eleven/tools/ApiInventoryTool/shell-api-baseline.json"
+commit_all "$repo_eleven" "develop 0.1.2"
+main_eleven="$(git -C "$repo_eleven" rev-parse HEAD)"
+git -C "$repo_eleven" checkout -q --detach "$main_eleven"
+printf 'side-baseline\n' > "$repo_eleven/tools/ApiInventoryTool/shell-api-baseline.json"
+printf 'extra\n' > "$repo_eleven/README.md"
+commit_all "$repo_eleven" "feature: side work"
+git -C "$repo_eleven" tag v0.1.1
+git -C "$repo_eleven" checkout -q "$MAIN_BRANCH"
+
+if (cd "$repo_eleven" && bash "$ROOT/scripts/bash/find-previous-api-baseline.sh" >/dev/null 2>&1); then
+    FAIL "an unresolvable baseline-bearing release tag must fail closed, not skip silently."
+fi
+
+# Case 12: the documented first-release exception is preserved: eligible formal
+# releases that predate the baseline tool skip the comparison with exit 0.
+repo_twelve="$FIXTURE/first-release-exception"
+new_repo "$repo_twelve"
+printf '<Version>0.1.0</Version>\n' > "$repo_twelve/Directory.Build.props"
+printf 'release notes\n' > "$repo_twelve/README.md"
+commit_all "$repo_twelve" "release 0.0.9"
+git -C "$repo_twelve" tag v0.0.9
+printf 'main advances\n' > "$repo_twelve/main.txt"
+commit_all "$repo_twelve" "main advances"
+
+output="$(cd "$repo_twelve" && bash "$ROOT/scripts/bash/find-previous-api-baseline.sh")"
+[[ -z "$output" ]] || FAIL "a pre-baseline formal release must skip the comparison with no output."
+
+# Case 13: several newer formal tags are skipped when an older usable baseline
+# exists, so a stale development baseline does not break comparison against the
+# last release the source actually builds on.
+repo_thirteen="$FIXTURE/multiple-newer-tags"
+new_repo "$repo_thirteen"
+MAIN_BRANCH="$(git -C "$repo_thirteen" branch --show-current)"
+mkdir -p "$repo_thirteen/tools/ApiInventoryTool"
+printf 'first-baseline\n' > "$repo_thirteen/tools/ApiInventoryTool/shell-api-baseline.json"
+printf '<Version>0.1.0</Version>\n' > "$repo_thirteen/Directory.Build.props"
+commit_all "$repo_thirteen" "release 0.1.0"
+git -C "$repo_thirteen" tag v0.1.0
+printf '<Version>0.1.1-dev</Version>\n' > "$repo_thirteen/Directory.Build.props"
+commit_all "$repo_thirteen" "develop 0.1.1"
+git -C "$repo_thirteen" tag v0.2.0
+git -C "$repo_thirteen" tag v0.3.0
+
+output="$(cd "$repo_thirteen" && bash "$ROOT/scripts/bash/find-previous-api-baseline.sh")"
+[[ -n "$output" ]] || FAIL "newer formal tags must be skipped when an older usable baseline exists."
+[[ "$(cat "$output")" == "first-baseline" ]] || FAIL "a newer formal tag was selected despite the version ceiling."
 rm -f "$output"
 
 echo "Previous shell API baseline helper: OK"

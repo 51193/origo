@@ -110,6 +110,25 @@ public class PathUtilityTests
         Assert.Throws<ArgumentNullException>(() => PathUtility.NormalizeDirectoryPath(null!));
     }
 
+    [Theory]
+    [InlineData("/", "/")]
+    [InlineData("\\", "\\")]
+    [InlineData("C:\\", "C:\\")]
+    [InlineData("C:/", "C:/")]
+    public void NormalizeDirectoryPath_PlainFilesystemRoot_IsPreserved(string input, string expected)
+    {
+        // Trimming a root to "" or "C:" would change an absolute directory into
+        // "no base" or a drive-relative path when the result is combined.
+        Assert.Equal(expected, PathUtility.NormalizeDirectoryPath(input));
+    }
+
+    [Fact]
+    public void NormalizeDirectoryPath_RootCombinesAsAbsoluteBase()
+    {
+        var normalizedRoot = PathUtility.NormalizeDirectoryPath("/");
+        Assert.Equal("/sub", PathUtility.Combine(normalizedRoot, "sub"));
+    }
+
     [Fact]
     public void NormalizeDirectoryPath_SchemePath_TrimsTrailingSlash()
     {

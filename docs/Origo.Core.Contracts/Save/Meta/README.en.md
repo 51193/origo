@@ -27,7 +27,7 @@ Display-metadata contracts for `meta.map` — the save-selection metadata separa
 IReadOnlyDictionary<string, string> Contribute(in SaveMetaBuildContext context);
 ```
 
-Contributors return independent dictionaries and must not mutate the context beyond reading it. Returning a null dictionary, a blank key, or a null value throws `InvalidOperationException` with contributor-type context instead of silently dropping entries.
+Contributors return independent dictionaries and must not mutate the context beyond reading it. Returning a null dictionary, a blank key, or a null value throws `InvalidOperationException` with contributor-type context instead of silently dropping entries. Keys and values must also round-trip through the line-based `meta.map` format: keys must be non-empty, must not start with `#`, must not contain `:` or line breaks, must not have leading/trailing whitespace, and must be well-formed UTF-16; values must not contain line breaks, must not have leading/trailing whitespace, and must be well-formed UTF-16. Violations throw `InvalidOperationException` naming the contributor while display metadata is merged, before any save file is written.
 
 ### SaveMetaBuildContext
 
@@ -47,7 +47,7 @@ Prevents contributors from calling `Clear()` or `Remove()` on a shared mutable t
 
 ### Why invalid contributor output must fail the save
 
-The contributor interface promises mergeable key-value pairs; silently skipping a null dictionary, blank key, or null value would disguise an implementation bug as "no metadata" and make the offending contributor impossible to identify. Saves are a strict-validation path, so the merger throws with contributor-type context and preserves fail-fast semantics.
+The contributor interface promises mergeable key-value pairs; silently skipping a null dictionary, blank key, or null value would disguise an implementation bug as "no metadata" and make the offending contributor impossible to identify. The same applies to entries the line-based `meta.map` format cannot round-trip (a `:` in a key, a padded value, a line break): leaving them to the codec would surface a format error after `current/` was partially written and without contributor context. Saves are a strict-validation path, so the merger throws with contributor-type context before any file is written and preserves fail-fast semantics.
 
 ### Why SaveMetaBuildContext is a readonly struct
 Avoids heap allocation on the save call tree. `readonly` prevents side-effect leakage. `in` parameter for ref passing.

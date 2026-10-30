@@ -172,10 +172,10 @@ main_ui / MainMenu [UI] screen=(100, 50)
 ```
 
 No arguments required. Automatically discovers the active `Camera3D` and iterates all Godot entity child nodes:
-- **3D nodes** (`Node3D`): Computes screen coordinates via frustum culling and projection, outputs `(screenX, screenY) depth`
-- **UI nodes** (`Control`): Directly reads `GlobalPosition` as screen coordinates
+- **3D nodes** (`Node3D`): engine-hidden nodes (own or ancestor `Visible = false`) are skipped; visible nodes are frustum-culled and projected, outputting `(screenX, screenY) depth`
+- **UI nodes** (`Control`): hidden controls (own or ancestor `Visible = false`) are skipped; visible controls read `GlobalPosition` directly as screen coordinates
 
-> Occlusion / obstruction detection is not yet implemented; only frustum culling is performed. Depth values can be used for manual front/back judgment.
+> Occlusion / obstruction detection is not yet implemented; only the engine visibility flag (`IsVisibleInTree()`) and frustum culling are applied. Depth values can be used for manual front/back judgment.
 
 ## Adding Custom Commands
 

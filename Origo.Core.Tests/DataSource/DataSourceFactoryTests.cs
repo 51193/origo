@@ -86,6 +86,36 @@ public class DataSourceFactoryTests
         Assert.Throws<ArgumentOutOfRangeException>(() => DataSourceNode.CreateNumber(double.NegativeInfinity));
     }
 
+    [Fact]
+    public void AsFloatingPoint_OverflowingNumberLiteral_Throws()
+    {
+        // The literal is a valid JSON number, but float/double parse it to
+        // infinity; As<T> must fail like the save-side converters instead of
+        // handing a non-finite value to game logic.
+        var overflowing = DataSourceNode.CreateNumber("1e999");
+
+        Assert.Throws<InvalidOperationException>(() => overflowing.As<double>());
+        Assert.Throws<InvalidOperationException>(() => overflowing.As<float>());
+    }
+
+    [Theory]
+    [InlineData("NaN")]
+    [InlineData("Infinity")]
+    [InlineData("-Infinity")]
+    [InlineData("1e999")]
+    public void AsDouble_NonFiniteTextNode_Throws(string raw)
+    {
+        Assert.Throws<InvalidOperationException>(
+            () => DataSourceNode.CreateString(raw).As<double>());
+    }
+
+    [Fact]
+    public void AsFloatingPoint_FiniteValues_ReturnParsedValue()
+    {
+        Assert.Equal(1e20, DataSourceNode.CreateNumber("1E+20").As<double>());
+        Assert.Equal(3.14f, DataSourceNode.CreateString("3.14").As<float>());
+    }
+
     [Theory]
     [InlineData("0")]
     [InlineData("-0")]

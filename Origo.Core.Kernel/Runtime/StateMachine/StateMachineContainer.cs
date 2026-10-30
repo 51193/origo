@@ -112,21 +112,73 @@ internal sealed class StateMachineContainer : IStateMachineContainer
 
     /// <summary>
     ///     Pops all state machine stacks during the quit process, one by one.
-    ///     Each machine's quit hooks run even when an earlier machine throws;
-    ///     failures are aggregated so one broken hook cannot strand the rest.
+    ///     Each stack level's quit hook is attempted even when an earlier level
+    ///     (or an earlier machine) throws: a throwing hook leaves its level on
+    ///     the stack, so the level is dropped without replaying hooks and the
+    ///     lower levels still receive their quit hooks. The level to drop is
+    ///     derived from a snapshot taken <b>before</b> the hook ran, so a hook
+    ///     that mutates the stack (throws or returns after pushing) cannot
+    ///     re-run a level, skip one, or keep the loop running forever. Failures
+    ///     are aggregated so one broken hook cannot strand the rest.
     /// </summary>
     public void PopAllOnQuit()
     {
         var failures = new List<Exception>();
         foreach (var sm in EnumerateMachinesInInsertionOrder())
         {
-            try
+            while (true)
             {
-                while (sm.TryPopOnQuit(out _)) { }
-            }
-            catch (Exception ex)
-            {
-                failures.Add(ex);
+                // Snapshot before the hook: a throwing hook may have pushed or
+                // popped levels, and force-removing the current top would then
+                // re-run the same failing level forever or skip a hook.
+                var beforePop = sm.Snapshot();
+                bool popped;
+                try
+                {
+                    popped = sm.TryPopOnQuit(out _);
+                }
+                catch (Exception ex)
+                {
+                    // The hook threw before the machine removed the top level.
+                    // Record the failure and drop the level that the pre-call
+                    // snapshot identified as the top, then continue with the
+                    // remaining levels.
+                    failures.Add(ex);
+                    try
+                    {
+                        ForcePopOnQuit(sm, beforePop);
+                    }
+                    catch (Exception forceEx)
+                    {
+                        // The machine cannot be unwound without hooks; stop at
+                        // this machine, but keep the remaining machines alive.
+                        failures.Add(forceEx);
+                        break;
+                    }
+
+                    continue;
+                }
+
+                if (!popped)
+                    break;
+
+                // A hook may push a level and return normally: TryPopCore then
+                // removes that pushed level, reports success, and the original
+                // stack never shrinks. Detect the no-progress iteration and drop
+                // the level identified by the pre-hook snapshot instead, so the
+                // loop always terminates.
+                if (sm.Snapshot().Count < beforePop.Count)
+                    continue;
+
+                try
+                {
+                    ForcePopOnQuit(sm, beforePop);
+                }
+                catch (Exception forceEx)
+                {
+                    failures.Add(forceEx);
+                    break;
+                }
             }
         }
 
@@ -136,6 +188,20 @@ internal sealed class StateMachineContainer : IStateMachineContainer
             throw new AggregateException(
                 "Multiple state machine quit hooks failed; the remaining machines were still released.",
                 failures);
+    }
+
+    /// <summary>
+    ///     Removes the top level of the pre-hook snapshot without invoking its
+    ///     quit hook. Used after a throwing quit hook (and after a no-progress
+    ///     pop where the hook pushed a level and returned) so the remaining
+    ///     levels of the same machine still run their quit hooks during teardown.
+    /// </summary>
+    private static void ForcePopOnQuit(StackStateMachine machine, IReadOnlyList<string> beforePop)
+    {
+        if (beforePop.Count == 0)
+            return;
+
+        ((IStateMachine)machine).RestoreStackWithoutHooks([.. beforePop.Take(beforePop.Count - 1)]);
     }
 
     private void ForEachMachine(Action<StackStateMachine> action)

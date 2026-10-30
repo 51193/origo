@@ -260,9 +260,14 @@ factory methods) can reference each other without cross-namespace `using` direct
   to add `using Origo.Core.Tests.TestSupport;` to reference shared facilities like `TestFactory`,
   increasing maintenance overhead.
 
-**Implementation**: This convention is enforced via `.editorconfig` rules — the `IDE0130` diagnostic
-on `[Origo.Core.Tests/**/*.cs]` paths is set to `none` (see repo root `.editorconfig`), same for other
-test projects.
+**Implementation**: `.editorconfig` sets the `IDE0130` (namespace does not match folder structure)
+diagnostic to `none` for the test and test-support project paths (see repo root `.editorconfig`), so a
+flat file-scoped namespace does not produce a folder-mismatch diagnostic. `IDE0130 = none` permits flat
+namespaces; it does not require them, and no build, format, or test gate inspects test namespaces:
+`dotnet format` cannot enforce a namespace shape and there is no architecture guard for it. Flatness is
+therefore maintained by review — a nested `Origo.Core.Tests.Snd` namespace would pass every gate.
+If automated enforcement is needed, add an architecture guard that asserts every test type's namespace
+equals its project's root namespace.
 
 **Before deviating from this convention**: Confirm design intent with the maintainer. If a specific directory
 needs sub-namespaces enabled, the reason must be recorded in the corresponding test capability document.

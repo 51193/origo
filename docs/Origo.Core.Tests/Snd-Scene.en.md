@@ -17,7 +17,7 @@ SndEntityFactory spawn orchestration and ProcessAll frame processing are covered
 | `MemorySndSceneHostTests.cs` | Basic entity add/remove/lookup/modify and list serialization behavior of StubSndSceneHost |
 | `FullMemorySndSceneHostTests.cs` | Binding prerequisites for FullMemorySndSceneHost, error paths for CreateEntity/RemoveEntity/RequestKillEntity |
 | `NullNodeFactoryTests.cs` | NullNodeFactory returns NullNodeHandle; Free/SetVisible are no-ops |
-| `SndEntityFactoryRollbackTests.cs` | Verifies that Spawn/SpawnMany roll back when an AfterSpawn hook throws (entity removal, observer teardown, strategy/node release, original exception propagation); rollback order is correct on detach-invalidating hosts (Godot wrapper semantics) so the original exception is not masked; when a rollback step itself throws, the original exception still propagates and the remaining rollback steps all execute |
+| `SndEntityFactoryRollbackTests.cs` | Verifies that Spawn/SpawnMany roll back when an AfterSpawn hook throws (entity removal, outgoing and incoming observer-binding teardown, strategy/node release, original exception propagation); rollback order is correct on detach-invalidating hosts (Godot wrapper semantics) so the original exception is not masked; when a rollback step itself throws, the original exception still propagates and the remaining rollback steps all execute; an incoming binding from an already-fired survivor is removed so the next save/load round-trip stays loadable; incoming-binding discovery on a host whose observer topology is unavailable is best-effort and cannot mask the original failure; a binding remounted from `OnUnmounted` is removed by the bounded cleanup retry (before and after the outgoing-binding teardown); a hook that remounts forever hits the documented give-up bound, where the survivor keeps one dangling edge and strict reload rejects the save |
 
 ## MemorySndSceneHostTests Details
 
@@ -82,6 +82,11 @@ SndEntityFactory spawn orchestration and ProcessAll frame processing are covered
 | `Spawn_DuplicateName_ThrowsBeforeCreating` | Host already contains an entity with the same name | InvalidOperationException (contains "already exists"), and no second entity is created |
 | `SpawnMany_DuplicateNameInBatch_ThrowsBeforeStagingAnyEntity` | Duplicate name inside the same batch | InvalidOperationException, and no entity in the batch is created |
 | `SpawnMany_CreateEntityThrows_RollsBackAlreadyStagedEntities` | CreateEntity fails mid-batch for the second entity (unregistered strategy index) | InvalidOperationException; already-staged entities removed from the host, acquired strategy references returned |
+| `SpawnMany_AfterSpawnHookThrows_RemovesIncomingObserverBindingsFromSurvivors` | A survivor's AfterSpawn mounts an observer binding onto a later staged sibling whose own AfterSpawn then throws | The survivor keeps no binding to the rolled-back entity: `OnUnmounted` ran for that binding, its serialized `ObserverIndices` is empty, and a save + full reload (strict observer recovery) succeeds with the reloaded survivor still binding-free |
+| `SpawnMany_AfterSpawnHookThrows_RetriesIncomingBindingCreatedByOnUnmounted` | The observer's `OnUnmounted` hook mounts a replacement binding onto the dying target while rollback removes the original one | The bounded retry removes the replacement as well: `OnUnmounted` ran twice, the remount guard fired once, and the survivor's `ObserverIndices` is empty |
+| `SpawnMany_AfterSpawnHookThrows_RemovesBindingCreatedByOutgoingOnUnmounted` | The doomed entity holds an outgoing observer binding whose `OnUnmounted` hook (fired during `TeardownObserverBindings`) mounts a survivor → dying binding | The post-teardown incoming cleanup pass removes that binding: the survivor's `ObserverIndices` is empty and a save + full reload (strict observer recovery) succeeds |
+| `SpawnMany_AfterSpawnHookThrows_RemountingHookCleanupIsBounded` | A pathological `OnUnmounted` hook keeps remounting a survivor → dying binding (`RemountLimit = int.MaxValue`) | Rollback terminates with bounded work (two cleanup passes × three attempts: six unmounts/remounts); the documented give-up outcome is asserted: the survivor keeps one live binding to the removed entity, and the subsequent save is rejected by strict reload recovery |
+| `Spawn_AfterSpawnHookThrows_TopologyDiscoveryThrows_PropagatesOriginalAndStillRollsBack` | AfterSpawn throws on a host whose `IObserverTopologyHost.ObserverTopology` accessor throws (unbound adapter host) | The original AfterSpawn exception propagates unchanged; `ReleaseStrategiesOnly`/`TeardownOnly`/`RemoveEntity` still run and the entity is removed (incoming-binding discovery is best-effort) |
 
 ## Test Helper Strategies
 
@@ -90,6 +95,12 @@ SndEntityFactory spawn orchestration and ProcessAll frame processing are covered
 | `ThrowingAfterSpawnStrategy` | SndEntityFactoryRollbackTests.cs | AfterSpawn hook throws InvalidOperationException ("Intentional AfterSpawn failure"); verifies Spawn/SpawnMany rollback |
 | `NormalStrategy` | SndEntityFactoryRollbackTests.cs | Normal lifecycle strategy; the entity whose hook fired (E1) survives in SpawnMany |
 | `NormalTwoStrategy` | SndEntityFactoryRollbackTests.cs | Normal lifecycle strategy; rollback candidate whose hook never fired (E3); verifies unfired entities are rolled back |
+| `MountSiblingObserverStrategy` | SndEntityFactoryRollbackTests.cs | AfterSpawn resolves the staged sibling "E2" via `OwningSession.FindByName` and mounts a recording observer on it (two-phase staging makes siblings resolvable) |
+| `RecordingObserver` | SndEntityFactoryRollbackTests.cs | Observer strategy recording each `OnUnmounted` target name; proves the incoming binding was cleaned up and released |
+| `MountRemountSiblingObserverStrategy` | SndEntityFactoryRollbackTests.cs | AfterSpawn mounts the remounting observer onto the staged sibling "E2" |
+| `RemountOnUnmountObserver` | SndEntityFactoryRollbackTests.cs | Observer whose `OnUnmounted` mounts a replacement binding onto the dying target up to `RemountLimit` times; verifies the bounded incoming-binding cleanup retry and its give-up bound |
+| `MountOutgoingSiblingObserverStrategy` | SndEntityFactoryRollbackTests.cs | Doomed lifecycle strategy: mounts an outgoing observer binding onto the surviving sibling "E1" during AfterSpawn, then throws |
+| `OutgoingRemountOnUnmountedObserver` | SndEntityFactoryRollbackTests.cs | Observer whose `OnUnmounted` (outgoing-binding teardown) mounts a survivor → dying binding; verifies the post-teardown incoming cleanup pass |
 
 ## Known Coverage Gaps
 

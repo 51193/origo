@@ -46,6 +46,8 @@ Verifies the complete TCP bridge behavior of ConsoleBridgeServer. Most integrati
 | `ClientSendCommand_LineOverConfiguredLimit_IsRejected` | A line over `MaxInputLineLength` closes the connection without enqueuing a command | console-commands |
 | `ClientSendCommand_CrlfAtExactLimit_Arrives` | An exact-limit line terminated by CRLF is accepted; the terminator is not counted | console-commands |
 | `ClientSendCommand_LoneCr_DispatchesImmediately` | A lone CR terminates and dispatches the line without waiting for another byte | console-commands |
+| `ClientSendCommand_UnterminatedLineAtEof_IsDiscarded` | A valid command written without a CR/LF terminator and followed by a half-close is discarded (not enqueued) and the server closes the connection | console-commands |
+| `ClientSendCommand_TerminatedLineThenUnterminatedTail_ExecutesOnlyTerminated` | One CRLF-framed command followed by an unterminated tail on the same connection and a half-close: exactly the framed command is enqueued, the tail is discarded | console-commands |
 | `ClientSendCommand_Unicode_Arrives` | "héllo 世界 🌍" Unicode command arrives | console-commands |
 | `ClientSendCommand_LeadingAndTrailingWhitespace_Trimmed` | "  \t  hello  \t  " → "hello" | console-commands |
 | `BlankLines_AreNotEnqueued` | Blank lines not enqueued | console-commands |

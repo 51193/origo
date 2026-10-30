@@ -26,7 +26,19 @@ public interface ISndWorldAccess
     /// <summary>Returns whether a strategy index is registered.</summary>
     bool IsStrategyRegistered(string index);
 
-    /// <summary>Registers a strategy factory under its declared index.</summary>
+    /// <summary>
+    ///     Registers a strategy factory under its declared index. Registration
+    ///     succeeds only before the bootstrap freeze; a strategy that is
+    ///     registered twice, lacks <c>[StrategyIndex]</c>, is not a sealed
+    ///     stateless type, or duplicates an existing index is rejected.
+    /// </summary>
+    /// <exception cref="System.ArgumentNullException">
+    ///     Thrown when <paramref name="factory" /> is null.
+    /// </exception>
+    /// <exception cref="System.InvalidOperationException">
+    ///     Thrown when registration is closed (after <c>ISndContext.Bootstrap</c>
+    ///     sealed the pool) or the strategy type/index is invalid.
+    /// </exception>
     void RegisterStrategy<TStrategy>(Func<TStrategy> factory) where TStrategy : BaseStrategy;
 
     /// <summary>Registers additional stable type-name mappings.</summary>

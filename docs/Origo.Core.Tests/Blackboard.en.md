@@ -16,6 +16,7 @@ Clear/GetKeys/SerializeAll/DeserializeAll full lifecycle.
 | File | Verification Focus |
 |------|-------------------|
 | `BlackboardTests.cs` | Blackboard CRUD + serialization + key validation + type safety |
+| `ReadOnlyBlackboardTests.cs` | Read-only save-meta blackboard facade: read delegation (including a found null) and fail-fast mutation rejection |
 
 ## Test Details
 
@@ -25,12 +26,13 @@ Clear/GetKeys/SerializeAll/DeserializeAll full lifecycle.
 |------------|-------------------|---------------|
 | `Blackboard_SetValue_And_TryGet_Int` | SetValue(100) → TryGet<int> returns (true, 100) | Blackboard Abstraction |
 | `Blackboard_SetValue_And_TryGet_String` | SetValue("player") → TryGet<string> returns (true, "player") | Blackboard Abstraction |
-| `Blackboard_SetValue_NullString_RemainsSupported` | Registered reference kind `string` can store null; TryGet still returns found=true | Blackboard Abstraction |
+| `Blackboard_SetValue_NullString_RemainsSupported` | Registered reference kind `string` can store null; `TryGet<string>` returns `(true, null)` through the nullable `T?` result | Blackboard Abstraction |
 | `Blackboard_Clear_RemovesAll` | GetKeys is empty after Clear | Blackboard Abstraction |
 | `Blackboard_GetKeys_ReturnsAllKeys` | GetKeys returns all key names | Blackboard Abstraction |
 | `Blackboard_GetKeys_ReturnsSnapshot` | GetKeys returns a snapshot; adding a key afterwards does not change the returned collection | Blackboard Abstraction |
 | `Blackboard_SerializeAll_And_DeserializeAll_RoundTrip` | Data consistent after serialize then deserialize | Blackboard Abstraction |
 | `Blackboard_SetValue_OverwriteExisting` | Overwriting returns the latest value | Blackboard Abstraction |
+| `ReadOnlyBlackboard_ReadsDelegateAndPreserveFoundNull` | Reads (including found-null, missing keys, and wrong types) delegate to the wrapped blackboard; GetKeys/SerializeAll see the wrapped state | Blackboard Abstraction |
 
 ### Error Path
 
@@ -42,6 +44,7 @@ Clear/GetKeys/SerializeAll/DeserializeAll full lifecycle.
 | `Blackboard_TryGet_ThrowsOnNullKey` | null key | ArgumentException |
 | `Blackboard_SetValue_ThrowsOnWhitespaceKey` | Whitespace key | ArgumentException |
 | `Blackboard_SetValue_NullUnregisteredReference_Throws` | Unregistered reference type `object?` written as null | ArgumentNullException; no unfindable entry is stored |
+| `ReadOnlyBlackboard_MutationsThrow` | SetValue/Clear/DeserializeAll through the read-only facade | InvalidOperationException; saved progress/session state cannot be mutated by a save-meta contributor |
 
 | `Blackboard_DeserializeAll_Null_Throws` | null data passed in | Throws Exception |
 

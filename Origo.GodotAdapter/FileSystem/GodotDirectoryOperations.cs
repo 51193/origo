@@ -33,11 +33,11 @@ internal static class GodotDirectoryOperations
         if (suffix is not null)
             fileNames = fileNames.Where(f => f.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
 
-        var result = fileNames.Select(f => $"{normalizedDir}/{f}").ToList();
+        var result = fileNames.Select(f => PathUtility.Combine(normalizedDir, f)).ToList();
 
         if (recursive)
             foreach (var subdir in dir.GetDirectories())
-                result.AddRange(EnumerateFiles($"{normalizedDir}/{subdir}", searchPattern, true));
+                result.AddRange(EnumerateFiles(PathUtility.Combine(normalizedDir, subdir), searchPattern, true));
 
         return result;
     }
@@ -47,7 +47,7 @@ internal static class GodotDirectoryOperations
         using var dir = DirAccess.Open(directoryPath) ?? throw new DirectoryNotFoundException($"Cannot open directory: {directoryPath}");
         dir.IncludeHidden = true;
         var normalizedDir = PathUtility.NormalizeDirectoryPath(directoryPath);
-        return [.. dir.GetDirectories().Select(d => $"{normalizedDir}/{d}")];
+        return [.. dir.GetDirectories().Select(d => PathUtility.Combine(normalizedDir, d))];
     }
 
     public static void Rename(string sourcePath, string destinationPath)
@@ -83,13 +83,13 @@ internal static class GodotDirectoryOperations
 
             foreach (var file in dir.GetFiles())
             {
-                var fileErr = dir.Remove($"{normalizedDir}/{file}");
+                var fileErr = dir.Remove(PathUtility.Combine(normalizedDir, file));
                 if (fileErr != Error.Ok)
                     throw new IOException($"Failed to delete file '{file}' in '{directoryPath}': {fileErr}");
             }
 
             foreach (var subdir in dir.GetDirectories())
-                DeleteRecursive($"{normalizedDir}/{subdir}");
+                DeleteRecursive(PathUtility.Combine(normalizedDir, subdir));
         }
 
         // Best-effort container removal through the parent handle (the same

@@ -115,6 +115,48 @@ public class SaveIdempotencyTests
     }
 
     [Fact]
+    public void ComputePayloadHash_UnpairedSurrogateNodeText_ThrowsInsteadOfColliding()
+    {
+        // The payload hash rejects ill-formed text in metadata and in node
+        // text: node text is hashed through the canonical node hash, which must
+        // not collapse it into U+FFFD and collide.
+        var replacement = CreateMinimalPayload("001", "default");
+        replacement.ProgressNode = DataSourceNode.CreateObject()
+            .Add("note", DataSourceNode.CreateString("A\uFFFDB"));
+        var loneSurrogate = CreateMinimalPayload("001", "default");
+        loneSurrogate.ProgressNode = DataSourceNode.CreateObject()
+            .Add("note", DataSourceNode.CreateString("A\uD800B"));
+
+        Assert.NotEmpty(SavePayloadWriter.ComputePayloadHash(replacement));
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => SavePayloadWriter.ComputePayloadHash(loneSurrogate));
+        Assert.Contains("UTF-16", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void WriteSavePayloadToCurrentThenSnapshot_UnpairedSurrogateNodeText_ThrowsBeforeWriting()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var logger = new TestLogger();
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root",
+            new DefaultSavePathPolicy());
+        var payload = CreateMinimalPayload("001", "default");
+        payload.ProgressNode = DataSourceNode.CreateObject()
+            .Add("note", DataSourceNode.CreateString("A\uD800B"));
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, payload, "001", logger));
+
+        Assert.Contains("UTF-16", ex.Message, StringComparison.Ordinal);
+        Assert.False(fs.DirectoryExists("root/current"));
+        Assert.False(fs.DirectoryExists("root/save_001"));
+        Assert.False(fs.Exists("root/current/.payload.sha"));
+        Assert.False(fs.Exists("root/save_001/.payload.sha"));
+    }
+
+    [Fact]
     public void ComputePayloadHash_CustomMetaOrder_Independent()
     {
         var a = CreateMinimalPayload("001", "default");
@@ -271,9 +313,7 @@ public class SaveIdempotencyTests
 
         // Compute expected hash before the save mutates the nodes.
         var freshPayload = CreateMinimalPayload("001", "default");
-        var expectedHash = SaveAtomicWriter.CombineHashes(
-            SavePayloadWriter.ComputePayloadHash(freshPayload),
-            SaveAtomicWriter.ComputeSideDirectoryHash(handle, SavePathLayout.ExtraDirectoryName));
+        var expectedHash = SaveAtomicWriter.ComputeCombinedHash(handle, freshPayload);
 
         SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, freshPayload, "001", logger);
 

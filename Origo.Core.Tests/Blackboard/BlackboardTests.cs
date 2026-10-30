@@ -119,7 +119,10 @@ public class BlackboardTests
         var bb = new Blackboard.Blackboard();
         bb.SetValue<string?>("key", null);
 
-        var (found, value) = bb.TryGet<string?>("key");
+        // TryGet returns (found, T?): the entry exists, so found is true while
+        // the value is null. The nullable result is part of the contract, so the
+        // plain TryGet<string> spelling no longer claims a non-null value.
+        var (found, value) = bb.TryGet<string>("key");
         Assert.True(found);
         Assert.Null(value);
     }

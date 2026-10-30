@@ -27,7 +27,8 @@ public class HostStartupRegistryTests
         var (found, settings) = second.Context.Blackboard.SystemBlackboard.TryGet<StartupSettings>("settings");
 
         Assert.True(found);
-        Assert.Equal(42, settings.Value);
+        Assert.NotNull(settings);
+        Assert.Equal(42, settings!.Value);
     }
 
     [Fact]

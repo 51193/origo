@@ -22,8 +22,9 @@ print_coverage_banner() {
   echo "══════════════════════════════════════════════════════════════════════"
   echo " Origo LINE COVERAGE GATES (enforced in CI and local runs)"
   echo " ────────────────────────────────────────────────────────────────────"
-  echo " • Tool: Coverlet (coverlet.msbuild) on all test projects"
-  echo " • Unified threshold: >= 90% line coverage across all projects"
+  echo " • Tool: Coverlet (coverlet.msbuild) on the five measured test projects"
+  echo " • Measured-project configuration (CollectCoverage/Threshold/Include) is pinned below"
+  echo " • Unified threshold: >= 90% line coverage across the measured projects"
   echo " • If coverage is below threshold, 'dotnet test' fails with a Coverlet error."
   echo " • Below, after tests, Coverlet prints a summary table (Line / Branch / Method)."
   echo "══════════════════════════════════════════════════════════════════════"
@@ -33,14 +34,88 @@ print_coverage_banner() {
 print_coverage_banner
 
 if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
-  echo "::notice title=Origo line coverage::Coverlet enforces >= 90% line coverage across all test projects. Summary table is printed after tests."
+  echo "::notice title=Origo line coverage::Coverlet enforces >= 90% line coverage across the measured test projects. Summary table is printed after tests."
 fi
+
+# --- coverage gate configuration pin ---
+# The percentage gate is only as strong as the per-project Coverlet settings: a
+# measured project that loses CollectCoverage, the threshold, or its assembly
+# Include filter silently stops being measured while CI stays green. Pin the
+# expected configuration here so drift fails before any test runs.
+# Entry format: <test project path>|<assembly Include filter token>
+MEASURED_COVERAGE_PROJECTS=(
+  "Origo.Core.Tests/Origo.Core.Tests.csproj|[Origo.Core]"
+  "Origo.GodotAdapter.Tests/Origo.GodotAdapter.Tests.csproj|[Origo.GodotAdapter]"
+  "Origo.ConsoleBridge.Tests/Origo.ConsoleBridge.Tests.csproj|[Origo.ConsoleBridge]"
+  "Origo.SourceGeneration.Tests/Origo.SourceGeneration.Tests.csproj|[Origo.SourceGeneration]"
+  "tools/ApiInventoryTool.Tests/ApiInventoryTool.Tests.csproj|[ApiInventoryTool]"
+)
+
+COVERAGE_CONFIG_FAILURES=0
+
+coverage_config_fail() {
+  echo "ERROR: coverage gate configuration: $*" >&2
+  COVERAGE_CONFIG_FAILURES=$((COVERAGE_CONFIG_FAILURES + 1))
+}
+
+require_coverage_setting() {
+  local project="$1"
+  local expected="$2"
+  if ! grep -Fq -- "$expected" "$project"; then
+    coverage_config_fail "'$expected' is missing from $project"
+  fi
+}
+
+verify_coverage_configuration() {
+  local entry project include_filter
+  for entry in "${MEASURED_COVERAGE_PROJECTS[@]}"; do
+    project="${entry%%|*}"
+    include_filter="${entry##*|}"
+    if [[ ! -f "$project" ]]; then
+      coverage_config_fail "measured test project is missing: $project"
+      continue
+    fi
+
+    require_coverage_setting "$project" "<CollectCoverage>true</CollectCoverage>"
+    require_coverage_setting "$project" "<CoverletOutputFormat>cobertura</CoverletOutputFormat>"
+    require_coverage_setting "$project" "<ThresholdType>line</ThresholdType>"
+    require_coverage_setting "$project" "<ThresholdStat>total</ThresholdStat>"
+    require_coverage_setting "$project" "coverlet.msbuild"
+    if ! grep -Fq -- "$include_filter" "$project"; then
+      coverage_config_fail "Include filter '$include_filter' is missing from $project"
+    fi
+
+    local solution_entry
+    solution_entry="$(basename "$project")"
+    if ! grep -Fq -- "$solution_entry" Origo.sln; then
+      coverage_config_fail "measured test project is not listed in Origo.sln: $project"
+    fi
+
+    local threshold
+    threshold="$(sed -n -E 's:.*<Threshold>([0-9]+)</Threshold>.*:\1:p' "$project")"
+    if [[ ! "$threshold" =~ ^[0-9]+$ ]]; then
+      coverage_config_fail "no numeric <Threshold> element is configured in $project"
+    elif [[ "$threshold" -lt 90 ]]; then
+      coverage_config_fail "coverage threshold $threshold in $project is below the documented 90% line gate"
+    fi
+  done
+
+  if [[ "$COVERAGE_CONFIG_FAILURES" -ne 0 ]]; then
+    echo "ERROR: coverage gate configuration drifted ($COVERAGE_CONFIG_FAILURES problem(s)); refusing to run the test gate." >&2
+    exit 1
+  fi
+
+  echo "Coverage configuration: OK (${#MEASURED_COVERAGE_PROJECTS[@]} measured projects, >= 90% line threshold)."
+}
+
+verify_coverage_configuration
+# --- end coverage gate configuration pin ---
 
 dotnet restore Origo.sln
 dotnet build Origo.sln --no-restore --configuration Release
 
 echo ""
-echo ">>> Running tests — Coverlet will fail the job if any project's LINE coverage is below its threshold."
+echo ">>> Running tests — Coverlet will fail the job if any measured project's LINE coverage is below its threshold."
 echo ""
 
 # Benchmarks are tagged [Trait("Category","Benchmark")] and run separately via

@@ -12,6 +12,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **`OrigoHost` implements `IDisposable`** — hosts can be owned with
+  `using var host = OrigoHost.Create(options);`; the existing idempotent
+  `Dispose` remains the public shutdown path.
+- **Approved pre-1.0 breaking changes in the shell API gate** — a reviewed
+  `tools/ApiInventoryTool/shell-api-approved-breaks.json` records the exact
+  previous-baseline line and a reason for a maintainer-approved break;
+  undeclared, malformed, duplicate, dormant, or wrong-assembly entries still
+  fail the gate and the CI/release workflow, while obsolete approvals whose line
+  a newer release already absorbed are reported for cleanup instead of failing.
+- **Validated release artifact set** — `scripts/bash/validate-release-artifacts.sh`
+  asserts the exact nine documented release assets (five packages, source archive,
+  docs `tar.gz`/`zip`, and `nuget.config`) with no extras before the Release
+  workflow moves the tag; the workflow guard requires the artifact assembly steps
+  and their order, and the validator is staged from `origin/main` like the other
+  trusted validators so snapshot tags that predate it can still be recovered.
 - **Dedicated Bash development-suite CI job** — the paired `bash-checks`/
   `powershell-checks` and `bash-lint`/`powershell-lint` CI jobs run the Bash
   and PowerShell suites side by side. The parity gate fails if any of the four
@@ -22,10 +37,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   its Bash-free shared checks, and every script appears in the script map.
   `scripts/bash/test-api-inventory-parent.sh` covers the Bash counterpart of
   the PowerShell metadata-release parent regression.
-- **Native Windows PowerShell development suite** — `scripts/powershell/` implements the full development gate set without invoking the POSIX scripts: SDK install (`dotnet-install.ps1`), format, shell API baseline and previous-package comparison, build/tests/coverage, benchmarks, Godot headless integration, package consumer smoke, layered `plan`/`quick`/`affected`/`full` checks, and commit lint. `common.ps1` centralizes SDK/Python/Godot resolution and disables MSBuild node reuse for reliable output capture; `ci.ps1` mirrors `scripts/bash/ci.sh`. A dedicated `windows-powershell` CI job verifies the suite alongside the existing Bash Windows job, and [docs/usage/windows-development.en.md](docs/usage/windows-development.en.md) documents prerequisites and usage.
+- **Native Windows PowerShell development suite** — `scripts/powershell/` implements the full development gate set without invoking the POSIX scripts: SDK install (`dotnet-install.ps1`), format, shell API baseline and previous-package comparison, build/tests/coverage, benchmarks, Godot headless integration, package consumer smoke, layered `plan`/`quick`/`affected`/`full` checks, and commit lint. `common.ps1` centralizes SDK/Python/Godot resolution and disables MSBuild node reuse for reliable output capture; `ci.ps1` mirrors `scripts/bash/ci.sh`. The paired `powershell-lint`/`powershell-checks` CI jobs verify the suite alongside the Bash lint and Windows build jobs, and [docs/usage/windows-development.en.md](docs/usage/windows-development.en.md) documents prerequisites and usage.
 - **Startup registry hook for persisted system-blackboard types** — `OrigoHostOptions.ConfigureStartupRegistry` and the adapter entry's `ConfigureStartupRegistry` run before `system.json` is read, so a custom type's name mapping and converter are available at startup; an unregistered type now fails with the `system.json` path and hook guidance instead of a bare type-name error. `ConfigureConverters` remains the Bootstrap-time hook for save payload types.
 - **Public shutdown path** — `ISndContext.Shutdown()` stops the active progress run, runs progress/session quit hooks, and deletes the temporary `current/` directory; `OrigoHost.Dispose()`, `GodotSndManager._ExitTree` while the foreground is live, and `OrigoDefaultEntry._ExitTree` (backstop) invoke it. The operation is idempotent and later bootstrap and persistence mutations (save/load/delete/continue/level-switch) fail explicitly.
-- **PR title/body lint for squash-merge commit messages** — the `pr-body-lint` workflow checks the PR title as a Conventional Commit subject and the PR body lines that GitHub uses for the squash commit, running the linter from `origin/main` when available; merge commits remain exempt from the local message lint.
+- **PR title/body lint for squash-merge commit messages** — the `pr-body-lint` workflow checks the PR title as a Conventional Commit subject and the PR body lines that GitHub uses for the squash commit, running the linter from `origin/main`; merge commits remain exempt from the local message lint.
 - **`ORIGOSG009` rejects types that cannot appear in generated TypedData
   accessors** — `void`, ref-like types such as `Span<T>`, static classes,
   unbound generic definitions, nullable value types such as `int?`, and
@@ -54,6 +69,40 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **BREAKING: `IBlackboard.TryGet<T>` is nullable-correct** — it now returns
+  `(bool found, T? value)`; a found value may be null (for a registered reference
+  kind, which still reports `found = true` with a null value). Consumers must
+  handle the nullable result instead of assuming a found value is non-null. This
+  is a pre-1.0 shell contract change approved through the shell API
+  approved-break record.
+- **`Origo.GodotAdapter` package metadata no longer repeats the Godot.NET.Sdk
+  pin** — `Description` and `PackageTags` are version-free, so the `Sdk=`
+  attribute is the single pin authority and a Godot SDK bump cannot leave stale
+  nuspec metadata.
+- **Shell API baseline records generic variance and nullable-flow attributes** —
+  the Roslyn inventory now records `in`/`out` variance and the nullable-flow
+  attributes that affect consumer analysis, with `schemaVersion` 2; previous-package
+  validation projects an older (v1) baseline to the legacy shape so the released
+  0.1.0 surface stays comparable, and previous-baseline resolution now fails closed
+  when a formal release cannot resolve a usable baseline (the pre-first-release skip
+  is explicit).
+- **CI jobs have bounded runtimes** — every CI, release, and CodeQL job sets
+  `timeout-minutes`, and apt steps run under `timeout 300` with
+  `Acquire::Retries=3`, so a hung infrastructure step fails the required check
+  instead of occupying it for hours.
+- **Test gates are pinned** — `scripts/bash/test.sh` refuses to run when a measured
+  test project loses its Coverlet coverage configuration, threshold, filter, or
+  solution membership; `scripts/bash/benchmark.sh` fails when a baseline benchmark
+  metric disappears from the run; architecture guard helpers gain negative-control
+  tests proving they report known violations.
+- **`DataSourceNode` floating-point reads reject non-finite values** — `As<float>`
+  and `As<double>` throw on an overflowing literal instead of returning infinity, and
+  `ComputeSha256Hash` rejects ill-formed UTF-16 instead of hashing replacement
+  characters.
+- **`SndMetaFluentBuilder` strategy-index adders reject blank indices** — matching
+  the builder's other setters, so metadata cannot persist an invalid strategy index.
+- **`PathUtility.NormalizeDirectoryPath` preserves plain filesystem/drive roots** —
+  `/`, `\\`, and `C:\\` no longer degrade to empty or drive-relative strings.
 - **Documentation entry points are now task-oriented** — the root README states
   the framework goal and routes readers to the manual instead of carrying a
   feature catalogue or a placeholder quick start. The manual index, usage
@@ -102,8 +151,100 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   forgotten base bump cannot publish a snapshot that sorts below an existing
   release.
 
+- **Previous-package API comparison uses the newest baseline not newer
+  than the source version** — a formal release tag newer than the source version
+  is skipped instead of aborting the gate, so a stale development baseline no
+  longer blocks comparison; a line added in the skipped release and removed
+  again is invisible to that comparison, while the committed-baseline `verify`
+  gate still enforces same-schema changes. Obsolete approved breaks must be
+  deleted after the release that makes them obsolete. The trade-off is
+  documented in the shell API baseline manual.
+
 ### Fixed
 
+- **Spawn-failure rollback repeats its bounded incoming observer-binding cleanup after
+  the outgoing-binding teardown** — an `OnUnmounted` hook that remounts a binding onto
+  the dying entity therefore cannot persist a dangling edge; the pathological
+  always-remount give-up case is documented and rejected by strict load.
+- **Shutdown requests raised during workflow teardown cancel deferred work queued by
+  quit hooks before the terminal state is committed**, and the retryable shutdown path
+  re-cancels work enqueued by a console input's `Clear`, so post-shutdown frames and
+  pending-persistence counters stay clean.
+- **State-machine quit detects no-progress pops** — a quit hook that pushes a level
+  and returns can no longer loop forever; the pre-hook level is force-dropped after
+  the hook ran and the remaining levels still receive their quit hooks.
+- **Shutdown cancels queued deferred requests** — pending business/system
+  actions are discarded with their discard accounting, so `IsPersistenceIdle`
+  becomes true and a post-shutdown frame no longer throws from work queued
+  before shutdown.
+- **Payload foreground mounts clear stale adapter-scene entities** when no
+  foreground session exists, so remnants cannot join the restored session or be
+  persisted as phantom entities on the next save.
+- **Spawn-failure rollback cleans incoming observer bindings best-effort and
+  retries a bounded number of times** when an `OnUnmounted` hook remounts a
+  binding onto the dying entity.
+- **Contributor display metadata is validated against the `meta.map`
+  round-trip rules before any save file is written** — an invalid key or value
+  fails with the contributor type in the message instead of a late encode error
+  leaving a partially written `current/`.
+- **Legacy mixed-case or trailing-period level directories fail with an
+  actionable migration error** naming the directory and the lowercase rename,
+  instead of a raw path-validation `ArgumentException` on load.
+- **The Bash development-suite parity gate checks the PowerShell test-project
+  list against `Origo.sln`** — a new xUnit project can no longer run only on the
+  Linux gate, and a listed project file that does not exist is rejected.
+- **Local documentation link validation covers the script map and GitHub
+  Markdown** — `docs.sh check` also validates links in `scripts/README.md` and
+  `.github/**/*.md`.
+- **Spawning entities rolls back sibling observer bindings** — when a batch
+  `AfterSpawn` hook throws, observer bindings that already-spawned siblings hold on
+  the rolled-back entity are removed, so a later save stays loadable instead of
+  being rejected by strict observer recovery.
+- **Save text with unpaired UTF-16 surrogates fails fast** — JSON/`.map`/raw-text
+  writers and the payload idempotency hash reject ill-formed UTF-16 instead of
+  silently persisting U+FFFD and treating changed content as unchanged.
+- **`Shutdown` is rejected inside an active lifecycle workflow and from `BeforeSave`**
+  — a hook can no longer tear down the progress run that the load/save/level-change
+  operation owns, and the workflow's state is not partially committed.
+- **Data-change notifications never reach an observer after its unmount** — a
+  subscription removed earlier in the same notification pass is skipped.
+- **A throwing state-machine quit hook no longer strands lower stack levels** —
+  every level's quit hook runs and failures are aggregated.
+- **Auto-save IDs are allocated atomically** — concurrent enqueueing cannot produce
+  duplicate slot IDs.
+- **Saving rejects a `SaveGamePayload.SaveId` that disagrees with the target slot**
+  instead of silently writing the other slot.
+- **ConsoleBridge discards an unterminated trailing input line** when a connection
+  closes instead of executing a half-sent command.
+- **`camera_view` does not report engine-hidden nodes as visible** — the visible
+  count and listing follow `IsVisibleInTree()` for 3D and UI nodes.
+- **TypedData generator reports ORIGOSG006 for unnamed registrations** — pointer and
+  array registrations are rejected as invalid identifiers before kind-name collision
+  checks can collapse two of them into an empty-name diagnostic.
+- **`GetNativeNode`/`GetNodeFromSnd` throw for a null receiver** instead of returning
+  null, matching the repository fail-fast rules.
+- **Release workflow guard rejects neutralized gates** — required commands only count
+  when a non-comment shell line actually runs them (an `echo`, a comment, `|| true`,
+  a chained `;`/`&`/`|`, command substitution, or a `true` substitute no longer
+  satisfies the guard); required steps must use the default/Bash shell and may not
+  hide commands behind PowerShell comments, traps, a control-flow branch, a heredoc,
+  or a success exit/return before the command, nor set `if:`/`continue-on-error:`
+  (the documented tag-push idempotent path and snapshot marker step are the only
+  allowlisted exceptions). The release job must keep the full ordered gate set
+  (lint, format, API baseline, tests/coverage, benchmarks, package consumer smoke,
+  and the Godot prerequisite job) before the tag moves. Trusted validators must be
+  staged with the exact reviewed `git show ... > ...` lines; other writes,
+  variable/cwd-relative writes, and tag-tree copies into `.release-validators/` are
+  rejected, and a required validator must be invoked as exactly the reviewed
+  `bash <path>` command. The artifact-set validator is bound to its exact reviewed
+  argv and no artifact-directory write may follow it; the weekly check/bump/dispatch
+  conditions are pinned, and the weekly completeness assertion must be a code line
+  starting with `[[` and ending with `]]` that precedes any early exit (including
+  heredoc/backslash/quoted/multiple-heredoc masking).
+- **Bash/PowerShell test-project parity covers both project lists** —
+  `scripts/bash/test-dev-suite.sh` compares the solution's xUnit projects with both
+  `$testProjects` and `$directProjects` in the PowerShell suite, so a new project
+  cannot silently run on only one platform.
 - **Release metadata verification runs the trusted verifier from the correct depth** — the Release workflow now stages `verify-release.sh` at `.release-validators/scripts/verify-release.sh`, where its `../..` root resolution reaches the repository; the workflow guard requires the metadata step and its exact staging path, and the self-test executes both the correct and one-level-too-deep layouts.
 - **Normal Godot entry exit runs foreground `BeforeQuit` hooks** — `GodotSndManager._ExitTree` shuts an active `SndContext` down before its parent entry's `_ExitTree` clears the entity collection, so the documented normal-exit hook path runs once; the out-of-contract per-entity fallback still handles a context without an active progress run.
 - **Main-menu/initial runs never read a real `save_000` snapshot** — those runs use an internal synthetic working id; a level switch now resolves only from `current/`, so a user-created `save_000` cannot inject an unrelated saved level into the next boot. Real save slots retain the documented snapshot fallback.

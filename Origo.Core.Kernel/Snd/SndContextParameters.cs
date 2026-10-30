@@ -96,10 +96,12 @@ public sealed class SndContextParameters
     public string? SndTemplateMapPath { get; init; }
 
     /// <summary>
-    ///     Converter registration callback invoked before Bootstrap.
-    ///     Extension developers can register custom <see cref="DataSourceConverter{T}" /> here,
-    ///     ensuring custom types are available before automatic strategy discovery,
-    ///     template loading, and entry save loading.
+    ///     Converter registration callback invoked inside <c>Bootstrap</c> before
+    ///     automatic strategy discovery, template loading, and entry save loading.
+    ///     Extension developers can register custom
+    ///     <see cref="DataSourceConverter{T}" /> here. System-blackboard types read
+    ///     before Bootstrap need <see cref="OrigoHostOptions.ConfigureStartupRegistry" />
+    ///     instead.
     /// </summary>
     public Action<DataSourceConverterRegistry>? ConfigureConverters { get; init; }
 

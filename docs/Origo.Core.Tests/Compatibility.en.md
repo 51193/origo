@@ -16,7 +16,7 @@ They drive the stable Contracts entry surface (`OrigoHost`, `ISndContext`, `ISes
 | File | Focus |
 |------|-------|
 | `Compatibility/ShellCompatibilityContractTests.cs` | `OrigoHost` shell entry: lifecycle hook ordering, observer binding recovery, post-Bootstrap fail-fast, background-session create/destroy transitions |
-| `Hosting/OrigoHostTests.cs` | Stable `OrigoHost`/`HostKernelPort` runtime construction, background workflow, dispose idempotence/rejection of later bootstrap, custom console handler; `AdapterHostKernelPort` runtime/observer/context binding order; explicit failure when the runtime binder, context binder, or file system is missing |
+| `Hosting/OrigoHostTests.cs` | Stable `OrigoHost`/`HostKernelPort` runtime construction, background workflow, `IDisposable`/using-scope disposal and dispose idempotence/rejection of later bootstrap, custom console handler; `AdapterHostKernelPort` runtime/observer/context binding order; explicit failure when the runtime binder, context binder, or file system is missing |
 | `Hosting/HostContextParametersTests.cs` | Shared `HostContextParameters` factory: every context parameter comes from its own `OrigoHostOptions` or `AdapterContextOptions` member, and null options fail fast with the parameter name |
 | `Hosting/HostStartupRegistryTests.cs` | `OrigoHostOptions.ConfigureStartupRegistry` runs before `system.json` load; a custom type persisted in the system blackboard reloads after host recreation; an unregistered custom type fails with the file path and startup-hook guidance |
 
@@ -50,7 +50,8 @@ They drive the stable Contracts entry surface (`OrigoHost`, `ISndContext`, `ISes
 
 | Test Method | Behavior Verified | Expected Behavior | Documentation Source |
 |---|---|---|---|---|
-| `OrigoHost_Dispose_IsIdempotentAndRejectsLaterBootstrap` | Host disposed twice; later Bootstrap | Second dispose no-op; Bootstrap throws | [Origo.Core](../Origo.Core/README.en.md) |
+| `OrigoHost_Dispose_IsIdempotentAndRejectsLaterBootstrap` | Host implements `IDisposable`; disposed twice; later Bootstrap | Second dispose no-op; Bootstrap throws | [Origo.Core](../Origo.Core/README.en.md) |
+| `OrigoHost_UsingScope_DisposesAndRemainsIdempotent` | Host owned by a `using` scope (no manual `Dispose`) | Scope disposal alone shuts the host down: later Bootstrap throws and a second `Context.Shutdown()` is idempotent | [Origo.Core](../Origo.Core/README.en.md) |
 | `OrigoHost_Dispose_ConsoleClearFailure_RemainsRetryable` | Console input Clear throws during Dispose | first Dispose throws; retry after recovery succeeds; Bootstrap rejected | [Origo.Core](../Origo.Core/README.en.md) |
 | `SystemBlackboard_UnregisteredCustomType_HostCreationExplainsStartupHook` | Custom type persisted without `ConfigureStartupRegistry` | host creation throws `InvalidOperationException` naming system.json and the hook | [Origo.Core](../Origo.Core/README.en.md) |
 | `OrigoHost_ShouldFailFastOnHalfConfiguredConsole` | Only one of `ConsoleInput` / `ConsoleOutputChannel` is supplied | `ArgumentException` at `OrigoHost.Create` | [Origo.Core](../Origo.Core/README.en.md) |

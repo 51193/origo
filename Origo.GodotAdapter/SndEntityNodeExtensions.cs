@@ -1,3 +1,4 @@
+using System;
 using Godot;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Node;
@@ -15,8 +16,11 @@ public static class SndEntityNodeExtensions
     ///     Gets the native Godot node from an SND node handle (adapter layer only).
     ///     Only works when INodeHandle is a GodotNodeHandle; otherwise returns null.
     /// </summary>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="handle" /> is null.</exception>
     public static Node? GetNativeNode(this INodeHandle handle)
     {
+        ArgumentNullException.ThrowIfNull(handle);
+
         if (handle is GodotNodeHandle godotHandle)
             return godotHandle.UnsafeGetNode();
         return null;
@@ -29,8 +33,11 @@ public static class SndEntityNodeExtensions
     ///     under that name (the SND node registry lookup is strict); only
     ///     works when the entity is a <see cref="GodotSndEntity" />.
     /// </summary>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="entity" /> is null.</exception>
     public static TNode? GetNodeFromSnd<TNode>(this ISndEntity entity, string name) where TNode : Node
     {
+        ArgumentNullException.ThrowIfNull(entity);
+
         if (entity is GodotSndEntity godotEntity)
             return godotEntity.GetNodeFromSnd<TNode>(name);
         return null;

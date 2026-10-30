@@ -21,7 +21,7 @@ runtime implementation or concrete adapter.
 | [Node](Node/README.en.md) | Engine node abstraction | `INodeFactory` + `INodeHandle` |
 | [Runtime](Runtime/README.en.md) | Runtime host and frame-driver contracts | `IOrigoFrameDriver` + `IOrigoRuntime` + `ISndWorldAccess` |
 | [Scene](Scene/README.en.md) | Read-only scene-access contract | `ISndSceneReadAccess` |
-| [Snd](Snd/README.en.md) | SND companion contracts | Nine `ISnd*` role interfaces |
+| [Snd](Snd/README.en.md) | SND companion contracts | `ISnd*` role interfaces (blackboard, deferred, template, console, state-machine, save, lifecycle, file, archive) |
 | [StateMachine](StateMachine/README.en.md) | State-machine contracts | `IStateMachine` + `IStateMachineContainer` + `IStateMachineContext` |
 
 ## Files at This Level

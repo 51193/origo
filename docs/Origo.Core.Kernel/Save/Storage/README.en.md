@@ -59,6 +59,7 @@ Complete implementation of the save storage layer. Responsible for file I/O (rea
 
 - **`.write_in_progress` exists under `current/`** → refuse to read, throw exception (previous write was interrupted)
 - **Per-level three-piece set incomplete** → refuse to read (partial existence = corruption)
+- **A level directory whose name is not a valid level identity** → refuse to read with a migration error that names the offending director(y/ies) and instructs the user to rename them to lowercase/path-safe ids; the writer preserves legacy mixed-case/trailing-period directories for explicit migration, and the reader must not silently skip them or surface a parameter-validation error
 - **progress.json missing** → payload reads refuse to read; `ReadProgressNodeFromSnapshot` is the nullable existence probe that returns null when the file is absent, and `LoadOrContinueStrict` turns that null into the actionable missing-`progress.json` error
 - **Background level referenced by the topology has no payload** → refuse to load (consistent with the foreground: a topology referencing level data that does not exist must fail explicitly; silently mounting an empty session would hide data loss)
 - **Payload level not referenced by the topology** → refuse to load (an unreferenced level would be silently ignored, losing its state; the topology and level set must describe the same sessions)
@@ -92,6 +93,10 @@ Deletion must cover the real slot and the `.tmp/.bak` remnants left by atomic wr
 
 A save id is embedded directly in `save_{id}/`, while the snapshot phase uses `save_{id}.tmp/` and `save_{id}.bak/`. An id ending in `.tmp` or `.bak` would therefore describe a different valid slot and the same staging/backup path; saving or deleting one id could destroy the other. Validation rejects those suffixes (case-insensitively), and also enforces lowercase and path-safe IDs: default Windows/macOS file systems fold case, and Windows strips a segment's trailing period, so `Foo`/`foo` and `foo`/`foo.` would otherwise alias one directory. Legacy mixed-case slots are outside the supported id set and must be renamed before use; storage operations detect a case-variant legacy slot and fail explicitly instead of overwriting or deleting it.
 
+### Why legacy level directories fail with a migration error
+
+Level ids use the same lowercase, path-safe identity rule as save ids because they name `level_{id}/` directories. The writer deliberately preserves a legacy mixed-case or trailing-period level directory instead of deleting it, so its data is available for an explicit migration. The reader therefore cannot skip such a directory silently: the payload would be incomplete, and skipping it would hide the legacy data. It also must not expose the raw path-assembly `ArgumentException`, which reads like a programming error and does not tell the user what to do. Read discovery validates every discovered level-directory id first and fails with one `InvalidOperationException` that names the offending directories, explains the identity rule, and gives the rename example (`level_Town` → `level_town`) plus the topology update needed for a referenced level. The active level id from the persisted session topology is validated the same way before any path is assembled.
+
 ### Why interrupted snapshots are recovered
 
 The backup-replace swap is safe against ordinary exceptions, but a process crash between `save_{id}/` → `save_{id}.bak/` and `save_{id}.tmp/` → `save_{id}/` leaves no real slot. Both enumeration and the snapshot read APIs that consume a saved slot (full payload, progress, and level reads) check for a complete backup and restore it as the real slot, so a direct load by ID recovers the same way as a list-then-load flow; incomplete backups and `.tmp` staging are ignored as slots. Directory-copy restore is not a recovery read and does not perform this check. This preserves the last known-good snapshot without presenting fake slots to the UI.
@@ -114,6 +119,8 @@ Saves involve multiple files (progress.json + 3 files per N levels). Atomic rena
 
 Different platforms (desktop, mobile, cloud save) may require different path layouts. Injecting the layout policy into `DefaultSaveStorageService` rather than hardcoding allows platform-specific policies to be injected at the adapter layer.
 
+Directory and slot members (`GetCurrentDirectory`, `GetSaveDirectory`, `GetLevelDirectory`, …) may rename any directory segment. File-path members must keep the suffix that codec routing uses for their content type (`.json`, `.map`, `.sha`, `.write_in_progress`): every payload file is read and written through `IDataSourceIoGateway` suffix routing, so renaming `progress.json` to `progress.dat` or the payload SHA file to a non-`.sha` name makes the next write/read fail with an explicit "no codec configured" error instead of using the policy path.
+
 ### Why SaveFileHandle uniformly encapsulates I/O dependencies
 
 `SaveFileHandle` encapsulates the five I/O dependencies `(IFileMetaAccess, IDataSourceIoGateway, IPathResolver, string saveRootPath, ISavePathPolicy)` into a single parameter object, making methods in SavePayloadReader/SavePayloadWriter/SaveStorageFacade map one-to-one with their implementations, avoiding the multi-level overload chains needed for passing the five-piece set layer by layer. `DefaultSaveStorageService` internally holds only a single field. It simultaneously carries path utility methods and gateway creation logic without needing separate helper classes.
@@ -131,9 +138,14 @@ When the same game state is written to the same save slot multiple times, SHA-25
 - Progress blackboard change → hash differs → rewrite
 - Any level data change → hash differs → rewrite
 - CustomMeta key-value change → hash differs → rewrite (map and level segments are length-prefixed, so values/keys containing `=` cannot make two distinct maps collide)
-- Only SaveId differs (writing to a different slot) → always write (new slot has no .sha to compare)
+- Node text change → hash differs → rewrite; text that is not well-formed UTF-16 (an unpaired surrogate) is rejected while hashing, because a replacement-fallback encoder would collapse it into U+FFFD and could make two distinct trees hash-equal
+- Only the target slot differs and the payload states no `SaveId` → always write (new slot has no .sha to compare). A non-empty payload `SaveId` that disagrees with the target (including an empty target) fails fast instead of silently writing another slot.
 
 The `current/.payload.sha` writes follow three deliberate, non-conflicting semantics: the snapshot path (`WriteSavePayloadToCurrentThenSnapshot`) writes the **combined hash** (payload + the policy's extra directory), which the next idempotency comparison consumes; the test path (`SaveStorageAndPayloadTests.WritePayloadWithPayloadSha`, which calls `SavePayloadWriter.WriteToCurrent` then `SaveAtomicWriter.WritePayloadSha`) writes the **payload-only hash** (tests have no extra side channel, so a combined hash would be inaccurate); the load-recovery path (`DefaultSaveStorageService.WriteSavePayloadToCurrent`) writes **no hash** — a recovery write has no idempotency contract, and only the snapshot phase performs deduplication. The only consumer of `.payload.sha` is `TryIdempotentSkip` comparing against the snapshot directory; the `current/` hash itself is consumed only indirectly when it is copied into a snapshot.
+
+### Why a mismatched payload save id fails fast
+
+`SaveGamePayload.SaveId` records the slot a payload was built for, while `WriteSavePayloadToCurrentThenSnapshot` also takes the target slot id. The target id names `save_{id}/` and must be non-empty. When the payload states a non-empty `SaveId`, it must equal the target id; any disagreement means the payload would be persisted under a slot it does not claim to belong to, and silently preferring either identity would hide a caller bug. The write therefore fails fast with `ArgumentException` before any save file is written (the check runs before the hash/dedup step; the public default service's read-only case-variant slot probe still precedes it). A non-empty payload id with an empty target is rejected by the same rule, and an empty target cannot write a slot. An empty payload `SaveId` means "no identity stated" and the target id names the slot. Read methods populate `SaveId` with the slot that was read.
 
 ### Why cross-storage-root extra/ restore takes an explicit source service
 
@@ -141,7 +153,7 @@ The `current/.payload.sha` writes follow three deliberate, non-conflicting seman
 
 ### Why DataSourceNode computes a Canonical Hash rather than a post-serialization hash
 
-`DataSourceNode.ComputeSha256Hash()` recursively generates a deterministic string representation and then applies SHA-256. Unlike the codec serialization approach, the canonical string does not depend on the codec version or indentation configuration; keys are sorted in dictionary order, ensuring the same data tree always produces the same hash.
+`DataSourceNode.ComputeSha256Hash()` builds a deterministic canonical string iteratively (cycle detection included) and then applies SHA-256. Unlike the codec serialization approach, the canonical string does not depend on the codec version or indentation configuration; map keys are sorted with `StringComparer.Ordinal`, ensuring the same data tree always produces the same hash. The canonical text is UTF-16 well-formedness checked and hashed with a strict UTF-8 encoder: an unpaired surrogate would otherwise be replaced by U+FFFD, letting two distinct trees share one digest.
 
 ---
 

@@ -189,27 +189,57 @@ public sealed class SndContext : ISndContext
         // A BeforeSave hook runs inside the session-mutation guard. Tearing the
         // progress run down here would remove sessions/current while the save
         // workflow is still active; reject the call before any cleanup instead.
+        // Kept before the workflow-body guard so a BeforeSave hook receives the
+        // more specific message.
         if (IsSessionSetMutationForbidden)
             throw new InvalidOperationException(
                 "SndContext.Shutdown cannot run while a BeforeSave hook is executing.");
 
+        // A lifecycle workflow body (load / save / change-level) still owns the
+        // progress run it is creating or serializing. Tearing it down here would
+        // let the workflow continue against a disposed run; reject instead and
+        // let the workflow complete or fail on its own terms. Nested shutdown
+        // requests from quit hooks during workflow teardown hit the
+        // _shutdownInProgress branch above and are resolved by the workflow
+        // owner after its cleanup attempt, so this guard cannot break that path.
+        if (_workflowInProgress)
+            throw new InvalidOperationException(
+                "SndContext.Shutdown cannot run while a lifecycle workflow " +
+                "(load/save/change-level) is in progress.");
+
         _shutdownInProgress = true;
         try
         {
+            // Cancel every queued persistence/business request first: they were
+            // scheduled against the runtime being torn down and must not run on a
+            // later frame (nor keep IsPersistenceIdle false). Cancel runs each
+            // action's discard callback, so tracked request accounting is
+            // released. The console state reset keeps its position as the next
+            // teardown step.
+            Exception? deferredCancelFailure = null;
+            try
+            {
+                Runtime.CancelPendingDeferredRequests();
+            }
+            catch (Exception ex)
+            {
+                deferredCancelFailure = ex;
+            }
+
             if (_progressRun is null && _shutdownCleanupPending)
             {
                 // A previous attempt ran the quit hooks and released the progress
                 // run but failed on a cleanup dependency (typically the current/
                 // delete). Retry only the idempotent cleanup steps; never replay
                 // hooks or session teardown.
-                Exception? retryFailure = null;
+                Exception? retryFailure = deferredCancelFailure;
                 try
                 {
                     Runtime.ResetConsoleState();
                 }
                 catch (Exception ex)
                 {
-                    retryFailure = ex;
+                    retryFailure ??= ex;
                 }
 
                 if (_shutdownRetryCurrentDelete)
@@ -222,6 +252,18 @@ public sealed class SndContext : ISndContext
                     {
                         retryFailure ??= ex;
                     }
+                }
+
+                // A retried console reset (or a consumer input source's Clear
+                // implementation) can enqueue fresh deferred work; cancel it
+                // before committing the terminal flag.
+                try
+                {
+                    Runtime.CancelPendingDeferredRequests();
+                }
+                catch (Exception ex)
+                {
+                    retryFailure ??= ex;
                 }
 
                 if (retryFailure is not null)
@@ -237,7 +279,7 @@ public sealed class SndContext : ISndContext
             // terminal flag is committed only after the whole attempt succeeds,
             // so a throwing consumer console source cannot make Shutdown a
             // permanent no-op with the progress run/current directory still live.
-            Exception? firstFailure = null;
+            Exception? firstFailure = deferredCancelFailure;
             var hadProgressRun = _progressRun is not null;
             try
             {
@@ -245,7 +287,7 @@ public sealed class SndContext : ISndContext
             }
             catch (Exception ex)
             {
-                firstFailure = ex;
+                firstFailure ??= ex;
             }
 
             try
@@ -262,6 +304,19 @@ public sealed class SndContext : ISndContext
             finally
             {
                 _progressRun = null;
+            }
+
+            // Quit hooks run during progress teardown and may enqueue new
+            // deferred work (persistence requests are only rejected once the
+            // terminal flag is committed). Drop that work too, so no queued
+            // action can run on a frame after shutdown.
+            try
+            {
+                Runtime.CancelPendingDeferredRequests();
+            }
+            catch (Exception ex)
+            {
+                firstFailure ??= ex;
             }
 
             if (firstFailure is not null)
@@ -677,6 +732,22 @@ public sealed class SndContext : ISndContext
             if (_shutdownRequestedDuringTeardown)
             {
                 _shutdownRequestedDuringTeardown = false;
+
+                // A quit hook that requested shutdown may also have queued
+                // deferred work before the terminal flag exists. Cancel it
+                // before committing shutdown, otherwise it would run on a later
+                // frame against the terminal context and keep the persistence
+                // counter non-zero. Cancellation failures join the teardown
+                // failure and keep the cleanup retryable.
+                try
+                {
+                    Runtime.CancelPendingDeferredRequests();
+                }
+                catch (Exception ex)
+                {
+                    progressTeardownFailure ??= ex;
+                }
+
                 if (progressTeardownFailure is null)
                 {
                     _shutdown = true;

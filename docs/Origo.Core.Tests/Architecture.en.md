@@ -8,7 +8,7 @@
 
 Verifies Origo's architectural constraints: Core assembly does not reference Godot (layer isolation),
 ISndContext is a pure composition interface (Interface Segregation Principle), strategies are validated
-as stateless via reflection at registration (rejects instance fields and writable properties), private-field naming is checked for Core, Kernel, Contracts, and Origo.TestSupport, and the build settings that make the IDE dead-code analyzers run are pinned.
+as stateless via reflection at registration (rejects mutable instance fields and writable properties; allows deeply immutable readonly fields), private-field naming is checked for Core, Kernel, Contracts, and Origo.TestSupport, the build settings that make the IDE dead-code analyzers run are pinned, and the guard detectors themselves are pinned by negative controls that require a known violation to be reported.
 
 ## Test File List
 
@@ -17,6 +17,7 @@ as stateless via reflection at registration (rejects instance fields and writabl
 | `CoreArchitectureGuardrailTests.cs` | Layer isolation, interface composition, shell API classification completeness, Contracts/Kernel dependency direction, consumers can complete full workflow through pure interfaces |
 | `AutoInitializerGuardTests.cs` | Strategy statelessness validation: mutable instance fields and writable instance properties rejected, static and readonly fields allowed; null-callback and meta-list guards. Missing `[StrategyIndex]` rejection is covered in [Snd-Strategy](Snd-Strategy.en.md) by `ActiveStrategyTests` / `ObserverStrategyTests` |
 | `BuildGateGuardTests.cs` | Build configuration that makes the dead-code analyzers real: `EnforceCodeStyleInBuild`, warnings as errors, and the `IDE0051`/`IDE0052` severities |
+| `ArchitectureGuardNegativeControlTests.cs` | Negative controls proving the private-field naming and shell API classification detectors actually report violations; a detector that silently returned an empty list would otherwise pass every positive guard |
 
 ## CoreArchitectureGuardrailTests Test Details
 
@@ -97,11 +98,34 @@ as stateless via reflection at registration (rejects instance fields and writabl
 | `BuildProperties_EnableCodeStyleAnalyzers_AndTreatWarningsAsErrors` | `Directory.Build.props` keeps `EnforceCodeStyleInBuild` and `TreatWarningsAsErrors` enabled, so the IDE analyzers run during the build and a warning fails it | META-TEST: Dead-Code Gate |
 | `EditorConfig_MakesDeadCodeAnalyzersErrors` | `.editorconfig` keeps `IDE0051` (unused private member) and `IDE0052` (unread private member) at error severity | META-TEST: Dead-Code Gate |
 
+## ArchitectureGuardNegativeControlTests Test Details
+
+### Happy Path
+
+| Test Method | Verified Behavior | Doc Reference |
+|------------|-------------------|---------------|
+| `PrivateFieldNamingConvention_ReportsNonConformingPrivateFields` | The detector reports exactly the two known non-conforming private fields of the fixture and reports nothing for the conforming fixture | AGENTS.md: consistent code format |
+| `PrivateFieldNamingConvention_CleanFixture_ReportsNoViolations` | A conforming fixture produces no violations (control for the reporting assertions) | AGENTS.md: consistent code format |
+| `PrivateFieldNamingConvention_AssemblyScan_ReportsFixtureViolations` | The assembly-level entry point reports the known fixture fields, proving the full assembly scan reaches them | AGENTS.md: consistent code format |
+| `ShellApiClassification_ValidTable_ReportsNoViolations` | The tracked table read through the table-path entry point reports no violations for the Core assembly (control) | architecture/shell-api-classification |
+
+### Error Path
+
+| Test Method | Triggered Error | Expected Behavior |
+|------------|----------------|-------------------|
+| `ShellApiClassification_MissingRow_ReportsUnclassifiedType` | A table copy with one exported `Origo.Core` row removed | Violation names the removed type as "not classified" |
+| `ShellApiClassification_UnknownClassification_IsReported` | A table copy with an invalid classification value | Violation reports `unknown classification` |
+| `ShellApiClassification_NotExportedRow_IsReported` | A table copy with a row for a type that is not exported | Violation reports the type "is not exported at this commit" |
+| `ShellApiClassification_DuplicateRow_IsReported` | A table copy with a duplicated row | Violation reports `duplicate classification row` |
+| `ShellApiClassification_MissingTable_Throws` | A missing classification table file | `FileNotFoundException` instead of silently accepting the assembly |
+
 ## Known Coverage Gaps
 
-| Gap Description | Impact | Doc Basis |
-|----------------|--------|-----------|
-| Core public API should not expose internal type concrete names | API stability | architecture/overview: public whitelist |
+None — the public-API exposure concern is covered by existing guards rather than an uncovered gap:
+
+- A public signature cannot reference an internal type: the C# compiler rejects the inconsistent accessibility (for example `CS0051`), so an "internal concrete type name in public API" case cannot compile, let alone ship.
+- Kernel types leaking into `Origo.Core` / `Origo.GodotAdapter` public signatures are rejected by `CoreShellPublicSignatures_ShouldNotExposeKernelTypes` and `AdapterShellPublicSignatures_ShouldNotExposeKernelTypes`.
+- The exported shell surface is pinned by the `ShellApiClassification_*` guards and by the Roslyn API baseline gate (`scripts/bash/api-inventory.sh`).
 
 ---
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Origo.Core.Snd.Entity;
 using Origo.Core.Snd.Metadata;
 using Xunit;
@@ -185,5 +186,88 @@ public class DataObserverManagerTests
 
         Assert.False(cb1Called);
         Assert.True(cb2Called);
+    }
+
+    [Fact]
+    public void Notify_WhenEarlierCallbackUnsubscribesLaterCallback_LaterCallbackNotInvoked()
+    {
+        // An observer hook may unmount a sibling binding while the target's
+        // notification pass is running. The snapshot iteration must skip the
+        // subscription that was removed in the same pass: running OnDataChanged
+        // after the binding's OnUnmounted cleanup would act on released state.
+        var mgr = new DataObserverManager();
+        var invoked = new List<string>();
+
+        void later(TypedData _1, TypedData _2) => invoked.Add("later");
+        void earlier(TypedData _1, TypedData _2)
+        {
+            invoked.Add("earlier");
+            mgr.Unsubscribe("hp", later);
+        }
+
+        mgr.Subscribe("hp", earlier);
+        mgr.Subscribe("hp", later);
+        mgr.NotifyObservers("hp", (TypedData)100, (TypedData)50);
+
+        Assert.Equal(["earlier"], invoked);
+    }
+
+    [Fact]
+    public void Notify_WhenEarlierCallbackClearsSubscriptions_RemainingCallbacksNotInvoked()
+    {
+        // Clear() is used when the owning entity is torn down. Its subscriptions
+        // must be marked removed before the dictionary is dropped so a
+        // notification pass already in flight does not call a callback after the
+        // entity's cleanup ran.
+        var mgr = new DataObserverManager();
+        var invoked = new List<string>();
+
+        void first(TypedData _1, TypedData _2)
+        {
+            invoked.Add("first");
+            mgr.Clear();
+        }
+
+        void second(TypedData _1, TypedData _2) => invoked.Add("second");
+
+        mgr.Subscribe("hp", first);
+        mgr.Subscribe("hp", second);
+        mgr.NotifyObservers("hp", (TypedData)100, (TypedData)50);
+
+        Assert.Equal(["first"], invoked);
+
+        // The cleared subscriptions stay gone for later notifications.
+        mgr.NotifyObservers("hp", (TypedData)50, (TypedData)10);
+        Assert.Equal(["first"], invoked);
+    }
+
+    [Fact]
+    public void Notify_UnsubscribeAndResubscribeSameCallbackInOnePass_OnlyFiresOnLaterNotification()
+    {
+        // A pass that unsubscribes and re-subscribes the same delegate must not
+        // deliver the current change through the fresh subscription: it was not
+        // part of the snapshot, and firing it would double-deliver the change.
+        var mgr = new DataObserverManager();
+        var calls = 0;
+        var cycled = false;
+        void cb(TypedData _1, TypedData _2) => calls++;
+        void driver(TypedData _1, TypedData _2)
+        {
+            if (cycled)
+                return;
+
+            cycled = true;
+            mgr.Unsubscribe("hp", cb);
+            mgr.Subscribe("hp", cb);
+        }
+
+        mgr.Subscribe("hp", cb);
+        mgr.Subscribe("hp", driver);
+        mgr.NotifyObservers("hp", (TypedData)100, (TypedData)50);
+
+        Assert.Equal(1, calls);
+
+        mgr.NotifyObservers("hp", (TypedData)50, (TypedData)10);
+        Assert.Equal(2, calls);
     }
 }

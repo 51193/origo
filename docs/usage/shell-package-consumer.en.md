@@ -50,5 +50,30 @@ The consumer fixture is not part of `Origo.sln` and contains no `ProjectReferenc
 - A missing package, a release package validator failure, a missing analyzer asset, a `ProjectReference` in either consumer, NuGet or compiler warnings, compilable kernel types, a missing Core-consumer kernel runtime assembly, unexpected Core/Kernel resolution or assemblies in the ConsoleBridge consumer, a failed ConsoleBridge round-trip or missing `CONSOLE_BRIDGE_PACKAGE_CONSUMER_OK`, a missing `unzip` while the engine cache is cold, or a failed Godot startup or missing `SHELL_CONSUMER_STARTUP_OK` all fail the job.
 - The Godot SDK pin is parsed by `scripts/bash/download-godot.sh` alone, with the adapter csproj as the authority; the smoke and the integration tests compare their pins against it, so a Godot SDK upgrade must update the adapter and both consumers in the same change.
 
+## Consuming a release from a consumer project
+
+A formal release attaches the five shell/kernel packages plus `nuget.config`
+(see [release pipeline artifacts](../release-process.en.md#release-pipeline-artifacts)).
+Download the `.nupkg` files for the release tag you use into a local folder,
+then make that folder the package source for your project:
+
+- copy the attached `nuget.config` next to your project and point its
+  `origo-local` source at the folder (the tracked
+  [`nuget.config.example`](../../nuget.config.example) is the template), or
+- add the feed to an existing `packageSources` entry, for example
+  `<add key="origo-local" value="./packages/origo/" />`.
+
+Reference the shell packages and pin the release version:
+
+```xml
+<PackageReference Include="Origo.Core" Version="x.y.z" />
+<PackageReference Include="Origo.GodotAdapter" Version="x.y.z" />
+```
+
+`Origo.Core.Contracts` and `Origo.Core.Kernel` are restored as dependencies of
+those shell packages from the same local feed, and the adapter package supplies
+the Godot runtime assets. This is the package-only path that the smoke test
+above verifies on every CI run and release.
+
 ---
 [↑ Back to Origo Manual](../README.en.md)

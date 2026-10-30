@@ -3,8 +3,11 @@
     <PropertyGroup>
         <EnableDynamicLoading>true</EnableDynamicLoading>
         <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-        <Description>Origo Godot 4 Adapter — bootstrap and runtime integration for Origo.Core. Built against Godot.NET.Sdk/4.7.2.</Description>
-        <PackageTags>godot;godot-4.7;godot-4.7.2;game;framework;csharp;origo;adapter;snd;entity</PackageTags>
+        <!-- Package metadata must not repeat the Godot.NET.Sdk pin: the Sdk
+             attribute above is the single authority, and versions written here
+             go stale on a bump with no gate. Keep only version-free tags. -->
+        <Description>Origo Godot 4 Adapter — bootstrap and runtime integration for Origo.Core, built against the Godot .NET SDK pinned by this project.</Description>
+        <PackageTags>godot;godot-4;game;framework;csharp;origo;adapter;snd;entity</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <GodotDisabledSourceGenerators>GodotPluginsInitializer</GodotDisabledSourceGenerators>
     </PropertyGroup>

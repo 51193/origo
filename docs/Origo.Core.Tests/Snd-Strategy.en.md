@@ -168,6 +168,7 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 | `Unmount_WhenOnUnmountedThrows_PoolReferenceStillReleased` | OnUnmounted hook throws InvalidOperationException | Exception propagates and the strategy is still returned to the pool (LogPoolLeaks emits no leak warning) |
 | `FullCleanup_NullTargetEntity_ThrowsInvalidOperation` | FullCleanup with null TargetEntity | InvalidOperationException (message contains "TargetEntity") |
 | `SessionDestroy_WhenOnUnmountedThrows_PoolReferenceStillReleased` | Session destruction tears down a binding whose OnUnmounted hook throws | InvalidOperationException propagates, but the strategy's pool reference is still released (no refCount leak warning) |
+| `TeardownAllBindingsFor_TwoThrowingBindings_AggregatesAndStillCleansLaterBinding` | Two bindings' OnUnmounted hooks throw during observer teardown and a later binding is healthy | AggregateException with two inner exceptions; the later binding is still cleaned up and its released strategy no longer receives data changes |
 
 ### Boundary Paths
 

@@ -175,6 +175,61 @@ public class ConsoleBridgeServerCommunicationTests
     }
 
     [Fact]
+    public void ClientSendCommand_UnterminatedLineAtEof_IsDiscarded()
+    {
+        var (server, (input, _)) = ConsoleBridgeTestInfrastructure.CreateStartedServer();
+        using var client = new TcpClient();
+        client.Connect(IPAddress.Loopback, server.ActualPort);
+        using var stream = client.GetStream();
+
+        // A valid command without its CR/LF terminator, followed by a
+        // half-close: the server must discard it instead of executing it.
+        var bytes = System.Text.Encoding.UTF8.GetBytes("snd_count");
+        stream.Write(bytes, 0, bytes.Length);
+        stream.Flush();
+        client.Client.Shutdown(SocketShutdown.Send);
+
+        // A graceful server close surfaces as a zero-byte read; a timeout means
+        // the connection stayed open.
+        stream.ReadTimeout = 2000;
+        var buffer = new byte[1];
+        Assert.Equal(0, stream.Read(buffer, 0, 1));
+        Assert.False(input.TryDequeueCommand(out var line),
+            $"An unterminated line must not be executed; got '{line}'.");
+
+        server.Dispose();
+    }
+
+    [Fact]
+    public void ClientSendCommand_TerminatedLineThenUnterminatedTail_ExecutesOnlyTerminated()
+    {
+        var (server, (input, _)) = ConsoleBridgeTestInfrastructure.CreateStartedServer();
+        using var client = new TcpClient();
+        client.Connect(IPAddress.Loopback, server.ActualPort);
+        using var stream = client.GetStream();
+
+        // One CRLF-framed command followed by an unterminated tail on the same
+        // connection: the half-close must dispatch exactly the framed line.
+        var bytes = System.Text.Encoding.UTF8.GetBytes("snd_count\r\nkill_all");
+        stream.Write(bytes, 0, bytes.Length);
+        stream.Flush();
+        client.Client.Shutdown(SocketShutdown.Send);
+
+        // A graceful server close surfaces as a zero-byte read; a timeout means
+        // the connection stayed open.
+        stream.ReadTimeout = 2000;
+        var buffer = new byte[1];
+        Assert.Equal(0, stream.Read(buffer, 0, 1));
+
+        Assert.True(input.TryDequeueCommand(out var line));
+        Assert.Equal("snd_count", line);
+        Assert.False(input.TryDequeueCommand(out var tail),
+            $"The unterminated tail must not be executed; got '{tail}'.");
+
+        server.Dispose();
+    }
+
+    [Fact]
     public void ClientSendCommand_Unicode_Arrives()
     {
         var (server, (input, _)) = ConsoleBridgeTestInfrastructure.CreateStartedServer();

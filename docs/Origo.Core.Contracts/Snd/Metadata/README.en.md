@@ -10,7 +10,7 @@ The data model for SND entity metadata. These models are pure data containers wi
 
 | File | Responsibility |
 |------|---------------|
-| `TypedData.cs` | Inline storage struct with type information (`readonly partial struct`), includes `RegisterKind()` method |
+| `TypedData.cs` | Inline storage struct with type information (`readonly partial struct`); the `internal` `RegisterKind()` method is called by generated module initializers |
 | `SndMetaFluentBuilder.cs` | SND entity metadata fluent builder; new builders emit recoverable Node/Strategy/Data sections by default and provide a fluent observer-binding API |
 | `SndInlineTypesAttribute.cs` | Assembly-level attribute declaring which types are stored inline in TypedData + optional `StartKind` offset |
 | `TypedDataLayeredRegistry.cs` | Multi-layer adapter extension points: KindResolver / FromObject / ToObject delegate chain registration |
@@ -27,8 +27,8 @@ The data model for SND entity metadata. These models are pure data containers wi
 public readonly partial struct TypedData : IEquatable<TypedData>
 {
     internal readonly byte _kind;   // Type discriminant value (0 = Null)
-    internal long _inlineBits;    // Value type inline storage (≤ 8 bytes)
-    internal object? _ref;        // Reference type or large value type fallback
+    internal readonly long _inlineBits;    // Value type inline storage (≤ 8 bytes)
+    internal readonly object? _ref;        // Reference type or large value type fallback
 
     public Type DataType { get; }
     public bool IsNull { get; }
@@ -37,7 +37,7 @@ public readonly partial struct TypedData : IEquatable<TypedData>
 
 The core type-preserving inline storage mechanism of the SND system. Value types (`int`, `float`, `bool`, etc.) are stored directly in the struct's `_inlineBits` field, with zero boxing and zero heap allocation. Reference types (`string`) are stored in the `_ref` field with no additional wrapping.
 
-`TypedData` is a partial struct enhanced by a Source Generator — compile-time generated code provides strongly-typed accessors for each registered type (`AsInt32()` / `TryGetSingle(out v)` etc.), explicit conversion operators, and generic factory classes (`TypedDataFactory<T>`). See [Origo.SourceGeneration](../../../Origo.SourceGeneration/README.en.md).
+`TypedData` is a partial struct enhanced by a Source Generator — compile-time generated code provides strongly-typed `TryGetXxx` accessors for each registered type (`TryGetSingle(out v)`, `TryGetString(out string?)`, etc.) and explicit conversion operators for the primitive kinds. The generated `TypedDataFactory<T>` and the `AsXxx()` accessors are `internal` framework plumbing that consumers cannot call. See [Origo.SourceGeneration](../../../Origo.SourceGeneration/README.en.md).
 
 Type discrimination is implemented via the `_kind` field. Discriminant value `0` is the `Null` sentinel (`default(TypedData)`). The `DataType` property returns the corresponding `System.Type` from the generated lookup table based on `_kind`.
 
@@ -56,8 +56,8 @@ At serialization boundaries (during deserialization), construction occurs throug
 
 **Recommended usage**:
 
-- Always use `TryGetXxx` / `TypedDataFactory<T>.TryExtract()` for value reads — the former is zero-boxing and does not route through `ToObject`'s switch dispatch.
-- Always use explicit operators (e.g., `(TypedData)42`) or `TypedDataFactory<T>.Create()` for construction.
+- Always use `TryGetXxx` for value reads — it is zero-boxing and does not route through `ToObject`'s switch dispatch.
+- Construct values through explicit operators for the registered primitive kinds (for example `(TypedData)42`), or through the typed storage APIs (`ISndDataAccess.SetData`, `IBlackboard.SetValue`, `SndMetaFluentBuilder`) for strings and other kinds. The generated `TypedDataFactory<T>` is `internal` framework plumbing and is not part of the consumer surface.
 - **Do not manually write kind dispatch or if-else chains to handle different TypedData types** — type discrimination logic is already encapsulated in generated code and `TypedDataObjectConverter`.
 
 ### SndMetaData
@@ -125,7 +125,7 @@ var watcher = new SndMetaFluentBuilder("Watcher")
     .Build();
 ```
 
-Typed Set methods include `SetInt`, `SetFloat`, `SetDouble`, `SetLong`, `SetBool`, `SetString`, and `SetBytes`. Every setter rejects a null, empty, or whitespace key with `ArgumentException`, matching `SetNode` and `AddObserverBinding`: a blank key cannot be retrieved later and would persist an unreachable value. `Build()` returns the completed `SndMetaData`.
+Typed Set methods include `SetInt`, `SetFloat`, `SetDouble`, `SetLong`, `SetBool`, `SetString`, and `SetBytes`. Every setter rejects a null, empty, or whitespace key with `ArgumentException`, matching `SetNode` and `AddObserverBinding`: a blank key cannot be retrieved later and would persist an unreachable value. `AddLifecycleStrategy` and `AddActiveStrategy` likewise reject a null or blank strategy index, because an unresolved index would otherwise fail only later during spawn or recovery. `Build()` returns the completed `SndMetaData`.
 
 ## Design Decisions
 
@@ -153,11 +153,11 @@ Entity Data values may be complex reference types (strings, arrays, nested objec
 
 ### Why TypedData does not expose an `object?` boxing accessor
 
-Returning value types like `int`/`float` as `object?` on the CLR **inevitably triggers a boxing allocation**. If TypedData exposed such a property, regardless of its name (`Data` or otherwise), it would become the most natural way for secondary developers to extract values from TypedData — because it "works for all types" without needing to learn generics or `TryGetXxx`. This is precisely the **backdoor** prohibited by §1.4: a fully-featured, simpler access path that obscures the existence of zero-boxing `TryGetXxx` / `TypedDataFactory<T>.TryExtract()`.
+Returning value types like `int`/`float` as `object?` on the CLR **inevitably triggers a boxing allocation**. If TypedData exposed such a property, regardless of its name (`Data` or otherwise), it would become the most natural way for secondary developers to extract values from TypedData — because it "works for all types" without needing to learn generics or `TryGetXxx`. This is precisely the **backdoor** prohibited by §1.4: a fully-featured, simpler access path that obscures the existence of zero-boxing `TryGetXxx`.
 
-TypedData deliberately does not expose a boxing accessor. There is only one path to extract a value: known type at compile time → `TryGetXxx` or `TypedDataFactory<T>.TryExtract()`, JIT-folded to zero-overhead field reads. Framework-internal cold paths that require type erasure (serialization, console debugging, `ToString`) are handled by `internal` `TypedDataObjectConverter.ToObject`, inaccessible to external code.
+TypedData deliberately does not expose a boxing accessor. There is only one consumer path to extract a value: known type at compile time → `TryGetXxx`, JIT-folded to zero-overhead field reads. Framework-internal cold paths that require type erasure (serialization, console debugging, `ToString`) are handled by `internal` `TypedDataObjectConverter.ToObject`, inaccessible to external code.
 
-Similarly, TypedData does not expose a `new TypedData(Type, object?)` universal constructor. There is only one path to construct: `TypedDataFactory<T>.Create()` or explicit operators (e.g., `(TypedData)42`), JIT-folded to zero-overhead field writes.
+Similarly, TypedData does not expose a `new TypedData(Type, object?)` universal constructor. Consumer construction goes through explicit operators for the primitive kinds (`(TypedData)42`) or the typed storage APIs; the generated `TypedDataFactory<T>` remains `internal` framework plumbing.
 
 ---
 

@@ -9,7 +9,8 @@
 Validates the storage layer contract of the Origo persistence system: "strict reads, explicit failures, two-phase writes."
 Covers `.write_in_progress` marker, level three-file-set integrity, missing `progress.json`,
 snapshot creation/read round-trip, path policy customization, idempotent deduplication, Payload model defaults,
-WellKnownKeys constants, SaveFileHandle path resolution and traversal protection, and the
+WellKnownKeys constants, SaveFileHandle path resolution and traversal protection, the
+legacy mixed-case level-directory migration failure on read, and the
 format-compatibility promise of the in-repository golden v1 save loaded through the shell entry.
 
 ## Test File List
@@ -18,6 +19,7 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 |------|-------------------|
 | `SaveStorageContractTests.cs` | Storage contract: marker, three-file-set, two-phase write, snapshot, meta.map, path policy |
 | `SaveStorageAndPayloadTests.cs` | Storage and Payload integration: write/read round-trip, LevelPayload write/read, snapshot atomicity, error recovery |
+| `SaveLegacyLevelMigrationTests.cs` | Full shell load path: `RequestLoadGame` on a snapshot with a legacy mixed-case level directory fails with the actionable migration error (no partial `current/` restore) and loads normally after the lowercase rename + topology rewrite |
 | `SaveIdempotencyTests.cs` | Idempotent deduplication: Payload SHA calculation, same/different payload write/skip, SHA file management |
 | `SavePathLayoutTests.cs` | Path layout: directory file path assembly under default policy and invalid parameter guards |
 | `SavePathPolicyContractTests.cs` | Path policy interface contract: ISavePathPolicy injection and policy-aware verification of all storage methods |
@@ -196,6 +198,7 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | `SnapshotCurrentToSave_OverwritingExistingSave_ReplacesContentAndLeavesNoBackup` | Overwriting existing save replaces content, no .bak/.tmp residue | ISaveStorageService |
 | `SaveStorageFacade_DeleteSave_RemovesSlotAndRemnants` | Deletes the real slot and cleans the matching `.tmp`/`.bak` remnants | ISaveStorageService.DeleteSave |
 | `SaveStorageFacade_DeleteSave_DoesNotTouchCurrentDirectory` | Deleting a slot leaves `current/` untouched | ISaveStorageService.DeleteSave |
+| `WriteSavePayloadToCurrentThenSnapshot_EmptyPayloadSaveId_UsesTargetId` | An empty payload SaveId lets the write target name the slot | ISaveStorageService.WriteSavePayloadToCurrentThenSnapshot |
 
 ### Error Path
 
@@ -208,6 +211,9 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | `SaveStorageFacade_ReadCurrent_MissingProgressStateMachines_Throws` | progress_state_machines.json missing | InvalidOperationException |
 | `SaveStorageFacade_ReadCurrent_MissingSessionStateMachines_Throws` | session_state_machines.json missing | InvalidOperationException |
 | `WriteToCurrent_WhenActiveLevelMissing_ThrowsWithoutWritingCurrent` | LevelPayload for ActiveLevelId missing | InvalidOperationException, no residue in current/ |
+| `WriteSavePayloadToCurrentThenSnapshot_SaveIdMismatch_ThrowsBeforeWriting` | Payload SaveId differs from the target save id | ArgumentException, no `current/` or snapshot written |
+| `DefaultSaveStorageService_WriteSavePayloadToCurrentThenSnapshot_SaveIdMismatch_Throws` | Same mismatch through the public default storage service | ArgumentException, no `current/` or snapshot written |
+| `WriteSavePayloadToCurrentThenSnapshot_EmptyTargetIdWithPayloadSaveId_Throws` | Payload states a SaveId but the write target id is empty | ArgumentException ("does not match"); target id must be non-empty, no `current/` or snapshot written |
 | `SaveStorageFacade_ReadCurrent_ActiveLevelPartial_MissingSession_Throws` | Active level missing session.json | InvalidOperationException |
 | `SaveStorageFacade_ReadCurrent_BackgroundLevelPartial_MissingStateMachines_Throws` | Background level missing session_state_machines.json | InvalidOperationException |
 | `SaveStorageFacade_ReadCurrent_WhenWriteMarkerExists_Throws` | .write_in_progress exists in current/ | InvalidOperationException |
@@ -257,6 +263,14 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | `SaveStorageFacade_SnapshotCurrentToSave_PreservesRootMarkerButCopiesArchiveMarker` | Root `.write_in_progress` plus `extra/.write_in_progress` | Root marker is not copied; archive file with the same name is preserved |
 | `WriteSavePayloadToCurrentThenSnapshot_WhenRenameFails_LogsErrorAndPreservesCurrent` | Adapter-style `IOException` during temp→final rename | Exception propagates, current/ remains, error is logged |
 
+## SaveLegacyLevelMigrationTests Details
+
+### Error Path
+
+| Test Method | Triggered Error | Expected Behavior |
+|-------------|----------------|-------------------|
+| `RequestLoadGame_LegacyMixedCaseLevelDirectory_ThrowsMigrationError_ThenLoadsAfterRename` | A real `save_legacy_slot/` was produced by the normal save path and then converted to the legacy shape (`level_MainMenu/` plus `__foreground__=MainMenu=false` topology) | `RequestLoadGame` + `FlushFrame` throws `InvalidOperationException` naming `MainMenu`/`level_MainMenu` and the lowercase rename (never a raw path-validation `ArgumentException`); the failure happens before the restore write, so no partially restored `current/` payload/marker exists. After renaming to `level_mainmenu` and rewriting the topology id, the same load succeeds with foreground level `mainmenu` and a restored `current/` |
+
 ## SavePayloadReaderDisposalTests Details
 
 ### Error Path
@@ -280,6 +294,7 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | `ComputePayloadHash_CustomMetaOrder_Independent` | CustomMeta key order does not affect Hash | SavePayloadWriter |
 | `ComputePayloadHash_CollidingMetaEncodings_DifferentHash` | Distinct maps with delimiter-like keys/values do not collide | SavePayloadWriter |
 | `ComputePayloadHash_UnpairedSurrogateMeta_ThrowsInsteadOfColliding` | A lone UTF-16 surrogate is rejected instead of hashing as U+FFFD | SavePayloadWriter |
+| `ComputePayloadHash_UnpairedSurrogateNodeText_ThrowsInsteadOfColliding` | Node text with a lone surrogate is rejected by canonical hashing instead of colliding with U+FFFD | DataSourceNode.ComputeSha256Hash |
 | `WriteSavePayloadToCurrentThenSnapshot_CollidingMeta_WritesMeta` | A colliding metadata shape is written, not idempotent-skipped | SaveStorageFacade |
 | `SaveStorageFacade_DeleteSave_BackupDeleteFailure_DoesNotResurrectSlot` | A failed backup delete leaves the real slot intact; the unremoved backup is not promoted while the real slot exists, so the deleted slot cannot be resurrected | SaveStorageFacade.DeleteSave |
 | `ComputePayloadHash_LevelOrder_Independent` | Levels dictionary key order does not affect Hash | SavePayloadWriter |
@@ -298,6 +313,9 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
 | `WriteSavePayloadToCurrentThenSnapshot_ShaReadError_PropagatesException` | SHA file read fails | InvalidOperationException (propagates original exception) |
+| `WriteSavePayloadToCurrentThenSnapshot_UnpairedSurrogateNodeText_ThrowsBeforeWriting` | Payload progress node text contains a lone UTF-16 surrogate | InvalidOperationException before any I/O; no `current/`, snapshot, or `.payload.sha` written |
+| `SaveStorageFacade_ReadFromSnapshot_LegacyMixedCaseLevelDirectory_ThrowsMigrationError` | Snapshot contains `level_Town/` alongside a valid `level_default/` | InvalidOperationException names `level_Town` and instructs the lowercase rename instead of a raw ArgumentException; after renaming to `level_town` the same snapshot reads successfully |
+| `SaveStorageFacade_ReadFromSnapshot_LegacyMixedCaseActiveLevelId_ThrowsMigrationError` | Active level id from the persisted topology is `Town` (legacy mixed case) | InvalidOperationException names `Town`/`level_Town` and instructs the rename; no parameter-validation ArgumentException |
 
 ### Boundary Path
 
@@ -441,10 +459,7 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | `CombineHashes_EmptySide_ProducesConsistentFormat` | Combining with an empty side still yields 64-char hex | SaveAtomicWriter |
 | `CombineHashes_SamePayload_EmptyAndNonEmptySide_DifferentResult` | Same payload hash, empty side vs non-empty side produce different results | SaveAtomicWriter |
 | `CombineHashes_WithExtra_DifferentFromPayloadHash` | Combined hash with extra differs from pure payload hash | SaveAtomicWriter |
-| `ComputeSideDirectoryHash_WithFiles_ReturnsNonEmpty` | Directory with files returns non-empty 64-char hex hash | SaveAtomicWriter |
-| `ComputeSideDirectoryHash_SameContent_SameHash` | Same content computed twice yields same hash | SaveAtomicWriter |
-| `ComputeSideDirectoryHash_DifferentContent_DifferentHash` | Content change yields different hash | SaveAtomicWriter |
-| `ComputeSideDirectoryHash_CustomDirectoryName_Works` | Custom directory name also produces a 64-char hex hash | SaveAtomicWriter |
+| `ComputeCombinedHash_ExtraFileContent_ProduceDifferentHashes` | Adding/changing an extra/ file changes the combined hash (production hash entry point) | SaveAtomicWriter.ComputeCombinedHash |
 | `ComputeCombinedHash_CustomExtraDirectory_IncludesExtraData` | A policy whose extra directory is `archive/` | Combined hash changes when `archive/` content changes |
 | `RestoreExtraFilesFromSnapshot_CustomExtraDirectory_UsesPolicy` | A policy whose extra directory is `archive/` | Snapshot `save_001/archive/` is restored to `current/archive/` |
 
@@ -455,9 +470,7 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | `CopyDirectoryFromSnapshot_SourceDirectoryDoesNotExist_ReturnsSilently` | No extra/ directory in snapshot | Returns silently, no exception |
 | `CopyDirectoryFromSnapshot_EmptySourceDirectory_DoesNothing` | extra/ is an empty directory | current/extra created but stays empty |
 | `RestoreExtraFilesFromSourceSnapshot_SourceWithoutExtra_ReturnsSilently` | Source snapshot has no extra/ directory | Returns silently; destination extra/ is not created |
-| `ComputeSideDirectoryHash_NoExtraDir_ReturnsEmpty` | No extra/ directory | Returns empty string |
-| `ComputeSideDirectoryHash_EmptyExtraDir_ReturnsEmpty` | extra/ directory exists but is empty | Returns empty string |
-| `ComputeSideDirectoryHash_CustomDirectory_Empty_ReturnsEmpty` | Custom directory is empty | Returns empty string |
+| `ComputeCombinedHash_NoExtraDirectoryAndEmptyExtraDirectory_ProduceSameHash` | No extra/ directory vs an empty extra/ directory | Same combined hash (both contribute an empty side hash) |
 
 ### Error Path
 

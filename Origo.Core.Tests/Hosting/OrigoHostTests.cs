@@ -77,10 +77,40 @@ public class OrigoHostTests
             AutoDiscoverStrategies = false,
         });
 
+        // Consumers may own the host through `using`; the existing Dispose()
+        // implementation is the interface implementation and keeps its
+        // idempotent/retryable semantics.
+        // Compile-time proof that the host facade implements IDisposable.
+        IDisposable disposable = host;
+        Assert.Same(host, disposable);
+
         host.Dispose();
         host.Dispose();
 
         Assert.Throws<InvalidOperationException>(() => host.Bootstrap());
+    }
+
+    [Fact]
+    public void OrigoHost_UsingScope_DisposesAndRemainsIdempotent()
+    {
+        var host = OrigoHost.Create(new OrigoHostOptions
+        {
+            Meta = new OrigoMeta("Tests", "1.0.0", "test"),
+            AutoDiscoverStrategies = false,
+        });
+
+        using (host)
+        {
+            Assert.NotNull(host.Runtime);
+            Assert.NotNull(host.Context);
+        }
+
+        // The using scope alone must have shut the host down: bootstrap is
+        // rejected and a second shutdown remains idempotent. No manual Dispose
+        // happens here, so this proves scope disposal rather than the explicit
+        // Dispose path.
+        Assert.Throws<InvalidOperationException>(() => host.Bootstrap());
+        host.Context.Shutdown();
     }
 
     [Fact]

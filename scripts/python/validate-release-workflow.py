@@ -35,6 +35,33 @@ tag-only command (no branch refspec, extra refspec, prefix command, or plain
 push), requires exactly one such push, requires the provenance and source-archive
 validators in order before it, and pins the release action's target_commitish so
 a missing tag can never be created at the default branch.
+
+Required-execution rules are structural: a required command only counts when a
+non-comment shell line actually runs it. `echo`, `true`, comments, and
+`<command> || true` masking therefore cannot satisfy a rule. The release job
+must stage the trusted validators with the exact reviewed
+`git show refs/remotes/origin/main:... > ...` lines; any tag-tree copy into
+`.release-validators/` is rejected. The weekly completeness assertion must be a
+code line starting with `[[` and ending with `]]`; comment-, `|| true`- or
+`true`-stamped marker text is rejected.
+
+Required-execution lines must also be plain: a required step must use the
+default/Bash shell, must not set `if:` or `continue-on-error:`, must not hide
+commands in a heredoc, an always-false branch, a nested control-flow block, a
+function definition, or a chained `&&`/`||` line, and a matched command line must
+not contain unquoted control operators or command substitution. Writes into `.release-validators/` are only allowed through the
+exact reviewed staging lines; copy, extraction, shell `-c`, and redirect forms
+are rejected. Job-level `if:`/`continue-on-error:` is rejected on the release
+job and on weekly jobs that carry required steps. Required trusted-validator
+invocations must be exactly `bash <reviewed path>` (no shell flags, `sh`,
+`source`, or `.`), and reads of `.release-validators/` may not move the working
+directory into it or reference it through variable indirection. Weekly marker and
+completeness checks ignore heredoc bodies and require the completeness assertion
+before any early `exit 0`. The release and weekly completion steps pin their
+required gate sets, ordering, step conditions, and the artifact validator argv. Like the rest
+of the guard this is a regression tripwire over run text, not a security
+boundary: scripts, tag trees, environment indirection, and dynamically
+constructed commands remain outside its reach.
 """
 
 from __future__ import annotations
@@ -56,6 +83,11 @@ WEEKLY_TAG_PUSH = 'git push origin "refs/tags/${TAG}"'
 WEEKLY_TAG_ASSIGNMENT = 'TAG="${{ steps.check.outputs.tag }}"'
 # The weekly bump step may only run these commands. A new command needs a
 # deliberate review and an entry here; in particular, a branch push is absent.
+WEEKLY_BUMP_CONDITION = "steps.check.outputs.new_version != ''"
+WEEKLY_DISPATCH_CONDITION = (
+    "steps.check.outputs.new_version != '' || "
+    "steps.check.outputs.dispatch_existing == 'true'"
+)
 WEEKLY_BUMP_PREFIXES = (
     "python3 scripts/python/write-version-stamp.py ",
     "git config ",
@@ -84,6 +116,57 @@ RELEASE_JOB_ACTIONS = {
     RELEASE_ACTION,
 }
 
+# Trusted validators are fetched from reviewed main and staged at the exact
+# paths their repository-root resolution expects.
+VALIDATOR_STAGING = {
+    "verify-release-provenance.sh": ".release-validators/verify-release-provenance.sh",
+    "validate-release-source.sh": ".release-validators/validate-release-source.sh",
+    "verify-release.sh": ".release-validators/scripts/verify-release.sh",
+    "validate-release-artifacts.sh": ".release-validators/validate-release-artifacts.sh",
+}
+STAGING_COMMAND = (
+    "git show refs/remotes/origin/main:scripts/bash/{validator} > {destination}"
+)
+RELEASE_PACK_PROJECTS = (
+    "Origo.Core.Contracts/Origo.Core.Contracts.csproj",
+    "Origo.Core.Kernel/Origo.Core.Kernel.csproj",
+    "Origo.Core/Origo.Core.csproj",
+    "Origo.GodotAdapter/Origo.GodotAdapter.csproj",
+    "Origo.ConsoleBridge/Origo.ConsoleBridge.csproj",
+)
+PACKAGE_VALIDATOR = "scripts/bash/validate-release-packages.sh"
+GODOT_JOB = "godot-integration-tests"
+RELEASE_SNAPSHOT_MARK_STEP = "Mark snapshot release as pre-release"
+# The snapshot marker is identified by its reviewed contents, not just its name.
+RELEASE_SNAPSHOT_MARK_IF = (
+    "${{ inputs.snapshot || contains(steps.resolve-tag.outputs.tag, '-') }}"
+)
+RELEASE_SNAPSHOT_MARK_RUN = 'gh release edit "${TAG}" --prerelease'
+# Gate scripts that must run in the release job before the tag moves.
+RELEASE_GATE_SCRIPTS = (
+    ("format gate", "scripts/bash/format.sh"),
+    ("test gate", "scripts/bash/test.sh"),
+    ("benchmark gate", "scripts/bash/benchmark.sh"),
+    ("package consumer smoke", "scripts/bash/package-consumer-smoke.sh"),
+)
+# The artifact-set validator is staged from reviewed main because old release
+# tags predate it; the tag tree must never be the source of that validator.
+ARTIFACTS_VALIDATOR = ".release-validators/validate-release-artifacts.sh"
+ARTIFACTS_VALIDATOR_TAG_TREE = "scripts/bash/validate-release-artifacts.sh"
+ARTIFACTS_VALIDATOR_ARGV = (
+    "bash", ARTIFACTS_VALIDATOR, "./artifacts", "${TAG#v}",
+)
+ARTIFACTS_STEP_PRELUDE_RE = re.compile(
+    r"^(?:set\s|export\s|[A-Za-z_][A-Za-z0-9_]*=)"
+)
+WRITE_COMMANDS = frozenset({
+    "cp", "install", "mv", "rsync", "ln", "tee", "dd", "cat", "sed", "perl",
+    "python", "python3", "find", "git", "curl", "wget", "tar", "unzip",
+    "touch", "truncate",
+})
+SHELL_COMMANDS = frozenset({"bash", "sh", "dash", "zsh"})
+ARTIFACTS_WRITE_COMMANDS = WRITE_COMMANDS | {"rm", "unlink", "shred"}
+
 
 def fail(message: str) -> None:
     print(f"ERROR: {message}", file=sys.stderr)
@@ -106,21 +189,791 @@ def _env_references_wrong_ref(env: object) -> bool:
     return any(_references_wrong_ref(str(value)) for value in env.values())
 
 
-def _calls_version_helper(run: str) -> bool:
-    """True when a non-comment line really invokes the helper."""
-    pattern = re.compile(
-        r"^(?:sudo\s+(?:-\S+\s+)*)?(?:env\s+)?"
-        r"(?:[A-Za-z_][A-Za-z0-9_]*=\S+\s+)*"
-        r"python3\s+(?:-\S+\s+)*(?:\./|\"\$PWD/|\$PWD/)?"
-        r"scripts/python/write-version-stamp\.py(?:\"|\s|$)"
-    )
-    for line in run.splitlines():
-        stripped = line.strip()
-        if stripped.startswith("#") or "||" in stripped:
+_ASSIGNMENT_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*=")
+
+
+def _strip_shell_comment(line: str) -> str:
+    """Remove a shell comment from one line, respecting simple quoting."""
+    quote = ""
+    for index, char in enumerate(line):
+        if quote:
+            if char == quote:
+                quote = ""
             continue
-        if pattern.match(stripped):
+        if char in ('"', "'"):
+            quote = char
+            continue
+        if char == "#" and (index == 0 or line[index - 1].isspace()):
+            return line[:index].rstrip()
+    return line
+
+
+def _active_lines(text: str) -> list[str]:
+    """Return shell lines that can execute, with comments removed.
+
+    Backslash continuations are joined exactly like the shell joins them, so a
+    required command is only ever satisfied by code that runs. Inline comments
+    are stripped as well, so a marker or argument hidden after ``#`` cannot
+    satisfy a rule. Lines containing ``||`` are returned here and filtered by
+    :func:`_runs_command`, because ``<command> || true`` must not satisfy a
+    required-execution rule.
+    """
+    joined = text.replace("\\\n", " ").replace("\\\r", " ")
+    lines: list[str] = []
+    for raw_line in joined.splitlines():
+        line = _strip_shell_comment(raw_line.strip())
+        if not line:
+            continue
+        lines.append(line)
+    return lines
+
+
+def _active_text(text: str) -> str:
+    """Comment-free, continuation-joined view used for marker checks."""
+    return "\n".join(_active_lines(text))
+
+
+_HEREDOC_DELIMITER_CHARS = frozenset(
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-"
+)
+
+
+def _heredoc_delimiters(line: str) -> list[str]:
+    """Return every heredoc delimiter introduced by one shell line.
+
+    Handles ``<<EOF``, ``<<-EOF``, ``<<'EOF-1'``, ``<<"EOF"``, ``<<\\EOF``,
+    and multiple heredocs on one line. Quote and command-substitution context is
+    tracked, so a heredoc inside ``"$(...)"`` (the weekly window helper) is
+    still recognized while operators inside quoted text are ignored.
+    """
+    delimiters: list[str] = []
+    contexts: list[str] = []
+    index = 0
+    while index < len(line):
+        char = line[index]
+        context = contexts[-1] if contexts else None
+        if context == "single":
+            if char == "'":
+                contexts.pop()
+            index += 1
+            continue
+        if context == "double":
+            if char == '"':
+                contexts.pop()
+            elif line.startswith("$(", index):
+                contexts.append("subshell")
+                index += 2
+                continue
+            index += 1
+            continue
+        if char in ('"', "'"):
+            contexts.append("single" if char == "'" else "double")
+            index += 1
+            continue
+        if line.startswith("$(", index):
+            contexts.append("subshell")
+            index += 2
+            continue
+        if char == ")" and context == "subshell":
+            contexts.pop()
+            index += 1
+            continue
+        if not line.startswith("<<", index):
+            index += 1
+            continue
+        cursor = index + 2
+        if cursor < len(line) and line[cursor] == "-":
+            cursor += 1
+        while cursor < len(line) and line[cursor] in " \t":
+            cursor += 1
+        if cursor < len(line) and line[cursor] in ('"', "'"):
+            closing = line.find(line[cursor], cursor + 1)
+            if closing < 0:
+                break
+            delimiters.append(line[cursor + 1 : closing])
+            index = closing + 1
+            continue
+        if cursor < len(line) and line[cursor] == "\\":
+            cursor += 1
+        start = cursor
+        while cursor < len(line) and line[cursor] in _HEREDOC_DELIMITER_CHARS:
+            cursor += 1
+        if cursor > start:
+            delimiters.append(line[start:cursor])
+            index = cursor
+            continue
+        index += 2
+    return delimiters
+
+
+def _strip_heredocs(text: str) -> str:
+    """Drop heredoc bodies so marker checks cannot read inert script text."""
+    kept: list[str] = []
+    pending: list[str] = []
+    for raw_line in text.splitlines():
+        stripped = raw_line.strip()
+        if pending:
+            if stripped == pending[0]:
+                pending.pop(0)
+            continue
+        kept.append(raw_line)
+        if stripped.startswith("#"):
+            continue
+        pending.extend(_heredoc_delimiters(raw_line))
+    return "\n".join(kept)
+
+
+def _command_tokens(line: str) -> list[str] | None:
+    """Tokenize a code line, stripping ``sudo``/``env``/assignment prefixes."""
+    try:
+        tokens = shlex.split(line, posix=True)
+    except ValueError:
+        return None
+    index = 0
+    while index < len(tokens):
+        token = tokens[index]
+        if token == "sudo":
+            index += 1
+            while index < len(tokens) and tokens[index].startswith("-"):
+                index += 1
+            continue
+        if token == "timeout":
+            index += 1
+            # Skip the duration argument of `timeout <duration> <command>`.
+            if index < len(tokens) and not tokens[index].startswith("-"):
+                index += 1
+            continue
+        if token == "env":
+            index += 1
+            while index < len(tokens) and (
+                tokens[index].startswith("-") or _ASSIGNMENT_RE.match(tokens[index])
+            ):
+                index += 1
+            continue
+        if _ASSIGNMENT_RE.match(token):
+            index += 1
+            continue
+        break
+    return tokens[index:] or None
+
+
+def _runs_command(line: str) -> list[str] | None:
+    """Return the argv of an executing line, or ``None`` when masked/empty."""
+    if "||" in line:
+        return None
+    return _command_tokens(line)
+
+
+def _active_commands(text: str) -> list[tuple[str, list[str]]]:
+    """Return ``(line, argv)`` pairs for non-comment, unmasked commands."""
+    commands: list[tuple[str, list[str]]] = []
+    for line in _active_lines(text):
+        tokens = _runs_command(line)
+        if tokens:
+            commands.append((line, tokens))
+    return commands
+
+
+def _unquoted_shell_metachars(line: str) -> str:
+    """Return shell metacharacters that can chain, mask, or substitute.
+
+    ``;``, ``&``, ``|``, backticks, ``$(``, ``<(``, and ``<<`` are detected
+    outside single quotes. Inside double quotes the shell still performs
+    command substitution and backtick expansion, so ``$(`` and backticks are
+    rejected there as well.
+    """
+    quote = ""
+    found: list[str] = []
+    index = 0
+    while index < len(line):
+        char = line[index]
+        if quote == "'":
+            if char == "'":
+                quote = ""
+            index += 1
+            continue
+        if quote == '"':
+            if char == '"':
+                quote = ""
+            elif char == "`":
+                found.append("`")
+            elif char == "$" and index + 1 < len(line) and line[index + 1] == "(":
+                found.append("$(")
+                index += 1
+            index += 1
+            continue
+        if char in ('"', "'"):
+            quote = char
+            index += 1
+            continue
+        if char in ";&|`":
+            found.append(char)
+        elif char == "$" and index + 1 < len(line) and line[index + 1] == "(":
+            found.append("$(")
+            index += 1
+        elif char == "<" and index + 1 < len(line) and line[index + 1] in "(<":
+            found.append(line[index : index + 2])
+            index += 1
+        index += 1
+    return "".join(found)
+
+
+def _is_direct_execution(line: str) -> bool:
+    """True when a line runs one command without chaining/substitution masking."""
+    return not _unquoted_shell_metachars(line)
+
+
+def _direct_commands(text: str) -> list[tuple[str, list[str]]]:
+    """Return commands that are direct, single-command lines."""
+    return [
+        (line, tokens)
+        for line, tokens in _active_commands(text)
+        if _is_direct_execution(line)
+    ]
+
+
+def _step_conditional_errors(step: dict, label: str) -> list[str]:
+    """Reject YAML conditionals on a step the guard requires to run."""
+    errors: list[str] = []
+    if "if" in step:
+        errors.append(
+            f"{label} must not set 'if:' because the guard requires it to run "
+            "unconditionally."
+        )
+    if "continue-on-error" in step:
+        errors.append(
+            f"{label} must not set 'continue-on-error:' because a failed required "
+            "step would otherwise be masked."
+        )
+    return errors
+
+
+_FUNCTION_DEFINITION_RE = re.compile(
+    r"^(?:function\s+[A-Za-z_][A-Za-z0-9_]*\s*(?:\(\s*\))?"
+    r"|[A-Za-z_][A-Za-z0-9_]*\s*\(\s*\))\s*\{"
+)
+_AFTER_REQUIRED_ALLOWED_COMMANDS = frozenset({"echo", "printf", "grep", "set"})
+
+
+def _step_hiding_errors(run: str, label: str) -> list[str]:
+    """Reject shell constructs that would stop a matched command from running."""
+    errors: list[str] = []
+    for line in _active_lines(run):
+        if "<<" in line:
+            errors.append(
+                f"{label} must not hide required commands in a heredoc: {line!r}."
+            )
+            continue
+        if "<#" in line or "#>" in line:
+            errors.append(
+                f"{label} must not hide required commands in a PowerShell "
+                f"block comment: {line!r}."
+            )
+            continue
+        if re.match(r"if\s+(?:false\b|\[\s*false\s*\])", line):
+            errors.append(
+                f"{label} must not hide required commands in an always-false "
+                f"branch: {line!r}."
+            )
+            continue
+        if _FUNCTION_DEFINITION_RE.match(line):
+            errors.append(
+                f"{label} must not wrap required commands in a function "
+                f"definition: {line!r}."
+            )
+            continue
+        if line.endswith(("&&", "||")) or line.startswith(("&&", "||", ";", "&")):
+            errors.append(
+                f"{label} must not chain a required step into a conditional "
+                f"fragment: {line!r}."
+            )
+    return errors
+
+
+_CONTROL_FLOW_OPENERS = frozenset({"if", "for", "while", "until", "case", "select"})
+_CONTROL_FLOW_CLOSERS = frozenset({"fi", "done", "esac"})
+_SHORT_CIRCUIT_COMMANDS = frozenset({"exit", "return", "trap", "exec"})
+
+
+def _default_shell_errors(step: dict, label: str) -> list[str]:
+    """Reject a non-default/non-Bash shell on a step the guard requires."""
+    shell = step.get("shell")
+    if shell is None:
+        return []
+    if str(shell).strip() == "bash":
+        return []
+    return [
+        f"{label} must use the default/Bash shell, not shell: {shell!r}, because "
+        "the guard inspects its run text as shell."
+    ]
+
+
+def _disables_errexit(tokens: list[str]) -> bool:
+    """True for ``set +e`` and ``set +o errexit``/``set +o pipefail`` forms."""
+    if not tokens or tokens[0] != "set":
+        return False
+    arguments = tokens[1:]
+    for position, argument in enumerate(arguments):
+        if argument.startswith("+") and "e" in argument:
+            return True
+        if (
+            argument == "+o"
+            and position + 1 < len(arguments)
+            and arguments[position + 1] in {"errexit", "pipefail"}
+        ):
             return True
     return False
+
+
+def _required_execution_status_errors(
+    step: dict, run: str, label: str, required_lines: set[str]
+) -> list[str]:
+    """Require a trustworthy exit status around the required command.
+
+    The GitHub Bash shell runs with ``-e -o pipefail`` by default, so an
+    explicit ``set -e`` is not required; disabling errexit is. The required
+    command must also be the last executable line (only display/set prelude is
+    allowed after it), so a trailing ``true`` cannot mask a failed gate.
+    """
+    errors: list[str] = []
+    lines = _active_lines(run)
+    for line in lines:
+        tokens = _command_tokens(line) or []
+        if _disables_errexit(tokens):
+            errors.append(f"{label} must not disable errexit: {line!r}.")
+    required_indices = [
+        index for index, line in enumerate(lines) if line in required_lines
+    ]
+    if not required_indices:
+        return errors
+    last_required = required_indices[-1]
+    for line in lines[last_required + 1 :]:
+        tokens = _command_tokens(line) or []
+        first = tokens[0] if tokens else ""
+        if first in _AFTER_REQUIRED_ALLOWED_COMMANDS:
+            continue
+        errors.append(
+            f"{label} must not run commands after its required command: "
+            f"{line!r}."
+        )
+    return errors
+
+
+def _is_success_exit(tokens: list[str]) -> bool:
+    """True when an exit/return line can report success to the step."""
+    if not tokens:
+        return False
+    if tokens[0] not in {"exit", "return"}:
+        return False
+    arguments = tokens[1:]
+    if not arguments:
+        return True
+    status = arguments[0]
+    if status == "0":
+        return True
+    if status.startswith(("$", "`")):
+        return True
+    return not re.fullmatch(r"[1-9][0-9]*", status)
+
+
+def _brace_depths(lines: list[str]) -> list[int]:
+    """Track only function/brace/subshell depth, not if/for keyword depth."""
+    depths: list[int] = []
+    depth = 0
+    for line in lines:
+        tokens = _command_tokens(line) or []
+        first = tokens[0] if tokens else ""
+        stripped = line.rstrip()
+        closes = first in {"}", ")"}
+        if closes:
+            depth = max(0, depth - 1)
+        depths.append(depth)
+        opens = (
+            first in {"{", "("}
+            or stripped.endswith(("{", "("))
+            or _FUNCTION_DEFINITION_RE.match(line) is not None
+        )
+        if opens:
+            depth += 1
+    return depths
+
+
+def _required_flow_errors(
+    run: str, label: str, required_lines: set[str], allow_conditional_exit_zero: bool = False
+) -> list[str]:
+    """Reject short-circuiting or nesting that makes a required line inert."""
+    errors: list[str] = []
+    lines = _active_lines(run)
+    if not required_lines:
+        return errors
+    depths: list[int] = []
+    depth = 0
+    for line in lines:
+        tokens = _command_tokens(line) or []
+        first = tokens[0] if tokens else ""
+        stripped = line.rstrip()
+        opens_block = (
+            first in _CONTROL_FLOW_OPENERS
+            or first in {"{", "("}
+            or stripped.endswith(("{", "("))
+            or _FUNCTION_DEFINITION_RE.match(line) is not None
+        )
+        closes_block = first in _CONTROL_FLOW_CLOSERS or first in {"}", ")"}
+        if closes_block:
+            depth = max(0, depth - 1)
+        depths.append(depth)
+        if opens_block:
+            depth += 1
+    required_indices = [index for index, line in enumerate(lines) if line in required_lines]
+    if not required_indices:
+        errors.append(
+            f"{label} must contain a required command the guard can locate."
+        )
+        return errors
+    first_required = required_indices[0]
+    for index, line in enumerate(lines):
+        tokens = _command_tokens(line) or []
+        first = tokens[0] if tokens else ""
+        if first == "trap":
+            errors.append(
+                f"{label} must not install a trap in a required step: {line!r}."
+            )
+            continue
+        if (
+            first in {"exit", "return"}
+            and index < first_required
+            and tokens[1:2] in (["0"], [])
+            and not (allow_conditional_exit_zero and depths[index] > 0)
+        ):
+            errors.append(
+                f"{label} must not return success before its required command: "
+                f"{line!r}."
+            )
+            continue
+        if line in required_lines:
+            if depths[index] > 0:
+                errors.append(
+                    f"{label} required command must not be inside a control-flow "
+                    f"block: {line!r}."
+                )
+            continue
+        if (
+            index < first_required
+            and depths[index] == 0
+            and first in _SHORT_CIRCUIT_COMMANDS
+        ):
+            errors.append(
+                f"{label} must not short-circuit before its required command: "
+                f"{line!r}."
+            )
+    return errors
+
+
+def _line_runs_bash_script(tokens: list[str], script: str) -> bool:
+    if tokens[0] not in {"bash", "sh"}:
+        return False
+    index = 1
+    while index < len(tokens) and tokens[index].startswith("-"):
+        index += 1
+    return index < len(tokens) and tokens[index] == script
+
+
+def _line_runs_reviewed_script(tokens: list[str], script: str) -> bool:
+    return tokens[:2] == ["bash", script]
+
+
+def _line_calls_version_helper(tokens: list[str]) -> bool:
+    helper_paths = {
+        "scripts/python/write-version-stamp.py",
+        "./scripts/python/write-version-stamp.py",
+        "$PWD/scripts/python/write-version-stamp.py",
+    }
+    if tokens[0] not in {"python3", "python"}:
+        return False
+    index = 1
+    while index < len(tokens) and tokens[index].startswith("-"):
+        index += 1
+    return index < len(tokens) and tokens[index] in helper_paths
+
+
+def _line_calls_dotnet_pack(tokens: list[str], project: str) -> bool:
+    return tokens[:3] == ["dotnet", "pack", project]
+
+
+def _line_copies_nuget_config(tokens: list[str]) -> bool:
+    return tokens[:2] == ["cp", "nuget.config.example"]
+
+
+def _line_builds_source_archive(tokens: list[str]) -> bool:
+    return (
+        tokens[:2] == ["git", "archive"]
+        and any("origo-source-${VERSION}.tar.gz" in token for token in tokens)
+    )
+
+
+def _line_packages_documentation_archive(tokens: list[str]) -> bool:
+    return (
+        tokens[:2] == ["tar", "-czf"]
+        and any(token.endswith("${DIRNAME}.tar.gz") for token in tokens)
+    ) or (
+        tokens[:2] == ["zip", "-rq"]
+        and any(token.endswith("${DIRNAME}.zip") for token in tokens)
+    )
+
+
+def _line_is_apt_install(tokens: list[str]) -> bool:
+    return tokens and tokens[0] == "apt-get" and "install" in tokens
+
+
+def _line_is_tag_push(tokens: list[str]) -> bool:
+    return tokens == [
+        "git",
+        "push",
+        "--force-with-lease=refs/tags/${TAG}:${BASE_SHA}",
+        "origin",
+        "refs/tags/${TAG}",
+    ]
+
+
+def _artifact_validation_step_errors(step: dict, label: str) -> list[str]:
+    """Require exactly the reviewed artifact validator invocation plus prelude."""
+    errors: list[str] = []
+    run = str(step.get("run") or "")
+    commands = _active_commands(run)
+    validator_commands = [
+        (line, tokens)
+        for line, tokens in commands
+        if tokens[:2] == ["bash", ARTIFACTS_VALIDATOR]
+    ]
+    if len(validator_commands) != 1:
+        errors.append(
+            f"{label} must run the artifact-set validator exactly once."
+        )
+    else:
+        line, tokens = validator_commands[0]
+        if tuple(tokens) != ARTIFACTS_VALIDATOR_ARGV:
+            errors.append(
+                f"{label} must run exactly 'bash {ARTIFACTS_VALIDATOR} "
+                "./artifacts \"${TAG#v}\"'; got {line!r}."
+            )
+    validator_line = validator_commands[0][0] if len(validator_commands) == 1 else None
+    seen_validator = False
+    for line in _active_lines(run):
+        if validator_line is not None and line == validator_line:
+            seen_validator = True
+            continue
+        if seen_validator:
+            errors.append(
+                f"{label} must not run commands after the artifact-set "
+                f"validator: {line!r}."
+            )
+            continue
+        tokens = _command_tokens(line) or []
+        if _disables_errexit(tokens):
+            errors.append(f"{label} must not disable errexit: {line!r}.")
+            continue
+        if not ARTIFACTS_STEP_PRELUDE_RE.match(line):
+            errors.append(
+                f"{label} may only contain prelude lines before the exact "
+                f"artifact-set validator command: {line!r}."
+            )
+    return errors
+
+
+def _artifacts_write_errors(
+    steps: list, artifacts_index: int, limit_index: int | None
+) -> list[str]:
+    """Reject artifact-directory writes after the artifact-set validation."""
+    errors: list[str] = []
+    limit = limit_index if limit_index is not None else len(steps)
+    for index in range(artifacts_index + 1, limit):
+        step = steps[index]
+        if not isinstance(step, dict):
+            continue
+        label = str(step.get("name") or f"release.steps[{index}]")
+        for line in _active_lines(str(step.get("run") or "")):
+            tokens = _command_tokens(line) or []
+            command = tokens[0].rsplit("/", 1)[-1] if tokens else ""
+            mentions_artifacts = any(
+                "./artifacts" in token or "artifacts/" in token for token in tokens
+            ) or "./artifacts" in line
+            if not mentions_artifacts:
+                continue
+            writer = command in ARTIFACTS_WRITE_COMMANDS or any(
+                token.rsplit("/", 1)[-1] in ARTIFACTS_WRITE_COMMANDS
+                for token in tokens[1:]
+            )
+            if writer or ">" in line:
+                errors.append(
+                    f"{label} must not write the artifacts directory after the "
+                    f"artifact-set validation: {line!r}."
+                )
+    return errors
+
+
+def _cleanup_relative_target(target: str) -> str:
+    """Normalize a cd/pushd target for the .release-validators prefix check."""
+    normalized = target.rstrip("/")
+    for prefix in ("./", "$PWD/", "${PWD}/"):
+        if normalized.startswith(prefix):
+            normalized = normalized[len(prefix):]
+    return normalized
+
+
+def _release_validators_write_errors(steps: list, allowed_lines: set[str]) -> list[str]:
+    """Reject any write into .release-validators outside the reviewed staging.
+
+    A ``cd``/``pushd`` into ``.release-validators`` is rejected outright, and the
+    working-directory state is tracked so a later relative redirect or copy
+    cannot write there without an absolute path in the line.
+    """
+    errors: list[str] = []
+    for index, step in enumerate(steps):
+        if not isinstance(step, dict):
+            continue
+        label = str(step.get("name") or f"release.steps[{index}]")
+        inside_validators = False
+        for line in _active_lines(str(step.get("run") or "")):
+            tokens = _command_tokens(line) or []
+            command = tokens[0].rsplit("/", 1)[-1] if tokens else ""
+            if command in {"cd", "pushd"}:
+                targets = [token for token in tokens[1:] if not token.startswith("-")]
+                target = _cleanup_relative_target(targets[0]) if targets else ""
+                if target == ".release-validators" or target.startswith(
+                    ".release-validators/"
+                ):
+                    errors.append(
+                        f"{label} must not change directory into "
+                        f".release-validators: {line!r}."
+                    )
+                    inside_validators = True
+                else:
+                    inside_validators = False
+                continue
+            if command == "popd":
+                inside_validators = False
+                continue
+            if inside_validators:
+                metachars = _unquoted_shell_metachars(line)
+                writer = command in WRITE_COMMANDS or any(
+                    token.rsplit("/", 1)[-1] in WRITE_COMMANDS
+                    for token in (tokens or [])[1:]
+                )
+                if metachars or writer or ">" in line:
+                    errors.append(
+                        f"{label} must not write .release-validators from a "
+                        f"changed working directory: {line!r}."
+                    )
+                continue
+            if ".release-validators" not in line:
+                continue
+            if line in allowed_lines:
+                continue
+            metachars = _unquoted_shell_metachars(line)
+            if metachars:
+                errors.append(
+                    f"{label} must not write .release-validators through shell "
+                    f"masking ({metachars}): {line!r}."
+                )
+                continue
+            shell_dash_c = command in SHELL_COMMANDS and any(
+                token.startswith("-") and "c" in token.lstrip("-")
+                for token in tokens[1:]
+            )
+            writer = command in WRITE_COMMANDS or any(
+                token.rsplit("/", 1)[-1] in WRITE_COMMANDS for token in tokens[1:]
+            )
+            if command == "eval" or shell_dash_c:
+                errors.append(
+                    f"{label} must not write .release-validators through "
+                    f"'{command}' evaluation: {line!r}."
+                )
+                continue
+            if writer:
+                errors.append(
+                    f"{label} must not write .release-validators with "
+                    f"'{command}': {line!r}."
+                )
+                continue
+            if ">" in line:
+                errors.append(
+                    f"{label} must write .release-validators only through the "
+                    f"reviewed git-show staging lines: {line!r}."
+                )
+            elif not (
+                line.startswith("bash .release-validators/")
+                or line.startswith("mkdir -p .release-validators/")
+            ):
+                errors.append(
+                    f"{label} must not reference .release-validators outside "
+                    "the reviewed staging lines and exact invocations: "
+                    f"{line!r}."
+                )
+    return errors
+
+
+def _calls_version_helper(run: str) -> bool:
+    """True when a non-comment, unmasked line really invokes the helper."""
+    helper_paths = {
+        "scripts/python/write-version-stamp.py",
+        "./scripts/python/write-version-stamp.py",
+        "$PWD/scripts/python/write-version-stamp.py",
+    }
+    for _, tokens in _direct_commands(run):
+        if tokens[0] not in {"python3", "python"}:
+            continue
+        index = 1
+        while index < len(tokens) and tokens[index].startswith("-"):
+            index += 1
+        if index < len(tokens) and tokens[index] in helper_paths:
+            return True
+    return False
+
+
+def _calls_dotnet_pack(run: str, project: str) -> bool:
+    return any(
+        tokens[:3] == ["dotnet", "pack", project]
+        for _, tokens in _direct_commands(run)
+    )
+
+
+def _copies_directory_build_props(run: str) -> bool:
+    return any(
+        tokens[:2] == ["cp", "Directory.Build.props"]
+        for _, tokens in _direct_commands(run)
+    )
+
+
+def _packages_documentation_snapshot(run: str) -> bool:
+    tar_ok = any(
+        tokens[:2] == ["tar", "-czf"]
+        and any(token.endswith("${DIRNAME}.tar.gz") for token in tokens)
+        for _, tokens in _direct_commands(run)
+    )
+    zip_ok = any(
+        tokens[:2] == ["zip", "-rq"]
+        and any(token.endswith("${DIRNAME}.zip") for token in tokens)
+        for _, tokens in _direct_commands(run)
+    )
+    dirname_ok = any(
+        line.startswith('DIRNAME="origo-docs-${VERSION}"') for line in _active_lines(run)
+    )
+    return tar_ok and zip_ok and dirname_ok
+
+
+def _builds_source_archive(run: str) -> bool:
+    return any(
+        tokens[:2] == ["git", "archive"]
+        and any("origo-source-${VERSION}.tar.gz" in token for token in tokens)
+        for _, tokens in _direct_commands(run)
+    )
+
+
+def _copies_nuget_config(run: str) -> bool:
+    return any(
+        tokens[:2] == ["cp", "nuget.config.example"]
+        for _, tokens in _direct_commands(run)
+    )
 
 
 def _release_push_errors(release_steps: list) -> list[str]:
@@ -174,13 +1027,14 @@ def _release_push_errors(release_steps: list) -> list[str]:
 
 
 def _calls_bash_script(run: str, script: str) -> bool:
-    """True when a non-comment line starts with ``bash <script>``."""
-    pattern = re.compile(rf"^bash\s+{re.escape(script)}(?:\s|$)")
-    for line in run.splitlines():
-        stripped = line.strip()
-        if stripped.startswith("#") or "||" in stripped:
+    """True when a non-comment, unmasked line runs ``bash <script>``."""
+    for _, tokens in _direct_commands(run):
+        if tokens[0] not in {"bash", "sh"}:
             continue
-        if pattern.match(stripped):
+        index = 1
+        while index < len(tokens) and tokens[index].startswith("-"):
+            index += 1
+        if index < len(tokens) and tokens[index] == script:
             return True
     return False
 
@@ -190,6 +1044,22 @@ def _step_index_with_run(release_steps: list, script: str) -> int | None:
         if not isinstance(step, dict):
             continue
         if _calls_bash_script(str(step.get("run") or ""), script):
+            return index
+    return None
+
+
+def _runs_reviewed_script(text: str, script: str) -> bool:
+    """True when an unmasked line runs exactly ``bash <script>`` (no flags)."""
+    return any(
+        tokens[:2] == ["bash", script] for _, tokens in _direct_commands(text)
+    )
+
+
+def _step_index_with_reviewed_script(release_steps: list, script: str) -> int | None:
+    for index, step in enumerate(release_steps):
+        if not isinstance(step, dict):
+            continue
+        if _runs_reviewed_script(str(step.get("run") or ""), script):
             return index
     return None
 
@@ -257,6 +1127,9 @@ def _weekly_snapshot_errors(workflow: dict) -> list[str]:
     orphan_tag_dispatch_condition_seen = False
     check_run = ""
     dispatch_run = ""
+    check_step = None
+    bump_step = None
+    dispatch_step = None
     tag_pushes = 0
     for job_name, job in (workflow.get("jobs") or {}).items():
         if not isinstance(job, dict):
@@ -266,6 +1139,19 @@ def _weekly_snapshot_errors(workflow: dict) -> list[str]:
                 f"weekly job '{job_name}' is a reusable workflow; only the "
                 "reviewed inline weekly job is allowed."
             )
+        job_required = any(
+            isinstance(step, dict)
+            and str(step.get("name") or "")
+            in {WEEKLY_CHECK_STEP, WEEKLY_BUMP_STEP, WEEKLY_DISPATCH_STEP}
+            for step in (job.get("steps") or [])
+        )
+        if job_required:
+            for conditional in ("if", "continue-on-error"):
+                if conditional in job:
+                    errors.append(
+                        f"weekly job '{job_name}' must not set '{conditional}:' "
+                        "because the guard requires its steps to run."
+                    )
         for index, step in enumerate(job.get("steps") or []):
             if not isinstance(step, dict):
                 continue
@@ -282,12 +1168,17 @@ def _weekly_snapshot_errors(workflow: dict) -> list[str]:
                 continue
             if step.get("name") == WEEKLY_CHECK_STEP:
                 check_run = run
+                check_step = step
+            if step.get("name") == WEEKLY_BUMP_STEP:
+                bump_step = step
             if step.get("name") == WEEKLY_DISPATCH_STEP:
                 dispatch_run = run
+                dispatch_step = step
             if _calls_bash_script(run, "scripts/bash/check-weekly-base.sh"):
                 base_check_seen = True
-            if ("gh api" in run and "/releases/tags/" in run
-                    and "dispatch_existing=true" in run):
+            run_code = _active_text(_strip_heredocs(run))
+            if ("gh api" in run_code and "/releases/tags/" in run_code
+                    and 'echo "dispatch_existing=true"' in run_code):
                 orphan_tag_recovery_seen = True
             if "Dispatch the release pipeline" in str(step.get("name") or ""):
                 if "dispatch_existing" in str(step.get("if") or ""):
@@ -295,6 +1186,10 @@ def _weekly_snapshot_errors(workflow: dict) -> list[str]:
             joined = run.replace("\\\n", "").replace("\\\r", "")
             if step.get("name") == WEEKLY_BUMP_STEP:
                 bump_seen = True
+                if "<<" in _active_text(_strip_heredocs(run)):
+                    errors.append(
+                        "weekly bump step must not hide tag commands in a heredoc."
+                    )
                 for number, raw_line in enumerate(joined.splitlines(), start=1):
                     line = raw_line.strip()
                     if not line or line.startswith("#"):
@@ -333,6 +1228,51 @@ def _weekly_snapshot_errors(workflow: dict) -> list[str]:
                             f"weekly step '{step.get('name', index)}' line "
                             f"{number} pushes outside the bump step: {line!r}"
                         )
+    for name, step_dict, expected_if in (
+        (WEEKLY_CHECK_STEP, check_step, None),
+        (WEEKLY_BUMP_STEP, bump_step, WEEKLY_BUMP_CONDITION),
+        (WEEKLY_DISPATCH_STEP, dispatch_step, WEEKLY_DISPATCH_CONDITION),
+    ):
+        if not isinstance(step_dict, dict):
+            continue
+        label = f"weekly step '{name}'"
+        errors.extend(_default_shell_errors(step_dict, label))
+        run = str(step_dict.get("run") or "")
+        if "<#" in run or "#>" in run:
+            errors.append(
+                f"{label} must not use PowerShell block comments in a required "
+                "shell step."
+            )
+        if "continue-on-error" in step_dict:
+            errors.append(
+                f"{label} must not set 'continue-on-error:' because a failed "
+                "required step would otherwise be masked."
+            )
+        actual_if = step_dict.get("if")
+        if expected_if is None:
+            if "if" in step_dict:
+                errors.append(
+                    f"{label} must not set 'if:' because it must run "
+                    "unconditionally."
+                )
+        elif actual_if != expected_if:
+            errors.append(
+                f"{label} must set 'if:' to exactly {expected_if!r} so the "
+                "documented dispatch/bump condition cannot be weakened."
+            )
+        if name in {WEEKLY_BUMP_STEP, WEEKLY_DISPATCH_STEP}:
+            for line in _active_lines(run):
+                tokens = _command_tokens(line) or []
+                first = tokens[0] if tokens else ""
+                if first == "trap":
+                    errors.append(
+                        f"{label} must not install a trap: {line!r}."
+                    )
+                elif first in {"exit", "return"}:
+                    errors.append(
+                        f"{label} must not exit before its work completes: "
+                        f"{line!r}."
+                    )
     if not bump_seen:
         errors.append(
             f"weekly workflow must define the '{WEEKLY_BUMP_STEP}' step."
@@ -430,30 +1370,86 @@ def _weekly_snapshot_errors(workflow: dict) -> list[str]:
                 "the weekly check must emit tag when the window has commits"
             ),
         }
+        check_stripped = _strip_heredocs(check_run)
+        check_code = _active_text(check_stripped)
+        check_lines = _active_lines(check_stripped)
         for marker, message in required_check_markers.items():
-            if marker not in check_run:
+            if marker not in check_code:
                 errors.append(f"weekly workflow check: {message}.")
 
-        orphan_start = check_run.find('if [[ -s "$ORPHAN_TAGS_FILE" ]]; then')
-        window_start = check_run.find('if [[ -z "$WINDOW_COMMITS" ]]', orphan_start)
+        # The completeness result must be an actual assertion line, not marker
+        # text hidden in a comment, heredoc body, or behind `true`, and it must
+        # be evaluated before any early exit from the check step.
+        check_depths = _brace_depths(check_lines)
+        exit_indices = [
+            index
+            for index, line in enumerate(check_lines)
+            if check_depths[index] == 0
+            and _is_success_exit(_command_tokens(line) or [])
+        ]
+        first_exit_index = exit_indices[0] if exit_indices else None
+        completeness_index = next(
+            (
+                index
+                for index, line in enumerate(check_lines)
+                if line.startswith("[[")
+                and line.endswith("]]")
+                and '"$draft" == "false"' in line
+                and '"$prerelease" == "true"' in line
+                and '"$assets" == "$expected"' in line
+            ),
+            None,
+        )
+        if completeness_index is None:
+            errors.append(
+                "weekly release completeness must be a code line starting with "
+                "`[[` and ending with `]]` that requires a published pre-release "
+                "with the exact expected asset names; comment, heredoc, echo, "
+                "`|| true`, and `true` substitutes do not count."
+            )
+        else:
+            if first_exit_index is not None and completeness_index > first_exit_index:
+                errors.append(
+                    "weekly release completeness assertion must be evaluated "
+                    "before any early exit in the check step."
+                )
+
+        orphan_start = check_code.find('if [[ -s "$ORPHAN_TAGS_FILE" ]]; then')
+        window_start = check_code.find('if [[ -z "$WINDOW_COMMITS" ]]', orphan_start)
         if orphan_start < 0 or window_start < 0:
             errors.append(
                 "weekly workflow check must record/probe orphans before considering the window."
             )
-        elif "exit 0" in check_run[orphan_start:window_start]:
+        elif "exit 0" in check_code[orphan_start:window_start]:
             errors.append(
                 "weekly orphan recovery must not exit before the current window can emit a new tag."
             )
+        orphan_line_index = next(
+            (
+                index
+                for index, line in enumerate(check_lines)
+                if 'if [[ -s "$ORPHAN_TAGS_FILE" ]]' in line
+            ),
+            None,
+        )
+        if (
+            first_exit_index is not None
+            and orphan_line_index is not None
+            and first_exit_index < orphan_line_index
+        ):
+            errors.append(
+                "weekly check step must not exit before the orphan scan completes."
+            )
 
         error_marker = 'echo "ERROR: GitHub release lookup for ${release_tag} failed: ${state}" >&2'
-        error_index = check_run.find(error_marker)
+        error_index = check_code.find(error_marker)
         if error_index < 0:
             errors.append(
                 "weekly release lookup must fail on non-404 GitHub API errors."
             )
         else:
-            next_fi = check_run.find("fi", error_index)
-            if next_fi < 0 or "exit 1" not in check_run[error_index:next_fi]:
+            next_fi = check_code.find("fi", error_index)
+            if next_fi < 0 or "exit 1" not in check_code[error_index:next_fi]:
                 errors.append(
                     "weekly release lookup must exit 1 on non-404 GitHub API errors, not return a false completeness result."
                 )
@@ -463,11 +1459,17 @@ def _weekly_snapshot_errors(workflow: dict) -> list[str]:
             f"weekly workflow must define the '{WEEKLY_DISPATCH_STEP}' step."
         )
     else:
-        if 'while IFS= read -r ORPHAN_TAG; do' not in dispatch_run:
+        dispatch_code = _active_text(_strip_heredocs(dispatch_run))
+        if "<<" in dispatch_code:
+            errors.append(
+                "weekly dispatch step must not use a heredoc around the "
+                "release-pipeline commands."
+            )
+        if 'while IFS= read -r ORPHAN_TAG; do' not in dispatch_code:
             errors.append(
                 "weekly dispatch step must iterate every recovered orphan tag."
             )
-        if 'done < "$ORPHAN_TAGS_FILE"' not in dispatch_run:
+        if 'done < "$ORPHAN_TAGS_FILE"' not in dispatch_code:
             errors.append(
                 "weekly dispatch step must consume the complete orphan tag file."
             )
@@ -569,6 +1571,23 @@ def main() -> int:
                 )
 
     release_job = (workflow.get("jobs") or {}).get("release")
+    if isinstance(release_job, dict):
+        for conditional in ("if", "continue-on-error"):
+            if conditional in release_job:
+                errors.append(
+                    "release job must not set "
+                    f"'{conditional}:' because the guard requires its steps to run."
+                )
+        release_needs = release_job.get("needs")
+        if isinstance(release_needs, str):
+            release_needs = [release_needs]
+        if not isinstance(release_needs, list) or GODOT_JOB not in [
+            str(need) for need in release_needs
+        ]:
+            errors.append(
+                f"release job must declare 'needs: {GODOT_JOB}' so the Godot "
+                "integration gate runs before publishing."
+            )
     release_steps = release_job.get("steps") if isinstance(release_job, dict) else None
     if not isinstance(release_steps, list):
         errors.append("release workflow must define release job steps.")
@@ -595,22 +1614,62 @@ def main() -> int:
             for step in release_steps
             if isinstance(step, dict)
         ]
-        if not any("bash scripts/bash/lint-scripts.sh" in command for command in run_commands):
+        step_names = [
+            str(step.get("name") or "")
+            for step in release_steps
+            if isinstance(step, dict)
+        ]
+        non_empty_names = [name for name in step_names if name]
+        duplicate_names = sorted(
+            {
+                name
+                for name in non_empty_names
+                if non_empty_names.count(name) > 1
+            }
+        )
+        for name in duplicate_names:
+            errors.append(f"release step name '{name}' must be unique.")
+        snapshot_mark_indices = [
+            index
+            for index, step in enumerate(release_steps)
+            if isinstance(step, dict)
+            and str(step.get("name") or "") == RELEASE_SNAPSHOT_MARK_STEP
+        ]
+        snapshot_mark_index: int | None = None
+        if len(snapshot_mark_indices) != 1:
             errors.append(
-                "release job must run bash scripts/bash/lint-scripts.sh so the tag "\
+                f"release job must define exactly one "
+                f"'{RELEASE_SNAPSHOT_MARK_STEP}' step."
+            )
+        else:
+            candidate = release_steps[snapshot_mark_indices[0]]
+            candidate_run = str(candidate.get("run") or "")
+            has_reviewed_command = any(
+                _normalize_command(line) == _normalize_command(RELEASE_SNAPSHOT_MARK_RUN)
+                for line in _active_lines(candidate_run)
+            )
+            if candidate.get("if") != RELEASE_SNAPSHOT_MARK_IF:
+                errors.append(
+                    "the snapshot pre-release marker step must keep its reviewed "
+                    "'if:' condition; that condition is the only allowed step "
+                    "condition in the release job."
+                )
+            elif not has_reviewed_command:
+                errors.append(
+                    "the snapshot pre-release marker step must run the reviewed "
+                    f"command {RELEASE_SNAPSHOT_MARK_RUN!r}."
+                )
+            else:
+                snapshot_mark_index = snapshot_mark_indices[0]
+
+        lint_index = _step_index_with_run(release_steps, "scripts/bash/lint-scripts.sh")
+        if lint_index is None:
+            errors.append(
+                "release job must run bash scripts/bash/lint-scripts.sh so the tag "
                 "pipeline enforces script, workflow, and instruction guards."
             )
         else:
-            lint_step = next(
-                (
-                    step
-                    for step in release_steps
-                    if isinstance(step, dict)
-                    and "bash scripts/bash/lint-scripts.sh" in str(step.get("run") or "")
-                ),
-                None,
-            )
-            lint_env = lint_step.get("env") if isinstance(lint_step, dict) else None
+            lint_env = release_steps[lint_index].get("env")
             if not isinstance(lint_env, dict) or lint_env.get("ORIGO_BRANCH_NAME") != RESOLVED_TAG_REF:
                 errors.append(
                     "release job must pass ORIGO_BRANCH_NAME as "
@@ -660,7 +1719,7 @@ def main() -> int:
                     "call with a preceding '# guard: read-only' line."
                 )
 
-        provenance_index = _step_index_with_run(
+        provenance_index = _step_index_with_reviewed_script(
             release_steps, ".release-validators/verify-release-provenance.sh"
         )
         if provenance_index is None:
@@ -685,7 +1744,7 @@ def main() -> int:
                     f"BASE_COMMIT_SHA={TAG_COMMIT_SHA}."
                 )
 
-        source_index = _step_index_with_run(
+        source_index = _step_index_with_reviewed_script(
             release_steps, ".release-validators/validate-release-source.sh"
         )
         if source_index is None:
@@ -701,20 +1760,33 @@ def main() -> int:
                     f"TAG={RESOLVED_TAG}."
                 )
             source_run = str(release_steps[source_index].get("run") or "")
-            if "$PWD/.release-validators/scripts/verify-release.sh" not in source_run:
+            source_line = next(
+                (
+                    line
+                    for line in _active_lines(source_run)
+                    if line.startswith("bash .release-validators/validate-release-source.sh")
+                ),
+                None,
+            )
+            if (source_line is None
+                    or '"$PWD/.release-validators/scripts/verify-release.sh"' not in source_line):
                 errors.append(
-                    "the source-archive validation step must pass the trusted "
-                    "$PWD/.release-validators/scripts/verify-release.sh verifier."
+                    "the source-archive validation step must run the validator and "
+                    "pass the trusted \"$PWD/.release-validators/scripts/verify-release.sh\" "
+                    "verifier."
                 )
 
-        metadata_step = next(
+        metadata_index = next(
             (
-                step
-                for step in release_steps
+                index
+                for index, step in enumerate(release_steps)
                 if isinstance(step, dict)
                 and step.get("name") == "Verify release metadata"
             ),
             None,
+        )
+        metadata_step = (
+            release_steps[metadata_index] if metadata_index is not None else None
         )
         if metadata_step is None:
             errors.append(
@@ -723,12 +1795,19 @@ def main() -> int:
             )
         else:
             metadata_run = str(metadata_step.get("run") or "")
-            if ".release-validators/scripts/verify-release.sh" not in metadata_run:
+            if not _runs_reviewed_script(
+                metadata_run, ".release-validators/scripts/verify-release.sh"
+            ):
                 errors.append(
                     "the metadata verification step must execute the trusted "
                     ".release-validators/scripts/verify-release.sh verifier."
                 )
-            if "TAG_VERSION=" not in metadata_run:
+            exports_tag_version = any(
+                tokens[0] == "export"
+                and any(token.startswith("TAG_VERSION=") for token in tokens)
+                for _, tokens in _direct_commands(metadata_run)
+            )
+            if not exports_tag_version:
                 errors.append(
                     "the metadata verification step must export TAG_VERSION for "
                     "the trusted verifier."
@@ -744,24 +1823,154 @@ def main() -> int:
             ),
             None,
         )
-        if None not in (
-            provenance_index,
-            version_index,
-            source_index,
-            push_index,
-            action_index,
-        ):
-            if not (
-                provenance_index
-                < version_index
-                < source_index
-                < push_index
-                < action_index
+
+        def step_index_with(predicate) -> int | None:
+            for index, step in enumerate(release_steps):
+                if isinstance(step, dict) and predicate(str(step.get("run") or "")):
+                    return index
+            return None
+
+        gate_indices: dict[str, int | None] = {}
+        for gate_label, gate_script in RELEASE_GATE_SCRIPTS:
+            gate_index = _step_index_with_run(release_steps, gate_script)
+            gate_indices[gate_label] = gate_index
+            if gate_index is None:
+                errors.append(
+                    f"release job must run bash {gate_script} so the documented "
+                    f"{gate_label} runs before the tag moves."
+                )
+        format_index = gate_indices["format gate"]
+        test_index = gate_indices["test gate"]
+        benchmark_index = gate_indices["benchmark gate"]
+        package_smoke_index = gate_indices["package consumer smoke"]
+        api_index = _step_index_with_run(release_steps, "scripts/bash/api-inventory.sh")
+
+        pack_indices = [
+            step_index_with(
+                lambda run, project=project: _calls_dotnet_pack(run, project)
+            )
+            for project in RELEASE_PACK_PROJECTS
+        ]
+        for project, pack_index in zip(RELEASE_PACK_PROJECTS, pack_indices):
+            if pack_index is None:
+                errors.append(
+                    f"release job must pack {project} so the five-package release "
+                    "set is complete."
+                )
+        package_index = _step_index_with_run(release_steps, PACKAGE_VALIDATOR)
+        if package_index is None:
+            errors.append(
+                f"release job must run bash {PACKAGE_VALIDATOR} so the five package "
+                "identities and shell/kernel pairing are validated."
+            )
+        else:
+            package_env = release_steps[package_index].get("env")
+            if not isinstance(package_env, dict) or package_env.get("TAG") != RESOLVED_TAG:
+                errors.append(
+                    "the release package validation step must receive "
+                    f"TAG={RESOLVED_TAG}."
+                )
+        nuget_index = step_index_with(_copies_nuget_config)
+        if nuget_index is None:
+            errors.append(
+                "release job must copy nuget.config.example to "
+                "./artifacts/nuget.config so the documented nuget.config asset "
+                "is attached."
+            )
+        docs_index = step_index_with(_packages_documentation_snapshot)
+        if docs_index is None:
+            errors.append(
+                "release job must build the documentation tar.gz and zip snapshot "
+                "(origo-docs-<version>) so the two documentation assets are attached."
+            )
+        source_tree_index = step_index_with(_builds_source_archive)
+        if source_tree_index is None:
+            errors.append(
+                "release job must build the source archive with git archive and the "
+                "origo-source-<version>.tar.gz name before validating it."
+            )
+        artifacts_index = _step_index_with_reviewed_script(
+            release_steps, ARTIFACTS_VALIDATOR
+        )
+        if artifacts_index is None:
+            errors.append(
+                "release job must run the staged artifact-set validator "
+                f"(bash {ARTIFACTS_VALIDATOR}) after source-archive validation and "
+                "before moving the tag so the attached artifact set is exactly the "
+                "documented nine names."
+            )
+        else:
+            artifacts_env = release_steps[artifacts_index].get("env")
+            if not isinstance(artifacts_env, dict) or artifacts_env.get("TAG") != RESOLVED_TAG:
+                errors.append(
+                    "the artifact-set validation step must receive "
+                    f"TAG={RESOLVED_TAG}."
+                )
+        for command in run_commands:
+            for line in _active_lines(command):
+                if line.startswith(
+                    (f"bash {ARTIFACTS_VALIDATOR_TAG_TREE}",
+                     f"sh {ARTIFACTS_VALIDATOR_TAG_TREE}")
+                ):
+                    errors.append(
+                        "release job must not execute the tag-tree artifact-set "
+                        f"validator; it is staged from main: {line!r}."
+                    )
+        if artifacts_index is not None:
+            artifacts_label = str(
+                release_steps[artifacts_index].get("name")
+                or f"release.steps[{artifacts_index}]"
+            )
+            errors.extend(
+                _artifact_validation_step_errors(
+                    release_steps[artifacts_index], artifacts_label
+                )
+            )
+            errors.extend(
+                _artifacts_write_errors(release_steps, artifacts_index, action_index)
+            )
+        if not any(_copies_directory_build_props(command) for command in run_commands):
+            errors.append(
+                "release job must copy Directory.Build.props into the "
+                "documentation snapshot so the manual's version reference resolves."
+            )
+
+        last_pack_index = max(
+            (index for index in pack_indices if index is not None), default=None
+        )
+        ordered_steps = [
+            ("tag provenance", provenance_index),
+            ("version stamping", version_index),
+            ("script lint", lint_index),
+            ("format gate", format_index),
+            ("shell API baseline gate", api_index),
+            ("test gate", test_index),
+            ("benchmark gate", benchmark_index),
+            ("package consumer smoke", package_smoke_index),
+            ("packing the five packages", last_pack_index),
+            ("release package validation", package_index),
+            ("the NuGet config copy", nuget_index),
+            ("the documentation snapshot", docs_index),
+            ("the source archive", source_tree_index),
+            ("source-archive validation", source_index),
+            ("artifact-set validation", artifacts_index),
+            ("the tag push", push_index),
+            ("GitHub Release creation", action_index),
+        ]
+        if all(index is not None for _, index in ordered_steps):
+            if any(
+                previous_index >= next_index
+                for (_, previous_index), (_, next_index) in zip(
+                    ordered_steps, ordered_steps[1:]
+                )
             ):
                 errors.append(
-                    "release job must run tag provenance, version stamping, "
-                    "source-archive validation, the tag push, and GitHub Release "
-                    "creation in that order."
+                    "release job must run tag provenance, version stamping, script "
+                    "lint, the format/API/test/benchmark/package-smoke gates, "
+                    "packing, package validation, the NuGet config copy, the "
+                    "documentation snapshot, the source archive, source-archive "
+                    "validation, artifact-set validation, the tag push, and "
+                    "GitHub Release creation in that order."
                 )
 
         release_commit_step = next(
@@ -783,24 +1992,38 @@ def main() -> int:
                 "target_commitish."
             )
 
-        for validator in (
-            "verify-release-provenance.sh",
-            "validate-release-source.sh",
-            "verify-release.sh",
-        ):
-            if not any(
-                f"git show refs/remotes/origin/main:scripts/bash/{validator}" in command
-                for command in run_commands
-            ):
+        staging_lines = [
+            line
+            for command in run_commands
+            for line in _active_lines(command)
+        ]
+        expected_staging = {
+            validator: STAGING_COMMAND.format(
+                validator=validator, destination=destination
+            )
+            for validator, destination in VALIDATOR_STAGING.items()
+        }
+        for validator, expected_line in expected_staging.items():
+            fetch_prefix = f"git show refs/remotes/origin/main:scripts/bash/{validator}"
+            if not any(line.startswith(fetch_prefix) for line in staging_lines):
                 errors.append(
                     f"release job must fetch scripts/bash/{validator} from "
                     "refs/remotes/origin/main so the tag tree cannot replace "
                     "the validator."
                 )
+            if expected_line not in staging_lines:
+                errors.append(
+                    "release job must stage the trusted validator with exactly "
+                    f"'{expected_line}'."
+                )
+        errors.extend(
+            _release_validators_write_errors(
+                release_steps, set(expected_staging.values())
+            )
+        )
         if not any(
-            "git show refs/remotes/origin/main:scripts/bash/verify-release.sh "
-            "> .release-validators/scripts/verify-release.sh" in command
-            for command in run_commands
+            line == expected_staging["verify-release.sh"]
+            for line in staging_lines
         ):
             errors.append(
                 "release job must stage the trusted verifier at "
@@ -809,42 +2032,44 @@ def main() -> int:
                 "path, so a deeper staging directory silently breaks it."
             )
 
-        if not any("cp Directory.Build.props" in command for command in run_commands):
-            errors.append(
-                "release job must copy Directory.Build.props into the "
-                "documentation snapshot so the manual's version reference resolves."
-            )
-        if not any("git archive" in command for command in run_commands):
-            errors.append(
-                "release job must build the source archive with git archive "
-                "before validating it."
-            )
+        for command in run_commands:
+            for line in _active_lines(command):
+                if line in expected_staging.values():
+                    continue
+                tokens = _command_tokens(line) or []
+                if not tokens:
+                    continue
+                if any(
+                    f"scripts/bash/{validator}" in token
+                    for validator in VALIDATOR_STAGING
+                    for token in tokens
+                ):
+                    errors.append(
+                        "release job must execute staged validators from "
+                        f".release-validators, not the tag tree: {line!r}."
+                    )
 
         errors.extend(_release_push_errors(release_steps))
 
+        installed_packages: set[str] = set()
+        for command in run_commands:
+            for _, tokens in _direct_commands(command):
+                if tokens[0] == "apt-get" and "install" in tokens:
+                    installed_packages.update(tokens)
         for dependency in ("shellcheck", "python3-yaml"):
-            if not any(dependency in command for command in run_commands):
+            if dependency not in installed_packages:
                 errors.append(
-                    f"release job must install script-lint dependency "\
+                    f"release job must install script-lint dependency "
                     f"'{dependency}' before running scripts/bash/lint-scripts.sh."
                 )
 
-        api_step = next(
-            (
-                step
-                for step in release_steps
-                if isinstance(step, dict)
-                and "bash scripts/bash/api-inventory.sh" in str(step.get("run") or "")
-            ),
-            None,
-        )
-        if api_step is None:
+        if api_index is None:
             errors.append(
                 "release job must run bash scripts/bash/api-inventory.sh so the tag "
                 "pipeline enforces the shell API baseline."
             )
         else:
-            api_env = api_step.get("env")
+            api_env = release_steps[api_index].get("env")
             current_release_tag = (
                 api_env.get("ORIGO_CURRENT_RELEASE_TAG")
                 if isinstance(api_env, dict)
@@ -857,6 +2082,172 @@ def main() -> int:
                     "version-sync commit does not make the current release "
                     "tag its own previous baseline."
                 )
+
+        required_step_indices: set[int] = {
+            index
+            for index in (
+                lint_index,
+                format_index,
+                api_index,
+                test_index,
+                benchmark_index,
+                package_smoke_index,
+                version_index,
+                provenance_index,
+                source_index,
+                metadata_index,
+                last_pack_index,
+                package_index,
+                nuget_index,
+                docs_index,
+                source_tree_index,
+                artifacts_index,
+                push_index,
+                action_index,
+                *pack_indices,
+            )
+            if index is not None
+        }
+        required_matchers: dict[int, list] = {}
+
+        def require_line(index: int | None, matcher) -> None:
+            if index is None:
+                return
+            required_matchers.setdefault(index, []).append(matcher)
+
+        require_line(
+            lint_index,
+            lambda line, tokens: _line_runs_bash_script(
+                tokens, "scripts/bash/lint-scripts.sh"
+            ),
+        )
+        require_line(
+            format_index,
+            lambda line, tokens: _line_runs_bash_script(
+                tokens, "scripts/bash/format.sh"
+            ),
+        )
+        require_line(
+            api_index,
+            lambda line, tokens: _line_runs_bash_script(
+                tokens, "scripts/bash/api-inventory.sh"
+            ),
+        )
+        require_line(
+            test_index,
+            lambda line, tokens: _line_runs_bash_script(
+                tokens, "scripts/bash/test.sh"
+            ),
+        )
+        require_line(
+            benchmark_index,
+            lambda line, tokens: _line_runs_bash_script(
+                tokens, "scripts/bash/benchmark.sh"
+            ),
+        )
+        require_line(
+            package_smoke_index,
+            lambda line, tokens: _line_runs_bash_script(
+                tokens, "scripts/bash/package-consumer-smoke.sh"
+            ),
+        )
+        require_line(
+            provenance_index,
+            lambda line, tokens: _line_runs_reviewed_script(
+                tokens, ".release-validators/verify-release-provenance.sh"
+            ),
+        )
+        require_line(
+            source_index,
+            lambda line, tokens: _line_runs_reviewed_script(
+                tokens, ".release-validators/validate-release-source.sh"
+            ),
+        )
+        require_line(
+            metadata_index,
+            lambda line, tokens: _line_runs_reviewed_script(
+                tokens, ".release-validators/scripts/verify-release.sh"
+            ),
+        )
+        require_line(
+            artifacts_index,
+            lambda line, tokens: _line_runs_reviewed_script(
+                tokens, ARTIFACTS_VALIDATOR
+            ),
+        )
+        require_line(version_index, lambda line, tokens: _line_calls_version_helper(tokens))
+        require_line(package_index, lambda line, tokens: _line_runs_bash_script(tokens, PACKAGE_VALIDATOR))
+        require_line(nuget_index, lambda line, tokens: _line_copies_nuget_config(tokens))
+        require_line(
+            docs_index,
+            lambda line, tokens: _line_packages_documentation_archive(tokens),
+        )
+        require_line(source_tree_index, lambda line, tokens: _line_builds_source_archive(tokens))
+        require_line(push_index, lambda line, tokens: _line_is_tag_push(tokens))
+        for project, pack_index in zip(RELEASE_PACK_PROJECTS, pack_indices):
+            require_line(
+                pack_index,
+                lambda line, tokens, project=project: _line_calls_dotnet_pack(
+                    tokens, project
+                ),
+            )
+        for index, step in enumerate(release_steps):
+            if not isinstance(step, dict):
+                continue
+            run = str(step.get("run") or "")
+            if any(
+                line in expected_staging.values() for line in _active_lines(run)
+            ):
+                required_step_indices.add(index)
+                require_line(
+                    index,
+                    lambda line, tokens, allowed=set(expected_staging.values()): (
+                        line in allowed
+                    ),
+                )
+            if any(_line_is_apt_install(tokens) for _, tokens in _active_commands(run)):
+                required_step_indices.add(index)
+                require_line(index, lambda line, tokens: _line_is_apt_install(tokens))
+        for index, step in enumerate(release_steps):
+            if not isinstance(step, dict):
+                continue
+            if index == snapshot_mark_index:
+                if "continue-on-error" in step:
+                    errors.append(
+                        f"{label} must not set 'continue-on-error:' because a "
+                        "failed pre-release marking would leave a snapshot as "
+                        "the Latest release."
+                    )
+                continue
+            label = str(step.get("name") or f"release.steps[{index}]")
+            errors.extend(_step_conditional_errors(step, label))
+        for index in sorted(required_step_indices):
+            step = release_steps[index]
+            if not isinstance(step, dict):
+                continue
+            label = str(step.get("name") or f"release.steps[{index}]")
+            run = str(step.get("run") or "")
+            errors.extend(_step_hiding_errors(run, label))
+            errors.extend(_default_shell_errors(step, label))
+            matchers = required_matchers.get(index)
+            if not matchers:
+                continue
+            required_lines = {
+                line
+                for line, tokens in _active_commands(run)
+                if any(matcher(line, tokens) for matcher in matchers)
+            }
+            errors.extend(
+                _required_flow_errors(
+                    run,
+                    label,
+                    required_lines,
+                    allow_conditional_exit_zero=(index == push_index),
+                )
+            )
+            errors.extend(
+                _required_execution_status_errors(step, run, label, required_lines)
+            )
 
     dispatch = event_mapping(workflow).get("workflow_dispatch")
     inputs = dispatch.get("inputs") if isinstance(dispatch, dict) else None

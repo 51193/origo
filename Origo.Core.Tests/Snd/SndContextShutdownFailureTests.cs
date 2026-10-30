@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading;
 using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.DataSource;
 using Origo.Core.Abstractions.Entity;
@@ -103,6 +104,39 @@ public class SndContextShutdownFailureTests
         fs.BeforeDeleteDirectory = null;
         host.Dispose();
         Assert.False(fs.DirectoryExists("root/current"));
+    }
+
+    [Fact]
+    public void Workflow_QuitHookQueuesRequestThenShutdown_CancelsQueuedWorkBeforeTerminalState()
+    {
+        // A quit hook can queue deferred work and then request shutdown while
+        // the workflow tears the old progress run down. The workflow commits the
+        // terminal state after teardown, so it must cancel that queued work
+        // first: otherwise a later frame runs the request against the terminal
+        // context and the persistence counter never drains.
+        var fs = new TestMemoryFileSystem();
+        var ctx = CreateEntryContext(fs);
+        ctx.Runtime.SndWorld.RegisterStrategy(() => new QueueSaveThenShutdownOnQuitStrategy());
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.FlushFrame();
+
+        var foreground = ctx.Runtime.SessionManager.ForegroundSession
+            ?? throw new InvalidOperationException("Test setup failed: no foreground session after entry load.");
+        foreground.Spawn(new SndMetaFluentBuilder("queue_then_shutdown_probe")
+            .AddLifecycleStrategy(QueueSaveThenShutdownOnQuitStrategy.Index)
+            .Build());
+
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        var ex = Assert.Throws<InvalidOperationException>(() => ctx.FlushFrame());
+        Assert.Contains("shut down", ex.Message, StringComparison.Ordinal);
+
+        Assert.Equal(0, ctx.Deferred.GetPendingPersistenceRequestCount());
+        Assert.True(ctx.Deferred.IsPersistenceIdle);
+        Assert.False(fs.DirectoryExists("root/save_queued_after_quit"));
+
+        // No deferred action survives to throw from the next frame.
+        Assert.Null(Record.Exception(() => ctx.FlushFrame()));
+        Assert.Throws<InvalidOperationException>(() => ctx.Save.RequestSaveGame("after_terminated"));
     }
 
     [Fact]
@@ -229,6 +263,185 @@ public class SndContextShutdownFailureTests
         }
     }
 
+    [Fact]
+    public void Shutdown_FromAfterSpawnHookDuringWorkflow_IsRejectedAndDoesNotTearDownWorkflow()
+    {
+        var fs = new TestMemoryFileSystem();
+        var ctx = CreateEntryContext(fs);
+        ctx.Runtime.SndWorld.RegisterStrategy(() => new ShutdownOnAfterSpawnStrategy());
+
+        // The entry workflow's AfterSpawn hook asks for shutdown while the
+        // main-menu workflow body is still mounting the new ProgressRun. The
+        // request must be rejected; committing it would dispose the progress
+        // run the workflow is still driving.
+        fs.SeedFile("res://levels/main_menu.json",
+            """
+            [
+              {
+                "name": "EntryProbe",
+                "node": { "pairs": {} },
+                "strategy": { "lifecycle_indices": ["shutdown.after_spawn"] },
+                "data": { "pairs": {} }
+              }
+            ]
+            """);
+
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        var ex = Assert.Throws<InvalidOperationException>(() => ctx.FlushFrame());
+        Assert.Contains("lifecycle workflow", ex.Message, StringComparison.Ordinal);
+
+        // The rejected shutdown did not commit terminal state: persistence
+        // mutations are still accepted. The workflow itself aborted and left
+        // no progress run mounted.
+        ctx.Save.SetContinueTarget("retry_slot");
+        Assert.Null(ctx.Blackboard.ProgressBlackboard);
+
+        ctx.Shutdown();
+        Assert.Throws<InvalidOperationException>(() => ctx.Bootstrap());
+    }
+
+    [Fact]
+    public void Shutdown_FromBeforeSaveHookDuringSaveWorkflow_IsRejectedAndSaveIsNotWritten()
+    {
+        var fs = new TestMemoryFileSystem();
+        var ctx = CreateEntryContext(fs);
+        ctx.Runtime.SndWorld.RegisterStrategy(() => new ShutdownOnBeforeSaveStrategy());
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.FlushFrame();
+
+        var foreground = ctx.Runtime.SessionManager.ForegroundSession
+            ?? throw new InvalidOperationException("Test setup failed: no foreground session after entry load.");
+        foreground.Spawn(new SndMetaFluentBuilder("save_probe")
+            .AddLifecycleStrategy(ShutdownOnBeforeSaveStrategy.Index)
+            .Build());
+
+        ctx.Save.RequestSaveGame("forbidden_save");
+        var ex = Assert.Throws<InvalidOperationException>(() => ctx.FlushFrame());
+        Assert.Contains("BeforeSave hook", ex.Message, StringComparison.Ordinal);
+
+        // Rejected before any snapshot write; the foreground session survives.
+        Assert.False(fs.DirectoryExists("root/save_forbidden_save"));
+        Assert.DoesNotContain("forbidden_save", ctx.Save.ListSaves());
+        var stillMounted = ctx.Runtime.SessionManager.ForegroundSession;
+        Assert.NotNull(stillMounted);
+        Assert.NotNull(stillMounted!.FindByName("save_probe"));
+
+        ctx.Shutdown();
+        Assert.Null(ctx.Blackboard.ProgressBlackboard);
+    }
+
+    [Fact]
+    public void Shutdown_FromSwitchAfterLoadHook_IsRejectedAndSwitchCompletes()
+    {
+        var fs = new TestMemoryFileSystem();
+        var ctx = CreateEntryContext(fs);
+        ctx.Runtime.SndWorld.RegisterStrategy(() => new TryShutdownOnAfterLoadStrategy());
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.FlushFrame();
+
+        // Seed the target-level payload into current/ AFTER the entry workflow
+        // (that workflow deletes current/ at start), so the switch loads real
+        // entities and their AfterLoad hooks run inside the switch workflow.
+        fs.SeedFile("root/current/level_level_a/snd_scene.json",
+            """
+            [
+              {
+                "name": "SwitchProbe",
+                "node": { "pairs": {} },
+                "strategy": { "lifecycle_indices": ["shutdown.switch_after_load"] },
+                "data": { "pairs": {} }
+              }
+            ]
+            """);
+        fs.SeedFile("root/current/level_level_a/session.json", "{}");
+        fs.SeedFile("root/current/level_level_a/session_state_machines.json", """{"machines":[]}""");
+
+        TryShutdownOnAfterLoadStrategy.ShutdownRejection = null;
+        ctx.Save.RequestSwitchForegroundLevel("level_a");
+        ctx.FlushFrame();
+
+        // The hook's shutdown request was rejected with the workflow guard, so
+        // the switch completes and the run stays live.
+        var rejection = TryShutdownOnAfterLoadStrategy.ShutdownRejection;
+        Assert.NotNull(rejection);
+        Assert.Contains("lifecycle workflow", rejection!, StringComparison.Ordinal);
+        var foreground = ctx.Runtime.SessionManager.ForegroundSession;
+        Assert.NotNull(foreground);
+        Assert.Equal("level_a", foreground!.LevelId);
+        Assert.NotNull(foreground.FindByName("SwitchProbe"));
+        Assert.NotNull(ctx.Blackboard.ProgressBlackboard);
+        ctx.Save.SetContinueTarget("after_switch");
+
+        ctx.Shutdown();
+        Assert.Null(ctx.Blackboard.ProgressBlackboard);
+    }
+
+    [Fact]
+    public void Switch_WhenDeferredActionThrows_ReleasesWorkflowGuardForLaterWorkflows()
+    {
+        var fs = new TestMemoryFileSystem();
+        var ctx = CreateEntryContext(fs);
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.FlushFrame();
+
+        // Seed a target level with an unreadable scene so the deferred switch
+        // action fails while loading the new foreground.
+        fs.SeedFile("root/current/level_broken/snd_scene.json", "{invalid}");
+        fs.SeedFile("root/current/level_broken/session.json", "{}");
+        fs.SeedFile("root/current/level_broken/session_state_machines.json", """{"machines":[]}""");
+
+        // A valid recovery target for the workflow after the failed switch.
+        fs.SeedFile("root/current/level_recovered/snd_scene.json", "[]");
+        fs.SeedFile("root/current/level_recovered/session.json", "{}");
+        fs.SeedFile("root/current/level_recovered/session_state_machines.json", """{"machines":[]}""");
+
+        // The level id "broken" maps to current/level_broken/snd_scene.json.
+        ctx.Save.RequestSwitchForegroundLevel("broken");
+        var failure = Assert.Throws<InvalidOperationException>(() => ctx.FlushFrame());
+        Assert.DoesNotContain("already in progress", failure.Message, StringComparison.Ordinal);
+
+        // The failed switch released the lifecycle-workflow guard: a subsequent
+        // switch, save, and shutdown all run without an "already in progress"
+        // error (the run itself stays alive).
+        ctx.Save.RequestSwitchForegroundLevel("recovered");
+        Assert.Null(Record.Exception(() => ctx.FlushFrame()));
+        var foreground = ctx.Runtime.SessionManager.ForegroundSession;
+        Assert.NotNull(foreground);
+        Assert.Equal("recovered", foreground!.LevelId);
+
+        ctx.Save.RequestSaveGame("after_failed_switch");
+        Assert.Null(Record.Exception(() => ctx.FlushFrame()));
+        Assert.Contains("after_failed_switch", ctx.Save.ListSaves());
+
+        ctx.Shutdown();
+        Assert.Null(ctx.Blackboard.ProgressBlackboard);
+    }
+
+    private static SndContext CreateEntryContext(TestMemoryFileSystem fs)
+    {
+        var logger = new TestLogger();
+        // Full-memory adapter host so foreground entities are real SndEntity
+        // instances whose AfterSpawn/BeforeSave hooks actually run. The bare
+        // TestSndSceneHost creates lifecycle-less dummy entities.
+        var host = new FullMemorySndSceneHost(logger);
+        var runtime = TestFactory.CreateRuntime(
+            logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), fs);
+        host.BindWorld(runtime.SndWorld);
+        var dataSourceIo = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(
+            runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json")
+        {
+            AutoDiscoverStrategies = false
+        });
+        host.BindContext(ctx);
+        fs.SeedFile("entry.json",
+            """{ "levels": { "main_menu": { "snd_scene": "res://levels/main_menu.json" } }, "main_menu_level": "main_menu" }""");
+        fs.SeedFile("res://levels/main_menu.json", "[]");
+        return ctx;
+    }
+
     private const string NoopPushIndex = "shutdown.noop_push";
     private const string ShutdownPopIndex = "shutdown.shutdown_pop";
     private const string ThrowOnQuitPopIndex = "shutdown.throw_quit_pop";
@@ -239,6 +452,60 @@ public class SndContextShutdownFailureTests
         public const string Index = "shutdown.quit_shutdown";
 
         public override void BeforeQuit(ISndEntity entity, ISndContext ctx) => ctx.Shutdown();
+    }
+
+    [StrategyIndex("shutdown.queue_save_then_shutdown")]
+    private sealed class QueueSaveThenShutdownOnQuitStrategy : LifecycleStrategyBase
+    {
+        public const string Index = "shutdown.queue_save_then_shutdown";
+
+        public override void BeforeQuit(ISndEntity entity, ISndContext ctx)
+        {
+            _ = ctx.Save.RequestSaveGameAuto("queued_after_quit");
+            ctx.Shutdown();
+        }
+    }
+
+    [StrategyIndex("shutdown.after_spawn")]
+    private sealed class ShutdownOnAfterSpawnStrategy : LifecycleStrategyBase
+    {
+        public override void AfterSpawn(ISndEntity entity, ISndContext ctx) => ctx.Shutdown();
+    }
+
+    [StrategyIndex("shutdown.before_save")]
+    private sealed class ShutdownOnBeforeSaveStrategy : LifecycleStrategyBase
+    {
+        public const string Index = "shutdown.before_save";
+
+        public override void BeforeSave(ISndEntity entity, ISndContext ctx) => ctx.Shutdown();
+    }
+
+    /// <summary>
+    ///     AfterLoad hook that requests shutdown and records the rejection, so a
+    ///     level switch can complete while proving the workflow guard fired.
+    /// </summary>
+    [StrategyIndex("shutdown.switch_after_load")]
+    private sealed class TryShutdownOnAfterLoadStrategy : LifecycleStrategyBase
+    {
+        private static readonly AsyncLocal<string?> _shutdownRejection = new();
+
+        public static string? ShutdownRejection
+        {
+            get => _shutdownRejection.Value;
+            set => _shutdownRejection.Value = value;
+        }
+
+        public override void AfterLoad(ISndEntity entity, ISndContext ctx)
+        {
+            try
+            {
+                ctx.Shutdown();
+            }
+            catch (InvalidOperationException ex)
+            {
+                ShutdownRejection = ex.Message;
+            }
+        }
     }
 
     [StrategyIndex(NoopPushIndex)]

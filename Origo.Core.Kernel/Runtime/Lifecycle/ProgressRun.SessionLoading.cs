@@ -158,9 +158,12 @@ internal sealed partial class ProgressRun
                 context?.EndSwitchTeardown();
             }
 
-            // A BeforeQuit hook may have requested shutdown while the old
-            // foreground was being disposed. Do not mount a new foreground or
-            // recreate current/ after the context was shut down.
+            // Defense-in-depth only: the lifecycle-workflow guard rejects
+            // SndContext.Shutdown while this switch is running, and the
+            // switch-teardown guard rejects it from the old foreground's quit
+            // hooks, so a switch cannot observe a terminal context here today.
+            // Keep the check so a future guard gap can never mount a new
+            // foreground (or recreate current/) after a successful shutdown.
             ThrowIfOwnerShutdown();
 
             try
@@ -190,6 +193,7 @@ internal sealed partial class ProgressRun
                 throw;
             }
 
+            // Defense-in-depth: see the guard note before the mount.
             ThrowIfOwnerShutdown();
             _owner.PersistProgress();
         }
@@ -223,7 +227,17 @@ internal sealed partial class ProgressRun
         {
             // CreateForegroundFromPayload validates the target level against
             // every other session before destroying the current foreground, so
-            // a conflict leaves the existing foreground untouched.
+            // a conflict leaves the existing foreground untouched. When no
+            // foreground exists, clear adapter-scene remnants explicitly (the
+            // same rule as the empty mount path): the shared adapter host can
+            // still hold entities after a failed session cleanup or from
+            // adapter-created content, and a payload mount would otherwise
+            // absorb them into the new session and persist them as phantom
+            // entities on the next save. A payload load always runs with no
+            // foreground session, so this is the normal path for it.
+            if (_owner._sessionManager.ForegroundSession is null)
+                _owner._sessionManager.ClearAdapterScene();
+
             var session = _owner._sessionManager.CreateForegroundFromPayload(levelId, levelPayload);
             return FinalizeForegroundMount(levelId, session, writeTopology);
         }

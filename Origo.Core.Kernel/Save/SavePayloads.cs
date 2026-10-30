@@ -64,7 +64,11 @@ public sealed class SaveGamePayload
     public const string FormatVersionMetaKey = "origo.format_version";
 
     /// <summary>
-    ///     The unique identifier of the save slot.
+    ///     The save slot this payload was built for. Storage write methods
+    ///     require a non-empty target slot id and compare it with this value
+    ///     when this value is non-empty; a mismatch fails fast. An empty value
+    ///     means the write target names the slot. Read methods always populate
+    ///     it with the slot that was read.
     /// </summary>
     public string SaveId { get; set; } = string.Empty;
 

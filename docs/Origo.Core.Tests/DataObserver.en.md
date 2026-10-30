@@ -8,13 +8,13 @@
 
 Validates the DataObserverManager subscription/notification system: the basic Subscribe/Unsubscribe/Notify chain,
 correct old/new value passing, key isolation (only subscribers for the subscribed key are notified), all multiple subscribers triggered,
-safety of self-unsubscribing within notifications (re-entrancy safety), and Clear removing everything.
+safety of self-unsubscribing within notifications (re-entrancy safety), skipping a subscription that a sibling callback unsubscribed earlier in the same pass (no notification after unmount), and Clear removing everything.
 
 ## Test File List
 
 | File | Verification Focus |
 |------|-------------------|
-| `DataObserverManagerTests.cs` | Basic chain + re-entrancy safety + key isolation + multiple subscribers and notifications |
+| `DataObserverManagerTests.cs` | Basic chain + re-entrancy safety (snapshot iteration, mid-pass Clear/unsubscribe) + key isolation + multiple subscribers and notifications |
 | `DataObserverManagerExtendedTests.cs` | Subscription with filter + Clear + extended edge cases |
 
 ## DataObserverManagerTests Details
@@ -45,6 +45,9 @@ safety of self-unsubscribing within notifications (re-entrancy safety), and Clea
 | `Unsubscribe_ThenNotify_NotCalled` | Notify after unsubscribe | Callback not invoked |
 | `Notify_InsideCallback_UnsubscribesItself_DoesNotThrow` | Self-unsubscribe within notification callback | Does not throw, notification not called again |
 | `Notify_InsideCallback_SubscribesNewKey_CurrentNotificationUnaffected` | Subscribe new key within notification | New subscription not triggered in current notification cycle |
+| `Notify_WhenEarlierCallbackUnsubscribesLaterCallback_LaterCallbackNotInvoked` | An earlier callback unsubscribes a later callback for the same key during the notification pass | Only the earlier callback runs; the removed subscription is skipped for the rest of the pass |
+| `Notify_WhenEarlierCallbackClearsSubscriptions_RemainingCallbacksNotInvoked` | An earlier callback calls `Clear()` during the notification pass | Remaining callbacks are skipped in the in-flight pass and stay removed for later notifications |
+| `Notify_UnsubscribeAndResubscribeSameCallbackInOnePass_OnlyFiresOnLaterNotification` | A later callback unsubscribes and re-subscribes the same delegate during the pass | The in-flight pass does not deliver the change through the fresh subscription; only a later notification fires it (no double delivery) |
 
 ## DataObserverManagerExtendedTests Details
 

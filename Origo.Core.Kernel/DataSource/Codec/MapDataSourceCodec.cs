@@ -32,7 +32,14 @@ internal sealed class MapDataSourceCodec(ILogger? logger = null) : IDataSourceCo
 
         foreach (var key in node.Keys.OrderBy(k => k, StringComparer.Ordinal))
         {
-            ValidateKey(key);
+            // The strict decoder trims both fields, splits on the first colon,
+            // and treats a leading '#' as a comment; keys/values that would
+            // change on read-back are rejected instead of producing files that
+            // silently corrupt data. The same rules are applied to display
+            // metadata before a save starts (see MapTextFormat).
+            if (MapTextFormat.FindKeyError(key) is { } keyError)
+                throw new InvalidOperationException(
+                    $"MapDataSourceCodec cannot encode key '{key}': {keyError}.");
 
             var child = node[key];
             if (child.IsNull)
@@ -43,17 +50,9 @@ internal sealed class MapDataSourceCodec(ILogger? logger = null) : IDataSourceCo
                     "is not representable in the string-only .map format. Use a Text child.");
 
             var value = child.AsString();
-            // The strict decoder trims both fields and splits on the first
-            // colon, so keys/values that would change on read-back are
-            // rejected instead of producing files that silently corrupt data.
-            if (value.Contains('\n') || value.Contains('\r'))
+            if (MapTextFormat.FindValueError(value) is { } valueError)
                 throw new InvalidOperationException(
-                    $"MapDataSourceCodec cannot encode key '{key}': its value contains " +
-                    "a line break, which the strict line-based decoder cannot read back.");
-            if (!string.Equals(value, value.Trim(), StringComparison.Ordinal))
-                throw new InvalidOperationException(
-                    $"MapDataSourceCodec cannot encode key '{key}': its value has leading or trailing " +
-                    "whitespace, which the strict decoder would remove.");
+                    $"MapDataSourceCodec cannot encode key '{key}': {valueError}.");
 
             sb.Append(key);
             sb.Append(": ");
@@ -61,23 +60,5 @@ internal sealed class MapDataSourceCodec(ILogger? logger = null) : IDataSourceCo
         }
 
         return sb.ToString();
-    }
-
-    private static void ValidateKey(string key)
-    {
-        if (string.IsNullOrEmpty(key))
-            throw new InvalidOperationException("MapDataSourceCodec cannot encode an empty key.");
-        if (!string.Equals(key, key.Trim(), StringComparison.Ordinal))
-            throw new InvalidOperationException(
-                $"MapDataSourceCodec cannot encode key '{key}': leading or trailing whitespace " +
-                "would be removed by the strict decoder.");
-        if (key.StartsWith('#'))
-            throw new InvalidOperationException(
-                $"MapDataSourceCodec cannot encode key '{key}': a leading '#' would make the " +
-                "strict decoder treat the line as a comment.");
-        if (key.Contains(':') || key.Contains('\n') || key.Contains('\r'))
-            throw new InvalidOperationException(
-                $"MapDataSourceCodec cannot encode key '{key}': ':' and line breaks are reserved " +
-                "by the line-based key: value format.");
     }
 }

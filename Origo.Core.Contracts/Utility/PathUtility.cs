@@ -9,7 +9,11 @@ namespace Origo.Core.Utility;
 public static class PathUtility
 {
     /// <summary>
-    ///     Normalizes a directory path by trimming trailing separators.
+    ///     Normalizes a directory path by trimming trailing separators, while
+    ///     preserving root forms: a scheme root (<c>user://</c>), a plain
+    ///     filesystem root (<c>/</c>), and a drive root (<c>C:\</c>) are
+    ///     returned unchanged instead of degrading to an empty or bare-drive
+    ///     string.
     /// </summary>
     /// <exception cref="ArgumentNullException">
     ///     Thrown when <paramref name="path" /> is null, matching
@@ -22,7 +26,21 @@ public static class PathUtility
         // would destroy it into the invalid "user:" prefix.
         if (path.EndsWith("://", StringComparison.Ordinal))
             return path;
-        return path.TrimEnd('/', '\\');
+
+        var trimmed = path.TrimEnd('/', '\\');
+        if (trimmed.Length == 0)
+        {
+            // "/" and "\" are filesystem roots: keep the separator instead of
+            // returning an empty string that Combine would treat as "no base".
+            return path.Length == 0 ? path : path[..1];
+        }
+
+        // "C:\" trims to the drive-relative "C:"; keep the separator so the
+        // result stays an absolute root.
+        if (trimmed.Length == 2 && trimmed[1] == ':' && char.IsLetter(trimmed[0]))
+            return path;
+
+        return trimmed;
     }
 
     /// <summary>Extracts the suffix after a leading '*' glob; null when the pattern has no glob prefix.</summary>
