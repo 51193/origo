@@ -255,6 +255,120 @@ public class AdapterCommandHandlerIntegrationTests : IDeferredTestFixture, IDisp
             "an existing entity must not be reported as absent");
     }
 
+    [DeferredTest(Description = "CameraView filters hidden 3D and UI nodes instead of reporting them as visible")]
+    public void CameraView_HiddenNodes_AreNotReportedAsVisible()
+    {
+        _root = ((SceneTree)Engine.GetMainLoop()).Root;
+
+        using var harness = new IntegrationTestHarness();
+        harness.BindRuntimeDependencies();
+        harness.BindContext();
+        var entity = GodotSndEntity.Create(
+            harness.SndWorld, harness.SndManager.Context!, harness.Logger,
+            harness.SndManager.GetObserverTopology(), _ => new StubNodeFactory());
+        SetupEntity(entity, "hidden_node_cam_entity");
+        _root.AddChild(entity);
+        TrackNode(entity);
+
+        var visiblePanel = new Control { Name = "VisiblePanel" };
+        entity.AddChild(visiblePanel);
+        var hidden3D = new Node3D { Name = "HiddenThing", Position = new Vector3(0, 0, -10), Visible = false };
+        entity.AddChild(hidden3D);
+        var hiddenPanel = new Control { Name = "HiddenPanel", Visible = false };
+        entity.AddChild(hiddenPanel);
+
+        var camera = new Camera3D { Name = "VisibilityFilterCamera", Current = true, Position = Vector3.Zero };
+        _root.AddChild(camera);
+        TrackNode(camera);
+
+        var runtime = CreateRuntimeWithMockSession(entity);
+        var handler = new CameraViewCommandHandler(runtime);
+        var output = new StubConsoleOutput();
+
+        var invocation = new CommandInvocation
+        {
+            Command = "camera_view",
+            PositionalArgs = [],
+            NamedArgs = new Dictionary<string, string>()
+        };
+
+        var success = handler.TryExecute(invocation, output, out _);
+        var text = string.Join("\n", output.PublishedLines);
+        IntegrationTestRunner.Assert(success, "TryExecute should succeed in headless.");
+        IntegrationTestRunner.AssertContains("VisiblePanel", text, "output");
+        IntegrationTestRunner.Assert(!text.Contains("HiddenThing", StringComparison.Ordinal),
+            "a hidden 3D node must not be reported as visible");
+        IntegrationTestRunner.Assert(!text.Contains("HiddenPanel", StringComparison.Ordinal),
+            "a hidden UI node must not be reported as visible");
+        IntegrationTestRunner.AssertContains("visible from 1 entities", text, "output");
+    }
+
+    [DeferredTest(Description = "CameraView filters nodes hidden by an ancestor instead of reporting them as visible")]
+    public void CameraView_HiddenAncestors_AreNotReportedAsVisible()
+    {
+        _root = ((SceneTree)Engine.GetMainLoop()).Root;
+
+        using var harness = new IntegrationTestHarness();
+        harness.BindRuntimeDependencies();
+        harness.BindContext();
+        var entity = GodotSndEntity.Create(
+            harness.SndWorld, harness.SndManager.Context!, harness.Logger,
+            harness.SndManager.GetObserverTopology(), _ => new StubNodeFactory());
+        SetupEntity(entity, "hidden_ancestor_cam_entity");
+        _root.AddChild(entity);
+        TrackNode(entity);
+
+        // A visible 3D child under a hidden 3D ancestor is not rendered, so it
+        // must be filtered by the ancestor's visibility and not counted as 3D.
+        var hidden3DAncestor = new Node3D
+        {
+            Name = "Hidden3DAncestor",
+            Position = new Vector3(0, 0, -10),
+            Visible = false
+        };
+        entity.AddChild(hidden3DAncestor);
+        hidden3DAncestor.AddChild(new Node3D { Name = "Visible3DChild", Position = new Vector3(0, 0, -10) });
+
+        // A visible Control child under a hidden CanvasItem ancestor is not
+        // drawn, so it must be filtered by the ancestor's visibility too.
+        var hiddenUiAncestor = new Control { Name = "HiddenUiAncestor", Visible = false };
+        entity.AddChild(hiddenUiAncestor);
+        hiddenUiAncestor.AddChild(new Control { Name = "VisibleUiChild" });
+
+        // Positive control: only this node may be reported and counted.
+        var visiblePanel = new Control { Name = "AncestorProbePanel" };
+        entity.AddChild(visiblePanel);
+
+        var camera = new Camera3D { Name = "HiddenAncestorCamera", Current = true, Position = Vector3.Zero };
+        _root.AddChild(camera);
+        TrackNode(camera);
+
+        var runtime = CreateRuntimeWithMockSession(entity);
+        var handler = new CameraViewCommandHandler(runtime);
+        var output = new StubConsoleOutput();
+
+        var invocation = new CommandInvocation
+        {
+            Command = "camera_view",
+            PositionalArgs = [],
+            NamedArgs = new Dictionary<string, string>()
+        };
+
+        var success = handler.TryExecute(invocation, output, out _);
+        var text = string.Join("\n", output.PublishedLines);
+        IntegrationTestRunner.Assert(success, "TryExecute should succeed in headless.");
+        IntegrationTestRunner.AssertContains("AncestorProbePanel", text, "output");
+        IntegrationTestRunner.Assert(!text.Contains("Hidden3DAncestor", StringComparison.Ordinal),
+            "a node hidden by an ancestor must not be reported as visible");
+        IntegrationTestRunner.Assert(!text.Contains("Visible3DChild", StringComparison.Ordinal),
+            "a visible 3D child of a hidden 3D ancestor must not be reported as visible");
+        IntegrationTestRunner.Assert(!text.Contains("HiddenUiAncestor", StringComparison.Ordinal),
+            "a hidden CanvasItem ancestor must not be reported as visible");
+        IntegrationTestRunner.Assert(!text.Contains("VisibleUiChild", StringComparison.Ordinal),
+            "a visible Control child of a hidden CanvasItem ancestor must not be reported as visible");
+        IntegrationTestRunner.AssertContains("1 nodes (0 3D, 1 UI) visible from 1 entities.", text, "output");
+    }
+
     [DeferredTest(Description = "PressButton rejects a button outside the target entity's subtree")]
     public void PressButton_OutsideEntity_Rejected()
     {

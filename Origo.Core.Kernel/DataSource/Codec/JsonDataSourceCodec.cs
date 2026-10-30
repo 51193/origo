@@ -116,7 +116,7 @@ internal sealed class JsonDataSourceCodec(bool writeIndented = true) : IDataSour
                     break;
 
                 case DataSourceNodeKind.Text:
-                    writer.WriteStringValue(node.AsString());
+                    WriteTextValue(writer, node);
                     break;
 
                 case DataSourceNodeKind.Number:
@@ -138,9 +138,21 @@ internal sealed class JsonDataSourceCodec(bool writeIndented = true) : IDataSour
         }
     }
 
+    private static void WriteTextValue(Utf8JsonWriter writer, DataSourceNode node)
+    {
+        var value = node.AsString();
+        // The writer's replacement fallback would collapse an unpaired UTF-16
+        // surrogate into U+FFFD, silently changing the value on read-back.
+        Utf16Text.ThrowIfNotWellFormed(value, "JSON text value");
+        writer.WriteStringValue(value);
+    }
+
     private static void WriteProperty(
         Utf8JsonWriter writer, string key, DataSourceNode node, HashSet<DataSourceNode> active)
     {
+        // The default encoder would replace an unpaired surrogate with U+FFFD,
+        // silently changing the key on read-back. Reject it instead.
+        Utf16Text.ThrowIfNotWellFormed(key, "JSON object key");
         writer.WritePropertyName(key);
         WriteNode(writer, node, active);
     }

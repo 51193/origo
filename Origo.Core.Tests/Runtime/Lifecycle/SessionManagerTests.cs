@@ -516,6 +516,38 @@ public class SessionManagerTests
         Assert.Null(ex);
     }
 
+    [Fact]
+    public void Clear_WithTwoFailingSessions_RemovesAllAndRethrowsFirstFailure()
+    {
+        var (ctx, _) = CreateContext();
+        ctx.Runtime.SndWorld.RegisterStrategy(() => new ThrowingBeforeQuitStrategy());
+        SetupForegroundSession(ctx);
+
+        var manager = ctx.Runtime.SessionManager;
+        var logger = (TestLogger)ctx.Runtime.Logger;
+
+        // Both background sessions use FullMemorySndSceneHost, whose entities
+        // really run BeforeQuit hooks (the adapter test host is a stub).
+        var first = manager.CreateBackgroundSession("bg1", "level_bg1");
+        first.Spawn(CreateMetaWithStrategy("bg1_probe", ThrowingBeforeQuitIdx));
+        var second = manager.CreateBackgroundSession("bg2", "level_bg2");
+        second.Spawn(CreateMetaWithStrategy("bg2_probe", ThrowingBeforeQuitIdx));
+
+        // Both session disposals fail; Clear must still remove every session,
+        // rethrow the first failure, and log the later failure.
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            ((SessionManager)manager).Clear());
+        Assert.Contains("bg1_probe boom", ex.Message, StringComparison.Ordinal);
+
+        Assert.Empty(manager.Keys);
+        Assert.Null(manager.ForegroundSession);
+        Assert.Null(manager.TryGet("bg1"));
+        Assert.Null(manager.TryGet("bg2"));
+        Assert.Contains(logger.Warnings,
+            w => w.Contains("Session dispose failed while clearing remaining sessions", StringComparison.Ordinal)
+                 && w.Contains("bg2_probe boom", StringComparison.Ordinal));
+    }
+
     // ── Helpers ─────────────────────────────────────────────────────
 
     private static SndMetaData CreateEmptyMeta(string name) =>
@@ -524,6 +556,15 @@ public class SessionManagerTests
             Name = name,
             NodeMetaData = new NodeMetaData(),
             StrategyMetaData = new StrategyMetaData(),
+            DataMetaData = new DataMetaData()
+        };
+
+    private static SndMetaData CreateMetaWithStrategy(string name, string lifecycleIndex) =>
+        new()
+        {
+            Name = name,
+            NodeMetaData = new NodeMetaData(),
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = [lifecycleIndex] },
             DataMetaData = new DataMetaData()
         };
 
@@ -555,6 +596,14 @@ public class SessionManagerTests
     }
 
     private const string _processSpyIdx = "test.smgr.process_spy";
+    private const string ThrowingBeforeQuitIdx = "test.smgr.throwing_before_quit";
+
+    [StrategyIndex(ThrowingBeforeQuitIdx)]
+    private sealed class ThrowingBeforeQuitStrategy : LifecycleStrategyBase
+    {
+        public override void BeforeQuit(ISndEntity entity, ISndContext ctx) =>
+            throw new InvalidOperationException($"{entity.Name} boom");
+    }
 
     [StrategyIndex(_processSpyIdx)]
     private sealed class ProcessSpyStrategy : LifecycleStrategyBase

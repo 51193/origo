@@ -30,6 +30,15 @@ public interface ISessionManager
     ///     Create a background level session and auto-mount it to the manager.
     ///     Uses a pure in-memory scene host implementation, independent of the engine adapter layer.
     /// </summary>
+    /// <exception cref="System.ArgumentException">
+    ///     Thrown when <paramref name="key" /> or <paramref name="levelId" /> is null,
+    ///     whitespace, or not a valid session/level token.
+    /// </exception>
+    /// <exception cref="System.InvalidOperationException">
+    ///     Thrown when the key is already mounted, the key is the reserved foreground
+    ///     key, the level is already managed by another session, or session-set
+    ///     mutation is forbidden because <c>BeforeSave</c> hooks are running.
+    /// </exception>
     ISessionRun CreateBackgroundSession(string key, string levelId, bool syncProcess = false);
 
     /// <summary>
@@ -38,6 +47,11 @@ public interface ISessionManager
     ///     <see cref="Contains" /> / <see cref="TryGet" /> query semantics and
     ///     keeping framework teardown paths (foreground switch, Clear) simple.
     /// </summary>
+    /// <exception cref="System.InvalidOperationException">
+    ///     Thrown when session-set mutation is forbidden because <c>BeforeSave</c>
+    ///     hooks are running; in that window even a blank or unmounted key is
+    ///     rejected so the save topology cannot change while serialization runs.
+    /// </exception>
     void DestroySession(string key);
 
     /// <summary>

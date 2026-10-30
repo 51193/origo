@@ -82,13 +82,14 @@ Rules:
 | `verify-release.sh` | Release metadata verification |
 | `verify-release-provenance.sh` | Tag ancestry and release-commit provenance |
 | `validate-release-packages.sh` | Validate the five-package release artifact set |
+| `validate-release-artifacts.sh` | Validate the exact nine release asset names before publishing |
 | `validate-release-source.sh` | Validate the release source archive |
 | `work-identity.sh` | Branch/worktree identity validation |
 | `package-consumer-smoke-lib.sh` | Source-only helpers for the package smoke |
 | `test-api-inventory-parent.sh` | Bash API-inventory parent/metadata-commit regression tests |
 | `test-docs.sh` | Generated-document and local-link validation |
 | `test-check-weekly-base.sh` | Weekly snapshot base/version validation |
-| `test-dev-suite.sh` | Bash/PowerShell gate parity, self-test wiring, and script-map guard |
+| `test-dev-suite.sh` | Bash/PowerShell gate parity, test-project parity, self-test wiring, and script-map guard |
 | `test-dotnet-env.sh` | SDK bootstrap, selection, and installer regression tests |
 | `test-download-godot-deps.sh` | Godot downloader dependency/cache tests |
 | `test-find-previous-api-baseline.sh` | Previous release baseline selection tests |
@@ -97,9 +98,24 @@ Rules:
 | `test-pre-push-hook.sh` | Pre-push commit-lint hook tests |
 | `test-release-check.sh` | Release preflight regression tests |
 | `test-validate-release-source.sh` | Release source archive validator tests |
+| `test-validate-release-artifacts.sh` | Release artifact-set validator tests |
 | `test-verify-release-provenance.sh` | Release provenance verifier tests |
 | `test-verify-release.sh` | Release metadata verifier tests |
 | `test-write-version-stamp.sh` | Version stamp helper tests |
+
+**Script-lint environment**: CI hard-fails when `shellcheck` is missing, while a
+local run without `shellcheck` prints a warning and still runs `bash -n`; local
+and CI results can also differ with the installed `shellcheck` version. This is
+the recorded supported-environment limitation tracked by issue #52, not a
+fallback that makes an uninstalled local gate fail.
+
+**Bash-only release pipeline**: the release/weekly validators
+(`release-check.sh`, `verify-release*.sh`, `validate-release-*.sh`,
+`find-previous-api-baseline.sh`, `check-weekly-base.sh`) and their self-tests
+are intentionally Bash-only, like the rest of the release pipeline. The Release
+and Weekly Build workflows run on `ubuntu-latest` only, so the PowerShell suite
+mirrors the development gates but not the release pipeline; this is why
+`validate-release-artifacts.sh` has no `scripts/powershell/` counterpart.
 
 ## Python (`scripts/python`)
 

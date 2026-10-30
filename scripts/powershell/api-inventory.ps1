@@ -11,6 +11,7 @@ param(
 
 $root = Get-OrigoRoot
 $baseline = Join-Path $root 'tools\ApiInventoryTool\shell-api-baseline.json'
+$approvedBreaks = Join-Path $root 'tools\ApiInventoryTool\shell-api-approved-breaks.json'
 
 function Get-OrigoTargetDir {
     param([string]$Project)
@@ -121,6 +122,9 @@ try {
             $generateArgs = @('run', '--project', 'tools\ApiInventoryTool', '--', 'generate') + $assemblyArgs + $referenceArgs + @('--output', $current)
             Invoke-OrigoDotnet -Arguments $generateArgs
             $compareArgs = @('run', '--project', 'tools\ApiInventoryTool', '--', 'compare', '--previous', $previous, '--current', $current)
+            if (Test-Path -LiteralPath $approvedBreaks -PathType Leaf) {
+                $compareArgs += @('--approved-breaks', $approvedBreaks)
+            }
             Invoke-OrigoDotnet -Arguments $compareArgs
         }
         finally {

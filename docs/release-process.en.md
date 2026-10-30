@@ -150,11 +150,11 @@ The Release workflow starts from a pushed `v*` tag or from `workflow_dispatch`
 with the `tag` input, which is how weekly snapshots start it. The tag is resolved
 first; every step below then applies to that tag:
 
-- Before stamping, fetch the validators from `origin/main` and verify tag provenance with `scripts/bash/verify-release-provenance.sh`: a formal tag must point at main history or the metadata-only release commit from an earlier run; a snapshot tag must point at main history or at a weekly/release version-stamp commit based on main. The metadata commit's subject must name the tag's exact version, may change only the three version elements in `Directory.Build.props`, and cannot smuggle extra MSBuild logic. The validators are not executed from the tag tree. `verify-release.sh` resolves the repository root as two directories above itself, so the workflow stages it at `<repo>/.release-validators/scripts/verify-release.sh`; staging it one level deeper would make it search for `CHANGELOG.md` under `.release-validators`. Tag creation remains a trusted operation: a tag-triggered workflow still uses the workflow file at the tag, so the gate prevents accidental unmerged tags rather than a malicious tag writer;
+- Before stamping, fetch the validators from `origin/main` and verify tag provenance with `scripts/bash/verify-release-provenance.sh`: a formal tag must point at main history or the metadata-only release commit from an earlier run; a snapshot tag must point at main history or at a weekly/release version-stamp commit based on main. The metadata commit's subject must name the tag's exact version, may change only the three version elements in `Directory.Build.props`, and cannot smuggle extra MSBuild logic. The validators — including `validate-release-artifacts.sh` — are not executed from the tag tree, so a release tag that predates the artifact-set checker can still be released. `verify-release.sh` resolves the repository root as two directories above itself, so the workflow stages it at `<repo>/.release-validators/scripts/verify-release.sh`; staging it one level deeper would make it search for `CHANGELOG.md` under `.release-validators`. Tag creation remains a trusted operation: a tag-triggered workflow still uses the workflow file at the tag, so the gate prevents accidental unmerged tags rather than a malicious tag writer;
 - Rewrite `Directory.Build.props` from the tag through the shared `scripts/python/write-version-stamp.py` helper (also used by the weekly snapshot workflow): accept exactly `x.y.z` or `x.y.z-<suffix>`, strip only the leading `v` for `<Version>`, and derive `AssemblyVersion` / `FileVersion` from `x.y.z.0` (a `-nightly` / `-alpha` suffix stays only in `<Version>`). If anything changed, the pipeline creates a `chore(release): sync version stamps to <tag>` commit whose parent is the tagged main commit. The tag-recheck step runs even when no rewrite was needed, so a stale tag can never survive a rerun; a hyphenated tag is always published as a pre-release;
 - Run `verify-release.sh`, `scripts/bash/lint-scripts.sh`, and the full test suite. The automatic rewrite covers only the version stamps; the formal metadata (CHANGELOG version block, empty `[Unreleased]`, and analyzer shipped block) must still be present in the tagged commit;
 - Run all compatibility gates: `scripts/bash/lint-scripts.sh` (script, workflow, and instruction guards),
-  `scripts/bash/api-inventory.sh` (shell API baseline; normal CI checks out full history and tags and fails before the gate if no formal release tag is visible, then auto-extracts the previous formal tag's baseline when no explicit previous baseline is set, allowing compatible additions while rejecting removals/signature changes),
+  `scripts/bash/api-inventory.sh` (shell API baseline; normal CI checks out full history and tags and fails before the gate if no formal release tag is visible, then auto-extracts the previous formal tag's baseline when no explicit previous baseline is set; resolution fails closed when formal tags exist but no usable baseline can be resolved (the pre-first-release skip is explicit), allowing compatible additions while rejecting removals/signature changes — reviewed pre-1.0 breaking changes are filtered only when listed in the approved-break file, where a dormant entry fails and an obsolete entry is reported for cleanup),
   `scripts/bash/test.sh` (behavior and save contracts), benchmarks, Godot headless
   integration, and `scripts/bash/package-consumer-smoke.sh` (shell-only restore,
   negative compile probe, and startup);
@@ -171,11 +171,18 @@ first; every step below then applies to that tag:
   expected `origo-<version>/` root, and, for a formal release, the same metadata
   verifier as the checkout. This is the authoritative source snapshot; GitHub's
   automatically generated source links resolve the same tag;
+- Run the staged `validate-release-artifacts.sh` (fetched from `main` with the
+  other validators) on the packed artifact directory after the source-archive
+  validation to assert the exact nine
+  attachment names (five packages, the source archive, the two documentation
+  archives, and `nuget.config`) with no extras; this check runs before the tag
+  moves;
 - Build a documentation snapshot archive containing `docs/`, `AGENTS.md`,
   `CHANGELOG.md`, and `Directory.Build.props` (the version authority referenced
   by the manual);
-- Only after tests, package validation, and source-archive validation succeed,
-  move **only the tag** to the release commit with a lease check. `main` is
+- Only after tests, package validation, source-archive validation, and
+  artifact-set validation succeed, move **only the tag** to the release commit
+  with a lease check. `main` is
   never written, so branch rules that require a pull request cannot block a
   release. Validation or packing failures leave every ref untouched. A fresh
   workflow run -- including a GitHub re-run, whose checkout now uses an
@@ -196,8 +203,11 @@ release tags to be immutable, create the tag after the stamped commit exists
 (for example a dispatch-created tag) instead of moving an existing tag.
 
 Packages are not pushed to nuget.org as formal artifacts; consumers download them
-from the GitHub Release and configure a local package source as described in the
-root [README](../README.md).
+from the GitHub Release and configure a local package source. The release
+attaches `nuget.config` from the tracked template
+[`nuget.config.example`](../nuget.config.example), and
+[Shell-Only Package Consumption Verification](usage/shell-package-consumer.en.md)
+documents the package-only restore path that the CI smoke test verifies.
 
 ## Related Files
 
@@ -205,6 +215,7 @@ root [README](../README.md).
 - [scripts/bash/verify-release.sh](../scripts/bash/verify-release.sh)
 - [scripts/bash/release-check.sh](../scripts/bash/release-check.sh)
 - [scripts/bash/validate-release-source.sh](../scripts/bash/validate-release-source.sh)
+- [scripts/bash/validate-release-artifacts.sh](../scripts/bash/validate-release-artifacts.sh)
 - [scripts/bash/verify-release-provenance.sh](../scripts/bash/verify-release-provenance.sh)
 - [scripts/bash/check-weekly-base.sh](../scripts/bash/check-weekly-base.sh)
 - [scripts/bash/find-previous-api-baseline.sh](../scripts/bash/find-previous-api-baseline.sh)

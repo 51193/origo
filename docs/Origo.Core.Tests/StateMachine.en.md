@@ -104,6 +104,10 @@ StateMachineStrategyBase default hook semantics, StateMachineStrategyContext sna
 | `StateMachineContainer_PopAllRuntime_InvokesBeforeRemoveTopToBottom` | PopAllRuntime triggers runtime hooks in LIFO order | state-machine: Container Operations |
 | `StateMachineContainer_PopAllOnQuit_InvokesBeforeQuitTopToBottom` | PopAllOnQuit triggers beforeQuit hooks in LIFO order | state-machine: Container Operations |
 | `StateMachineContainer_PopAllOnQuit_TraversesMachinesInInsertionOrder` | Multiple state machines traversed in insertion order | state-machine |
+| `StateMachineContainer_PopAllOnQuit_OneThrowingLevel_DoesNotStrandLowerLevels` | A throwing top-level `OnPopBeforeQuit` is force-dropped without replay and the lower level still receives its quit hook | InvalidOperationException (single failure); pop events are top then lower level |
+| `StateMachineContainer_PopAllOnQuit_AggregatesTwoMachineFailures_AndProcessesLaterMachines` | Two machines' quit hooks throw; a third machine is healthy | AggregateException with two inner exceptions; the later machine is still visited (its quit event recorded) |
+| `StateMachineContainer_PopAllOnQuit_HookPushesThenThrows_TerminatesAndKeepsLowerLevels` | The top-level `OnPopBeforeQuit` pushes an extra level and then throws | Force-pop uses the pre-hook snapshot: the machine terminates (no re-run/infinite loop), the pushed level and failing level are dropped, the lower level still receives its quit hook, and the single failure propagates |
+| `StateMachineContainer_PopAllOnQuit_HookPushesThenReturns_TerminatesAndKeepsLowerLevels` | The top-level `OnPopBeforeQuit` pushes an extra level and returns normally | No-progress detection drops the pre-hook level without re-running its hook: quit returns normally, the "boom" hook ran exactly once, and the lower level still receives its quit hook (two invocations total, no infinite loop) |
 | `StateMachineContainer_PopAllOnQuit_FirstHookThrows_StillRunsLaterMachines` | A throwing quit hook is aggregated and later machines still run | state-machine: Container Operations |
 | `ProgressStateMachine_LevelSwitch_DoesNotReplayOnPushAfterLoad` | A foreground switch does not replay live progress stacks | state-machine: Progress Lifecycle |
 | `ProgressStateMachine_QuitHook_CanReadSceneAccess` | Progress quit hooks run before session teardown, so SceneAccess is available | state-machine: Progress Lifecycle |
@@ -141,6 +145,9 @@ StateMachineStrategyBase default hook semantics, StateMachineStrategyContext sna
 | `SmPushStrategy` | RandomAndStateMachineTests.TestStrategies.cs | Push hook: records events in `push:runtime:before->after` and `push:afterload:before->after` formats |
 | `SmPopStrategy` | RandomAndStateMachineTests.TestStrategies.cs | Pop hook: records `pop:runtime:...` and `pop:beforeQuit:...` events |
 | `SmPopOrderProbeStrategy` | RandomAndStateMachineTests.TestStrategies.cs | OnPopBeforeQuit records MachineKey, verifying multi-machine traversal order |
+| `SmThrowOnTopQuitStrategy` | RandomAndStateMachineTests.TestStrategies.cs | Records each quit pop and throws only when the popped top is "boom"; verifies per-level quit-hook isolation and aggregation |
+| `SmPushThenThrowOnQuitStrategy` | RandomAndStateMachineTests.TestStrategies.cs | Pushes an extra level inside the quit hook and then throws on the first "boom" pop; verifies pre-hook snapshot force-pop terminates and does not re-run levels |
+| `SmPushThenReturnOnQuitStrategy` | RandomAndStateMachineTests.TestStrategies.cs | Pushes an extra level inside the quit hook and returns normally on the first "boom" pop; verifies no-progress detection terminates quit with bounded hook invocations |
 | `SwapTestPushStrategy` | RandomAndStateMachineTests.Container.cs | Empty Push hook, used for serialization atomic replace tests |
 | `SwapTestPopStrategy` | RandomAndStateMachineTests.Container.cs | Empty Pop hook, used for serialization atomic replace tests |
 | `SmPushStub` | StackStateMachineTests.cs | Empty StateMachineStrategyBase Push stub, only used to drive stack operations |

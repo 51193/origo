@@ -16,7 +16,7 @@ The default in-memory implementation of the `IBlackboard` interface. Uses `Dicti
 
 - **Key validation**: Both `SetValue` and `TryGet` perform defensive checks on empty/null keys, throwing `ArgumentException`
 - **SetValue**: Creates a value type instance via `TypedDataFactory<T>.Create(value)` and stores it in the dictionary; the generic type is captured at compile time. A null of an unregistered reference type throws `ArgumentNullException` (a null of a registered reference kind such as `string` remains legal)
-- **TryGet**: First looks up the `TypedData`, then extracts and validates the runtime type via `TypedDataFactory<T>.TryExtract(td, out var value)`
+- **TryGet**: First looks up the `TypedData`, then extracts and validates the runtime type via the generated `TypedDataFactory<T>.TryExtract(td, out var value)`. The result is `(bool found, T? value)`: a stored null of a registered reference kind returns `found = true` with a null value, and the nullable result makes that visible to callers. Value-type arguments stay non-nullable in practice because an unconstrained `T?` annotation does not become `Nullable<T>`
 - **SerializeAll/DeserializeAll**: Full export/import, no incremental merging. `DeserializeAll` clears first then populates — replacement semantics
 
 ## Design Decisions

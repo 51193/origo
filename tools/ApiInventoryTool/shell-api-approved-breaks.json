@@ -1,0 +1,19 @@
+{
+  "breaks": [
+    {
+      "assembly": "Origo.Core.Contracts",
+      "api": "M:Origo.Core.Abstractions.Blackboard.IBlackboard.(bool found, T value) TryGet<T>(string key)",
+      "reason": "Pre-0.1 nullable annotation correction: TryGet now returns (bool found, T? value); no external consumers exist yet."
+    },
+    {
+      "assembly": "Origo.Core.Contracts",
+      "api": "M:Origo.Core.Blackboard.Blackboard.public (bool found, T value) TryGet<T>(string key)",
+      "reason": "Pre-0.1 nullable annotation correction: TryGet now returns (bool found, T? value)."
+    },
+    {
+      "assembly": "Origo.Core",
+      "api": "T:public sealed Class Origo.Core.OrigoHost : Origo.Core.Abstractions.Runtime.IOrigoFrameDriver",
+      "reason": "Pre-0.1 addition of IDisposable to the host facade so consumers can own it via using; adding the interface changes the recorded type signature."
+    }
+  ]
+}

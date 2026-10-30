@@ -48,16 +48,20 @@ public sealed class SndMetaFluentBuilder
     }
 
     /// <summary>Adds a passive lifecycle strategy index to the metadata.</summary>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="index" /> is null or whitespace.</exception>
     public SndMetaFluentBuilder AddLifecycleStrategy(string index)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(index);
         _meta.StrategyMetaData ??= new StrategyMetaData();
         _meta.StrategyMetaData.LifecycleIndices.Add(index);
         return this;
     }
 
     /// <summary>Adds an active strategy index to the metadata.</summary>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="index" /> is null or whitespace.</exception>
     public SndMetaFluentBuilder AddActiveStrategy(string index)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(index);
         _meta.StrategyMetaData ??= new StrategyMetaData();
         _meta.StrategyMetaData.ActiveIndices.Add(index);
         return this;

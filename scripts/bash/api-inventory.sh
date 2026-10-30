@@ -13,13 +13,18 @@
 #    contains the tracked baseline. A tag-only release commit is a metadata-only
 #    child of main, so the helper accepts it even though it is not an ancestor
 #    of HEAD; releases before the baseline tool exists skip this comparison with
-#    an explicit message.
+#    an explicit message. Baseline resolution is fail-closed: formal release tags
+#    that exist but cannot be resolved as a usable previous baseline abort the
+#    gate instead of silently disabling the comparison. Reviewed pre-0.1 breaks
+#    are declared in tools/ApiInventoryTool/shell-api-approved-breaks.json and
+#    passed to the compare command when that file exists.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
 source "$ROOT/scripts/bash/dotnet-env.sh"
 
 BASELINE="$ROOT/tools/ApiInventoryTool/shell-api-baseline.json"
+APPROVED_BREAKS="$ROOT/tools/ApiInventoryTool/shell-api-approved-breaks.json"
 MODE="${1:-verify}"
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -75,7 +80,11 @@ trap cleanup EXIT
 
 PREVIOUS="${ORIGO_PREVIOUS_API_BASELINE:-}"
 if [[ -z "$PREVIOUS" ]]; then
-  PREVIOUS="$(bash scripts/bash/find-previous-api-baseline.sh)"
+  if ! PREVIOUS="$(bash scripts/bash/find-previous-api-baseline.sh)"; then
+    echo "ERROR: previous shell API baseline resolution failed." >&2
+    echo "Refusing to skip previous-package validation after the diagnostic above." >&2
+    exit 1
+  fi
   AUTO_PREVIOUS="$PREVIOUS"
 fi
 
@@ -93,11 +102,15 @@ if [[ -n "$PREVIOUS" ]]; then
   CURRENT="$(mktemp)"
   dotnet run --project tools/ApiInventoryTool -- generate \
     "${ASSEMBLY_ARGS[@]}" "${REFERENCE_ARGS[@]}" --output "$CURRENT"
-  dotnet run --project tools/ApiInventoryTool -- compare --previous "$PREVIOUS" --current "$CURRENT"
+  COMPARE_ARGS=(--previous "$PREVIOUS" --current "$CURRENT")
+  if [[ -f "$APPROVED_BREAKS" ]]; then
+    COMPARE_ARGS+=(--approved-breaks "$APPROVED_BREAKS")
+  fi
+  dotnet run --project tools/ApiInventoryTool -- compare "${COMPARE_ARGS[@]}"
 else
   echo ""
   echo "Previous-package validation: no previous formal release shell API baseline"
-  echo "was found (releases before the baseline tool was introduced skip this"
+  echo "is available (releases before the baseline tool was introduced skip this"
   echo "gate). Set ORIGO_PREVIOUS_API_BASELINE to override auto-detection."
 fi
 echo "Shell API inventory: OK"

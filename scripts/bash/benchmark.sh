@@ -22,6 +22,10 @@
 # rerun; only a throughput regression that fails both attempts is reported,
 # which filters transient CPU/GC/JIT noise without hiding deterministic
 # regressions. Allocation-only failures fail immediately.
+# A baseline metric with no measurement in the current run means a benchmark was
+# removed or renamed; that check is machine-independent and fails on every
+# machine (including CI), so deleting a benchmark cannot silently shrink the
+# monitored surface. Only --update-baseline records an intentional removal.
 # Pass --update-baseline to refresh baseline.json from the current run
 # (e.g. after a confirmed improvement or an environment change).
 set -euo pipefail
@@ -168,6 +172,12 @@ if not same_machine:
 fails = []
 throughput_regressed = False
 skipped = 0
+# Metrics present in the baseline but absent from the current run mean a
+# benchmark was removed or renamed, which would silently shrink the measured
+# surface (the loop below iterates only over current metrics). This check is
+# machine-independent: it must fail on CI runners too, where the numeric
+# comparison gates are skipped.
+missing = sorted(key for key in baseline.get("metrics", {}) if key not in current)
 # Throughput gates only apply to min-of-rounds measurements (CompareTable /
 # Compare / Report kinds); single-shot ReportTable rows swing with CPU
 # frequency scaling, so only their allocation is gated.
@@ -201,6 +211,15 @@ for key, cur in sorted(current.items()):
 if skipped:
     print(f"  {skipped} metric(s) without baseline entries (new benchmarks).")
 
+if missing:
+    print(f"  {len(missing)} baseline metric(s) missing from this run (benchmark removed or renamed):")
+    for key in missing:
+        print(f"    {key}")
+        fails.append(
+            f"  FAIL missing metric: {key} (baseline measurement has no current benchmark; "
+            "run --update-baseline only if the measurement was intentionally removed)"
+        )
+
 if fails:
     print("")
     print(f"BENCHMARK REGRESSION DETECTED — {len(fails)} violation(s):")
@@ -210,12 +229,18 @@ if fails:
     print("If the change is a real improvement or the environment changed,")
     print("re-run with: bash scripts/bash/benchmark.sh --update-baseline")
     print("and commit the refreshed docs/benchmarks/baseline.json.")
+    print("A metric reported as MISSING must be restored, or its intentional removal")
+    print("recorded with the same --update-baseline command.")
     # Exit 2 marks a throughput failure, which the shell retries once to
     # filter out CPU frequency/GC/JIT noise; allocation-only failures exit 1
     # immediately because allocation counts are deterministic in this suite.
+    # A missing metric is deterministic too (the benchmark is gone), so it
+    # never enters the throughput retry path.
+    if missing:
+        sys.exit(1)
     sys.exit(2 if throughput_regressed else 1)
 
-print("All benchmark metrics within thresholds.")
+print("All expected benchmark metrics are present and within thresholds.")
 EOF
 COMPARE_EXIT_CODE=$?
 set -e

@@ -5,8 +5,9 @@
 This page is generated from `tools/ApiInventoryTool/shell-api-baseline.json`,
 the same Roslyn inventory used by the shell API gate. It is the canonical
 signature reference for the public shell surface. The inventory records
-canonical names, modifiers, and signatures; it is not a compilable source
-file. Do not edit it by hand.
+canonical names, modifiers, signatures, generic variance, and the
+nullable-flow attributes that affect consumer nullable analysis; it is not
+a compilable source file. Do not edit it by hand.
 
 Regenerate and validate locally with:
 
@@ -68,7 +69,7 @@ public static (int X, int Z)? ParseCoords(object? input)
 ### `Origo.Core.OrigoHost`
 
 ```csharp
-public sealed class Origo.Core.OrigoHost : Origo.Core.Abstractions.Runtime.IOrigoFrameDriver
+public sealed class Origo.Core.OrigoHost : Origo.Core.Abstractions.Runtime.IOrigoFrameDriver, System.IDisposable
 public Origo.Core.Abstractions.Runtime.IOrigoRuntime Runtime { get; }
 public Origo.Core.Snd.ISndContext Context { get; }
 public static Origo.Core.OrigoHost Create(Origo.Core.OrigoHostOptions options)
@@ -151,7 +152,7 @@ public static float GetNumeric(this Origo.Core.Abstractions.Entity.ISndDataAcces
 
 ```csharp
 public interface Origo.Core.Abstractions.Blackboard.IBlackboard
-(bool found, T value) TryGet<T>(string key)
+(bool found, T? value) TryGet<T>(string key)
 System.Collections.Generic.IReadOnlyCollection<string> GetKeys()
 System.Collections.Generic.IReadOnlyDictionary<string, Origo.Core.Snd.Metadata.TypedData> SerializeAll()
 void Clear()
@@ -163,7 +164,7 @@ void SetValue<T>(string key, T value)
 
 ```csharp
 public interface Origo.Core.Abstractions.Console.IConsoleInputSource
-bool TryDequeueCommand(out string? line)
+bool TryDequeueCommand([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out string? line)
 void Clear()
 void Enqueue(string line)
 ```
@@ -297,10 +298,10 @@ public interface Origo.Core.Abstractions.Logging.ILogger
 void Log(Origo.Core.Abstractions.Logging.LogLevel level, string tag, string message)
 ```
 
-### `Origo.Core.Abstractions.Logging.ILogger<TCategory>`
+### `Origo.Core.Abstractions.Logging.ILogger<out TCategory>`
 
 ```csharp
-public interface Origo.Core.Abstractions.Logging.ILogger<TCategory> : Origo.Core.Abstractions.Logging.ILogger
+public interface Origo.Core.Abstractions.Logging.ILogger<out TCategory> : Origo.Core.Abstractions.Logging.ILogger
 void Log(Origo.Core.Abstractions.Logging.LogLevel level, string message)
 ```
 
@@ -508,7 +509,7 @@ Origo.Core.Abstractions.Scene.ISndSceneReadAccess SceneAccess { get; }
 
 ```csharp
 public sealed class Origo.Core.Blackboard.Blackboard : Origo.Core.Abstractions.Blackboard.IBlackboard
-public (bool found, T value) TryGet<T>(string key)
+public (bool found, T? value) TryGet<T>(string key)
 public Blackboard()
 public System.Collections.Generic.IReadOnlyCollection<string> GetKeys()
 public System.Collections.Generic.IReadOnlyDictionary<string, Origo.Core.Snd.Metadata.TypedData> SerializeAll()

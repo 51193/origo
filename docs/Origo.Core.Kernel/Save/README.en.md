@@ -73,6 +73,7 @@ DefaultSaveStorageService.WriteSavePayloadToCurrentThenSnapshot(...)
 - **Format version newer than the supported one** → throw exception (refuses to load future saves)
 - **A level referenced by the topology has no payload** (foreground or background) → throw exception (an inconsistent topology; both foreground and background reject the silent fallback to an empty session)
 - **A payload level not referenced by the topology** → throw exception (an unreferenced level would otherwise be read and silently ignored, losing its state on the next save)
+- **A level directory whose name is not a valid level identity** (legacy mixed case or trailing period) → throw a migration error that names the director(y/ies) and instructs the lowercase/path-safe rename; the writer preserves such legacy data for explicit migration, so the reader neither skips it silently nor exposes a raw path-validation error
 
 ## DataSourceNode Ownership
 

@@ -30,7 +30,7 @@ public sealed class Blackboard : IBlackboard
     }
 
     /// <inheritdoc />
-    public (bool found, T value) TryGet<T>(string key)
+    public (bool found, T? value) TryGet<T>(string key)
     {
         if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentException("Blackboard key cannot be null or whitespace.", nameof(key));

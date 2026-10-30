@@ -343,7 +343,21 @@ public sealed class ConsoleBridgeServer : IDisposable
         {
             var read = await reader.ReadAsync(one.AsMemory(0, 1), ct).ConfigureAwait(false);
             if (read == 0)
-                return builder.Length == 0 ? null : builder.ToString();
+            {
+                if (builder.Length > 0)
+                {
+                    // Commands are framed by CR/LF, so a line is dispatched only
+                    // after its terminator. Dropping the unterminated remainder
+                    // keeps a half-sent command (client crash, Ctrl-D before
+                    // Enter, truncated write) from executing as if submitted.
+                    _logger.Log(LogLevel.Warning, nameof(ConsoleBridgeServer),
+                        new LogMessageBuilder()
+                            .AddContext("discardedCharacters", builder.Length)
+                            .Build("Console input connection closed with an unterminated line; discarding it instead of executing it."));
+                }
+
+                return null;
+            }
 
             var ch = one[0];
             if (ch == '\r' || ch == '\n')

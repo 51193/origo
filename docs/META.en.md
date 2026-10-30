@@ -10,7 +10,7 @@
 
 ## Bounded Shell Compatibility Exception
 
-`Origo.Core`, `Origo.Core.Contracts`, `Origo.GodotAdapter`, and `Origo.ConsoleBridge` are 0.1.x shell packages that promise source/behavior compatibility; the implementation package `Origo.Core.Kernel` and nightly builds make no consumer compatibility promise. The exception covers only shell contracts, kernel-shell ports, and compatibility tests; it never relaxes fail-fast, single-access-path, or architectural isolation rules. See [shell-kernel-boundary](architecture/shell-kernel-boundary.en.md) for the design and [shell-api-baseline](architecture/shell-api-baseline.en.md) plus [release-process](release-process.en.md) for the gates.
+`Origo.Core`, `Origo.Core.Contracts`, `Origo.GodotAdapter`, and `Origo.ConsoleBridge` are 0.1.x shell packages that promise source/behavior compatibility, except for maintainer-approved pre-1.0 breaking changes recorded in the shell API approved-break file; the implementation package `Origo.Core.Kernel` and nightly builds make no consumer compatibility promise. The exception covers only shell contracts, kernel-shell ports, and compatibility tests; it never relaxes fail-fast, single-access-path, or architectural isolation rules. See [shell-kernel-boundary](architecture/shell-kernel-boundary.en.md) for the design and [shell-api-baseline](architecture/shell-api-baseline.en.md) plus [release-process](release-process.en.md) for the gates.
 
 ## Writing Principles
 
@@ -96,7 +96,7 @@ After a code PR is merged, check:
 
 All non-merge commits must follow the Conventional Commits specification to keep repository history readable and machine-parseable. Merge commits are exempt because Git/GitHub generates their "Merge ..." subject and body; `scripts/bash/lint-commits.sh` therefore lints only non-merge commits. Each clone must enable the repository hooks once with `git config core.hooksPath .githooks`; the local `.githooks/pre-push` hook invokes `scripts/bash/lint-commits.sh` before Git uploads objects and checks every non-merge commit in each branch range being pushed: type, 72-character subject limit, no trailing period, and body lines no longer than 72 characters. This gate runs locally. Dependabot-authored commits are exempt because Dependabot can configure a commit-message prefix but does not support custom message templates, and its generated body lines exceed 72 characters. `.github/dependabot.yml` sets the `chore(deps)` prefix for every ecosystem so generated subjects remain Conventional Commits, and `scripts/bash/lint-commits.sh` skips Dependabot-authored commits; human-authored commits in the same branch remain fully checked.
 
-GitHub's squash merge uses the pull-request body as the commit body. Because no local hook sees that generated commit, the `pr-body-lint` CI workflow runs `scripts/python/lint-pr-body.py` on opened, synchronized, reopened, and edited pull requests; it checks the title as a Conventional Commit subject (including GitHub's ` (#number)` suffix) and enforces the 72-character body-line rule (excluding fenced code blocks, table rows, and single-URL lines). It runs the linter from `origin/main` when that file exists, falling back to the checked-out copy only before the first merge introduces it. Wrap prose in the PR body; a passing local commit is not sufficient when the squash body would violate the rule.
+GitHub's squash merge uses the pull-request body as the commit body. Because no local hook sees that generated commit, the `pr-body-lint` CI workflow runs `scripts/python/lint-pr-body.py` on opened, synchronized, reopened, and edited pull requests; it checks the title as a Conventional Commit subject (including GitHub's ` (#number)` suffix) and enforces the 72-character body-line rule (excluding fenced code blocks, table rows, and single-URL lines). It always runs the linter from `origin/main`, so a pull request cannot weaken the linter it relies on; if `main` no longer ships the linter the check fails instead of falling back to the pull-request tree. Wrap prose in the PR body; a passing local commit is not sufficient when the squash body would violate the rule.
 
 ### Basic Format
 
@@ -291,8 +291,9 @@ scripts.
 
 Windows development uses the native PowerShell suite under `scripts/powershell/`
 instead of the POSIX scripts; the two sets implement the same development gate sequence and never
-invoke each other; Bash-free shared Python validators run on both, while Bash-backed POSIX
-self-tests remain Linux-side. `scripts/powershell/install-dotnet.ps1` installs the pinned SDK
+invoke each other; the Bash parity gate also checks that the PowerShell test gate's
+explicit project list matches the solution's xUnit test projects; Bash-free shared
+Python validators run on both, while Bash-backed POSIX self-tests remain Linux-side. `scripts/powershell/install-dotnet.ps1` installs the pinned SDK
 through `dotnet-install.ps1`, and `scripts/powershell/ci.ps1` is the Windows
 equivalent of `scripts/bash/ci.sh` (script parse/lint, format, API baseline, build
 and tests, benchmarks, Godot integration, and package consumer smoke).
@@ -353,7 +354,10 @@ bash scripts/bash/docs.sh check
 ```
 
 The generated file is committed so documentation remains available without a
-remote generation service. `docs.sh check` also validates local Markdown links.
+remote generation service. `docs.sh check` also validates local Markdown links
+across the root Markdown files, the manual under `docs/`, `scripts/README.md`,
+and `.github/` Markdown; missing directories are skipped so focused tests can
+build a minimal documentation root.
 `scripts/bash/test-docs.sh` runs the check in the normal local lint gate; do not
 edit generated files by hand.
 

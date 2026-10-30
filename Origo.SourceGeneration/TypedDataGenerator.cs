@@ -313,9 +313,13 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
         }
 
         var validTypes = ValidateAndFilter(input.IsHome, allTypes, diagnostics);
+        // Identifier validity runs before the name-collision gate: unnamed types
+        // (pointer/array types have an empty Name) sanitize to an empty kind
+        // name, and each such registration must report ORIGOSG006 instead of a
+        // pair of them looking like one empty-name ORIGOSG005 collision.
+        validTypes = RejectInvalidKindNames(validTypes, input.IsHome, diagnostics);
         validTypes = RejectKindCollisions(validTypes, diagnostics);
         validTypes = RejectKindNameCollisions(validTypes, diagnostics);
-        validTypes = RejectInvalidKindNames(validTypes, input.IsHome, diagnostics);
         return new GenerationPlan(validTypes, diagnostics);
     }
 
@@ -530,12 +534,15 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
 
     /// <summary>
     ///     Rejects types whose sanitized kind names are not valid C#
-    ///     identifiers (e.g. pointer types, whose <c>Name</c> contains
-    ///     <c>*</c>, would emit accessor identifiers like <c>AsInt32*</c>),
-    ///     and — in adapter mode — types whose kind names collide with the
-    ///     Home assembly's reserved kind names (a *custom* type named like a
-    ///     Home inline kind, e.g. the user's own <c>Int32</c>, diverges from
-    ///     the Home accessor semantics; the BCL type itself does not).
+    ///     identifiers (pointer and array types are unnamed, so they sanitize
+    ///     to the empty string, which cannot become a generated accessor
+    ///     identifier), and — in adapter mode — types whose kind names collide
+    ///     with the Home assembly's reserved kind names (a *custom* type named
+    ///     like a Home inline kind, e.g. the user's own <c>Int32</c>, diverges
+    ///     from the Home accessor semantics; the BCL type itself does not).
+    ///     This gate runs before the kind-name-collision gate so every type
+    ///     whose identifier cannot be emitted reports ORIGOSG006, even when two
+    ///     such types would otherwise look like one empty-name kind collision.
     /// </summary>
     private static List<InlineTypeInfo> RejectInvalidKindNames(
         List<InlineTypeInfo> types, bool isHome, List<Diagnostic> diagnostics)

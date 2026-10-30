@@ -44,6 +44,9 @@ internal static class Program
 
     private static int Generate(CommandOptions options)
     {
+        if (options.ApprovedBreaksPath is not null)
+            return Fail("--approved-breaks is only valid for the compare command.");
+
         var result = Build(options);
         if (!result.Succeeded)
             return FailWithErrors("API inventory generation failed.", result.Errors);
@@ -57,6 +60,9 @@ internal static class Program
 
     private static int Verify(CommandOptions options)
     {
+        if (options.ApprovedBreaksPath is not null)
+            return Fail("--approved-breaks is only valid for the compare command.");
+
         var result = Build(options);
         if (!result.Succeeded)
             return FailWithErrors("API inventory build failed.", result.Errors);
@@ -90,18 +96,39 @@ internal static class Program
 
         var previous = InventoryJson.Deserialize(File.ReadAllText(options.PreviousBaselinePath));
         var current = InventoryJson.Deserialize(File.ReadAllText(options.OutputPath));
-        var failures = InventoryComparer.ComparePrevious(previous, current);
-        if (failures.Count == 0)
+        var comparison = InventoryComparer.ComparePreviousDetailed(previous, current);
+
+        IReadOnlyList<ApprovedBreak> approvedBreaks = [];
+        var approvedBreaksPath = options.ApprovedBreaksPath;
+        if (approvedBreaksPath is not null)
         {
-            Console.WriteLine("Previous-package shell API validation: OK.");
+            var loaded = ApprovedBreaksFile.Load(approvedBreaksPath);
+            if (!loaded.Succeeded)
+                return FailWithErrors("Approved shell API breaks file failed validation.", loaded.Errors);
+            approvedBreaks = loaded.Breaks;
+        }
+
+        var result = ApprovedBreakFilter.Apply(comparison, approvedBreaks);
+        if (result.Succeeded)
+        {
+            var obsoleteCount = result.ObsoleteApprovals.Count;
+            Console.WriteLine(approvedBreaksPath is null
+                ? "Previous-package shell API validation: OK."
+                : $"Previous-package shell API validation: OK ({result.AppliedCount} approved break(s), {obsoleteCount} obsolete approval(s) ignored).");
+            foreach (var obsolete in result.ObsoleteApprovals)
+            {
+                Console.WriteLine(
+                    $"  obsolete approval ignored (line is no longer in the previous baseline): {obsolete.Assembly}: {obsolete.Api}");
+            }
+
             return 0;
         }
 
         Console.Error.WriteLine("Previous-package shell API validation failed (0.1.x source compatibility).");
-        foreach (var failure in failures.Take(100))
+        foreach (var failure in result.Failures.Take(100))
             Console.Error.WriteLine($"  {failure}");
-        if (failures.Count > 100)
-            Console.Error.WriteLine($"  ... and {failures.Count - 100} more.");
+        if (result.Failures.Count > 100)
+            Console.Error.WriteLine($"  ... and {result.Failures.Count - 100} more.");
         return 1;
     }
 
@@ -138,6 +165,9 @@ internal static class Program
                     break;
                 case "--current":
                     options.OutputPath = RequireValue(args, ref i, argument);
+                    break;
+                case "--approved-breaks":
+                    options.ApprovedBreaksPath = RequireValue(args, ref i, argument);
                     break;
                 default:
                     throw new InvalidOperationException($"unknown option '{argument}'.");
@@ -198,7 +228,8 @@ internal static class Program
         Console.WriteLine("Usage:");
         Console.WriteLine("  ApiInventoryTool generate --assembly <name>=<path> [--reference-dir <dir>]... [--output <file>]");
         Console.WriteLine("  ApiInventoryTool verify   --assembly <name>=<path> [--reference-dir <dir>]... [--baseline <file>]");
-        Console.WriteLine("  ApiInventoryTool compare  --previous <file> --current <file>");
+        Console.WriteLine(
+            "  ApiInventoryTool compare  --previous <file> --current <file> [--approved-breaks <file>]");
     }
 
     private sealed class CommandOptions
@@ -209,5 +240,6 @@ internal static class Program
         public string? BaselinePath { get; set; }
         public string? OutputPath { get; set; }
         public string? PreviousBaselinePath { get; set; }
+        public string? ApprovedBreaksPath { get; set; }
     }
 }

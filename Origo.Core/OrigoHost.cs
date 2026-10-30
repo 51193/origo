@@ -10,9 +10,10 @@ namespace Origo.Core;
 ///     Core shell host facade. Creates a kernel runtime/SND context behind
 ///     stable Contracts interfaces, so consumers that reference only the Core
 ///     shell package can compile and run a Core workflow without kernel compile
-///     assets.
+///     assets. Implements <see cref="IDisposable" /> so a consumer can own the
+///     host with <c>using var host = OrigoHost.Create(options);</c>.
 /// </summary>
-public sealed class OrigoHost : IOrigoFrameDriver
+public sealed class OrigoHost : IOrigoFrameDriver, IDisposable
 {
     private readonly ISndContext _context;
     private int _disposeState;
@@ -53,7 +54,8 @@ public sealed class OrigoHost : IOrigoFrameDriver
 
     /// <summary>
     ///     Stops the active progress run, runs session/progress quit hooks, and
-    ///     cleans the temporary <c>current/</c> directory. Idempotent.
+    ///     cleans the temporary <c>current/</c> directory. Idempotent, and called
+    ///     automatically when the host is owned by a <c>using</c> scope.
     /// </summary>
     public void Dispose()
     {

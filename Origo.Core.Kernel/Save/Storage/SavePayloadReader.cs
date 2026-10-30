@@ -43,6 +43,8 @@ internal static class SavePayloadReader
         string baseRel,
         string location)
     {
+        ValidateActiveLevelId(activeLevelId, location);
+
         var progressRel = handle.PathPolicy.GetProgressFile(baseRel);
         var progressSmRel = handle.PathPolicy.GetProgressStateMachinesFile(baseRel);
         DataSourceNode? progressNode = null;
@@ -61,7 +63,7 @@ internal static class SavePayloadReader
             ValidateFormatVersion(baseRel, customMeta);
 
             levels = CreateLevelPayloadMap(handle, baseRel, activeLevelId);
-            ReadRemainingLevelPayloads(handle, baseRel, levels);
+            ReadRemainingLevelPayloads(handle, baseRel, levels, location);
 
             return CreateSavePayload(
                 saveId,
@@ -158,7 +160,14 @@ internal static class SavePayloadReader
         return TryReadLevelPayload(handle, saveRel, levelId);
     }
 
-    internal static IReadOnlyDictionary<string, string>? TryReadStringMap(
+    /// <summary>
+    ///     Reads an optional scalar string map file (such as <c>meta.map</c>).
+    ///     Returns null only when the file does not exist; an existing file that
+    ///     is not a map, has a null/collection value, or cannot be decoded is
+    ///     corrupted data and fails the read instead of being reported as
+    ///     "absent".
+    /// </summary>
+    internal static IReadOnlyDictionary<string, string>? ReadOptionalStringMap(
         SaveFileHandle handle,
         string mapFileAbs)
     {
@@ -241,7 +250,7 @@ internal static class SavePayloadReader
 
             var customMetaRel = handle.PathPolicy.GetCustomMetaFile(baseDirectoryRel);
             var customMetaAbs = handle.GetAbsolutePath(customMetaRel);
-            var customMeta = TryReadStringMap(handle, customMetaAbs);
+            var customMeta = ReadOptionalStringMap(handle, customMetaAbs);
 
             return (progressNode, progressStateMachinesNode, customMeta);
         }
@@ -348,22 +357,84 @@ internal static class SavePayloadReader
     private static void ReadRemainingLevelPayloads(
         SaveFileHandle handle,
         string baseDirectoryRel,
-        Dictionary<string, LevelPayload> levels)
+        Dictionary<string, LevelPayload> levels,
+        string location)
     {
         var baseAbs = handle.GetAbsolutePath(baseDirectoryRel);
         if (!handle.MetaAccess.DirectoryExists(baseAbs))
             return;
 
+        // Discover first, validate the directory identities, then read: an
+        // invalid legacy directory name would otherwise surface as a parameter
+        // ArgumentException from path assembly instead of an actionable
+        // migration error, and reading valid siblings first would allocate node
+        // trees for a save that cannot be returned.
+        var levelDirectories = new List<string>();
+        var invalidDirectories = new List<string>();
         foreach (var dirAbs in handle.MetaAccess.EnumerateDirectories(baseAbs))
         {
             var levelId = handle.PathPolicy.TryGetLevelIdFromDirectory(dirAbs);
             if (levelId is null || levels.ContainsKey(levelId))
                 continue;
 
+            if (!SavePathLayout.IsValidLevelId(levelId))
+            {
+                invalidDirectories.Add(SaveFileHandle.GetLeafDirectoryName(dirAbs));
+                continue;
+            }
+
+            levelDirectories.Add(levelId);
+        }
+
+        if (invalidDirectories.Count > 0)
+            throw CreateLegacyLevelDirectoryException(location, invalidDirectories);
+
+        foreach (var levelId in levelDirectories)
+        {
             var levelPayload = TryReadLevelPayload(handle, baseDirectoryRel, levelId);
             if (levelPayload is not null)
                 levels[levelId] = levelPayload;
         }
+    }
+
+    /// <summary>
+    ///     Rejects an active level id that is not a valid level identity before
+    ///     it is embedded into a directory path. Such an id only comes from
+    ///     legacy save data (mixed case, forbidden characters, trailing period);
+    ///     the error tells the user how to migrate it instead of exposing the
+    ///     path-assembly parameter validation.
+    /// </summary>
+    private static void ValidateActiveLevelId(string activeLevelId, string location)
+    {
+        if (string.IsNullOrWhiteSpace(activeLevelId) || SavePathLayout.IsValidLevelId(activeLevelId))
+            return;
+
+        throw new InvalidOperationException(
+            $"Save at {location} references active level id '{activeLevelId}', which is not a valid " +
+            $"level identity. Level ids must use lowercase ASCII letters, digits, '.', '_' and '-', " +
+            "must not be dot-only, and must not end with '.'. Legacy level data must be migrated: " +
+            $"rename the 'level_{activeLevelId}' directory to the lowercase/path-safe id and update " +
+            "the persisted session topology to match, then retry the load.");
+    }
+
+    /// <summary>
+    ///     Builds the strict-read failure for legacy level directories whose
+    ///     names do not satisfy the level identity rule. The writer intentionally
+    ///     preserves such directories for an explicit migration, so the reader
+    ///     must name them and instruct the rename instead of failing with an
+    ///     opaque path-validation error.
+    /// </summary>
+    private static InvalidOperationException CreateLegacyLevelDirectoryException(
+        string location, List<string> directoryNames)
+    {
+        var noun = directoryNames.Count == 1 ? "directory" : "directories";
+        var names = string.Join("', '", directoryNames);
+        return new InvalidOperationException(
+            $"Save at {location} contains level {noun} '{names}' whose level id is not a valid level " +
+            "identity. Level ids must use lowercase ASCII letters, digits, '.', '_' and '-', must not " +
+            "be dot-only, and must not end with '.'. Legacy level data must be migrated: rename each " +
+            "directory to its lowercase/path-safe id (for example 'level_Town' -> 'level_town') and " +
+            "update the matching session topology entry, then retry the load.");
     }
 
     private sealed record LevelFiles(

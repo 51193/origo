@@ -6,17 +6,17 @@
 
 ## Behavior Overview
 
-Validates the DataSourceNode tree model and its encode/decode, conversion, and hashing capabilities: node factory (Map/Array/Text/Number/Bool/Null), strongly-typed value accessors (AsString/AsChar plus the generic As<T>: As<int>/As<long>/As<float>/As<double>/As<byte>/As<sbyte>/As<short>/As<ushort>/As<uint>/As<ulong>/As<decimal>), object/array access (indexer, TryGetValue, ContainsKey, Keys, Count, Elements), Builder chained Add, lazy expansion (expander not called before access, expand only once, expansion failure keeps Lazy with retry), JSON codec round-trip (complex nested tree/top-level array/empty object/empty array, nested objects lazy, primitives not lazy), Map codec (comments/empty lines skipped, colons in values, skip null values, empty value, line without colon throws), `DataSourceConverterRegistry` (register/get, generic and runtime-typed read/write, unregistered type throws, null write, type hierarchy fallback), complete round-trip for 14 primitive types + 14 array types + domain types (TypedData/SndMetaData/BlackboardData/StateMachineContainerPayload/StringDictionary), `TypeStringMapping` type name registration, `IDisposable` recursive disposal with deep-tree stack overflow prevention, `ComputeSha256Hash` canonical hashing, and the strict parse behavior of `KeyValueFileParser` (malformed lines and empty keys throw, empty values are valid, duplicate keys warn and the last value wins).
+Validates the DataSourceNode tree model and its encode/decode, conversion, and hashing capabilities: node factory (Map/Array/Text/Number/Bool/Null), strongly-typed value accessors (AsString/AsChar plus the generic As<T>: As<int>/As<long>/As<float>/As<double>/As<byte>/As<sbyte>/As<short>/As<ushort>/As<uint>/As<ulong>/As<decimal>), object/array access (indexer, TryGetValue, ContainsKey, Keys, Count, Elements), Builder chained Add, lazy expansion (expander not called before access, expand only once, expansion failure keeps Lazy with retry), JSON codec round-trip (complex nested tree/top-level array/empty object/empty array, nested objects lazy, primitives not lazy), Map codec (comments/empty lines skipped, colons in values, skip null values, empty value, line without colon throws), `DataSourceConverterRegistry` (register/get, generic and runtime-typed read/write, unregistered type throws, null write, type hierarchy fallback), complete round-trip for 14 primitive types + 14 array types + domain types (TypedData/SndMetaData/BlackboardData/StateMachineContainerPayload/StringDictionary), `TypeStringMapping` type name registration, `IDisposable` recursive disposal with deep-tree stack overflow prevention, `ComputeSha256Hash` canonical hashing (ill-formed UTF-16 rejected instead of colliding), and the strict parse behavior of `KeyValueFileParser` (malformed lines and empty keys throw, empty values are valid, duplicate keys warn and the last value wins).
 
 ## Test File List
 
 | File | Verification Focus |
 |------|-------------------|
-| `DataSourceFactoryTests.cs` | Factory methods and basic accessors: node creation, value/object/array access, Builder chained Add, Lazy expansion |
-| `DataSourceCodecTests.cs` | JSON codec round-trip (complex nested tree, top-level array, lazy expansion) and Map codec edge cases (comments/empty lines skipped, colons in values, line without colon throws) |
+| `DataSourceFactoryTests.cs` | Factory methods and basic accessors: node creation (including non-finite `As<T>` rejection), value/object/array access, Builder chained Add, Lazy expansion |
+| `DataSourceCodecTests.cs` | JSON codec round-trip (complex nested tree, top-level array, lazy expansion, unpaired-surrogate rejection) and Map codec edge cases (comments/empty lines skipped, colons in values, ordinal key order, strict decode, unpaired-surrogate rejection) |
 | `DataSourceConverterTests.cs` | ConverterRegistry registration and read/write, complete round-trip for 14 primitive types + 14 array types + 5 domain types (TypedData/SndMetaData/BlackboardData/StateMachineContainerPayload/StringDictionary), TypeStringMapping extension |
 | `DataSourceTests.cs` | Remaining items: IDisposable recursive disposal with deep-tree stack overflow prevention, new accessor methods, TypeStringMapping new type registration, DataSourceConverterRegistry type hierarchy fallback, ReadOnlyDictionary round-trip |
-| `DataSourceNodeSha256Tests.cs` | DataSourceNode `ComputeSha256Hash` canonical hash computation |
+| `DataSourceNodeSha256Tests.cs` | DataSourceNode `ComputeSha256Hash` canonical hash computation, including well-formed-UTF-16 enforcement |
 | `KeyValueFileParserTests.cs` | `KeyValueFileParser.Parse` key-value file parsing (strict parsing, comments, duplicate keys, empty keys/values, null/empty content) |
 | `CorruptObserverIndicesStrictReadTests.cs` (in Save/) | Verifies: when `observer_indices` contains a non-object element, **multiple target keys**, or an **empty object** (corrupted save), `LoadFromPayload` throws `InvalidOperationException` (containing "observer_indices") instead of silently dropping bindings |
 
@@ -39,6 +39,7 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `AsLong_ParsesCorrectly` | Number node `As<long>()` parses to long | DataSource |
 | `AsFloat_ParsesCorrectly` | Number node `As<float>()` parses to float | DataSource |
 | `AsDouble_ParsesCorrectly` | Number node `As<double>()` parses to double | DataSource |
+| `AsFloatingPoint_FiniteValues_ReturnParsedValue` | Finite `As<float>`/`As<double>` values parse from number and text nodes | DataSource |
 | `ObjectNode_IndexerByKey_ReturnsChild` | obj["x"] returns child node | DataSource |
 | `ObjectNode_TryGetValue_ReturnsTrueForExistingKey` | TryGetValue for existing key returns true and outputs child node | DataSource |
 | `ObjectNode_ContainsKey_WorksCorrectly` | ContainsKey returns true/false for existing/missing keys | DataSource |
@@ -61,6 +62,7 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `MapCodec_Decode_IgnoresCommentsAndEmptyLines` | Map decode skips `#` comments and empty lines | DataSource |
 | `MapCodec_Decode_HandlesColonsInValues` | Map decode preserves colons in values (e.g. URLs) | DataSource |
 | `MapCodec_Encode_SkipsNullValues` | Map encode skips null-valued keys | DataSource |
+| `MapCodec_Encode_WritesKeysInOrdinalSortOrder` | Map encode writes keys sorted with `StringComparer.Ordinal`, not insertion order | DataSource |
 | `MapCodec_Encode_RejectsMultilineValue` | Value contains newline characters | InvalidOperationException (encode would produce a file that its own strict decode cannot read back, so it must be rejected) |
 | `MapCodec_DuplicateKey_WarningIsObservable` | Duplicate keys on decode | Warning logged (observable through the injected logger) |
 | `Registry_RegisterAndGet_RoundTrips` | Register→Get→Write→Read round-trip | DataSource |
@@ -137,6 +139,8 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `CreateNumber_NullString_Throws` | CreateNumber(string) with null | ArgumentNullException |
 | `CreateNumber_NonJsonNumberLiteral_Throws` | Non-JSON literal (empty, `"abc"`, `"1e"`, `"0x10"`, `" 42"`, `"NaN"`, `"Infinity"`) | ArgumentException (literal is written via WriteRawValue, so invalid JSON must be rejected here) |
 | `CreateNumber_NonFiniteFloatingPoint_Throws` | float/double NaN or ±Infinity | ArgumentOutOfRangeException |
+| `AsFloatingPoint_OverflowingNumberLiteral_Throws` | Valid JSON literal `1e999` overflows float/double | InvalidOperationException (non-finite parsed value must not leak out of `As<T>`) |
+| `AsDouble_NonFiniteTextNode_Throws` | Text node `NaN`/`Infinity`/`-Infinity`/`1e999` read as double | InvalidOperationException (matches the save-side converter rejection) |
 | `Add_NullChild_Throws` | Map/Array Add with a null child | ArgumentNullException (deferring the error to encode time becomes an NRE or empty data) |
 | `ObjectNode_IndexerByKey_ThrowsOnMissingKey` | obj["missing"] | KeyNotFoundException |
 | `Registry_Get_ThrowsForUnregisteredType` | Get<DateTime>() unregistered | InvalidOperationException |
@@ -169,6 +173,11 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `MapCodec_Encode_RejectsNonTextChild` | Number/Bool child | InvalidOperationException (`.map` only carries strings; decoding would silently drift the type) |
 | `MapCodec_Encode_RejectsNestedObjectOrArrayChild` | Object/Array child | InvalidOperationException (flat key:value format cannot represent nested structures; writing such a file would be unreadable by its own strict decoder) |
 | `MapCodec_Encode_EmptyKey_Throws` | Empty key | InvalidOperationException |
+| `MapCodec_Decode_IsAlwaysStrict_EmptyKeyThrows` | Decode line with an empty key | FormatException (decode has no lenient mode) |
+| `JsonCodec_Encode_UnpairedSurrogateText_Throws` | JSON text value contains a lone UTF-16 surrogate | InvalidOperationException (the writer's replacement fallback must not persist U+FFFD) |
+| `JsonCodec_Encode_UnpairedSurrogateKey_Throws` | JSON object key contains a lone UTF-16 surrogate | InvalidOperationException |
+| `MapCodec_Encode_UnpairedSurrogateKeyOrValue_Throws` | Map key or value contains a lone UTF-16 surrogate | InvalidOperationException |
+| `RawTextCodec_Encode_UnpairedSurrogate_Throws` | Raw text file content contains a lone UTF-16 surrogate | InvalidOperationException |
 | `ArrayConverter_Read_NullNode_Throws` | Array converter reads a Null root node | InvalidOperationException (must not silently become an empty array) |
 | `ArrayConverter_Read_ScalarNode_Throws` | Array converter reads a scalar root node | InvalidOperationException |
 | `ArrayConverter_Read_ObjectNode_Throws` | Array converter reads an object root node | InvalidOperationException |
@@ -239,12 +248,15 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
 | `DisposedNode_ComputeSha256Hash_Throws` | ComputeSha256Hash on disposed node | ObjectDisposedException |
+| `UnpairedSurrogateText_ThrowsInsteadOfCollidingWithReplacementChar` | Text `"A\uD800B"` vs `"A\uFFFDB"` | The well-formed value hashes; the lone-surrogate value throws InvalidOperationException instead of colliding |
+| `UnpairedSurrogateMapKey_ThrowsInsteadOfColliding` | Map key contains a lone low surrogate | InvalidOperationException |
 
 ### Boundary Path
 
 | Test Method | Boundary Condition | Expected Behavior |
 |-------------|-------------------|-------------------|
 | `EmptyString_HashWorks` | Empty string node | Hash deterministic and reproducible |
+| `WellFormedSurrogatePair_HashesNormally` | Astral-plane character (valid surrogate pair) | Hashes as a 64-char lowercase hex string (the guard only rejects malformed text) |
 
 ## KeyValueFileParserTests Details
 

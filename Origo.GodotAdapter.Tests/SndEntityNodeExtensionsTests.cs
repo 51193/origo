@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Node;
 using Origo.GodotAdapter;
 using Origo.GodotAdapter.Snd;
@@ -28,4 +30,12 @@ public class SndEntityNodeExtensionsTests
         var entity = new InMemorySndEntity("Dummy");
         Assert.Null(entity.GetNodeFromSnd<Godot.Node>("sprite"));
     }
+
+    [Fact]
+    public void GetNativeNode_NullHandle_Throws() =>
+        Assert.Throws<ArgumentNullException>(() => ((INodeHandle)null!).GetNativeNode());
+
+    [Fact]
+    public void GetNodeFromSnd_NullEntity_Throws() =>
+        Assert.Throws<ArgumentNullException>(() => ((ISndEntity)null!).GetNodeFromSnd<Godot.Node>("sprite"));
 }

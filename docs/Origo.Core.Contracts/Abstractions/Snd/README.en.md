@@ -3,21 +3,21 @@
 > [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: Snd](../../Snd/README.en.md)
 
 ## Overview
-Role interface decomposition of ISndContext. 9 Snd role interfaces + `IStateMachineContext` (from the StateMachine module) decomposed by responsibility (ISP). ISndContext does not inherit any role interfaces; all capabilities are accessed through typed companion properties.
+Role interface decomposition of ISndContext. The Snd role interfaces plus `IStateMachineContext` (from the StateMachine module) are decomposed by responsibility (ISP). ISndContext does not inherit any role interfaces; all capabilities are accessed through typed companion properties.
 
 ## Included Files
 
 | File | Responsibility |
 |------|------|
-| `ISndBlackboardAccess.cs` | System + progress-level blackboard access (2 members) |
-| `ISndDeferredActions.cs` | Deferred action queue: enqueue + pending-persistence count + persistence-idle state (3 members) |
-| `ISndTemplateAccess.cs` | Template load/reload, deep clone by key, JSON entity-list resolution (including template shorthand) (5 members) |
-| `ISndConsoleAccess.cs` | Console command submit/output subscribe/output unsubscribe (3 members) |
-| `ISndStateMachineAccess.cs` | Progress-level state machine container (1 member). Returns `IStateMachineContainer?` |
-| `ISndSaveOperations.cs` | Save list/read/write/delete + level switch + continue + meta contributor (10 members) |
-| `ISndLifecycleOperations.cs` | Bootstrap completion state + Continue/Initial/MainMenu entry points (5 members) |
-| `ISndFileAccess.cs` | File access: structured + strongly-typed + exists (5 members). All via IDataSourceIoGateway boundary |
-| `ISndArchiveFileAccess.cs` | In-save file access: structured + strongly-typed + exists + delete (6 members) |
+| `ISndBlackboardAccess.cs` | System + progress-level blackboard access |
+| `ISndDeferredActions.cs` | Deferred action queue: enqueue + pending-persistence count + persistence-idle state |
+| `ISndTemplateAccess.cs` | Template load/reload, deep clone by key, JSON entity-list resolution (including template shorthand) |
+| `ISndConsoleAccess.cs` | Console command submit/output subscribe/output unsubscribe |
+| `ISndStateMachineAccess.cs` | Progress-level state machine container. Returns `IStateMachineContainer?` |
+| `ISndSaveOperations.cs` | Save list/read/write/delete + level switch + continue + meta contributor |
+| `ISndLifecycleOperations.cs` | Bootstrap completion state + Continue/Initial/MainMenu entry points |
+| `ISndFileAccess.cs` | File access: structured + strongly-typed + exists. All via IDataSourceIoGateway boundary |
+| `ISndArchiveFileAccess.cs` | In-save file access: structured + strongly-typed + exists + delete |
 
 ## ISndContext Companion Properties
 
@@ -26,7 +26,7 @@ Beyond its typed companion properties, ISndContext directly exposes the followin
 | Member | Description |
 |------|------|
 | `Bootstrap()` | Entry point: strategy discovery → ordering validation and registration freeze → alias/template loading → entry save loading |
-| `Shutdown()` | Idempotent teardown: run progress/session quit hooks, release the active progress run, and delete the temporary `current/` working directory; later bootstrap and persistence mutations fail explicitly |
+| `Shutdown()` | Idempotent teardown: run progress/session quit hooks, release the active progress run, and delete the temporary `current/` working directory; later bootstrap and persistence mutations fail explicitly. Rejected while a load/save/change-level workflow is in progress, from a `BeforeSave` hook, or during level-switch teardown |
 | `SaveRootPath` | Current save root path |
 | `InitialSaveRootPath` | Initial save root path |
 | `EntryConfigPath` | Entry configuration file path |
@@ -65,14 +65,14 @@ Callers performing save/load orchestration already hold `ctx.Deferred` and `ctx.
 
 ### Why decompose ISndContext
 
-Decomposing the interface into narrow interfaces (9 Snd role interfaces + IStateMachineContext), each consumer can depend only on the narrow interfaces they need:
+Decomposing the interface into narrow interfaces (the Snd role interfaces plus `IStateMachineContext`), each consumer can depend only on the narrow interfaces they need:
 
 - Code that only needs blackboard access depends on `ISndBlackboardAccess`
 - Code that only needs deferred queue depends on `ISndDeferredActions`
 - Code that only needs save operations depends on `ISndSaveOperations`
 - etc.
 
-Strategy hooks (`LifecycleStrategyBase`'s 8 virtual methods) retain `ISndContext ctx` as a full parameter — strategies as first-class citizens should be able to access all framework capabilities.
+Strategy hooks (`LifecycleStrategyBase`'s virtual lifecycle methods) retain `ISndContext ctx` as a full parameter — strategies as first-class citizens should be able to access all framework capabilities.
 
 ### Why companion properties rather than interface inheritance
 Eliminates naming conflicts between role interfaces (e.g., multiple `Clear()`) and provides clearer call semantics (`ctx.Save.RequestLoadGame(...)`).

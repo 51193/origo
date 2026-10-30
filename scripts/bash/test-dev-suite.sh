@@ -53,6 +53,46 @@ if [[ "${powershell_steps[*]}" != "$expected_steps" ]]; then
     FAIL "PowerShell CI gate sequence drifted: ${powershell_steps[*]}"
 fi
 
+# Both test gates must run the same xUnit projects: the Bash gate lets
+# `dotnet test Origo.sln` discover them, while `test.ps1` enumerates paths
+# explicitly. Compare the PowerShell list with the solution's xUnit test
+# projects so a new project cannot run on Linux only.
+powershell_project_list() {
+    local variable="$1"
+    awk -v name="$variable" '
+        { line = $0; sub(/^[ \t]+/, "", line) }
+        line == "$" name " = @(" { inside = 1; next }
+        inside && line == ")" { inside = 0; next }
+        inside { print }
+    ' scripts/powershell/test.ps1 \
+        | sed -nE "s|^[[:space:]]*'([^']+\.csproj)',?$|\1|p" \
+        | tr '\\' '/' \
+        | LC_ALL=C sort
+}
+
+solution_test_projects="$(
+    grep -oE '"[^"]*\.Tests\.csproj"' Origo.sln \
+        | tr -d '"' \
+        | tr '\\' '/' \
+        | grep -v '\.Integration\.Tests\.csproj$' \
+        | LC_ALL=C sort || true
+)"
+if [[ -z "$solution_test_projects" ]]; then
+    FAIL "could not read the solution's xUnit test projects from Origo.sln"
+fi
+for array_name in testProjects directProjects; do
+    powershell_projects="$(powershell_project_list "$array_name")"
+    if [[ "$solution_test_projects" != "$powershell_projects" ]]; then
+        FAIL "PowerShell \$$array_name drifted from Origo.sln test projects:" \
+            "$(printf '%s\n' "$powershell_projects" | tr '\n' ' ') !=" \
+            "$(printf '%s\n' "$solution_test_projects" | tr '\n' ' ')"
+    fi
+    while IFS= read -r project; do
+        [[ -n "$project" ]] || continue
+        [[ -f "$project" ]] || FAIL "PowerShell \$$array_name lists a missing project: $project"
+    done <<< "$powershell_projects"
+done
+
 # Every Bash self-test must be wired into the Bash lint gate (the parity gate
 # itself is the exception because it is the gate doing this check).
 for self_test in scripts/bash/test-*.sh; do

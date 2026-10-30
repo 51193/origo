@@ -46,6 +46,7 @@ The framework does not require game code to duplicate its runtime wiring.
 | Runtime, SND, save, and console internals | [Project Module Index](#project-module-index) |
 | Tests and their capabilities | [Test documentation](#test-documentation) |
 | Repository rules | [AGENTS.md](../AGENTS.md) |
+| Repository agent configuration | [agents/README](agents/README.en.md) |
 | Documentation maintenance | [META](META.en.md) |
 | Release and Changelog | [release-process](release-process.en.md) |
 | Performance baselines | [benchmarks/README](benchmarks/README.en.md) |

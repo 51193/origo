@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Threading;
 using Origo.Core.Abstractions.Snd;
 using Origo.Core.Save;
 using Origo.Core.Save.Meta;
@@ -124,9 +125,19 @@ internal sealed class SndContextSaveOperations(SndContext owner) : ISndSaveOpera
 
     private string NextAutoSaveId()
     {
+        // Auto-save ids are unique per operations instance even when save
+        // requests are enqueued from different threads (deferred-action
+        // enqueueing is documented as thread-safe). A plain read/compare/write
+        // could hand two concurrent callers the same millisecond id; the CAS
+        // loop keeps the shared counter monotonic.
         var candidate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        _lastAutoSaveId = candidate > _lastAutoSaveId ? candidate : _lastAutoSaveId + 1;
-        return _lastAutoSaveId.ToString(CultureInfo.InvariantCulture);
+        while (true)
+        {
+            var observed = Interlocked.Read(ref _lastAutoSaveId);
+            var next = candidate > observed ? candidate : observed + 1;
+            if (Interlocked.CompareExchange(ref _lastAutoSaveId, next, observed) == observed)
+                return next.ToString(CultureInfo.InvariantCulture);
+        }
     }
 
     /// <inheritdoc/>
@@ -149,9 +160,21 @@ internal sealed class SndContextSaveOperations(SndContext owner) : ISndSaveOpera
 
         // A level switch persists the foreground state and progress to disk,
         // so it is tracked as a pending persistence request like save/load.
+        // It also runs under the lifecycle-workflow guard: the switch tears
+        // down and mounts the foreground session, and a hook firing inside it
+        // (persist/quit/AfterLoad) must not tear that workflow down through
+        // SndContext.Shutdown.
         owner.EnqueueTrackedSystemDeferred(() =>
         {
-            owner.EnsureProgressRun().SwitchForeground(newLevelId);
+            owner.BeginWorkflow();
+            try
+            {
+                owner.EnsureProgressRun().SwitchForeground(newLevelId);
+            }
+            finally
+            {
+                owner.EndWorkflow();
+            }
         });
     }
 }

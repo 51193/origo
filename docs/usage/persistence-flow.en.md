@@ -12,6 +12,7 @@ Origo's save system follows **strict read, explicit failure, two-phase write** c
 {saveRoot}/
 ├── current/                              # Active save (temporary, runtime state)
 │   ├── .write_in_progress                # Write-in-progress marker
+│   ├── .payload.sha                     # Combined payload + extra/ SHA-256 (idempotent dedup)
 │   ├── progress.json                    # Progress blackboard (global progress + full session topology)
 │   ├── progress_state_machines.json      # Progress-level state machine snapshot
 │   ├── meta.map                         # Display metadata + format version (when present)
@@ -30,7 +31,7 @@ Origo's save system follows **strict read, explicit failure, two-phase write** c
 └── save_.../
 ```
 
-Save IDs use lowercase ASCII letters, digits, `.`, `_`, and `-`; they must not end in `.tmp` or `.bak` (reserved for snapshot staging/backup) and must not be dot-only or end with `.` (Windows strips a trailing period). Mixed-case IDs are rejected because `save_{id}/` is the same directory as a differently-cased ID on default Windows/macOS file systems; level IDs follow the same lowercase, path-safe rule because they name `level_{id}/`. A process crash between the two rename steps is recovered when the slot is next listed or read: a complete `save_{id}.bak/` is restored as `save_{id}/`; incomplete staging/backup directories are not exposed as slots.
+Save IDs use lowercase ASCII letters, digits, `.`, `_`, and `-`; they must not end in `.tmp` or `.bak` (reserved for snapshot staging/backup) and must not be dot-only or end with `.` (Windows strips a trailing period). Mixed-case IDs are rejected because `save_{id}/` is the same directory as a differently-cased ID on default Windows/macOS file systems; level IDs follow the same lowercase, path-safe rule because they name `level_{id}/`. Legacy mixed-case or trailing-period level directories are preserved by the writer for explicit migration and are rejected on load with an error naming the directory and the rename instruction (`level_Town` → `level_town`, plus the matching session topology entry when that level is referenced). A process crash between the two rename steps is recovered when the slot is next listed or read: a complete `save_{id}.bak/` is restored as `save_{id}/`; incomplete staging/backup directories are not exposed as slots.
 
 ## Two-Phase Write
 
@@ -38,6 +39,17 @@ The write starts with an idempotent-skip check: when `current/` has no
 `.write_in_progress` marker, the target snapshot's `.payload.sha` exists, and it
 matches the current payload plus the policy's extra/ side hash, no file is
 written.
+
+The combined hash is computed before any file is written, so payload text that
+cannot round-trip fails there with no disk side effects: canonical node hashing
+rejects an unpaired UTF-16 surrogate (JSON strings cannot carry it losslessly —
+the encoder would replace it with U+FFFD), and a mismatched
+`SaveGamePayload.SaveId` target is rejected before hashing as well.
+
+The write target id must be non-empty because it names `save_{id}/`. A payload
+whose `SaveGamePayload.SaveId` is non-empty must equal the target id: the write
+fails with `ArgumentException` when they differ (including a set payload id with
+an empty target), and an empty `SaveId` means the target id names the slot.
 
 ### Phase 1: Write to current/
 
@@ -86,8 +98,9 @@ snapshot read restores as the real slot; `.tmp` is never listed as a save.
 | Level three files partially present | Throw exception (data corruption) |
 | `progress.json` missing on a full payload read | Throw exception; the narrow `ReadProgressNodeFromSnapshot` probe returns `null` |
 | Format version below 1 or newer than supported | Throw exception (0/negative is corrupt data; a newer version cannot be parsed) |
+| A level-directory name is not a valid level identity | Throw exception naming the legacy director(y/ies) and instructing the lowercase/path-safe rename; do not silently skip legacy data |
 | Topology and payload levels disagree | Throw exception (a referenced level has no payload, or a payload level is not referenced) |
-| No levels exist at all | Treated as "no save exists yet" |
+| No level directories at all | Not a valid written save (the writer requires the active level); a full payload read fails on the missing active level. "No saves yet" is the business-layer signal from `ListSaves`/`HasContinueData`, not a reader result. |
 
 ## JSON Format Reference
 
@@ -155,7 +168,7 @@ Scene entities are a JSON array of `SndMetaData`. Each element contains `name`, 
 
 ```csharp
 SaveGamePayload {
-    SaveId,                     // Save slot ID
+    SaveId,                     // Save slot ID (must equal a non-empty write target when set; empty lets the target name the slot)
     ActiveLevelId,              // Current active level
     ProgressNode,               // Progress blackboard: global progress + session topology (DataSourceNode)
     ProgressStateMachinesNode,  // Progress-level state machines
@@ -296,6 +309,8 @@ public interface ISavePathPolicy
 ```
 
 `EnumerateSaveIds` is the slot enumeration hook for a custom layout; `EnumerateInterruptedSnapshots` maps each save ID to the actual backup directory path used by interrupted-snapshot recovery, and `TryGetLevelIdFromDirectory` is the inverse mapping used when discovering level payloads and checking snapshot completeness. The default implementations recognize the standard `save_`, `level_`, and `.bak` naming; a custom policy overrides the applicable hooks so `ListSaves`, `ListSavesWithMetaData`, direct loads, and recovery see the same slots and levels that writes created. `GetExtraDirectory` is also used by extra-file restore and the idempotency side hash, so a policy that renames `extra/` remains consistent across save and load.
+
+Directory/slot members may rename any directory segment. File-path members must keep the suffix that routes their content type (`.json`, `.map`, `.sha`, `.write_in_progress`): all payload file content goes through `IDataSourceIoGateway` suffix routing, so a custom policy that renames `progress.json` to another suffix makes every subsequent write/read fail with an explicit "no codec configured" error.
 
 The default implementation `DefaultSavePathPolicy` → `SavePathLayout` provides the standard layout.
 

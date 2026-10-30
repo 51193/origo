@@ -15,6 +15,12 @@ namespace Origo.Core.DataSource;
 /// </summary>
 public sealed class DataSourceNode : IDisposable
 {
+    // Canonical hashing must reject unpaired UTF-16 surrogates instead of
+    // letting a replacement-fallback encoder collapse them into U+FFFD: that
+    // collapse would make distinct node trees hash-equal and hide real content
+    // changes from the save idempotency check.
+    private static readonly UTF8Encoding _strictUtf8 = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
+
     private readonly List<DataSourceNode> _arrayChildren = [];
     private readonly Dictionary<string, DataSourceNode> _objectChildren = new(StringComparer.Ordinal);
     private readonly List<string> _orderedKeys = [];
@@ -222,6 +228,30 @@ public sealed class DataSourceNode : IDisposable
     ///     For complex types (arrays, domain objects), use
     ///     <see cref="DataSourceConverterRegistry.Read{T}" />.
     /// </summary>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown when the node carries no value, or when a floating-point
+    ///     literal parses to a non-finite value (a JSON number literal such as
+    ///     <c>1e999</c> overflows the target type; JSON has no NaN or infinity
+    ///     literal). The stored raw text is preserved verbatim and number nodes
+    ///     are encoded verbatim, so the overflow surfaces only in
+    ///     <c>As&lt;float&gt;</c>/<c>As&lt;double&gt;</c> reads (integer and
+    ///     decimal reads report their own parse/overflow exceptions).
+    /// </exception>
+    /// <exception cref="FormatException">
+    ///     Thrown when the stored raw text is not a valid literal for
+    ///     <typeparamref name="T" />. Numeric reads parse the stored raw text
+    ///     regardless of the node kind, so a numeric text node parses and only
+    ///     non-numeric text (including a numeric read from a bool node, or
+    ///     <c>As&lt;int&gt;</c> on <c>"3.14"</c>) throws.
+    /// </exception>
+    /// <exception cref="OverflowException">
+    ///     Thrown when the stored integer literal does not fit the requested
+    ///     integer type.
+    /// </exception>
+    /// <exception cref="NotSupportedException">
+    ///     Thrown when <typeparamref name="T" /> is not one of the supported
+    ///     primitive types.
+    /// </exception>
     public T As<T>()
     {
         EnsureExpanded();
@@ -242,8 +272,8 @@ public sealed class DataSourceNode : IDisposable
         if (typeof(T) == typeof(uint)) return (T)(object)uint.Parse(_value!, CultureInfo.InvariantCulture);
         if (typeof(T) == typeof(long)) return (T)(object)long.Parse(_value!, CultureInfo.InvariantCulture);
         if (typeof(T) == typeof(ulong)) return (T)(object)ulong.Parse(_value!, CultureInfo.InvariantCulture);
-        if (typeof(T) == typeof(float)) return (T)(object)float.Parse(_value!, CultureInfo.InvariantCulture);
-        if (typeof(T) == typeof(double)) return (T)(object)double.Parse(_value!, CultureInfo.InvariantCulture);
+        if (typeof(T) == typeof(float)) return (T)(object)ParseFiniteSingle(_value!);
+        if (typeof(T) == typeof(double)) return (T)(object)ParseFiniteDouble(_value!);
         if (typeof(T) == typeof(decimal)) return (T)(object)decimal.Parse(_value!, CultureInfo.InvariantCulture);
         if (typeof(T) == typeof(bool)) return (T)(object)bool.Parse(_value!);
 
@@ -251,6 +281,34 @@ public sealed class DataSourceNode : IDisposable
             $"As<{typeof(T).Name}> is not supported. " +
             "Only primitive types are supported. " +
             "For complex types, use DataSourceConverterRegistry.Read<T>.");
+    }
+
+    /// <summary>
+    ///     Parses a stored floating-point literal and rejects non-finite
+    ///     results. <c>float.Parse</c> returns
+    ///     ±infinity for an overflowing literal instead of throwing, while JSON
+    ///     has no NaN or infinity literal; accepting the value here would
+    ///     silently propagate a value that the save writer rejects.
+    /// </summary>
+    private static float ParseFiniteSingle(string value)
+    {
+        var parsed = float.Parse(value, CultureInfo.InvariantCulture);
+        return float.IsFinite(parsed)
+            ? parsed
+            : throw new InvalidOperationException(
+                $"Cannot parse value '{value}' as Single: the literal overflows the type " +
+                "and JSON number nodes cannot represent a non-finite value.");
+    }
+
+    /// <summary>Double counterpart of <see cref="ParseFiniteSingle" />.</summary>
+    private static double ParseFiniteDouble(string value)
+    {
+        var parsed = double.Parse(value, CultureInfo.InvariantCulture);
+        return double.IsFinite(parsed)
+            ? parsed
+            : throw new InvalidOperationException(
+                $"Cannot parse value '{value}' as Double: the literal overflows the type " +
+                "and JSON number nodes cannot represent a non-finite value.");
     }
 
     private static bool IsValidJsonNumberLiteral(string value)
@@ -329,11 +387,19 @@ public sealed class DataSourceNode : IDisposable
     ///     Computes the SHA-256 hash of the entire node tree (lowercase hexadecimal).
     ///     Used for write idempotency verification — the same data tree produces the same hash.
     /// </summary>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown when the graph contains a cycle, or when a map key or text
+    ///     value contains an unpaired UTF-16 surrogate. The canonical text
+    ///     cannot be encoded losslessly in that case (a replacement-fallback
+    ///     encoder would collapse distinct strings into U+FFFD), so hashing it
+    ///     would let two different trees share one digest.
+    /// </exception>
     public string ComputeSha256Hash()
     {
         EnsureExpanded();
         var canonical = BuildCanonicalString();
-        var bytes = Encoding.UTF8.GetBytes(canonical);
+        Utf16Text.ThrowIfNotWellFormed(canonical, "DataSourceNode canonical text");
+        var bytes = _strictUtf8.GetBytes(canonical);
         var hash = SHA256.HashData(bytes);
         return Convert.ToHexString(hash).ToLowerInvariant();
     }
@@ -644,5 +710,58 @@ public sealed class DataSourceNode : IDisposable
         // Release references for GC
         _rawText = null;
         _expander = null;
+    }
+}
+
+/// <summary>
+///     UTF-16 well-formedness guard shared by the canonical hashing of
+///     <see cref="DataSourceNode" /> and the kernel text codecs. JSON strings
+///     and the line-based <c>.map</c> format cannot round-trip an unpaired
+///     surrogate: the BCL encoders replace it with U+FFFD, so a save would
+///     silently persist a different value (and two distinct trees would hash
+///     equally). Callers reject the text before encoding/hashing it.
+/// </summary>
+internal static class Utf16Text
+{
+    /// <summary>
+    ///     Returns true when the string contains no unpaired UTF-16 surrogate
+    ///     (high surrogate must be followed by a low surrogate, and vice versa).
+    /// </summary>
+    internal static bool IsWellFormed(string value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        for (var index = 0; index < value.Length; index++)
+        {
+            var character = value[index];
+            if (!char.IsSurrogate(character))
+                continue;
+            if (char.IsHighSurrogate(character)
+                && index + 1 < value.Length
+                && char.IsLowSurrogate(value[index + 1]))
+            {
+                index++;
+                continue;
+            }
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    ///     Throws an actionable <see cref="InvalidOperationException" /> when
+    ///     the string is not well-formed UTF-16; <paramref name="context" />
+    ///     names the value being validated (for example the file operation).
+    /// </summary>
+    internal static void ThrowIfNotWellFormed(string value, string context)
+    {
+        if (IsWellFormed(value))
+            return;
+
+        throw new InvalidOperationException(
+            $"{context} contains an unpaired UTF-16 surrogate. The value cannot be " +
+            "encoded losslessly; split or repair the text instead of writing a " +
+            "replacement character.");
     }
 }

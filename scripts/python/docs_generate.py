@@ -28,25 +28,49 @@ REPO_BLOB_RE = re.compile(
 )
 
 
+_DECLARATION_MODIFIER_TOKENS = frozenset(
+    {
+        "public",
+        "protected",
+        "internal",
+        "private",
+        "static",
+        "sealed",
+        "abstract",
+        "readonly",
+        "ref",
+        "partial",
+        "unsafe",
+        "file",
+    }
+)
+_DECLARATION_KIND_TOKENS = {
+    "Class": "class",
+    "Interface": "interface",
+    "Delegate": "delegate",
+    "Struct": "struct",
+    "RecordStruct": "record struct",
+    "Record": "record",
+    "Enum": "enum",
+}
+
+
 def format_declaration(text: str) -> str:
     text = text.strip().rstrip(":").strip()
-    replacements = (
-        ("public sealed Class ", "public sealed class "),
-        ("public static Class ", "public static class "),
-        ("public abstract Class ", "public abstract class "),
-        ("public Class ", "public class "),
-        ("public static Interface ", "public static interface "),
-        ("public Interface ", "public interface "),
-        ("public readonly Struct ", "public readonly struct "),
-        ("public Struct ", "public struct "),
-        ("public sealed Record ", "public sealed record "),
-        ("public Record ", "public record "),
-        ("public Enum ", "public enum "),
-    )
-    for old, new in replacements:
-        if text.startswith(old):
-            return new + text[len(old):]
-    return text
+    if not text:
+        return text
+
+    # The canonical inventory uses Roslyn TypeKind words (Class/Struct/Record/
+    # RecordStruct/Delegate/...); translate only the declaration-kind token that
+    # follows the accessibility/modifier prefix so generic parameter names and
+    # type names are never rewritten.
+    tokens = text.split(" ")
+    index = 0
+    while index < len(tokens) and tokens[index] in _DECLARATION_MODIFIER_TOKENS:
+        index += 1
+    if index < len(tokens) and tokens[index] in _DECLARATION_KIND_TOKENS:
+        tokens[index] = _DECLARATION_KIND_TOKENS[tokens[index]]
+    return " ".join(tokens)
 
 
 def format_member(text: str, owner: str) -> str:
@@ -90,8 +114,9 @@ def render_contract_api() -> str:
         "This page is generated from `tools/ApiInventoryTool/shell-api-baseline.json`,",
         "the same Roslyn inventory used by the shell API gate. It is the canonical",
         "signature reference for the public shell surface. The inventory records",
-        "canonical names, modifiers, and signatures; it is not a compilable source",
-        "file. Do not edit it by hand.",
+        "canonical names, modifiers, signatures, generic variance, and the",
+        "nullable-flow attributes that affect consumer nullable analysis; it is not",
+        "a compilable source file. Do not edit it by hand.",
         "",
         "Regenerate and validate locally with:",
         "",
@@ -175,10 +200,26 @@ def strip_code_fences(text: str) -> str:
     return "\n".join(result)
 
 
+def local_markdown_documents() -> list[Path]:
+    """Return the tracked local Markdown documents the link check covers.
+
+    The manual and root Markdown files are the narrative surface; the script map
+    and the GitHub templates/configuration Markdown are maintained docs that are
+    linked from the manual and CONTRIBUTING, so broken links there are checked
+    too. Missing directories are skipped so focused tests can use a minimal root.
+    """
+    documents = sorted(ROOT.glob("*.md"))
+    documents.extend(sorted((ROOT / "docs").rglob("*.md")))
+    scripts_readme = ROOT / "scripts" / "README.md"
+    if scripts_readme.is_file():
+        documents.append(scripts_readme)
+    documents.extend(sorted((ROOT / ".github").rglob("*.md")))
+    return documents
+
+
 def validate_links() -> list[str]:
     errors: list[str] = []
-    markdown_files = sorted(ROOT.glob("*.md"))
-    markdown_files.extend(sorted((ROOT / "docs").rglob("*.md")))
+    markdown_files = local_markdown_documents()
     for path in markdown_files:
         if not path.is_file():
             continue
@@ -191,7 +232,7 @@ def validate_links() -> list[str]:
                 target = repo_match.group(1)
                 if not (ROOT / target).exists():
                     errors.append(
-                        f"{path.relative_to(ROOT)}: repository link target missing "
+                        f"{path.relative_to(ROOT).as_posix()}: repository link target missing "
                         f"{raw_target}"
                     )
                 continue
@@ -205,7 +246,7 @@ def validate_links() -> list[str]:
                 continue
             resolved = (path.parent / target).resolve()
             if not resolved.exists():
-                errors.append(f"{path.relative_to(ROOT)}: missing link target {raw_target}")
+                errors.append(f"{path.relative_to(ROOT).as_posix()}: missing link target {raw_target}")
     return errors
 
 
@@ -290,12 +331,12 @@ def validate_summary_content() -> list[str]:
             continue
         text = path.read_text(encoding="utf-8")
         if "quick-start" in text.lower() or "quick start" in text.lower():
-            errors.append(f"{path.relative_to(ROOT)}: stale quick-start reference")
+            errors.append(f"{path.relative_to(ROOT).as_posix()}: stale quick-start reference")
         for pattern in BANNED_SUMMARY_PATTERNS:
             match = re.search(pattern, text)
             if match:
                 errors.append(
-                    f"{path.relative_to(ROOT)}: avoid brittle count '{match.group(0)}'; "
+                    f"{path.relative_to(ROOT).as_posix()}: avoid brittle count '{match.group(0)}'; "
                     "use names or a generated/validated inventory"
                 )
     return errors
@@ -311,7 +352,7 @@ def validate_generated_registry() -> list[str]:
                 continue
             if path.resolve() not in registered:
                 try:
-                    label = path.relative_to(ROOT)
+                    label = path.relative_to(ROOT).as_posix()
                 except ValueError:
                     label = path
                 errors.append(
@@ -343,13 +384,13 @@ def check_staged_generated() -> list[str]:
             continue
         if staged.returncode != 0:
             errors.append(
-                f"generated file is not staged or tracked: {display_path(path)}; "
+                f"generated file is not staged or tracked: {display_path(path).as_posix()}; "
                 "generate and stage it before commit"
             )
             continue
         if staged.stdout != render():
             errors.append(
-                f"staged generated file is stale: {path.relative_to(ROOT)}; "
+                f"staged generated file is stale: {path.relative_to(ROOT).as_posix()}; "
                 "regenerate and stage it before commit"
             )
     return errors
@@ -366,11 +407,11 @@ def check_generated() -> list[str]:
     errors: list[str] = []
     for path, render in GENERATED_ARTIFACTS.items():
         if not path.is_file():
-            errors.append(f"missing generated file: {display_path(path)}")
+            errors.append(f"missing generated file: {display_path(path).as_posix()}")
             continue
         if path.read_text(encoding="utf-8") != render():
             errors.append(
-                f"generated file is stale: {display_path(path)}; "
+                f"generated file is stale: {display_path(path).as_posix()}; "
                 "run `scripts/bash/docs.sh generate` and commit the result"
             )
     return errors
@@ -384,7 +425,7 @@ def main(argv: list[str] | None = None) -> int:
         for path, render in GENERATED_ARTIFACTS.items():
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(render(), encoding="utf-8")
-            print(f"wrote {path.relative_to(ROOT)}")
+            print(f"wrote {path.relative_to(ROOT).as_posix()}")
         return 0
     if args.mode == "check-staged":
         errors = check_staged_generated()

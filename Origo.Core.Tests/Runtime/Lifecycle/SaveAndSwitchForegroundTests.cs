@@ -165,6 +165,7 @@ public class SaveAndSwitchForegroundTests
         var (found, topology) = ctx.EnsureProgressRun().ProgressBlackboard
             .TryGet<string>(WellKnownKeys.SessionTopology);
         Assert.True(found);
+        Assert.NotNull(topology);
 
         var activeLevel = SessionTopologyCodec.ExtractForegroundLevelId(topology);
         Assert.Equal("game", activeLevel);

@@ -9,6 +9,18 @@ namespace Origo.Core.Save.Storage;
 ///     directories and files, decoupling the path layout from business logic
 ///     so different path strategies can be injected per environment.
 /// </summary>
+/// <remarks>
+///     Directory/slot members (<see cref="GetCurrentDirectory" />,
+///     <see cref="GetSaveDirectory" />, <see cref="GetLevelDirectory" />, …) may
+///     rename any directory segment. File-path members, however, must keep the
+///     file suffix that the codec registry routes by (for example
+///     <c>.json</c>, <c>.map</c>, <c>.sha</c>, <c>.write_in_progress</c>):
+///     all save content I/O passes through <c>IDataSourceIoGateway</c> suffix
+///     routing, so renaming a payload file's suffix makes every write and read
+///     fail with "no codec configured" (fail-fast, not silent). The manual's
+///     Storage entry and the persistence-flow usage guide state the same
+///     constraint.
+/// </remarks>
 public interface ISavePathPolicy
 {
     /// <summary>Get the relative path of the active save directory (current/).</summary>

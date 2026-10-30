@@ -62,7 +62,7 @@ Strategy + Node + Data
 
 - Strategies are explicitly registered via `[StrategyIndex("xxx")]`
 - Missing index, null value, or type mismatch must throw an error
-- Strategies are validated for statelessness at registration time via reflection (instance fields / writable properties are rejected)
+- Strategies are validated for statelessness at registration time via reflection (mutable instance fields and writable instance properties are rejected; deeply immutable readonly fields are allowed)
 - Strategies follow the complete registry partial order; topological candidates use index Ordinal order
 
 ## Session Model
@@ -140,11 +140,13 @@ Additionally, `ISessionManager` and `ISessionRun` live in the Abstractions layer
 | Forbidden | Reason | Counter-Example |
 |-----------|--------|-----------------|
 | **Fire strategy lifecycle hooks** | Strategies are a Core layer concept; hook firing timing and order must be centrally orchestrated by Core | `GodotSndManager` must not call `FireAfterSpawnHooks()`, `FireBeforeDeadHooks()`, etc. |
-| **Manage strategy release/ref counting** | Strategy pool, ref counting, and partial-order sorting are managed in Core's `SndStrategyPool` and `SndStrategyManager` | `GodotSndManager` must not call `ReleaseStrategiesOnly()` |
+| **Manage strategy release/ref counting** | Strategy pool, ref counting, and partial-order sorting are managed in Core's `SndStrategyPool` and `SndStrategyManager` | `GodotSndManager` must not call `ReleaseStrategiesOnly()` during normal lifecycle orchestration (see the teardown-fallback exception below) |
 | **Directly call Core pipeline methods** | The timing and order of frame boundary operations (entity processing → business queue → kill entities → system queue → console) are controlled by Core. The adapter layer should only call `IOrigoFrameDriver.DriveFrame(delta)` to hand over frame control | The adapter layer must not directly call the internal `FlushEndOfFrameDeferred` or `ProcessPending` |
 | **Directly drive Core startup flow** | Strategy discovery, ordering validation and registration freeze, alias/template loading, and entry save loading are internal Core orchestration, uniformly executed in `SndContext.Bootstrap()`. The adapter layer only passes configuration via `SndContextParameters` | The adapter layer must not directly call `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`, `LoadSceneAliases()`, `LoadTemplates()`, `RequestLoadMainMenuEntrySave()` |
 | **Hold Core orchestration state** | The state machine for entity lifecycle management (e.g., pending kill, teardown flow) is maintained by the Core layer | The adapter layer should not have methods like `QuitFromManager`, `DeadFromManager` |
 | **Load engine-agnostic business configuration** | Template parsing, alias mapping, and strategy index resolution are all done in Core | The adapter layer should not read and parse business configurations like `snd_templates.map` |
+
+The only adapter-side exception is the documented last-resort `GodotSndManager._ExitTree` fallback: when the manager node leaves the scene tree with no active progress run — Core session teardown was bypassed, for example business code removing the manager node directly — it tears down the remaining entities' observer bindings (which runs their `OnUnmounted` hooks) and returns their strategy-pool references before clearing the collection. Normal entry exit never takes that path: the manager shuts the `ISndContext` down while the entity collection is still populated, so Core orchestrates the quit hooks, strategy release, and cleanup. The fallback exists only to keep an already-bypassed teardown from leaking Core-side state; it does not run while a live session exists, and it fires no other lifecycle hook.
 
 ### Core Layer Responsibilities
 

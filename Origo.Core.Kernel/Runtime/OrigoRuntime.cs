@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.ExceptionServices;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Console;
 using Origo.Core.Abstractions.Lifecycle;
@@ -188,6 +189,47 @@ public sealed class OrigoRuntime : IOrigoRuntime
         _businessDeferredScheduler.Tick();
         _sessionManagerProvider().KillPendingAllSessions();
         _systemDeferredScheduler.Tick();
+    }
+
+    /// <summary>
+    ///     Discards every queued deferred action in the business and system queues,
+    ///     running each action's discard cleanup (used for persistence-request
+    ///     accounting) before this method returns. Called by
+    ///     <see cref="Snd.SndContext.Shutdown" /> and by the workflow teardown
+    ///     path that commits a deferred shutdown request, so requests queued
+    ///     before a shutdown can neither run against the terminal context nor
+    ///     leave the persistence-request counter non-zero. Both queues are
+    ///     cleared even when one discard callback throws; the first failure is
+    ///     rethrown afterwards.
+    ///     Only actions still queued are cancelled: a batch that is already being
+    ///     executed keeps running, including its remaining actions, so callers
+    ///     that cancel from inside a batch must not assume the batch stops. If
+    ///     the current action throws, fail-fast still abandons the rest of that
+    ///     batch.
+    /// </summary>
+    internal void CancelPendingDeferredRequests()
+    {
+        Exception? firstFailure = null;
+        try
+        {
+            _businessDeferredScheduler.Clear();
+        }
+        catch (Exception ex)
+        {
+            firstFailure = ex;
+        }
+
+        try
+        {
+            _systemDeferredScheduler.Clear();
+        }
+        catch (Exception ex)
+        {
+            firstFailure ??= ex;
+        }
+
+        if (firstFailure is not null)
+            ExceptionDispatchInfo.Capture(firstFailure).Throw();
     }
 
     /// <summary>

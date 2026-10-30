@@ -141,16 +141,33 @@ Custom storage and path policies are designed separately in a later version.
   `origo.format_version`; format-version-1 reads, reads without the version
   key, and corrupted-data failure semantics are explicitly tested.
 - **Generated-code compatibility**: `TryGetXxx`, nullable annotations, Kind
-  allocation, and ORIGOSG diagnostics remain stable.
+  allocation, and ORIGOSG diagnostics are recorded by the baseline gate; a
+  reviewed annotation correction is handled through the approved-break process
+  below instead of drifting silently.
 - **SDK pairing**: 0.1.x supports .NET 10 and Godot.NET.Sdk 4.7.2; a wider range
   is opened after later verification.
 
 0.1.x does not promise binary compatibility: consumers recompile after updating
-shell packages. Behavior breaks and API removals target 0.2.0; backward-compatible
-additions to the consumer API are allowed within 0.1.x, but must pass API
-baseline review and preserve source/behavior compatibility. Kernel packages make
-no consumer compatibility promise, but kernel-shell port contracts are governed
-by this document. Shell and kernel use exact version pairing within 0.1.x so
+shell packages. Backward-compatible additions to the consumer API are allowed
+within 0.1.x, but must pass API baseline review and preserve source/behavior
+compatibility.
+
+Before 1.0 no external consumer base is promised, so the maintainer may approve a
+breaking shell change when it materially improves the contract. An approved
+break is handled end to end in one reviewed change: regenerate the shell API
+baseline, list the removed/changed previous line with a reason in
+`tools/ApiInventoryTool/shell-api-approved-breaks.json`, and record the change
+in the Changelog as `BREAKING:` with a migration note. The approved-break file
+is a review record, not a compatibility waiver: an undeclared, malformed,
+duplicate, dormant, or wrong-assembly entry fails the gate; an obsolete entry
+whose line a newer release has already absorbed is reported for cleanup instead
+of failing so the first post-release push stays green; missing-assembly failures
+can never be approved. Once a consumer base is promised (1.0+), breaking changes follow
+the normal major/minor policy instead.
+
+Kernel packages make no consumer compatibility promise, but kernel-shell port
+contracts are governed by this document. Shell and kernel use exact version
+pairing within 0.1.x so
 restore cannot silently combine untested versions.
 
 Godot-generated nested signal types are generated public surface and are

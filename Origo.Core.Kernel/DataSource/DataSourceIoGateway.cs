@@ -6,10 +6,16 @@ namespace Origo.Core.DataSource;
 
 /// <summary>
 ///     Default implementation of the DataSource file I/O intermediate layer. All file content read/write
-///     operations are routed to the corresponding <see cref="IDataSourceCodec" /> via suffix, and
-///     encode/decode exceptions are uniformly wrapped as <see cref="InvalidOperationException" />
-///     (including file path and suffix information).
+///     operations are routed to the corresponding <see cref="IDataSourceCodec" /> via suffix.
 /// </summary>
+/// <remarks>
+///     Encode failures and eager decode failures are wrapped as
+///     <see cref="InvalidOperationException" /> with the file path and suffix.
+///     JSON decoding is lazy (<c>JsonDataSourceCodec</c>): its parse/expansion
+///     exception surfaces when the returned node is first accessed, outside this
+///     wrapper's try/catch, so it does not carry the file path — load paths
+///     supplement the level/file context there (see the DataSource manual).
+/// </remarks>
 internal sealed class DataSourceIoGateway : IDataSourceIoGateway
 {
     private readonly Dictionary<DataSourceCodecKind, IDataSourceCodec> _codecs;

@@ -56,6 +56,83 @@ class DocsGenerateTests(unittest.TestCase):
             "public sealed record Origo.Core.OrigoMeta",
         )
 
+    def test_type_declaration_handles_delegate_and_custom_struct_kinds(self):
+        self.assertEqual(
+            MODULE.format_declaration("public Delegate Origo.Fixture.Handler :"),
+            "public delegate Origo.Fixture.Handler",
+        )
+        self.assertEqual(
+            MODULE.format_declaration("public readonly RecordStruct Origo.Fixture.Pair :"),
+            "public readonly record struct Origo.Fixture.Pair",
+        )
+        self.assertEqual(
+            MODULE.format_declaration("public ref Struct Origo.Fixture.Span :"),
+            "public ref struct Origo.Fixture.Span",
+        )
+        self.assertEqual(
+            MODULE.format_declaration("public abstract Record Origo.Fixture.Base :"),
+            "public abstract record Origo.Fixture.Base",
+        )
+
+    def test_declaration_kind_token_does_not_rewrite_type_name(self):
+        self.assertEqual(
+            MODULE.format_declaration("public Class Struct :"),
+            "public class Struct",
+        )
+
+    def test_render_contract_api_renders_variance_and_flow_attributes(self):
+        original = MODULE.BASELINE
+        with tempfile.TemporaryDirectory() as directory:
+            baseline = Path(directory) / "baseline.json"
+            baseline.write_text(
+                json.dumps(
+                    {
+                        "schemaVersion": 2,
+                        "assemblies": [
+                            {
+                                "name": "Fixture",
+                                "api": [
+                                    "T:public Interface Origo.Fixture.ISource<out T> : ",
+                                    "M:Origo.Fixture.ISource<out T>.T Read()",
+                                    "M:Origo.Fixture.ISource<out T>.bool TryRead"
+                                    "([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out T value)",
+                                    "M:Origo.Fixture.ISource<out T>."
+                                    "[return: System.Diagnostics.CodeAnalysis.MaybeNull] public T? ReadOrNull()",
+                                    "T:public Delegate Origo.Fixture.Handler : ",
+                                    "M:Origo.Fixture.Handler.public void Invoke(string value)",
+                                ],
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            MODULE.BASELINE = baseline
+            try:
+                rendered = MODULE.render_contract_api()
+            finally:
+                MODULE.BASELINE = original
+
+        # Variance is part of the declaration; it must not leak into constructed
+        # member signatures, and flow attributes must be rendered inline.
+        self.assertIn("### `Origo.Fixture.ISource<out T>`", rendered)
+        self.assertIn("public interface Origo.Fixture.ISource<out T>", rendered)
+        self.assertIn(
+            "bool TryRead([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out T value)",
+            rendered,
+        )
+        self.assertIn(
+            "[return: System.Diagnostics.CodeAnalysis.MaybeNull] public T? ReadOrNull()",
+            rendered,
+        )
+        self.assertNotIn("Origo.Fixture.ISource<out T>.bool TryRead", rendered)
+
+        # Declaration kinds the inventory can emit (delegates and the struct
+        # family) render as C# keywords, not Roslyn TypeKind words.
+        self.assertIn("### `Origo.Fixture.Handler`", rendered)
+        self.assertIn("public delegate Origo.Fixture.Handler", rendered)
+        self.assertIn("public void Invoke(string value)", rendered)
+
     def test_member_normalization_handles_init_and_protected(self):
         self.assertEqual(
             MODULE.format_member(
@@ -288,6 +365,73 @@ class DocsGenerateTests(unittest.TestCase):
             finally:
                 MODULE.ROOT = original
 
+
+
+    def test_validate_links_covers_script_map_and_github_markdown(self):
+        original = MODULE.ROOT
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "docs").mkdir()
+            (root / "docs/README.en.md").write_text("# Manual\n", encoding="utf-8")
+            (root / "AGENTS.md").write_text("# Agents\n", encoding="utf-8")
+            (root / "scripts").mkdir()
+            (root / "scripts/README.md").write_text(
+                "[agents](../AGENTS.md) · [manual](../docs/README.en.md)\n",
+                encoding="utf-8",
+            )
+            (root / ".github/ISSUE_TEMPLATE").mkdir(parents=True)
+            (root / ".github/ISSUE_TEMPLATE/bug_report.md").write_text(
+                "[manual](../../docs/README.en.md)\n", encoding="utf-8"
+            )
+            MODULE.ROOT = root
+            try:
+                self.assertEqual(MODULE.validate_links(), [])
+            finally:
+                MODULE.ROOT = original
+
+    def test_validate_links_rejects_broken_script_map_link(self):
+        original = MODULE.ROOT
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "docs").mkdir()
+            (root / "scripts").mkdir()
+            (root / "scripts/README.md").write_text(
+                "[missing](missing-script.md)\n", encoding="utf-8"
+            )
+            MODULE.ROOT = root
+            try:
+                errors = MODULE.validate_links()
+                self.assertTrue(
+                    any(
+                        "scripts/README.md" in error and "missing-script.md" in error
+                        for error in errors
+                    ),
+                    errors,
+                )
+            finally:
+                MODULE.ROOT = original
+
+    def test_validate_links_rejects_broken_github_markdown_link(self):
+        original = MODULE.ROOT
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "docs").mkdir()
+            template = root / ".github/ISSUE_TEMPLATE/bug_report.md"
+            template.parent.mkdir(parents=True)
+            template.write_text("[missing](../../docs/missing.md)\n", encoding="utf-8")
+            MODULE.ROOT = root
+            try:
+                errors = MODULE.validate_links()
+                self.assertTrue(
+                    any(
+                        ".github/ISSUE_TEMPLATE/bug_report.md" in error
+                        and "missing.md" in error
+                        for error in errors
+                    ),
+                    errors,
+                )
+            finally:
+                MODULE.ROOT = original
 
 if __name__ == "__main__":
     unittest.main()

@@ -13,7 +13,7 @@ Console command extensions for the Godot adapter layer. An adapter-layer command
 | `CommandHandlerBase.cs` | Adapter-layer command handler base class, holds an `IOrigoRuntime` reference, validates argument count, and resolves named Godot entities for commands that require them |
 | `PressButtonCommandHandler.cs` | Godot-specific command: finds and emits Button.Pressed signal by entity + path |
 | `TreeDebugCommandHandler.cs` | Godot-specific command: prints the complete Godot node tree of an entity (including dynamically created child nodes) |
-| `CameraViewCommandHandler.cs` | Godot-specific command: displays screen coordinates and depth of all entity nodes from the active camera's perspective |
+| `CameraViewCommandHandler.cs` | Godot-specific command: displays screen coordinates and depth of all visible entity nodes from the active camera's perspective (engine visibility flag + camera frustum) |
 | `ProjectionHelper.cs` | Camera projection math utility: world coordinates → screen pixel coordinates (frustum clipping) |
 
 ## Module Details
@@ -54,12 +54,12 @@ Flow:
 1. Gets SceneTree → Root Viewport via `Engine.GetMainLoop()`
 2. `viewport.GetCamera3D()` gets the active camera
 3. Iterates all `GodotSndEntity` instances in the foreground session
-4. Recursively traverses each entity's child nodes:
+4. Recursively traverses each entity's child nodes, skipping nodes the engine would not render (the node or an ancestor of the same render type has `Visible = false`, i.e. `IsVisibleInTree()` is false):
    - `Node3D` → computes 2D screen coordinates and depth via `ProjectionHelper.ProjectWorldToScreen`
    - `Control` → reads `GlobalPosition` directly (UI space)
 5. Output format: `entity / node [Type] screen=(X, Y) depth=D`
 
-> Occlusion/culling detection is not yet implemented; currently shows all visible nodes within the frustum. Depth values can be used for manual sorting to determine front-to-back order.
+> Occlusion detection is not yet implemented; only the engine visibility flag (`IsVisibleInTree()`) and camera-frustum culling are applied. Depth values can be used for manual sorting to determine front-to-back order.
 
 ## Design Decisions
 

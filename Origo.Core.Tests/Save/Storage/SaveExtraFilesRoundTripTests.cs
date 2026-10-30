@@ -355,99 +355,48 @@ public class SaveExtraFilesRoundTripTests
         Assert.False(fs.Exists("root/save_slot_01/extra/remove_me.json"));
     }
 
-    // ── ComputeSideDirectoryHash / CombineHashes unit tests ──────────
+    // ── Combined payload + extra/ hash unit tests ────────────────────
+    // The side-directory hash is internal to the save idempotency contract;
+    // tests exercise the production entry point (ComputeCombinedHash) instead
+    // of a test-only wrapper.
 
     [Fact]
-    public void ComputeSideDirectoryHash_NoExtraDir_ReturnsEmpty()
+    public void ComputeCombinedHash_NoExtraDirectoryAndEmptyExtraDirectory_ProduceSameHash()
     {
         var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
-        fs.CreateDirectory("root/current");
+        var payload = TestFactory.CreateMinimalPayload("001", "default");
 
-        var hash = SaveAtomicWriter.ComputeSideDirectoryHash(handle, "extra");
-        Assert.Equal(string.Empty, hash);
+        var withoutExtraDir = SaveAtomicWriter.ComputeCombinedHash(handle, payload);
+
+        fs.CreateDirectory("root/current/extra");
+        var withEmptyExtraDir = SaveAtomicWriter.ComputeCombinedHash(handle, payload);
+
+        Assert.Equal(withoutExtraDir, withEmptyExtraDir);
+        Assert.Matches("^[0-9a-f]{64}$", withoutExtraDir);
     }
 
     [Fact]
-    public void ComputeSideDirectoryHash_EmptyExtraDir_ReturnsEmpty()
+    public void ComputeCombinedHash_ExtraFileContent_ProduceDifferentHashes()
     {
         var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        var payload = TestFactory.CreateMinimalPayload("001", "default");
         fs.CreateDirectory("root/current/extra");
 
-        var hash = SaveAtomicWriter.ComputeSideDirectoryHash(handle, "extra");
-        Assert.Equal(string.Empty, hash);
-    }
+        var empty = SaveAtomicWriter.ComputeCombinedHash(handle, payload);
 
-    [Fact]
-    public void ComputeSideDirectoryHash_WithFiles_ReturnsNonEmpty()
-    {
-        var fs = new TestMemoryFileSystem();
-        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
-        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
-        fs.SeedFile("root/current/extra/a.json", """{"k":"v"}""");
-        fs.SeedFile("root/current/extra/b.json", """{"x":1}""");
-
-        var hash = SaveAtomicWriter.ComputeSideDirectoryHash(handle, "extra");
-        Assert.NotEmpty(hash);
-        Assert.Matches("^[0-9a-f]{64}$", hash);
-    }
-
-    [Fact]
-    public void ComputeSideDirectoryHash_SameContent_SameHash()
-    {
-        var fs = new TestMemoryFileSystem();
-        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
-        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
-        fs.SeedFile("root/current/extra/data.json", """{"k":"v"}""");
-
-        var h1 = SaveAtomicWriter.ComputeSideDirectoryHash(handle, "extra");
-        var h2 = SaveAtomicWriter.ComputeSideDirectoryHash(handle, "extra");
-        Assert.Equal(h1, h2);
-    }
-
-    [Fact]
-    public void ComputeSideDirectoryHash_DifferentContent_DifferentHash()
-    {
-        var fs = new TestMemoryFileSystem();
-        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
-        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         fs.SeedFile("root/current/extra/data.json", """{"k":"v1"}""");
+        var v1 = SaveAtomicWriter.ComputeCombinedHash(handle, payload);
 
-        var h1 = SaveAtomicWriter.ComputeSideDirectoryHash(handle, "extra");
-
-        fs.Delete("root/current/extra/data.json");
         fs.SeedFile("root/current/extra/data.json", """{"k":"v2"}""");
+        var v2 = SaveAtomicWriter.ComputeCombinedHash(handle, payload);
 
-        var h2 = SaveAtomicWriter.ComputeSideDirectoryHash(handle, "extra");
-        Assert.NotEqual(h1, h2);
-    }
-
-    [Fact]
-    public void ComputeSideDirectoryHash_CustomDirectoryName_Works()
-    {
-        var fs = new TestMemoryFileSystem();
-        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
-        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
-        fs.SeedFile("root/current/custom/file.json", """{"v":1}""");
-
-        var hash = SaveAtomicWriter.ComputeSideDirectoryHash(handle, "custom");
-        Assert.NotEmpty(hash);
-        Assert.Matches("^[0-9a-f]{64}$", hash);
-    }
-
-    [Fact]
-    public void ComputeSideDirectoryHash_CustomDirectory_Empty_ReturnsEmpty()
-    {
-        var fs = new TestMemoryFileSystem();
-        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
-        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
-        fs.CreateDirectory("root/current/custom");
-
-        var hash = SaveAtomicWriter.ComputeSideDirectoryHash(handle, "custom");
-        Assert.Equal(string.Empty, hash);
+        Assert.NotEqual(empty, v1);
+        Assert.NotEqual(v1, v2);
+        Assert.Equal(v2, SaveAtomicWriter.ComputeCombinedHash(handle, payload));
     }
 
     [Fact]

@@ -9,6 +9,7 @@ using Origo.Core.Runtime.Console;
 using Origo.Core.Save;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
+using Origo.Core.Snd.Scene;
 using Origo.Core.Snd.Strategy;
 using Xunit;
 
@@ -243,6 +244,47 @@ public class SndContextWorkflowTests
         Assert.Throws<InvalidOperationException>(() => ctx.Bootstrap());
     }
 
+    [Fact]
+    public void Shutdown_Retry_ConsoleClearQueuesRequest_CancelsItBeforeCommittingTerminalState()
+    {
+        var input = new QueueingConsoleInput();
+        var logger = new TestLogger();
+        var runtime = TestFactory.CreateRuntime(
+            logger,
+            new TestSndSceneHost(),
+            new TypeStringMapping(),
+            new Origo.Core.Blackboard.Blackboard(),
+            input,
+            new ConsoleOutputChannel());
+        var fs = new TestMemoryFileSystem();
+        var ctx = new SndContext(new SndContextParameters(
+            runtime,
+            TestFactory.CreateIoGateway(fs),
+            TestFactory.CreateFileMetaAccess(fs),
+            TestFactory.CreatePathResolver(fs),
+            "root",
+            "res://initial",
+            "entry.json"));
+        input.Context = ctx;
+
+        // First attempt fails on the console clear and leaves the cleanup
+        // retryable.
+        var first = Assert.Throws<InvalidOperationException>(() => ctx.Shutdown());
+        Assert.Contains("console clear failed", first.Message, StringComparison.OrdinalIgnoreCase);
+
+        // The retry's console clear enqueues a persistence request; the retry
+        // must cancel it before committing terminal state.
+        input.ThrowOnClear = false;
+        input.QueueSaveOnClear = true;
+        ctx.Shutdown();
+
+        Assert.Equal(0, ctx.Deferred.GetPendingPersistenceRequestCount());
+        Assert.True(ctx.Deferred.IsPersistenceIdle);
+        Assert.False(fs.DirectoryExists("root/save_queued_by_console_clear"));
+        Assert.Null(Record.Exception(() => ctx.FlushFrame()));
+        Assert.Throws<InvalidOperationException>(() => ctx.Bootstrap());
+    }
+
     private sealed class ThrowingConsoleInput : IConsoleInputSource
     {
         public bool ThrowOnClear { get; set; } = true;
@@ -261,6 +303,31 @@ public class SndContextWorkflowTests
         {
             if (ThrowOnClear)
                 throw new InvalidOperationException("console clear failed");
+        }
+    }
+
+    private sealed class QueueingConsoleInput : IConsoleInputSource
+    {
+        public bool ThrowOnClear { get; set; } = true;
+        public bool QueueSaveOnClear { get; set; }
+        public SndContext? Context { get; set; }
+
+        public bool TryDequeueCommand([NotNullWhen(true)] out string? line)
+        {
+            line = null;
+            return false;
+        }
+
+        public void Enqueue(string line)
+        {
+        }
+
+        public void Clear()
+        {
+            if (ThrowOnClear)
+                throw new InvalidOperationException("console clear failed");
+            if (QueueSaveOnClear)
+                Context!.Save.RequestSaveGame("queued_by_console_clear");
         }
     }
 
@@ -466,6 +533,57 @@ public class SndContextWorkflowTests
         var (found, saveId) = ctx.Blackboard.SystemBlackboard.TryGet<string>(WellKnownKeys.ActiveSaveId);
         Assert.True(found);
         Assert.Equal(string.Empty, saveId);
+    }
+
+    [Fact]
+    public void RequestLoadInitialSave_PayloadMount_ClearsForeignAdapterEntities()
+    {
+        // The shared adapter host can still hold entities before a payload load
+        // (a previous session cleanup failed at RemoveAllEntities, or adapter
+        // code created them). A payload mount must clear them like the empty
+        // mount path does; otherwise they join the new session and are persisted
+        // as phantom entities on the next save.
+        var logger = new TestLogger();
+        var fs = new TestMemoryFileSystem();
+        var host = new FullMemorySndSceneHost(logger);
+        var runtime = TestFactory.CreateRuntime(
+            logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), fs);
+        host.BindWorld(runtime.SndWorld);
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(
+            runtime, io, metaAccess, pathResolver, "root", "initial", "entry.json")
+        {
+            AutoDiscoverStrategies = false
+        });
+        host.BindContext(ctx);
+        SeedInitialSave(fs, "initial");
+
+        host.CreateEntity(new SndMetaData
+        {
+            Name = "foreign_remnant",
+            NodeMetaData = new NodeMetaData(),
+            StrategyMetaData = new StrategyMetaData(),
+            DataMetaData = new DataMetaData()
+        });
+        Assert.NotNull(host.FindByName("foreign_remnant"));
+
+        ctx.Lifecycle.RequestLoadInitialSave();
+        ctx.FlushFrame();
+
+        var foreground = ctx.Runtime.SessionManager.ForegroundSession
+            ?? throw new InvalidOperationException("Test setup failed: no foreground session after initial load.");
+        Assert.Null(foreground.FindByName("foreign_remnant"));
+        Assert.Empty(foreground.GetEntities());
+        Assert.Null(host.FindByName("foreign_remnant"));
+
+        // The remnant must not resurface in the next snapshot's scene payload.
+        ctx.Save.RequestSaveGame("after_initial_load");
+        ctx.FlushFrame();
+        Assert.Contains("after_initial_load", ctx.Save.ListSaves());
+        var sceneJson = fs.ReadAllText("root/save_after_initial_load/level_default/snd_scene.json");
+        Assert.DoesNotContain("foreign_remnant", sceneJson, StringComparison.Ordinal);
     }
 
     [Fact]

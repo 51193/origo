@@ -17,9 +17,21 @@ public static class PrivateFieldNamingConvention
     public static IReadOnlyList<string> FindViolations(Assembly assembly)
     {
         ArgumentNullException.ThrowIfNull(assembly);
+        return FindViolations(GetLoadableTypes(assembly));
+    }
+
+    /// <summary>
+    ///     Returns fully qualified names of private fields that violate the convention
+    ///     among explicitly supplied types. Architecture negative-control tests use this
+    ///     overload to prove the detector reports a known violation; a detector that
+    ///     silently returned no violations would otherwise pass every positive guard.
+    /// </summary>
+    internal static IReadOnlyList<string> FindViolations(IEnumerable<Type> types)
+    {
+        ArgumentNullException.ThrowIfNull(types);
 
         var violations = new List<string>();
-        foreach (var type in GetLoadableTypes(assembly))
+        foreach (var type in types)
         {
             if (ShouldSkipType(type))
                 continue;

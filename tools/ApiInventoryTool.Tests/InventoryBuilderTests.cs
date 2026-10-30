@@ -435,4 +435,386 @@ public class InventoryBuilderTests
         }
     }
 
+    [Fact]
+    public void Build_RendersGenericVarianceInDeclarationsAndMemberPrefixes()
+    {
+        var directory = TestAssemblyEmitter.CreateDirectory();
+        try
+        {
+            var path = TestAssemblyEmitter.Emit(directory, "Sample.Variance",
+                """
+                namespace Sample
+                {
+                    public interface IProducer<out T>
+                    {
+                        T Read();
+                        System.Collections.Generic.IReadOnlyList<T> Items { get; }
+                    }
+
+                    public interface IConsumer<in T>
+                    {
+                        void Consume(T value);
+                    }
+                }
+                """);
+
+            var result = InventoryBuilder.Build(
+                [new AssemblyInput("Sample.Variance", path)],
+                [directory],
+                []);
+
+            Assert.True(result.Succeeded, string.Join('\n', result.Errors));
+            var api = result.Document!.Assemblies.Single().Api;
+
+            // Variance belongs to the generic parameter declaration; it must
+            // appear on the type line and on member prefixes (which use the
+            // same canonical type display).
+            Assert.Contains(api, line => line.StartsWith("T:public Interface Sample.IProducer<out T>", StringComparison.Ordinal));
+            Assert.Contains(api, line => line.StartsWith("T:public Interface Sample.IConsumer<in T>", StringComparison.Ordinal));
+            Assert.Contains(api, line => line.Contains("Sample.IProducer<out T>.T Read()", StringComparison.Ordinal));
+            Assert.Contains(api, line => line.Contains("Sample.IConsumer<in T>.void Consume(T value)", StringComparison.Ordinal));
+
+            // Constructed uses (the IReadOnlyList<T> property type here) must
+            // not inherit the variance marker of the declaration.
+            Assert.True(
+                api.Any(line => line.Contains("IReadOnlyList<T> Items", StringComparison.Ordinal)),
+                "API lines:\n" + string.Join("\n", api));
+            Assert.DoesNotContain(api, line => line.Contains("IReadOnlyList<out T>", StringComparison.Ordinal));
+        }
+        finally
+        {
+            TestAssemblyEmitter.TryDelete(directory);
+        }
+    }
+
+    [Fact]
+    public void Build_RecordsNullableFlowAttributesInCanonicalOrder()
+    {
+        var directory = TestAssemblyEmitter.CreateDirectory();
+        try
+        {
+            var runtimeDirectory = Path.GetDirectoryName(typeof(object).Assembly.Location)!;
+            var systemRuntimePath = Path.Combine(runtimeDirectory, "System.Runtime.dll");
+            Assert.True(File.Exists(systemRuntimePath), $"System.Runtime.dll not found at '{systemRuntimePath}'.");
+
+            var path = TestAssemblyEmitter.Emit(directory, "Sample.Flow",
+                """
+                #nullable enable
+                using System.Diagnostics.CodeAnalysis;
+
+                namespace Sample
+                {
+                    public class Flow
+                    {
+                        private string? _field;
+
+                        public bool TryRead([NotNullWhen(true)] out string? value)
+                        {
+                            value = null;
+                            return false;
+                        }
+
+                        [return: MaybeNull]
+                        public string Read() => null!;
+
+                        [MemberNotNull(nameof(_field))]
+                        [return: MaybeNull]
+                        public string Create()
+                        {
+                            _field = "x";
+                            return null!;
+                        }
+                    }
+                }
+                """,
+                systemRuntimePath);
+
+            var result = InventoryBuilder.Build(
+                [new AssemblyInput("Sample.Flow", path)],
+                [directory],
+                []);
+
+            Assert.True(result.Succeeded, string.Join('\n', result.Errors));
+            var api = result.Document!.Assemblies.Single().Api;
+
+            // Parameter attributes are rendered inline with canonical
+            // fully-qualified names so the line stays a readable signature.
+            Assert.Contains(api, line => line.Contains(
+                "bool TryRead([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out string? value)", StringComparison.Ordinal));
+
+            // Return-only attributes are grouped canonically; member-level
+            // MemberNotNull attributes precede the return group.
+            Assert.Contains(api, line => line.Contains(
+                "[return: System.Diagnostics.CodeAnalysis.MaybeNull] public string Read()", StringComparison.Ordinal));
+            Assert.Contains(api, line => line.Contains(
+                "[System.Diagnostics.CodeAnalysis.MemberNotNull(\"_field\")] [return: System.Diagnostics.CodeAnalysis.MaybeNull] public string Create()",
+                StringComparison.Ordinal));
+        }
+        finally
+        {
+            TestAssemblyEmitter.TryDelete(directory);
+        }
+    }
+
+    [Fact]
+    public void Build_AppliesParameterAttributesByPositionForOverlappingDisplays()
+    {
+        var directory = TestAssemblyEmitter.CreateDirectory();
+        try
+        {
+            var runtimeDirectory = Path.GetDirectoryName(typeof(object).Assembly.Location)!;
+            var systemRuntimePath = Path.Combine(runtimeDirectory, "System.Runtime.dll");
+            Assert.True(File.Exists(systemRuntimePath), $"System.Runtime.dll not found at '{systemRuntimePath}'.");
+
+            // "out string? val" is a prefix of the earlier "out string? value":
+            // an isolated IndexOf would insert the later parameter's attribute in
+            // front of the earlier parameter.
+            var path = TestAssemblyEmitter.Emit(directory, "Sample.ParameterOrder",
+                """
+                #nullable enable
+                using System.Diagnostics.CodeAnalysis;
+
+                namespace Sample
+                {
+                    public class Reader
+                    {
+                        public bool TryRead(
+                            out string? value,
+                            [NotNullWhen(true)] out string? val)
+                        {
+                            value = null;
+                            val = null;
+                            return false;
+                        }
+                    }
+                }
+                """,
+                systemRuntimePath);
+
+            var result = InventoryBuilder.Build(
+                [new AssemblyInput("Sample.ParameterOrder", path)],
+                [directory],
+                []);
+
+            Assert.True(result.Succeeded, string.Join('\n', result.Errors));
+            var line = Assert.Single(result.Document!.Assemblies.Single().Api,
+                entry => entry.Contains("TryRead(", StringComparison.Ordinal));
+
+            Assert.Contains(
+                "out string? value, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out string? val",
+                line,
+                StringComparison.Ordinal);
+            Assert.DoesNotContain(
+                "[System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out string? value",
+                line,
+                StringComparison.Ordinal);
+        }
+        finally
+        {
+            TestAssemblyEmitter.TryDelete(directory);
+        }
+    }
+
+    [Fact]
+    public void Build_RecordsFieldTargetedNullableFlowAttribute()
+    {
+        var directory = TestAssemblyEmitter.CreateDirectory();
+        try
+        {
+            var runtimeDirectory = Path.GetDirectoryName(typeof(object).Assembly.Location)!;
+            var systemRuntimePath = Path.Combine(runtimeDirectory, "System.Runtime.dll");
+            var path = TestAssemblyEmitter.Emit(directory, "Sample.FieldFlow",
+                """
+                #nullable enable
+                using System.Diagnostics.CodeAnalysis;
+
+                namespace Sample
+                {
+                    public class Holder
+                    {
+                        [MaybeNull]
+                        public string Field = null!;
+                    }
+                }
+                """,
+                systemRuntimePath);
+
+            var result = InventoryBuilder.Build(
+                [new AssemblyInput("Sample.FieldFlow", path)], [directory], []);
+
+            Assert.True(result.Succeeded, string.Join('\n', result.Errors));
+            var api = result.Document!.Assemblies.Single().Api;
+            Assert.Contains(api, line => line.Contains(
+                "[System.Diagnostics.CodeAnalysis.MaybeNull] public string Field", StringComparison.Ordinal));
+        }
+        finally
+        {
+            TestAssemblyEmitter.TryDelete(directory);
+        }
+    }
+
+    [Fact]
+    public void CreateFrameworkReferences_ReturnsOnlyManagedMetadata()
+    {
+        // On Windows the shared framework directory also contains native
+        // libraries; creating metadata references for them throws
+        // BadImageFormatException, so the API gate would fail only on that OS.
+        // Production keeps this helper private; tests may inspect internals via
+        // reflection instead of widening the production surface for convenience.
+        var method = typeof(InventoryBuilder).GetMethod(
+            "CreateFrameworkReferences",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        Assert.NotNull(method);
+        var references = (Microsoft.CodeAnalysis.MetadataReference[])method.Invoke(null, null)!;
+
+        Assert.NotEmpty(references);
+        Assert.All(references, reference =>
+            Assert.EndsWith(".dll", reference.Display, StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void Build_RejectsUnresolvedReferenceExplicitly()
+    {
+        var libraryDirectory = TestAssemblyEmitter.CreateDirectory();
+        var shellDirectory = TestAssemblyEmitter.CreateDirectory();
+        try
+        {
+            var library = TestAssemblyEmitter.Emit(libraryDirectory, "Sample.Library",
+                "namespace Sample.Library { public class Hidden { } }");
+            var shell = TestAssemblyEmitter.Emit(shellDirectory, "Sample.Shell",
+                "namespace Sample.Shell { public class Visible { public Sample.Library.Hidden Create() => null!; } }",
+                library);
+
+            // The reference directory contains the shell assembly only, so the
+            // library dependency cannot be resolved.
+            var result = InventoryBuilder.Build(
+                [new AssemblyInput("Sample.Shell", shell)],
+                [shellDirectory],
+                []);
+
+            Assert.False(result.Succeeded);
+            Assert.Contains(result.Errors, error =>
+                error.Contains("unresolved type", StringComparison.Ordinal));
+        }
+        finally
+        {
+            TestAssemblyEmitter.TryDelete(libraryDirectory);
+            TestAssemblyEmitter.TryDelete(shellDirectory);
+        }
+    }
+
+    [Fact]
+    public void ComparePrevious_NormalizesVersionOneAndKeepsRemovalDetection()
+    {
+        var previous = new InventoryDocument
+        {
+            SchemaVersion = 1,
+            Assemblies =
+            [
+                new AssemblyInventory
+                {
+                    Name = "A",
+                    Api =
+                    [
+                        "T:public Interface A.IProducer<T> : ",
+                        "M:A.IProducer<T>.bool TryRead(out string? value)",
+                    ],
+                },
+            ],
+        };
+        var enrichedCompatible = new InventoryDocument
+        {
+            SchemaVersion = 2,
+            Assemblies =
+            [
+                new AssemblyInventory
+                {
+                    Name = "A",
+                    Api =
+                    [
+                        "T:public Interface A.IProducer<out T> : ",
+                        "M:A.IProducer<out T>.bool TryRead([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out string? value)",
+                    ],
+                },
+            ],
+        };
+
+        Assert.Empty(InventoryComparer.ComparePrevious(previous, enrichedCompatible));
+
+        var removed = new InventoryDocument
+        {
+            SchemaVersion = 2,
+            Assemblies = [new AssemblyInventory { Name = "A", Api = [] }],
+        };
+        Assert.Contains(
+            InventoryComparer.ComparePrevious(previous, removed),
+            failure => failure.Contains("removed or changed API", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void ComparePrevious_SameSchemaDetectsVarianceAndAttributeChanges()
+    {
+        var previous = new InventoryDocument
+        {
+            Assemblies =
+            [
+                new AssemblyInventory
+                {
+                    Name = "A",
+                    Api =
+                    [
+                        "T:public Interface A.IProducer<out T> : ",
+                        "M:A.IProducer<out T>.bool TryRead([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out string? value)",
+                    ],
+                },
+            ],
+        };
+        var varianceRemoved = new InventoryDocument
+        {
+            Assemblies =
+            [
+                new AssemblyInventory
+                {
+                    Name = "A",
+                    Api =
+                    [
+                        "T:public Interface A.IProducer<T> : ",
+                        "M:A.IProducer<out T>.bool TryRead([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out string? value)",
+                    ],
+                },
+            ],
+        };
+        var attributeRemoved = new InventoryDocument
+        {
+            Assemblies =
+            [
+                new AssemblyInventory
+                {
+                    Name = "A",
+                    Api =
+                    [
+                        "T:public Interface A.IProducer<out T> : ",
+                        "M:A.IProducer<out T>.bool TryRead(out string? value)",
+                    ],
+                },
+            ],
+        };
+
+        Assert.NotEmpty(InventoryComparer.ComparePrevious(previous, varianceRemoved));
+        Assert.NotEmpty(InventoryComparer.ComparePrevious(previous, attributeRemoved));
+    }
+
+    [Fact]
+    public void ProjectLineToSchemaOne_StripsOnlyEnrichedSegments()
+    {
+        Assert.Equal(
+            "M:A.IProducer<T>.bool TryRead(out string? value)",
+            InventoryComparer.ProjectLineToSchemaOne(
+                "M:A.IProducer<out T>.bool TryRead([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out string? value)"));
+        Assert.Equal(
+            "M:A.Producer.bool TryRead(out string? value)",
+            InventoryComparer.ProjectLineToSchemaOne(
+                "M:A.Producer.bool TryRead([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out string? value)"));
+    }
+
 }

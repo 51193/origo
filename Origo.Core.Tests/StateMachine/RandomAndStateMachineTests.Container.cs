@@ -144,6 +144,181 @@ public partial class RandomAndStateMachineTests
     }
 
     [Fact]
+    public void StateMachineContainer_PopAllOnQuit_OneThrowingLevel_DoesNotStrandLowerLevels()
+    {
+        var logger = new TestLogger();
+        var host = new TestSndSceneHost();
+        var runtime = TestFactory.CreateRuntime(logger, host);
+        var fs = new TestMemoryFileSystem();
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var pool = runtime.SndWorld.StrategyPool;
+        pool.Register(() => new SmPushStrategy());
+        pool.Register(() => new SmThrowOnTopQuitStrategy());
+
+        var events = new List<string>();
+        SmThrowOnTopQuitStrategy.Events = events;
+
+        try
+        {
+            var container = new StateMachineContainer(pool, ctx.StateMachineContext);
+            var sm = container.CreateOrGet("fsm", "sm.push.test", "sm.pop.throw_on_top");
+            sm.Push("bottom");
+            sm.Push("boom");
+
+            // The top level's quit hook throws. The top level is force-removed
+            // without replaying hooks so the lower level still receives its
+            // quit hook instead of being stranded on the stack.
+            var ex = Assert.Throws<InvalidOperationException>(() => container.PopAllOnQuit());
+            Assert.Contains("quit hook failure on top level", ex.Message, StringComparison.Ordinal);
+            Assert.Equal(new[] { "quit:boom->bottom", "quit:bottom->null" }, events);
+
+            container.Clear();
+        }
+        finally
+        {
+            ResetStrategyHooks();
+        }
+    }
+
+    [Fact]
+    public void StateMachineContainer_PopAllOnQuit_HookPushesThenThrows_TerminatesAndKeepsLowerLevels()
+    {
+        var logger = new TestLogger();
+        var host = new TestSndSceneHost();
+        var runtime = TestFactory.CreateRuntime(logger, host);
+        var fs = new TestMemoryFileSystem();
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var pool = runtime.SndWorld.StrategyPool;
+        pool.Register(() => new SmPushStrategy());
+        pool.Register(() => new SmPushThenThrowOnQuitStrategy());
+
+        var events = new List<string>();
+        SmPushThenThrowOnQuitStrategy.Events = events;
+        SmPushThenThrowOnQuitStrategy.Reset();
+
+        try
+        {
+            var container = new StateMachineContainer(pool, ctx.StateMachineContext);
+            var sm = container.CreateOrGet("fsm", "sm.push.test", "sm.pop.push_then_throw");
+            SmPushThenThrowOnQuitStrategy.Machine = sm;
+            sm.Push("bottom");
+            sm.Push("boom");
+            Assert.Equal(["bottom", "boom"], sm.Snapshot());
+
+            // The "boom" hook pushes "extra" onto the stack and then throws.
+            // Force-popping must use the snapshot captured before the hook, so
+            // the machine drops "boom" (and the hook's extra level), terminates,
+            // and still runs the lower "bottom" quit hook.
+            var ex = Assert.Throws<InvalidOperationException>(() => container.PopAllOnQuit());
+            Assert.Contains("pushed a level then threw", ex.Message, StringComparison.Ordinal);
+            Assert.Equal(new[] { "quit:boom->bottom", "quit:bottom->null" }, events);
+            Assert.Empty(sm.Snapshot());
+
+            container.Clear();
+        }
+        finally
+        {
+            ResetStrategyHooks();
+        }
+    }
+
+    [Fact]
+    public void StateMachineContainer_PopAllOnQuit_HookPushesThenReturns_TerminatesAndKeepsLowerLevels()
+    {
+        var logger = new TestLogger();
+        var host = new TestSndSceneHost();
+        var runtime = TestFactory.CreateRuntime(logger, host);
+        var fs = new TestMemoryFileSystem();
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var pool = runtime.SndWorld.StrategyPool;
+        pool.Register(() => new SmPushStrategy());
+        pool.Register(() => new SmPushThenReturnOnQuitStrategy());
+
+        var events = new List<string>();
+        SmPushThenReturnOnQuitStrategy.Events = events;
+        SmPushThenReturnOnQuitStrategy.Reset();
+
+        try
+        {
+            var container = new StateMachineContainer(pool, ctx.StateMachineContext);
+            var sm = container.CreateOrGet("fsm", "sm.push.test", "sm.pop.push_then_return");
+            SmPushThenReturnOnQuitStrategy.Machine = sm;
+            sm.Push("bottom");
+            sm.Push("boom");
+
+            // The "boom" hook pushes "extra" and returns normally, so the pop
+            // call reports success by removing the pushed level and the original
+            // stack does not shrink. The no-progress detection must drop "boom"
+            // from the pre-hook snapshot, terminate, and still run the lower
+            // "bottom" quit hook — with the "boom" hook invoked exactly once.
+            var ex = Record.Exception(() => container.PopAllOnQuit());
+            Assert.Null(ex);
+            Assert.Equal(new[] { "quit:boom->bottom", "quit:bottom->null" }, events);
+            Assert.Empty(sm.Snapshot());
+
+            container.Clear();
+        }
+        finally
+        {
+            ResetStrategyHooks();
+        }
+    }
+
+    [Fact]
+    public void StateMachineContainer_PopAllOnQuit_AggregatesTwoMachineFailures_AndProcessesLaterMachines()
+    {
+        var logger = new TestLogger();
+        var host = new TestSndSceneHost();
+        var runtime = TestFactory.CreateRuntime(logger, host);
+        var fs = new TestMemoryFileSystem();
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var pool = runtime.SndWorld.StrategyPool;
+        pool.Register(() => new SmPushStrategy());
+        pool.Register(() => new SmThrowOnQuitStrategy());
+        pool.Register(() => new SmPopOrderProbeStrategy());
+
+        var events = new List<string>();
+        SmPopOrderProbeStrategy.Events = events;
+
+        try
+        {
+            var container = new StateMachineContainer(pool, ctx.StateMachineContext);
+            var first = container.CreateOrGet("first", "sm.push.test", "sm.pop.throw");
+            var second = container.CreateOrGet("second", "sm.push.test", "sm.pop.throw");
+            var third = container.CreateOrGet("third", "sm.push.test", "sm.pop.orderprobe");
+            first.Push("a");
+            second.Push("b");
+            third.Push("c");
+
+            // Two throwing machines aggregate into one AggregateException; the
+            // later healthy machine is still visited.
+            var ex = Assert.Throws<AggregateException>(() => container.PopAllOnQuit());
+            Assert.Equal(2, ex.InnerExceptions.Count);
+            Assert.All(ex.InnerExceptions, inner =>
+                Assert.Contains("quit hook failure", inner.Message, StringComparison.Ordinal));
+            Assert.Equal(new[] { "third" }, events);
+
+            container.Clear();
+        }
+        finally
+        {
+            ResetStrategyHooks();
+        }
+    }
+
+    [Fact]
     public void StateMachineContainer_Clear_ReleasesAllMachines_WhenOneDisposeThrows()
     {
         var logger = new TestLogger();

@@ -154,8 +154,8 @@ save-slot operations, and help. The authoritative command list is
 
 It also exposes `Bootstrap`, `Shutdown`, `SaveRootPath`,
 `InitialSaveRootPath`, and `EntryConfigPath`. `Shutdown` is idempotent and
-rejects teardown while a save workflow or level-switch teardown owns the
-session set.
+rejects teardown while a load/save/change-level workflow is in progress or
+while a level-switch teardown owns the session set.
 
 Interface declarations, member signatures, package ownership, and overloads:
 [generated contract API](../generated/contract-api.en.md).

@@ -67,6 +67,26 @@ internal static class SavePathLayout
         ValidateIdentifier(levelId, paramName, "level id", requireLowercase: true, requirePathSafe: true);
 
     /// <summary>
+    ///     Returns true when <paramref name="levelId" /> satisfies the level-id
+    ///     identity rule (lowercase, path-safe, not dot-only, no trailing
+    ///     period). The payload reader uses this to report legacy mixed-case
+    ///     level directories as an actionable migration failure instead of a
+    ///     parameter-validation error.
+    /// </summary>
+    internal static bool IsValidLevelId(string levelId)
+    {
+        try
+        {
+            ValidateLevelId(levelId, nameof(levelId));
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
     ///     Shared token validation for identifiers embedded in directory or
     ///     file names. Allows only ASCII letters, digits, <c>.</c>,
     ///     <c>_</c>, and <c>-</c>. The optional rules are opt-in so session

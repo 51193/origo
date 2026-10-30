@@ -567,6 +567,19 @@ public class SaveStorageAndPayloadTests
         fs.SeedFile($"{root}/level_default/session_state_machines.json", """{"machines":[]}""");
     }
 
+    private static void SeedSnapshotWithLevels(
+        TestMemoryFileSystem fs, string root, params string[] levelDirectoryNames)
+    {
+        fs.SeedFile($"{root}/progress.json", "{}");
+        fs.SeedFile($"{root}/progress_state_machines.json", """{"machines":[]}""");
+        foreach (var levelDirectoryName in levelDirectoryNames)
+        {
+            fs.SeedFile($"{root}/{levelDirectoryName}/snd_scene.json", "[]");
+            fs.SeedFile($"{root}/{levelDirectoryName}/session.json", "{}");
+            fs.SeedFile($"{root}/{levelDirectoryName}/session_state_machines.json", """{"machines":[]}""");
+        }
+    }
+
     private static void SeedCompleteCustomSnapshot(TestMemoryFileSystem fs, string root)
     {
         fs.SeedFile($"{root}/progress.json", "{}");
@@ -923,6 +936,73 @@ public class SaveStorageAndPayloadTests
     }
 
     [Fact]
+    public void WriteSavePayloadToCurrentThenSnapshot_SaveIdMismatch_ThrowsBeforeWriting()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        var payload = TestFactory.CreateMinimalPayload("001", "default");
+
+        var ex = Assert.Throws<ArgumentException>(() =>
+            SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(
+                handle, payload, "002", new TestLogger()));
+
+        Assert.Contains("does not match", ex.Message, StringComparison.Ordinal);
+        Assert.False(fs.DirectoryExists("root/current"));
+        Assert.False(fs.DirectoryExists("root/save_002"));
+    }
+
+    [Fact]
+    public void DefaultSaveStorageService_WriteSavePayloadToCurrentThenSnapshot_SaveIdMismatch_Throws()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
+        var payload = TestFactory.CreateMinimalPayload("001", "default");
+
+        Assert.Throws<ArgumentException>(() =>
+            storage.WriteSavePayloadToCurrentThenSnapshot(payload, "002", new TestLogger()));
+
+        Assert.False(fs.DirectoryExists("root/current"));
+        Assert.False(fs.DirectoryExists("root/save_002"));
+    }
+
+    [Fact]
+    public void WriteSavePayloadToCurrentThenSnapshot_EmptyPayloadSaveId_UsesTargetId()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        var payload = TestFactory.CreateMinimalPayload("001", "default");
+        payload.SaveId = string.Empty;
+
+        SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(
+            handle, payload, "target", new TestLogger());
+
+        Assert.True(fs.DirectoryExists("root/save_target"));
+    }
+
+    [Fact]
+    public void WriteSavePayloadToCurrentThenSnapshot_EmptyTargetIdWithPayloadSaveId_Throws()
+    {
+        // The target id names save_{id}/ and must be non-empty; a payload that
+        // states an identity cannot be written to an unnamed slot. The facade
+        // rejects the mismatch before any I/O.
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        var payload = TestFactory.CreateMinimalPayload("001", "default");
+
+        var ex = Assert.Throws<ArgumentException>(() =>
+            SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(
+                handle, payload, string.Empty, new TestLogger()));
+
+        Assert.Contains("does not match", ex.Message, StringComparison.Ordinal);
+        Assert.False(fs.DirectoryExists("root/current"));
+        Assert.False(fs.DirectoryExists("root/save_001"));
+    }
+
+    [Fact]
     public void SaveStorageFacade_ReadCurrent_ActiveLevelPartial_MissingSession_Throws()
     {
         var fs = new TestMemoryFileSystem();
@@ -966,6 +1046,57 @@ public class SaveStorageAndPayloadTests
             SaveStorageFacade.ReadSavePayloadFromCurrent(handle, "001", "default"));
         Assert.Contains("session_state_machines.json", ex.Message, StringComparison.Ordinal);
         Assert.Contains("bg", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SaveStorageFacade_ReadFromSnapshot_LegacyMixedCaseLevelDirectory_ThrowsMigrationError()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        SeedSnapshotWithLevels(fs, "root/save_legacy", "level_default", "level_Town", "level_Bad");
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            SaveStorageFacade.ReadSavePayloadFromSnapshot(handle, "legacy", "default"));
+
+        // The failure must name every offending directory and instruct the
+        // rename; a raw path-validation ArgumentException would not be
+        // actionable for a user migrating a pre-lowercase save.
+        Assert.Contains("level_Town", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("level_Bad", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("lowercase", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("'level_Town' -> 'level_town'", ex.Message, StringComparison.Ordinal);
+
+        // Renaming the legacy directories to their lowercase identities is the
+        // documented migration and makes the same snapshot readable again.
+        fs.Rename("root/save_legacy/level_Town", "root/save_legacy/level_town");
+        fs.Rename("root/save_legacy/level_Bad", "root/save_legacy/level_bad");
+        var payload = SaveStorageFacade.ReadSavePayloadFromSnapshot(handle, "legacy", "default");
+        try
+        {
+            Assert.Contains("town", payload.Levels.Keys);
+            Assert.Contains("bad", payload.Levels.Keys);
+        }
+        finally
+        {
+            SavePayloadDisposal.Dispose(payload);
+        }
+    }
+
+    [Fact]
+    public void SaveStorageFacade_ReadFromSnapshot_LegacyMixedCaseActiveLevelId_ThrowsMigrationError()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        SeedSnapshotWithLevels(fs, "root/save_legacy", "level_Town");
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            SaveStorageFacade.ReadSavePayloadFromSnapshot(handle, "legacy", "Town"));
+
+        Assert.Contains("'Town'", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("lowercase", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("'level_Town'", ex.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -1076,7 +1207,7 @@ public class SaveStorageAndPayloadTests
         var progressSm = """{"machines":[]}""";
         var payload = new SaveGamePayload
         {
-            SaveId = "001",
+            SaveId = "new",
             ActiveLevelId = "default",
             ProgressNode = TestFactory.NodeFromJson("""{"marker":"after_write"}"""),
             ProgressStateMachinesNode = TestFactory.NodeFromJson(progressSm),

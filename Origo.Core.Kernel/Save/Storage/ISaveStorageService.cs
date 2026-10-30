@@ -29,9 +29,13 @@ public interface ISaveStorageService
     /// </summary>
     /// <remarks>
     ///     Fails when neither the slot nor a remnant exists. Deletion is not
-    ///     transactional across multiple directories: the real slot is removed
-    ///     first, then leftovers, so an I/O failure cannot leave a valid slot
-    ///     whose backup was already deleted.
+    ///     transactional across multiple directories: interrupted-snapshot
+    ///     remnants (<c>.tmp</c> and the policy-discovered backup) are removed
+    ///     before the visible slot. Recovery promotes a complete backup whenever
+    ///     the real slot is missing, so deleting the visible slot first would
+    ///     let a failed remnant cleanup resurrect the deleted save on the next
+    ///     enumeration. With the remnant-first order a failed cleanup leaves
+    ///     the visible slot intact and the delete fails visibly.
     /// </remarks>
     /// <exception cref="System.ArgumentException">Thrown when <paramref name="saveId" /> is not a valid save ID token.</exception>
     /// <exception cref="System.InvalidOperationException">Thrown when no slot or remnant exists for <paramref name="saveId" />.</exception>
@@ -47,10 +51,27 @@ public interface ISaveStorageService
 
     /// <summary>Writes a save payload to current/, then snapshots it to the save_* directory.</summary>
     /// <remarks>
-    ///     The implementation must fully consume the payload's
-    ///     <see cref="DataSourceNode" /> trees during the call; callers may
-    ///     dispose them as soon as the method returns.
+    ///     <para>
+    ///         The implementation must fully consume the payload's
+    ///         <see cref="DataSourceNode" /> trees during the call; callers may
+    ///         dispose them as soon as the method returns.
+    ///     </para>
+    ///     <para>
+    ///         The target slot is named by <paramref name="newSaveId" />, which
+    ///         must be non-empty because it names <c>save_{id}/</c>. When the
+    ///         payload states a non-empty
+    ///         <see cref="SaveGamePayload.SaveId" />, it must equal that target
+    ///         id; a mismatch fails fast before any save file is written,
+    ///         because silently writing the payload to the other slot would
+    ///         hide a caller bug. An empty payload <c>SaveId</c> means "the
+    ///         caller did not state an identity, use <paramref name="newSaveId" />".
+    ///     </para>
     /// </remarks>
+    /// <exception cref="System.ArgumentException">
+    ///     Thrown when <paramref name="newSaveId" /> is empty or not a valid
+    ///     save ID token, or when a non-empty
+    ///     <see cref="SaveGamePayload.SaveId" /> differs from it.
+    /// </exception>
     void WriteSavePayloadToCurrentThenSnapshot(
         SaveGamePayload payload,
         string newSaveId,

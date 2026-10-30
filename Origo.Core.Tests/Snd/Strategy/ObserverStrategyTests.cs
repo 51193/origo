@@ -215,6 +215,42 @@ public class ObserverStrategyTests : IDisposable
     }
 
     [Fact]
+    public void TeardownAllBindingsFor_TwoThrowingBindings_AggregatesAndStillCleansLaterBinding()
+    {
+        var (observer, ctx, topology) = SetupWithTopology();
+        var factory = new TestNodeFactory();
+        var targetA = ctx.Runtime.SndWorld.CreateEntity(factory, ctx, ctx.Runtime.Logger, topology);
+        var targetB = ctx.Runtime.SndWorld.CreateEntity(factory, ctx, ctx.Runtime.Logger, topology);
+        var targetC = ctx.Runtime.SndWorld.CreateEntity(factory, ctx, ctx.Runtime.Logger, topology);
+
+        ((IEntityLifecycle)observer).RecoverForLifecycle(CreateMeta("observer"));
+        ((IEntityLifecycle)observer).FireAfterSpawnHooks();
+        ((IEntityLifecycle)targetA).RecoverForLifecycle(CreateMeta("target_a"));
+        ((IEntityLifecycle)targetA).FireAfterSpawnHooks();
+        ((IEntityLifecycle)targetB).RecoverForLifecycle(CreateMeta("target_b"));
+        ((IEntityLifecycle)targetB).FireAfterSpawnHooks();
+        ((IEntityLifecycle)targetC).RecoverForLifecycle(CreateMeta("target_c"));
+        ((IEntityLifecycle)targetC).FireAfterSpawnHooks();
+
+        observer.MountObserverStrategy(targetA, _throwOnUnmountIdx);
+        observer.MountObserverStrategy(targetB, _throwOnUnmountIdx);
+        observer.MountObserverStrategy(targetC, _selfWatchIdx);
+        SelfWatchObserver.DataChangedCalls.Clear();
+
+        // Two failing bindings aggregate into one AggregateException; the later
+        // healthy binding is still cleaned up (its target no longer notifies
+        // the released strategy).
+        var ex = Assert.Throws<AggregateException>(() =>
+            ((IEntityLifecycle)observer).TeardownObserverBindings());
+        Assert.Equal(2, ex.InnerExceptions.Count);
+        Assert.All(ex.InnerExceptions, inner =>
+            Assert.Contains("OnUnmounted boom", inner.Message, StringComparison.Ordinal));
+
+        targetC.SetData("character.hp", 10);
+        Assert.Empty(SelfWatchObserver.DataChangedCalls);
+    }
+
+    [Fact]
     public void SessionDestroy_WhenOnUnmountedThrows_PoolReferenceStillReleased()
     {
         var logger = new TestLogger();

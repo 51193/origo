@@ -19,6 +19,7 @@ public class BaselineContentTests
         Assert.True(File.Exists(baselinePath), $"Baseline not found: {baselinePath}");
 
         var document = InventoryJson.Deserialize(File.ReadAllText(baselinePath));
+        Assert.Equal(2, document.SchemaVersion);
         Assert.Equal(4, document.Assemblies.Count);
         var contracts = Assert.Single(document.Assemblies, a => a.Name == "Origo.Core.Contracts");
         var adapter = Assert.Single(document.Assemblies, a => a.Name == "Origo.GodotAdapter");
@@ -26,6 +27,15 @@ public class BaselineContentTests
 
         // Source Generator output: nullable generated accessor on TypedData.
         Assert.Contains(contracts.Api, line => line.Contains("TryGetString(out string? value)", StringComparison.Ordinal));
+
+        // Schema 2 enrichment: generic variance and nullable-flow attributes are
+        // part of the frozen shell surface and must stay in the tracked baseline.
+        Assert.Contains(contracts.Api, line =>
+            line.Contains("Origo.Core.Abstractions.Logging.ILogger<out TCategory>", StringComparison.Ordinal));
+        Assert.Contains(contracts.Api, line =>
+            line.Contains(
+                "TryDequeueCommand([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out string? line)",
+                StringComparison.Ordinal));
 
         // Godot Source Generator output: nested MethodName/PropertyName/SignalName types.
         Assert.Contains(adapter.Api, line =>

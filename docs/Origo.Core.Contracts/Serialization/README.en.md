@@ -9,7 +9,7 @@ Type-to-string mapping infrastructure. During JSON serialization, `TypedData` ne
 
 | File | Responsibility |
 |------|------|
-| `BclTypeNames.cs` | Stable string constants for 14 BCL primitives + 14 arrays + 2 immutable collections |
+| `BclTypeNames.cs` | Stable string constants for the BCL primitives, their primitive arrays, and the immutable string collection types |
 | `TypeStringMapping.cs` | Bidirectional type ↔ string mapping table; registers all known types at startup |
 
 ## Implementation Details
@@ -18,7 +18,7 @@ Type-to-string mapping infrastructure. During JSON serialization, `TypedData` ne
 Uses short names (`"Int32"`, `"ArraySingle"`) rather than full CLR names, reducing JSON size.
 
 ### TypeStringMapping
-- **Constructor**: Pre-registers 28 BCL types + dictionaries
+- **Constructor**: Pre-registers the BCL primitive, primitive-array, and immutable collection type names
 - **RegisterType<T>()**: Public, for adapter layers to register engine-specific types
 - **Bidirectional validation**: Checks for conflicts on registration; throws `InvalidOperationException`
 - **Lookup failures throw**: Never returns null

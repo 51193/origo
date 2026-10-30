@@ -16,13 +16,21 @@ internal sealed class ReadOnlyBlackboard(IBlackboard inner) : IBlackboard
 {
     private readonly IBlackboard _inner = inner ?? throw new ArgumentNullException(nameof(inner));
 
-    /// <inheritdoc/>
+    /// <summary>Always throws: save-meta contexts are read-only.</summary>
+    /// <exception cref="InvalidOperationException">
+    ///     Always thrown; contributors must not mutate progress/session state
+    ///     through the save-meta context.
+    /// </exception>
     public void SetValue<T>(string key, T value) => ThrowReadOnly();
 
     /// <inheritdoc/>
-    public (bool found, T value) TryGet<T>(string key) => _inner.TryGet<T>(key);
+    public (bool found, T? value) TryGet<T>(string key) => _inner.TryGet<T>(key);
 
-    /// <inheritdoc/>
+    /// <summary>Always throws: save-meta contexts are read-only.</summary>
+    /// <exception cref="InvalidOperationException">
+    ///     Always thrown; contributors must not mutate progress/session state
+    ///     through the save-meta context.
+    /// </exception>
     public void Clear() => ThrowReadOnly();
 
     /// <inheritdoc/>
@@ -31,7 +39,11 @@ internal sealed class ReadOnlyBlackboard(IBlackboard inner) : IBlackboard
     /// <inheritdoc/>
     public IReadOnlyDictionary<string, TypedData> SerializeAll() => _inner.SerializeAll();
 
-    /// <inheritdoc/>
+    /// <summary>Always throws: save-meta contexts are read-only.</summary>
+    /// <exception cref="InvalidOperationException">
+    ///     Always thrown; contributors must not mutate progress/session state
+    ///     through the save-meta context.
+    /// </exception>
     public void DeserializeAll(IReadOnlyDictionary<string, TypedData> data) => ThrowReadOnly();
 
     private static void ThrowReadOnly() =>

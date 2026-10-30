@@ -15,6 +15,7 @@ concurrency:
 jobs:
   bash-lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     env:
       ORIGO_BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
       # Fork pull request branches are outside the repository owners' control;
@@ -25,8 +26,8 @@ jobs:
 
       - name: Install shellcheck
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq shellcheck python3-yaml
+          timeout 300 sudo apt-get -o Acquire::Retries=3 update -qq
+          timeout 300 sudo apt-get -o Acquire::Retries=3 install -y -qq shellcheck python3-yaml
 
       - name: Lint repository scripts
         run: bash scripts/bash/lint-scripts.sh
@@ -37,6 +38,7 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
       fail-fast: false
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
 
     steps:
       - uses: actions/checkout@v7
@@ -94,6 +96,7 @@ jobs:
   # PowerShell check below.
   bash-checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v7
@@ -107,6 +110,7 @@ jobs:
   # PowerShell lint check paired with bash-lint.
   powershell-lint:
     runs-on: windows-latest
+    timeout-minutes: 15
     env:
       ORIGO_BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
       ORIGO_FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
@@ -130,6 +134,7 @@ jobs:
   # sets cannot drift silently.
   powershell-checks:
     runs-on: windows-latest
+    timeout-minutes: 90
     env:
       ORIGO_BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
       # Fork pull request branches are outside the repository owners' control;
@@ -178,6 +183,7 @@ jobs:
         os: [ubuntu-latest]
       fail-fast: false
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v7
@@ -201,8 +207,8 @@ jobs:
 
       - name: Install Godot headless dependencies
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq libxcursor1 libxinerama1 libxrandr2 libasound2t64 libpulse0 libgl1 libfontconfig1
+          timeout 300 sudo apt-get -o Acquire::Retries=3 update -qq
+          timeout 300 sudo apt-get -o Acquire::Retries=3 install -y -qq libxcursor1 libxinerama1 libxrandr2 libasound2t64 libpulse0 libgl1 libfontconfig1
 
       - name: Godot headless integration tests
         run: bash scripts/bash/godot-test.sh

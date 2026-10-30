@@ -102,7 +102,9 @@ from the shell packages. No Bash or shell pipeline is involved.
 `powershell-checks` job with `fetch-depth: 0` (the API baseline selects the
 previous formal release tag). The `bash-build-and-test (windows-latest)` matrix job
 also runs the POSIX script set, so both implementations are verified on
-Windows.
+Windows. The Bash parity gate (`scripts/bash/test-dev-suite.sh`) also compares
+this suite's explicit test-project list with the solution's xUnit test projects,
+so a new test project cannot silently run only on the Linux gate.
 
 The Windows benchmark comparison follows the same machine-capture rule as the
 POSIX gate: thresholds apply only when `docs/benchmarks/baseline.json` was

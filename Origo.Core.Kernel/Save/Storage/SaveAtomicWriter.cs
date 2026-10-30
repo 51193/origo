@@ -219,18 +219,6 @@ internal static class SaveAtomicWriter
         return Convert.ToHexString(sha.GetHashAndReset()).ToLowerInvariant();
     }
 
-    internal static string ComputeSideDirectoryHash(SaveFileHandle handle, string relativeDirName)
-    {
-        ArgumentNullException.ThrowIfNull(handle);
-        if (string.IsNullOrWhiteSpace(relativeDirName))
-            throw new ArgumentException("Relative directory name cannot be null or whitespace.",
-                nameof(relativeDirName));
-
-        var currentRel = handle.PathPolicy.GetCurrentDirectory();
-        return ComputeSideDirectoryHashByRelativeDir(
-            handle, SavePathLayout.Combine(currentRel, relativeDirName));
-    }
-
     private static string ComputeSideDirectoryHashByRelativeDir(
         SaveFileHandle handle, string dirRel)
     {

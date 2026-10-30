@@ -210,6 +210,78 @@ public class SaveMetaContributorRegistrationTests
             _ => new Dictionary<string, string> { ["key"] = null! });
     }
 
+    [Theory]
+    [InlineData("player:name", "x")]
+    [InlineData("ok_key", " padded ")]
+    [InlineData("line_break", "line1\nline2")]
+    public void RegisterSaveMetaContributor_UnrepresentableMetadata_FailsSaveBeforeAnyFileIsWritten(
+        string key, string value)
+    {
+        var ctx = SndContextTestHelper.Create(out var fs);
+        SndContextTestHelper.SetupProgressRun(ctx, fs);
+
+        // Seed current/ with a sentinel and a stale level directory before the
+        // failing save: the setup leaves current/ absent, which would make a
+        // "not written" assertion trivially true. A save that reached the
+        // writer would add the payload files and prune the stale level.
+        fs.SeedFile("root/current/sentinel.txt", "sentinel-content");
+        fs.SeedFile("root/current/level_stale/snd_scene.json", "[]");
+        var before = SnapshotFiles(fs, "root/current");
+        Assert.Equal(2, before.Count);
+
+        ctx.Save.RegisterSaveMetaContributor(new KeyValueContributor(key, value));
+
+        ctx.Save.RequestSaveGame("invalid_meta_slot");
+        var ex = Assert.Throws<InvalidOperationException>(() => ctx.FlushFrame());
+
+        // The failure names the contributor and happens while merging display
+        // metadata, before the payload writer touches current/.
+        Assert.Contains(nameof(KeyValueContributor), ex.Message, StringComparison.Ordinal);
+        Assert.Contains("meta.map", ex.Message, StringComparison.Ordinal);
+
+        // current/ must be exactly unchanged: no payload/meta files, no prune
+        // of the stale level directory, and no write-in-progress marker.
+        var after = SnapshotFiles(fs, "root/current");
+        Assert.Equal(before.Count, after.Count);
+        foreach (var (path, content) in before)
+        {
+            Assert.True(after.TryGetValue(path, out var afterContent),
+                $"Failed save must not remove '{path}' from current/.");
+            Assert.Equal(content, afterContent);
+        }
+
+        Assert.False(fs.Exists("root/current/.write_in_progress"));
+        Assert.False(fs.DirectoryExists("root/save_invalid_meta_slot"));
+    }
+
+    [Fact]
+    public void RegisterSaveMetaContributor_MapSafeMetadata_SavesAndLoadsFromSnapshot()
+    {
+        var ctx = SndContextTestHelper.Create(out var fs);
+        SndContextTestHelper.SetupProgressRun(ctx, fs);
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        ctx.Save.RegisterSaveMetaContributor(
+            new KeyValueContributor("play_time", "2h 30m"));
+
+        ctx.Save.RequestSaveGame("valid_meta_slot");
+        ctx.FlushFrame();
+
+        var payload = SaveStorageFacade.ReadSavePayloadFromSnapshot(
+            handle, "valid_meta_slot", MainMenuLevelId);
+        try
+        {
+            Assert.NotNull(payload.CustomMeta);
+            Assert.Equal("2h 30m", payload.CustomMeta!["play_time"]);
+        }
+        finally
+        {
+            SavePayloadDisposal.Dispose(payload);
+        }
+    }
+
     private static void AssertSaveFailsForInvalidContribution(
         Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>> contribute)
     {
@@ -219,6 +291,15 @@ public class SaveMetaContributorRegistrationTests
 
         ctx.Save.RequestSaveGame("invalid_meta_slot");
         Assert.Throws<InvalidOperationException>(() => ctx.FlushFrame());
+    }
+
+    private static Dictionary<string, string> SnapshotFiles(
+        TestMemoryFileSystem fs, string directoryPath)
+    {
+        var snapshot = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var filePath in fs.EnumerateFiles(directoryPath, "*", true))
+            snapshot[filePath] = fs.ReadAllText(filePath);
+        return snapshot;
     }
 
     private sealed class KeyValueContributor(string key, string value) : ISaveMetaContributor

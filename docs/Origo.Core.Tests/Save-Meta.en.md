@@ -9,7 +9,7 @@
 Validates the construction, merging, and persistence of `meta.map` display metadata.
 Covers the `ISaveMetaContributor` contributor interface, `DelegateSaveMetaContributor` delegate wrapper,
 `SaveMetaBuildContext` context data passing, `SaveMetaMerger` multi-source merging,
-contributor registration, fail-fast on invalid contributor output, and the full SaveGame chain.
+contributor registration, fail-fast on invalid contributor output (including display metadata that cannot round-trip through the line-based `meta.map` format), and the full SaveGame chain.
 
 ## Test File List
 
@@ -17,8 +17,8 @@ contributor registration, fail-fast on invalid contributor output, and the full 
 |------|-------------------|
 | `DelegateSaveMetaContributorTests.cs` | DelegateSaveMetaContributor delegate invocation and null constructor guard |
 | `SaveMetaBuildContextTests.cs` | SaveMetaBuildContext property storage and null parameter guards |
-| `SaveMetaIntegrationTests.cs` | Full chain: register→RequestSaveGame→CustomMeta written to meta.map; also includes SaveMetaNullAndSessionContextTests |
-| `SaveMetaMergerTests.cs` | SaveMetaMerger multi-contributor merging, override priority, fail-fast on invalid output |
+| `SaveMetaIntegrationTests.cs` | Full chain: register→RequestSaveGame→CustomMeta written to meta.map; unrepresentable metadata fails before any file is written (verified against a pre-seeded `current/`); also includes SaveMetaNullAndSessionContextTests |
+| `SaveMetaMergerTests.cs` | SaveMetaMerger multi-contributor merging, override priority, fail-fast on invalid output including `.map` round-trip rules |
 
 ## DelegateSaveMetaContributorTests Details
 
@@ -61,6 +61,7 @@ contributor registration, fail-fast on invalid contributor output, and the full 
 | `SaveWithoutContributors_CustomMetaIsNull` | CustomMeta is null when no contributors registered | persistence-flow |
 | `ContributorReceivesCorrectSaveMetaBuildContext` | Contributor callback receives correct SaveMetaBuildContext (SaveId/LevelId/Progress/Session) | ISaveMetaContributor |
 | `SaveMultipleTimes_EachSaveHasCorrectMeta` | Multiple saves each carry their own cycle's CustomMeta | persistence-flow |
+| `RegisterSaveMetaContributor_MapSafeMetadata_SavesAndLoadsFromSnapshot` | Map-safe metadata (interior spaces, no edge whitespace) is written to `meta.map` and read back from the snapshot | persistence-flow: meta.map |
 
 ### SaveMetaContributorRegistrationTests Error Path
 
@@ -71,6 +72,7 @@ contributor registration, fail-fast on invalid contributor output, and the full 
 | `RegisterSaveMetaContributor_NullContribution_FailsSave` | Contributor returns a null dictionary | `FlushFrame` for RequestSaveGame throws InvalidOperationException; no save is produced |
 | `RegisterSaveMetaContributor_BlankContributionKey_FailsSave` | Contributor returns a blank key | `FlushFrame` for RequestSaveGame throws InvalidOperationException; no save is produced |
 | `RegisterSaveMetaContributor_NullContributionValue_FailsSave` | Contributor returns a null value | `FlushFrame` for RequestSaveGame throws InvalidOperationException; no save is produced |
+| `RegisterSaveMetaContributor_UnrepresentableMetadata_FailsSaveBeforeAnyFileIsWritten` | Contributor key contains `:`, or the value has edge whitespace or a line break (cannot round-trip through `.map`); `current/` is pre-seeded with a sentinel and a stale level directory | `FlushFrame` throws InvalidOperationException naming the contributor and `meta.map`; the seeding proves the failure happens before any payload write — pre-seeded `current/` files are byte-identical afterwards (no marker, no prune, no new payload/meta files) and no snapshot is written |
 
 ## SaveMetaNullAndSessionContextTests Details
 
@@ -87,6 +89,7 @@ contributor registration, fail-fast on invalid contributor output, and the full 
 | Test Method | Verified Behavior | Reference |
 |-------------|-----------------|-----------|
 | `Merge_LaterContributorOverwritesEarlierSameKey` | For the same key across multiple contributors, later overwrites earlier | SaveMetaMerger |
+| `Merge_MapSafeEntriesWithSpecialValueCharacters_MergeNormally` | Values containing `:` and interior spaces still merge (only the key/value separator is reserved) | SaveMetaMerger / MapTextFormat |
 
 ### Boundary Path
 
@@ -102,6 +105,7 @@ contributor registration, fail-fast on invalid contributor output, and the full 
 | `Merge_BlankKey_Throws` | Contributor returns an empty key | InvalidOperationException (includes contributor type) |
 | `Merge_WhitespaceKey_Throws` | Contributor returns a whitespace-only key | InvalidOperationException (includes contributor type) |
 | `Merge_NullValue_Throws` | Contributor returns a null value for a key | InvalidOperationException (includes contributor type) |
+| `Merge_UnrepresentableMapEntry_ThrowsWithContributorContext` | Key contains `:` or starts with `#`; value contains a line break or edge whitespace | InvalidOperationException naming the contributor and `meta.map` before any merge result is produced |
 
 ## Test Helper Strategies
 

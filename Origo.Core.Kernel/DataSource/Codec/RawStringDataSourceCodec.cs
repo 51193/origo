@@ -14,6 +14,13 @@ internal sealed class RawStringDataSourceCodec : IDataSourceCodec
     public DataSourceNode Decode(string rawText) =>
         DataSourceNode.CreateString(rawText);
 
-    public string Encode(DataSourceNode node) =>
-        node.AsString();
+    public string Encode(DataSourceNode node)
+    {
+        var value = node.AsString();
+        // A replacement-fallback encoder would collapse an unpaired UTF-16
+        // surrogate into U+FFFD, silently changing the file content on
+        // read-back; reject it instead of persisting replacement text.
+        Utf16Text.ThrowIfNotWellFormed(value, "Raw text value");
+        return value;
+    }
 }

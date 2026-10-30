@@ -139,6 +139,12 @@ internal sealed class CameraViewCommandHandler(IOrigoRuntime runtime) : CommandH
         {
             case Node3D node3D:
                 {
+                    // Only report nodes the engine would render: Visible=false on
+                    // the node or a Node3D ancestor removes it from the rendered
+                    // frame, so it must not be counted as visible either.
+                    if (!node3D.IsVisibleInTree())
+                        return null;
+
                     var result = ProjectionHelper.ProjectWorldToScreen(
                         cameraGlobal, cameraProj, node3D.GlobalPosition, viewportSize);
                     if (result is { } r)
@@ -153,6 +159,12 @@ internal sealed class CameraViewCommandHandler(IOrigoRuntime runtime) : CommandH
                 }
             case Control control:
                 {
+                    // CanvasItem visibility is independent of the Node3D chain:
+                    // the engine hides a Control when its Visible flag or a
+                    // CanvasItem ancestor's flag is false.
+                    if (!control.IsVisibleInTree())
+                        return null;
+
                     count.Ui++;
                     Vector2 screenPos = control.GlobalPosition;
                     return string.Format(CultureInfo.InvariantCulture,

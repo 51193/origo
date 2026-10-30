@@ -221,7 +221,7 @@ internal static class SaveStorageFacade
             var saveRel = handle.PathPolicy.GetSaveDirectory(id);
             var metaRel = handle.PathPolicy.GetCustomMetaFile(saveRel);
             var metaAbs = handle.GetAbsolutePath(metaRel);
-            var rawMeta = SavePayloadReader.TryReadStringMap(handle, metaAbs) ??
+            var rawMeta = SavePayloadReader.ReadOptionalStringMap(handle, metaAbs) ??
                           new Dictionary<string, string>();
 
             // Framework-reserved keys (the origo. namespace, e.g. the format
@@ -288,6 +288,22 @@ internal static class SaveStorageFacade
         ILogger logger)
     {
         ArgumentNullException.ThrowIfNull(logger);
+        // The payload carries the slot it was built for and the method takes
+        // the slot to write; the target id must name a slot. A non-empty
+        // payload identity that disagrees means the caller is about to persist
+        // the payload somewhere it does not claim to belong; silently writing
+        // to the other slot would hide that bug.
+        if (!string.IsNullOrEmpty(payload.SaveId)
+            && !string.Equals(payload.SaveId, newSaveId, StringComparison.Ordinal))
+        {
+            var targetDescription = string.IsNullOrEmpty(newSaveId) ? "<empty>" : $"'{newSaveId}'";
+            throw new ArgumentException(
+                $"SaveGamePayload.SaveId '{payload.SaveId}' does not match the target save id " +
+                $"{targetDescription}. A non-empty payload SaveId must equal a non-empty target " +
+                "save id; leave the payload SaveId empty so the target id names the slot.",
+                nameof(payload));
+        }
+
         var watch = Stopwatch.StartNew();
 
         var combinedHash = SaveAtomicWriter.ComputeCombinedHash(handle, payload);

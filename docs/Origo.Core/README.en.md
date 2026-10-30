@@ -51,7 +51,11 @@ host.Runtime.SndWorld.RegisterStrategy(() => new CounterStrategy());
 host.DriveFrame(1.0 / 60.0);
 ```
 
-Call `host.Dispose()` (or `host.Context.Shutdown()`) when the process stops driving the host: it runs session/progress quit hooks and deletes the temporary `current/` working directory. `host.Context` exposes the stable `ISndContext` capability facets; `host.Runtime`
+`OrigoHost` implements `IDisposable`, so the host can be owned by a `using`
+scope: `using var host = OrigoHost.Create(options);` disposes it when the scope
+ends. Calling `host.Dispose()` manually (or `host.Context.Shutdown()`) is
+equivalent when the process stops driving the host: it runs session/progress
+quit hooks and deletes the temporary `current/` working directory. `host.Context` exposes the stable `ISndContext` capability facets; `host.Runtime`
 exposes `IOrigoRuntime` and `ISndWorldAccess`. Supply
 `OrigoHostOptions.FileSystem` and call `host.Bootstrap()` when the workflow
 needs entry-config or save files. If the system blackboard stores a custom

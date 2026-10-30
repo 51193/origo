@@ -136,4 +136,19 @@ public class PersistentBlackboardTests
         Assert.True(found);
         Assert.Equal(42, v);
     }
+
+    [Fact]
+    public void PersistentBlackboard_TryGet_StoredNullString_ReturnsFoundNull()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, pathResolver, dataSourceIo, registry) = CreateDeps(fs);
+        var path = "user://origo/system.json";
+        var board = new PersistentBlackboard(metaAccess, pathResolver, path, dataSourceIo, registry, new Blackboard.Blackboard());
+
+        board.SetValue<string?>("note", null);
+
+        var (found, note) = board.TryGet<string>("note");
+        Assert.True(found);
+        Assert.Null(note);
+    }
 }

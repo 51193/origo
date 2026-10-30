@@ -495,9 +495,10 @@ public class TypedDataGeneratorTests
     [Fact]
     public void PointerType_ReportsDiagnostic_InsteadOfEmittingInvalidIdentifier()
     {
-        // A pointer type's Name contains '*', which sanitizes to an invalid
-        // C# identifier: the generator must reject it with a diagnostic
-        // instead of emitting uncompilable accessor names (CS1001).
+        // A pointer type is unnamed (ITypeSymbol.Name is empty), so its
+        // sanitized kind name is the empty string and cannot become a C#
+        // identifier: the generator must reject it with a diagnostic instead of
+        // emitting uncompilable accessor names (CS1001).
         // (In Home mode the ORIGOSG002 gate rejects non-system value types
         // first; the adapter mode is where such a registration survives
         // validation and reaches the identifier check.)
@@ -510,6 +511,67 @@ public class TypedDataGeneratorTests
         Assert.All(
             output.GeneratorDiagnostics.Where(d => d.Id == "ORIGOSG006"),
             d => Assert.Equal(DiagnosticSeverity.Error, d.Severity));
+        Assert.Empty(output.CompileErrors);
+    }
+
+    [Fact]
+    public void TwoUnnamedTypes_ReportORIGOSG006_InsteadOfEmptyKindNameCollision()
+    {
+        // Pointer and array types are unnamed, so both sanitize to the same
+        // empty kind name. The identifier-validity gate must run before the
+        // kind-name-collision gate: each registration reports ORIGOSG006
+        // (invalid identifier) instead of the pair being reported as one
+        // ORIGOSG005 collision with an empty kind name.
+        var adapterSource = """
+            [assembly: Origo.Core.Snd.Metadata.SndInlineTypes(128, typeof(int*), typeof(string[]))]
+            """;
+        var output = RunAdapter(adapterSource);
+
+        Assert.Equal(2, output.GeneratorDiagnostics.Count(d => d.Id == "ORIGOSG006"));
+        Assert.False(output.HasGeneratorDiagnostic("ORIGOSG005"));
+        Assert.Empty(output.GeneratedSources);
+        Assert.Empty(output.CompileErrors);
+    }
+
+    [Fact]
+    public void MixedHomeRegistration_ValidPrimitiveAndUnnamedType_ReportsORIGOSG006OnlyForUnnamed()
+    {
+        // Home mode: the unnamed reference type (array) is reported once at its
+        // registration and dropped, while the valid primitive keeps generating
+        // normally (no empty-name ORIGOSG005, no lost valid output).
+        var output = RunHome(
+            "[assembly: Origo.Core.Snd.Metadata.SndInlineTypes(typeof(int), typeof(string[]))]");
+
+        var diagnostic = Assert.Single(output.GeneratorDiagnostics, d => d.Id == "ORIGOSG006");
+        Assert.False(output.HasGeneratorDiagnostic("ORIGOSG005"));
+        Assert.True(diagnostic.Location.IsInSource, "the diagnostic must point at the registration");
+        var sourceText = diagnostic.Location.SourceTree!.GetText(TestContext.Current.CancellationToken);
+        var attributeLine = sourceText.Lines[diagnostic.Location.GetLineSpan().StartLinePosition.Line];
+        Assert.Contains("SndInlineTypes", sourceText.ToString(attributeLine.Span));
+        Assert.Contains("public const byte Int32 = 1;", output.AllGeneratedText);
+        Assert.Contains("TypedData.RegisterKind(1, typeof(int));", output.AllGeneratedText);
+        Assert.DoesNotContain("typeof(string[])", output.AllGeneratedText);
+        Assert.Empty(output.CompileErrors);
+    }
+
+    [Fact]
+    public void MixedAdapterRegistration_ValidCustomTypeAndUnnamedType_ReportsORIGOSG006OnlyForUnnamed()
+    {
+        // Adapter mode: the unnamed pointer is reported once at its registration
+        // and dropped, while the valid custom reference type keeps generating its
+        // adapter accessors and kind registration.
+        var adapterSource = """
+            [assembly: Origo.Core.Snd.Metadata.SndInlineTypes(128, typeof(ValidCustom), typeof(int*))]
+            public sealed class ValidCustom { public int Value; }
+            """;
+        var output = RunAdapter(adapterSource);
+
+        var diagnostic = Assert.Single(output.GeneratorDiagnostics, d => d.Id == "ORIGOSG006");
+        Assert.False(output.HasGeneratorDiagnostic("ORIGOSG005"));
+        Assert.Equal(0, diagnostic.Location.GetLineSpan().StartLinePosition.Line);
+        Assert.Contains("AsValidCustom", output.AllGeneratedText);
+        Assert.Contains("TryGetValidCustom", output.AllGeneratedText);
+        Assert.Contains("TypedData.RegisterKind(128, typeof(ValidCustom));", output.AllGeneratedText);
         Assert.Empty(output.CompileErrors);
     }
 

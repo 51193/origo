@@ -55,10 +55,24 @@ public static class ShellApiClassificationInventory
     public static IReadOnlyList<string> FindViolations(Assembly assembly)
     {
         ArgumentNullException.ThrowIfNull(assembly);
+        return FindViolations(
+            assembly,
+            Path.Combine(FindRepositoryRoot(), "docs", "architecture", "shell-api-classification.en.md"));
+    }
 
-        var repositoryRoot = FindRepositoryRoot();
-        var englishEntries = ParseTable(Path.Combine(
-            repositoryRoot, "docs", "architecture", "shell-api-classification.en.md"));
+    /// <summary>
+    ///     Returns classification-coverage violations for <paramref name="assembly" />
+    ///     using the supplied classification table path. Architecture negative-control
+    ///     tests use this overload with a modified copy of the tracked table to prove
+    ///     that missing, stale, duplicate, and invalid rows are reported; the public
+    ///     overload always reads the tracked table.
+    /// </summary>
+    internal static IReadOnlyList<string> FindViolations(Assembly assembly, string classificationTablePath)
+    {
+        ArgumentNullException.ThrowIfNull(assembly);
+        ArgumentException.ThrowIfNullOrWhiteSpace(classificationTablePath);
+
+        var englishEntries = ParseTable(classificationTablePath);
 
         var violations = new List<string>();
         ValidateRows(englishEntries, "en", violations);
