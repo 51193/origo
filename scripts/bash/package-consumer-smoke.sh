@@ -5,9 +5,9 @@
 # the tracked fixtures to isolated temporary directories with no repository
 # project references, restores them through package restore only against an
 # isolated NuGet package cache, builds with warnings as errors, proves kernel
-# compile assets are inaccessible with a negative probe, runs the public
-# ConsoleBridge path, and starts the Godot consumer headlessly through the
-# public OrigoDefaultEntry path.
+# compile assets are inaccessible with negative probes, runs the Core-only
+# OrigoHost and public ConsoleBridge paths, and starts the Godot consumer
+# headlessly through the public OrigoDefaultEntry path.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
@@ -54,6 +54,7 @@ WORK=$(mktemp -d "${TMPDIR:-/tmp}/origo-package-consumer.XXXXXX")
 FEED="$WORK/feed"
 CONSUMER_DIR="$WORK/consumer"
 PROBE_DIR="$WORK/kernel-probe"
+CORE_CONSUMER_DIR="$WORK/core-consumer"
 CONSOLE_CONSUMER_DIR="$WORK/console-consumer"
 ISOLATED_PACKAGES="$WORK/packages"
 cleanup() {
@@ -61,7 +62,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-mkdir -p "$FEED" "$CONSUMER_DIR" "$PROBE_DIR" "$CONSOLE_CONSUMER_DIR" "$ISOLATED_PACKAGES"
+mkdir -p "$FEED" "$CONSUMER_DIR" "$PROBE_DIR" "$CORE_CONSUMER_DIR" "$CONSOLE_CONSUMER_DIR" "$ISOLATED_PACKAGES"
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo " Shell-only package consumer smoke"
@@ -85,6 +86,7 @@ bash scripts/bash/validate-release-packages.sh "$FEED" "$VERSION"
 
 cp -R tools/ShellPackageConsumer/. "$CONSUMER_DIR/"
 cp -R tools/ShellPackageConsumer/. "$PROBE_DIR/"
+cp -R tools/CorePackageConsumer/. "$CORE_CONSUMER_DIR/"
 cp -R tools/ConsoleBridgePackageConsumer/. "$CONSOLE_CONSUMER_DIR/"
 
 cat > "$CONSUMER_DIR/nuget.config" <<NUGET_CONFIG
@@ -98,10 +100,13 @@ cat > "$CONSUMER_DIR/nuget.config" <<NUGET_CONFIG
 </configuration>
 NUGET_CONFIG
 cp "$CONSUMER_DIR/nuget.config" "$PROBE_DIR/nuget.config"
+cp "$CONSUMER_DIR/nuget.config" "$CORE_CONSUMER_DIR/nuget.config"
 cp "$CONSUMER_DIR/nuget.config" "$CONSOLE_CONSUMER_DIR/nuget.config"
 
 grep -q "<ProjectReference" "$CONSUMER_DIR/OrigoShellPackageConsumer.csproj" \
     && FAIL "consumer fixture must not contain a ProjectReference."
+grep -q "<ProjectReference" "$CORE_CONSUMER_DIR/OrigoCorePackageConsumer.csproj" \
+    && FAIL "Core-only consumer fixture must not contain a ProjectReference."
 grep -q "<ProjectReference" "$CONSOLE_CONSUMER_DIR/OrigoConsoleBridgePackageConsumer.csproj" \
     && FAIL "ConsoleBridge consumer fixture must not contain a ProjectReference."
 
@@ -201,6 +206,75 @@ if [[ $PROBE_EXIT -eq 0 ]]; then
 fi
 grep -q "CS0246" <<<"$PROBE_OUTPUT" \
     || { tail -20 <<<"$PROBE_OUTPUT"; FAIL "negative probe failed without the expected CS0246 diagnostic."; }
+
+# Core-only fixture: references only the Origo.Core package and starts the
+# shell host in a console process. It must not pull adapter, ConsoleBridge, or
+# Godot assets into the restore graph, and it must not require a Godot engine.
+set +e
+CORE_RESTORE_OUTPUT=$(cd "$CORE_CONSUMER_DIR" && dotnet restore OrigoCorePackageConsumer.csproj \
+    -p:OrigoShellPackageVersion="$VERSION" 2>&1)
+CORE_RESTORE_EXIT=$?
+set -e
+if [[ $CORE_RESTORE_EXIT -ne 0 ]]; then
+    echo "$CORE_RESTORE_OUTPUT" | tail -30
+    FAIL "Core-only consumer restore failed with $CORE_RESTORE_EXIT."
+fi
+
+CORE_ASSETS=$(find_first_file "$CORE_CONSUMER_DIR" -path "*/obj/project.assets.json")
+[[ -n "$CORE_ASSETS" ]] || FAIL "Core-only consumer restore did not produce project.assets.json."
+grep -Fq "$NUGET_PACKAGES" "$CORE_ASSETS" \
+    || FAIL "Core-only consumer restore did not use the isolated NuGet package cache."
+for package in Origo.Core Origo.Core.Contracts Origo.Core.Kernel; do
+    grep -Fq "\"$package/" "$CORE_ASSETS" \
+        || FAIL "Core-only consumer restore did not resolve $package."
+done
+for package in Origo.GodotAdapter Origo.ConsoleBridge GodotSharp; do
+    if grep -Fq "\"$package/" "$CORE_ASSETS"; then
+        FAIL "Core-only consumer unexpectedly resolved $package."
+    fi
+done
+
+set +e
+CORE_BUILD_OUTPUT=$(cd "$CORE_CONSUMER_DIR" && dotnet build OrigoCorePackageConsumer.csproj \
+    --no-restore --configuration Release -warnaserror \
+    -p:OrigoShellPackageVersion="$VERSION" 2>&1)
+CORE_BUILD_EXIT=$?
+set -e
+if [[ $CORE_BUILD_EXIT -ne 0 ]]; then
+    echo "$CORE_BUILD_OUTPUT" | tail -40
+    FAIL "Core-only consumer build failed with $CORE_BUILD_EXIT."
+fi
+
+set +e
+CORE_STARTUP_OUTPUT=$(cd "$CORE_CONSUMER_DIR" && dotnet run \
+    --project OrigoCorePackageConsumer.csproj \
+    --configuration Release --no-build --no-restore 2>&1)
+CORE_EXIT=$?
+set -e
+if [[ $CORE_EXIT -ne 0 ]]; then
+    echo "$CORE_STARTUP_OUTPUT" | tail -30
+    FAIL "Core-only consumer exited with $CORE_EXIT."
+fi
+if ! grep -q "CORE_CONSUMER_STARTUP_OK" <<<"$CORE_STARTUP_OUTPUT"; then
+    echo "$CORE_STARTUP_OUTPUT" | tail -30
+    FAIL "Core-only consumer did not print CORE_CONSUMER_STARTUP_OK."
+fi
+echo "$CORE_STARTUP_OUTPUT" | grep "CORE_CONSUMER_STARTUP_OK"
+
+cp "$CORE_CONSUMER_DIR/KernelLeakProbe.cs.template" "$CORE_CONSUMER_DIR/KernelLeakProbe.cs"
+set +e
+CORE_PROBE_OUTPUT=$(cd "$CORE_CONSUMER_DIR" && dotnet build OrigoCorePackageConsumer.csproj \
+    --no-restore --configuration Release -warnaserror \
+    -p:OrigoShellPackageVersion="$VERSION" 2>&1)
+CORE_PROBE_EXIT=$?
+set -e
+if [[ $CORE_PROBE_EXIT -eq 0 ]]; then
+    FAIL "Core-only kernel leak probe unexpectedly succeeded; kernel compile assets leaked through the Origo.Core package."
+fi
+if ! grep -q "CS0246" <<<"$CORE_PROBE_OUTPUT"; then
+    echo "$CORE_PROBE_OUTPUT" | tail -20
+    FAIL "Core-only kernel leak probe failed without the expected CS0246 diagnostic."
+fi
 
 GODOT_BIN=$(bash scripts/bash/download-godot.sh)
 echo "Using Godot binary: $GODOT_BIN"

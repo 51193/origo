@@ -94,7 +94,7 @@ Rules:
 | `test-download-godot-deps.sh` | Godot downloader dependency/cache tests |
 | `test-find-previous-api-baseline.sh` | Previous release baseline selection tests |
 | `test-lint-pr-body.sh` | PR title/body linter regression tests |
-| `test-package-consumer-smoke-lib.sh` | Package-smoke helper tests |
+| `test-package-consumer-smoke-lib.sh` | Package-smoke helper and fixture contract tests |
 | `test-pre-push-hook.sh` | Pre-push commit-lint hook tests |
 | `test-release-check.sh` | Release preflight regression tests |
 | `test-validate-release-source.sh` | Release source archive validator tests |
