@@ -45,6 +45,7 @@ They drive the stable Contracts entry surface (`OrigoHost`, `ISndContext`, `ISes
 | Test Method | Behavior Verified | Documentation Source |
 |-------------|-------------------|----------------------|
 | `HostKernelPort_ShouldBeInternal_AndLiveInKernelPortsNamespace` | `HostKernelPort` and its contract stay internal and never enter the export surface | [Ports](../Origo.Core.Kernel/Ports/README.en.md) |
+| `HostConstruction_WithoutPersistence_UsesInMemorySystemBlackboard` | The shared host construction helper keeps the Core no-filesystem fallback in memory and does not touch a persistence file system | [Ports](../Origo.Core.Kernel/Ports/README.en.md) |
 | `OrigoHost_ShouldCreateStableRuntimeAndRunBackgroundWorkflow` | `OrigoHost` constructs a stable runtime/context and drives frames, strategy registration, and a session workflow | [Ports](../Origo.Core.Kernel/Ports/README.en.md) |
 | `OrigoHost_ShouldRegisterCustomConsoleHandlerThroughStableRuntime` | With injected console channels, a custom command registered through `IOrigoRuntime.RegisterConsoleCommandHandler` produces output during `DriveFrame` | [console-commands](../usage/console-commands.en.md) |
 

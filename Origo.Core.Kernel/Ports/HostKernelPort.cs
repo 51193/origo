@@ -1,13 +1,7 @@
 #pragma warning disable IDE0130 // Intentional: kernel ports are required to live in the Origo.Core.Kernel.Ports namespace.
 using System;
-using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.Abstractions.Runtime;
-using Origo.Core.DataSource;
-using Origo.Core.Logging;
-using Origo.Core.Runtime;
-using Origo.Core.Save;
-using Origo.Core.Serialization;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Scene;
 
@@ -55,51 +49,35 @@ internal sealed class CoreHostKernelPort : IHostKernelPort
         ArgumentNullException.ThrowIfNull(options);
 
         var fileSystem = options.FileSystem ?? HostUnavailableFileSystem.Instance;
-        var typeMapping = new TypeStringMapping();
-        var converterRegistry = DataSourceFactory.CreateDefaultRegistry(typeMapping);
-        options.ConfigureStartupRegistry?.Invoke(typeMapping, converterRegistry);
-        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fileSystem, logger: options.Logger);
-        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fileSystem);
-        var pathResolver = DataSourceFactory.CreatePathResolver(fileSystem);
+        var services = HostConstruction.CreateServices(
+            options,
+            fileSystem,
+            options.ConfigureStartupRegistry);
         var sceneHost = new FullMemorySndSceneHost(options.Logger);
-
-        IBlackboard systemBlackboard;
-        if (options.FileSystem is not null)
-        {
-            var systemBlackboardPath = pathResolver.CombinePath(options.SaveRootPath, "system.json");
-            var persistentBlackboard = new PersistentBlackboard(
-                metaAccess,
-                pathResolver,
-                systemBlackboardPath,
-                dataSourceIo,
-                converterRegistry,
-                new Origo.Core.Blackboard.Blackboard());
-            persistentBlackboard.LoadFromDisk();
-            systemBlackboard = persistentBlackboard;
-        }
-        else
-        {
-            systemBlackboard = new Origo.Core.Blackboard.Blackboard();
-        }
-
-        var runtime = new OrigoRuntime(
-            options.Meta,
-            options.Logger,
+        var systemBlackboardPath = options.FileSystem is null
+            ? null
+            : services.PathResolver.CombinePath(options.SaveRootPath, "system.json");
+        var systemBlackboard = HostConstruction.CreateSystemBlackboard(
+            options.FileSystem,
+            services,
+            systemBlackboardPath);
+        var runtime = HostConstruction.CreateRuntime(
+            options,
             sceneHost,
-            typeMapping,
-            converterRegistry,
-            dataSourceIo,
+            services,
             systemBlackboard,
             options.ConsoleInput,
             options.ConsoleOutputChannel);
         sceneHost.BindWorld(runtime.SndWorld);
 
-        var context = new SndContext(HostContextParameters.Create(
+        var context = HostConstruction.CreateContext(
             runtime,
-            dataSourceIo,
-            metaAccess,
-            pathResolver,
-            options));
+            HostContextParameters.Create(
+                runtime,
+                services.DataSourceIo,
+                services.MetaAccess,
+                services.PathResolver,
+                options));
         sceneHost.BindContext(context);
 
         return new OrigoHostBundle(runtime, context);
