@@ -162,6 +162,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **Shutdown is rejected during session frame processing** — a strategy/hook that calls `ISndContext.Shutdown` from `Process`, `BeforeDead`, `OnUnmounted`, or `AfterSpawn` can no longer empty the scene host mid-iteration and throw after the terminal state was committed; the context stays live and the frame can continue. A failed shutdown also clears its nested teardown request, so a later lifecycle workflow is rejected until the retryable cleanup is finished instead of committing shutdown without deleting the incomplete `current/` area.
 - **Spawn-failure rollback repeats its bounded incoming observer-binding cleanup after
   the outgoing-binding teardown** — an `OnUnmounted` hook that remounts a binding onto
   the dying entity therefore cannot persist a dangling edge; the pathological

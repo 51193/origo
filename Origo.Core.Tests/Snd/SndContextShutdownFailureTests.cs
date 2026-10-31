@@ -101,6 +101,14 @@ public class SndContextShutdownFailureTests
         Assert.Throws<IOException>(() => host.DriveFrame(0.016));
         Assert.True(fs.DirectoryExists("root/current"));
 
+        // A workflow must not consume a stale nested-shutdown request and
+        // commit terminal state; the failed cleanup remains retryable only
+        // through Shutdown/Dispose.
+        host.Context.Lifecycle.RequestLoadMainMenuEntrySave();
+        var pending = Assert.Throws<InvalidOperationException>(() => host.DriveFrame(0.016));
+        Assert.Contains("cleanup is pending", pending.Message, StringComparison.Ordinal);
+        Assert.True(fs.DirectoryExists("root/current"));
+
         fs.BeforeDeleteDirectory = null;
         host.Dispose();
         Assert.False(fs.DirectoryExists("root/current"));

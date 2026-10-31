@@ -35,9 +35,11 @@ public interface ISndContext
     ///     shutdown, bootstrap and persistence mutations (save/load/delete/continue/level-switch) fail explicitly.
     ///     Throws <see cref="InvalidOperationException" /> when called while a
     ///     lifecycle workflow (load/save/change-level) is in progress, from a
-    ///     <c>BeforeSave</c> hook (the save workflow owns the session set), or
-    ///     while a level switch is tearing down the old foreground; the switch
-    ///     aborts before mounting a new foreground or recreating <c>current/</c>.
+    ///     <c>BeforeSave</c> hook (the save workflow owns the session set), while
+    ///     a level switch is tearing down the old foreground, or while session
+    ///     entities are being processed, spawned, killed, or torn down; the
+    ///     switch aborts before mounting a new foreground or recreating
+    ///     <c>current/</c>.
     /// </summary>
     void Shutdown();
 

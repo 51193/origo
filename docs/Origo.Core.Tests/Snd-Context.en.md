@@ -14,6 +14,7 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 |------|-------------------|
 | `SndContextWorkflowTests.cs` | SndContext save/load/continue/switch full-chain workflows |
 | `SndContextShutdownFailureTests.cs` | Cleanup invariant when unloading the old ProgressRun throws: both the ProgressRun reference and the foreground session are cleared; failed `current/` cleanup remains retryable without replaying hooks; nested `Shutdown` from a quit hook cannot commit terminal state before the outer cleanup; a quit hook that queues a persistence request and then requests shutdown during workflow teardown has that queued work cancelled before the terminal flag; `Shutdown` requested from a load/save/level-switch workflow hook or from a `BeforeSave` hook is rejected without tearing the run down; a throwing deferred switch releases the lifecycle-workflow guard for later workflows |
+| `SndContextShutdownGuardTests.cs` | Shutdown raised from a frame's session processing, kill sweep, or spawn is rejected before the progress run can empty the host; the scene stays intact, `BeforeQuit` does not run after `BeforeDead`, and an `AfterSpawn` shutdown rolls the entity back. The failed-shutdown path also rejects a later workflow until cleanup is retried |
 | `SndContextEntryFlowTests.cs` | SndContext workflow starting from entry configuration |
 | `SndContextBootstrapTests.cs` | Bootstrap startup flow: order of strategy discovery, ordering validation and registration freeze, alias/template loading, entry save loading, and configuration switches |
 | `PersistenceRequestTrackingTests.cs` | Persistence requests (save/continue/initial/main menu entry/switch level) tracked as pending count until flushed; concurrent auto-save id allocation stays unique; shutdown cancels queued requests, runs their discard accounting, and stays retryable when a discard callback throws |
@@ -21,6 +22,16 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `SndArchetypeLoaderTests.cs` | SndArchetypeLoader.TryLoad parsing and ApplyAttributes type inference |
 | `SndTemplateResolverTests.cs` | Template alias resolution, caching, clone does not affect cache |
 | `TemplateAccessPublicPathTests.cs` | Public `ISndTemplateAccess` path: cloning templates then session spawn, runtime template/alias map loading, JSON entity-list template shorthand resolution |
+
+## SndContextShutdownGuardTests Details
+
+### Error Paths
+
+| Test Method | Triggered Error | Expected Behavior |
+|-------------|-----------------|-------------------|
+| `DriveFrame_ShutdownFromProcess_IsRejectedWithoutCorruptingScene` | A strategy calls `ctx.Shutdown()` from `Process` during a real `DriveFrame` | `InvalidOperationException` naming session processing; the context and scene host remain live, and a later frame runs normally once the strategy stops requesting shutdown |
+| `DriveFrame_ShutdownFromBeforeDead_IsRejectedAndBeforeQuitDoesNotRun` | A strategy calls `ctx.Shutdown()` from `BeforeDead` during the end-of-frame kill sweep | `InvalidOperationException` naming the kill sweep; the entity is still removed, `BeforeQuit` is not fired after `BeforeDead`, and the next frame runs normally |
+| `Spawn_ShutdownFromAfterSpawn_IsRejectedAndEntityIsRolledBack` | A strategy calls `ctx.Shutdown()` from `AfterSpawn` during a direct `ISessionRun.Spawn` | `InvalidOperationException` naming spawning; the spawned entity is rolled back and the context stays live |
 
 ## SndContextWorkflowTests Details
 
@@ -271,6 +282,9 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | Strategy Class | Defined In | Purpose |
 |----------------|-----------|---------|
 | `NullMetaConverter` | SndTemplateResolverTests.cs | Converter that returns null, for verifying null detection |
+| `ShutdownOnProcessStrategy` | SndContextShutdownGuardTests.cs | Calls `Shutdown` from `Process` once armed, for the frame-iteration guard |
+| `ShutdownOnBeforeDeadStrategy` | SndContextShutdownGuardTests.cs | Calls `Shutdown` from `BeforeDead` and records `BeforeQuit` ordering |
+| `ShutdownOnAfterSpawnStrategy` | SndContextShutdownGuardTests.cs | Calls `Shutdown` from `AfterSpawn`, for the spawn-rollback guard |
 
 ## Known Coverage Gaps
 
