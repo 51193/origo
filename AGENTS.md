@@ -39,7 +39,7 @@ follow the chain into source; manual rationale is required context.
 This project is in early development and does not promise API stability, except the bounded 0.1.x shell contract in `docs/architecture/shell-kernel-boundary.*`; kernel packages keep this rule.
 
 - **Forbidden**: compatibility shims, deprecation layers, dual-track APIs, migration shells, evolution traces, dead code, and markers such as `since v0.x`, `legacy`, or `new`.
-- Make a clean breaking change and bring code plus docs to the current correct state. Record breaking changes in `CHANGELOG.md` under `[Unreleased]` per §4, prefixed with `BREAKING:`.
+- Make a clean breaking change and bring code plus docs to the current correct state. Record breaking changes per §4, prefixed with `BREAKING:`.
 - **Forbidden**: public/internal properties or methods added solely for test convenience. Production code is written as if tests do not exist; tests use `InternalsVisibleTo`, reflection, or `TestFactory`-style infrastructure.
 
 ### 1.3 Full-Chain Understanding — Eliminating False-Positive Tech Debt Fixes
@@ -171,11 +171,12 @@ path is a blind spot, not a regression test. Details:
 
 ## 4. Changelog Conventions
 
-Full rules (categories, baselines, snapshots, writing) are in
+Full rules (categories, baselines, snapshots, maintenance log, writing) are in
 `docs/release-process.en.md`.
 
-- Record user-facing significant changes under `[Unreleased]` in `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, or `Security`.
-- Breaking changes use no separate category: classify under `Changed` / `Removed` and prefix with `BREAKING:`.
+- User-facing changes go under `[Unreleased]`; repository-only changes go to
+  `docs/maintenance-log.en.md`.
+- Breaking changes: no separate category; user-observable under `Changed` / `Removed` with `BREAKING:`, contributor-only in the maintenance log.
 - Baseline = last formal release tag; nightly/alpha/preview are not versions/baselines. Do not record intra-version churn; record only the final state.
 - §1.3 applies: do not mis-record deliberate cross-module designs as `Fixed`.
 
@@ -219,7 +220,8 @@ Full details: `docs/release-process.en.md`. Pre-tag summary:
 - Rules: [META](docs/META.en.md), [release process](docs/release-process.en.md), [review process](docs/review-process.en.md).
 - Tests: [META-TEST](docs/Origo.Core.Tests/META-TEST.en.md).
 - Modules: English entries under `docs/<module>/` and [usage](docs/usage/README.en.md).
-- Changes and tools: [CHANGELOG.md](CHANGELOG.md), `_origo_local/README.md`,
+- Changes and tools: [CHANGELOG.md](CHANGELOG.md),
+  [maintenance log](docs/maintenance-log.en.md), `_origo_local/README.md`,
   [.editorconfig](.editorconfig), [.github/dependabot.yml](.github/dependabot.yml),
   [.github/workflows/](.github/workflows/),
   [scripts/README.md](scripts/README.md), [ci.sh](scripts/bash/ci.sh).
