@@ -107,6 +107,8 @@ powershell_lint_active="$(grep -v '^[[:space:]]*#' scripts/powershell/lint-scrip
 for marker in \
     "scripts/python/check_test.py" \
     "scripts/python/validate-agent-docs.py" \
+    "scripts/python/verify-ci-workflow.py" \
+    "scripts/python/test-verify-ci-workflow.py" \
     "scripts/python/validate-release-workflow.py" \
     "scripts/python/test-validate-release-workflow.py" \
     "scripts/python/work_identity.py" \
@@ -114,6 +116,15 @@ for marker in \
     "docs.ps1"; do
     grep -Fq "$marker" <<<"$powershell_lint_active" \
         || FAIL "PowerShell lint gate is missing shared check: $marker"
+done
+# The same Bash-free Python gates must also stay wired into the Bash lint gate.
+# Filter comments so a commented-out invocation cannot satisfy the parity gate.
+bash_lint_active="$(grep -v '^[[:space:]]*#' scripts/bash/lint-scripts.sh)"
+for marker in \
+    "scripts/python/verify-ci-workflow.py" \
+    "scripts/python/test-verify-ci-workflow.py"; do
+    grep -Fq "$marker" <<<"$bash_lint_active" \
+        || FAIL "Bash lint gate is missing shared check: $marker"
 done
 grep -Fq "test-api-inventory-parent.ps1" <<<"$powershell_lint_active" \
     || FAIL "PowerShell lint gate is missing its API-inventory self-test."

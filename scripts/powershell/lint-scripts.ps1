@@ -27,6 +27,8 @@ Invoke-OrigoPython -Arguments @('-B', 'scripts/python/docs_generate_test.py')
 & (Join-Path $PSScriptRoot 'docs.ps1')
 Invoke-OrigoPython -Arguments @('scripts/python/validate-agent-docs.py')
 & (Join-Path $PSScriptRoot 'test-api-inventory-parent.ps1')
+Invoke-OrigoPython -Arguments @('scripts/python/verify-ci-workflow.py')
+Invoke-OrigoPython -Arguments @('-B', 'scripts/python/test-verify-ci-workflow.py')
 Invoke-OrigoPython -Arguments @('scripts/python/validate-release-workflow.py')
 Invoke-OrigoPython -Arguments @('scripts/python/test-validate-release-workflow.py')
 if (-not [string]::IsNullOrWhiteSpace($env:ORIGO_BRANCH_NAME)) {

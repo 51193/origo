@@ -2038,5 +2038,206 @@ class ReleaseWorkflowGuardTests(unittest.TestCase):
         self.assertIn("must not disable errexit", stderr)
 
 
+    # ------------------------------------------------------------------
+    # Godot prerequisite job: the release needs: edge must point at a job
+    # whose complete body still runs the reviewed gate.
+    # ------------------------------------------------------------------
+    def without_godot_job(self) -> str:
+        text = WORKFLOW.read_text(encoding="utf-8")
+        start = text.index("\n  godot-integration-tests:\n")
+        end = text.index("\n  release:\n", start)
+        return text[:start] + text[end:]
+
+    def test_missing_godot_job_is_rejected(self) -> None:
+        code, _, stderr = self.run_guard(self.without_godot_job())
+        self.assertEqual(code, 1)
+        self.assertIn(
+            "must define the 'godot-integration-tests' job", stderr
+        )
+
+    def test_echoed_godot_gate_is_rejected(self) -> None:
+        text = self.mutated(
+            "      - name: Godot headless integration tests\n"
+            "        run: bash scripts/bash/godot-test.sh",
+            "      - name: Godot headless integration tests\n"
+            "        run: echo bash scripts/bash/godot-test.sh",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("must run exactly the reviewed commands", stderr)
+
+    def test_godot_gate_extra_command_is_rejected(self) -> None:
+        text = self.mutated(
+            "      - name: Godot headless integration tests\n"
+            "        run: bash scripts/bash/godot-test.sh",
+            "      - name: Godot headless integration tests\n"
+            "        run: |\n"
+            "          bash scripts/bash/godot-test.sh\n"
+            "          true",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("must run exactly the reviewed commands", stderr)
+
+    def test_godot_job_condition_is_rejected(self) -> None:
+        text = self.mutated(
+            "  godot-integration-tests:\n    runs-on: ubuntu-latest\n",
+            "  godot-integration-tests:\n    runs-on: ubuntu-latest\n"
+            "    if: false\n",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn(
+            "the 'godot-integration-tests' job must not set 'if:'", stderr
+        )
+
+    def test_godot_job_continue_on_error_is_rejected(self) -> None:
+        text = self.mutated(
+            "  godot-integration-tests:\n    runs-on: ubuntu-latest\n",
+            "  godot-integration-tests:\n    runs-on: ubuntu-latest\n"
+            "    continue-on-error: true\n",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn(
+            "the 'godot-integration-tests' job must not set "
+            "'continue-on-error:'",
+            stderr,
+        )
+
+    def test_godot_step_condition_is_rejected(self) -> None:
+        text = self.mutated(
+            "      - name: Godot headless integration tests\n",
+            "      - name: Godot headless integration tests\n"
+            "        if: false\n",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("must not set 'if:'", stderr)
+
+    def test_godot_step_continue_on_error_is_rejected(self) -> None:
+        text = self.mutated(
+            "      - name: Godot headless integration tests\n",
+            "      - name: Godot headless integration tests\n"
+            "        continue-on-error: true\n",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("must not set 'continue-on-error:'", stderr)
+
+    def test_godot_step_shell_override_is_rejected(self) -> None:
+        text = self.mutated(
+            "      - name: Godot headless integration tests\n",
+            "      - name: Godot headless integration tests\n"
+            "        shell: bash\n",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("must use the default shell", stderr)
+
+    def test_godot_step_env_is_rejected(self) -> None:
+        text = self.mutated(
+            "      - name: Godot headless integration tests\n",
+            "      - name: Godot headless integration tests\n"
+            "        env:\n"
+            "          EXTRA: value\n",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("must not set step 'env:'", stderr)
+
+    def test_godot_checkout_ref_drift_is_rejected(self) -> None:
+        text = self.mutated(
+            "          ref: ${{ inputs.tag || github.ref }}",
+            "          ref: main",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn(
+            "must use exactly the reviewed action inputs", stderr
+        )
+        self.assertIn("inputs.tag || github.ref", stderr)
+
+    def test_godot_cache_drift_is_rejected(self) -> None:
+        text = self.mutated(
+            "          path: .godot_binary",
+            "          path: .godot_cache",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("must use exactly the reviewed action inputs", stderr)
+
+    def test_godot_apt_package_drift_is_rejected(self) -> None:
+        text = self.mutated(
+            "libxcursor1 libxinerama1 libxrandr2 libasound2t64 libpulse0 "
+            "libgl1 libfontconfig1",
+            "libxcursor1 libxinerama1 libxrandr2 libasound2t64 libgl1 "
+            "libfontconfig1",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("must run exactly the reviewed commands", stderr)
+
+    def test_godot_tag_layout_probe_drift_is_rejected(self) -> None:
+        text = self.mutated(
+            "for path in scripts/bash/godot-test.sh "
+            "scripts/python/write-version-stamp.py; do",
+            "for path in scripts/bash/godot-test.sh; do",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("must run exactly the reviewed commands", stderr)
+
+    def test_godot_unapproved_action_is_rejected(self) -> None:
+        text = self.mutated(
+            "        uses: actions/setup-dotnet@v6",
+            "        uses: actions/setup-dotnet-legacy@v6",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("uses unapproved action", stderr)
+
+    def test_top_level_defaults_is_rejected(self) -> None:
+        text = self.mutated(
+            "name: Release\n\n",
+            "name: Release\n\ndefaults:\n  run:\n    shell: bash\n\n",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("must not set top-level 'defaults:'", stderr)
+
+    def test_top_level_env_is_rejected(self) -> None:
+        text = self.mutated(
+            "name: Release\n\n",
+            "name: Release\n\nenv:\n  BASH_ENV: /tmp/evil\n\n",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("must not set top-level 'env:'", stderr)
+
+    def test_weekly_job_env_is_rejected(self) -> None:
+        weekly = self.mutated_weekly(
+            "jobs:\n  weekly-build:\n    runs-on: ubuntu-latest\n",
+            "jobs:\n  weekly-build:\n    runs-on: ubuntu-latest\n"
+            "    env:\n      BAD: 1\n",
+        )
+        code, _, stderr = self.run_guard(
+            WORKFLOW.read_text(encoding="utf-8"), weekly
+        )
+        self.assertEqual(code, 1)
+        self.assertIn("weekly job 'weekly-build' must not set 'env:'", stderr)
+
+    def test_weekly_top_level_env_is_rejected(self) -> None:
+        weekly = self.mutated_weekly(
+            "name: Weekly Build\n",
+            "name: Weekly Build\nenv:\n  BASH_ENV: /tmp/evil\n",
+        )
+        code, _, stderr = self.run_guard(
+            WORKFLOW.read_text(encoding="utf-8"), weekly
+        )
+        self.assertEqual(code, 1)
+        self.assertIn("weekly workflow must not set top-level 'env:'", stderr)
+
+
 if __name__ == "__main__":
     unittest.main()
