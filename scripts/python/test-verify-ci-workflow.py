@@ -181,6 +181,17 @@ class CiWorkflowGuardTests(unittest.TestCase):
         )
         self.assert_rejected(text, "must not set job 'defaults:'")
 
+    def test_workflow_write_permissions_are_rejected(self) -> None:
+        text = self.mutated(
+            "permissions:\n  contents: read\n",
+            "permissions:\n  contents: write\n",
+        )
+        self.assert_rejected(text, "must set exactly top-level permissions")
+
+    def test_missing_workflow_permissions_are_rejected(self) -> None:
+        text = self.mutated("permissions:\n  contents: read\n", "")
+        self.assert_rejected(text, "must set exactly top-level permissions")
+
     def test_workflow_defaults_is_rejected(self) -> None:
         text = self.mutated(
             "name: CI\n\n",
