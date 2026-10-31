@@ -78,6 +78,13 @@ internal sealed partial class ProgressRun : IDisposable
 
     public ISessionManager SessionManager => _sessionManager;
 
+    /// <summary>
+    ///     True while this run's sessions are processing, spawning, killing, or
+    ///     tearing down. Shutdown must not dispose the run mid-operation.
+    /// </summary>
+    internal bool IsSessionOperationInProgress =>
+        _sessionManager.IsSessionOperationInProgress || _sessionManager.IsSessionTeardownInProgress;
+
     public string SaveId { get; private set; }
 
     /// <summary>

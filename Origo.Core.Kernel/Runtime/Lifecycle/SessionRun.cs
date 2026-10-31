@@ -131,14 +131,42 @@ internal sealed class SessionRun : ISessionRun, IDisposable
     public ISndEntity Spawn(SndMetaData meta)
     {
         ThrowIfDisposed();
-        return SndEntityFactory.Spawn(_sceneHost, meta);
+        EnterSessionOperation();
+        try
+        {
+            return SndEntityFactory.Spawn(_sceneHost, meta);
+        }
+        finally
+        {
+            ExitSessionOperation();
+        }
     }
 
     /// <inheritdoc/>
     public void SpawnMany(params SndMetaData[] metaList)
     {
         ThrowIfDisposed();
-        SndEntityFactory.SpawnMany(_sceneHost, metaList);
+        EnterSessionOperation();
+        try
+        {
+            SndEntityFactory.SpawnMany(_sceneHost, metaList);
+        }
+        finally
+        {
+            ExitSessionOperation();
+        }
+    }
+
+    private void EnterSessionOperation()
+    {
+        if (_sessionManager is SessionManager manager)
+            manager.EnterSessionOperation();
+    }
+
+    private void ExitSessionOperation()
+    {
+        if (_sessionManager is SessionManager manager)
+            manager.ExitSessionOperation();
     }
 
     /// <inheritdoc/>

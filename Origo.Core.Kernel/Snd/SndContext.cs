@@ -186,6 +186,7 @@ public sealed class SndContext : ISndContext
             throw new InvalidOperationException(
                 "SndContext.Shutdown cannot run while a level switch is tearing down the foreground.");
 
+
         // A BeforeSave hook runs inside the session-mutation guard. Tearing the
         // progress run down here would remove sessions/current while the save
         // workflow is still active; reject the call before any cleanup instead.
@@ -206,6 +207,15 @@ public sealed class SndContext : ISndContext
             throw new InvalidOperationException(
                 "SndContext.Shutdown cannot run while a lifecycle workflow " +
                 "(load/save/change-level) is in progress.");
+
+        // A strategy/hook running inside the frame's session processing or kill
+        // sweep still owns the scene host iteration. Disposing the progress run
+        // here would empty the host mid-iteration and make the count guard or
+        // physical removal throw after the terminal state was committed.
+        if (_progressRun is { IsSessionOperationInProgress: true })
+            throw new InvalidOperationException(
+                "SndContext.Shutdown cannot run while session entities are being " +
+                "processed, spawned, killed, or torn down.");
 
         _shutdownInProgress = true;
         try
@@ -267,7 +277,10 @@ public sealed class SndContext : ISndContext
                 }
 
                 if (retryFailure is not null)
+                {
+                    _shutdownRequestedDuringTeardown = false;
                     ExceptionDispatchInfo.Capture(retryFailure).Throw();
+                }
 
                 _shutdownCleanupPending = false;
                 _shutdownRetryCurrentDelete = false;
@@ -323,6 +336,10 @@ public sealed class SndContext : ISndContext
             {
                 _shutdownCleanupPending = true;
                 _shutdownRetryCurrentDelete = hadProgressRun;
+                // The nested shutdown request belonged to this failed attempt:
+                // the attempt remains retryable, but a later lifecycle workflow
+                // must not consume a stale request and commit terminal state.
+                _shutdownRequestedDuringTeardown = false;
                 ExceptionDispatchInfo.Capture(firstFailure).Throw();
             }
 
@@ -708,6 +725,10 @@ public sealed class SndContext : ISndContext
     private T RunWorkflow<T>(Func<T> body)
     {
         ThrowIfShutdown();
+        if (_shutdownCleanupPending)
+            throw new InvalidOperationException(
+                "SndContext cannot start a lifecycle workflow while a previous " +
+                "shutdown cleanup is pending. Retry Shutdown to finish it.");
         Runtime.SndWorld.StrategyPool.SealRegistration();
         BeginWorkflow();
         try

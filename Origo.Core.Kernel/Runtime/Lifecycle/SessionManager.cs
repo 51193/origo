@@ -30,6 +30,7 @@ internal sealed class SessionManager : ISessionManager
     private readonly Dictionary<string, MountedSession> _sessions = new(StringComparer.Ordinal);
     private bool _clearingSessions;
     private int _tearingDownSessions;
+    private int _sessionOperationDepth;
 
     // NOTE: MountedSession stores SessionRun (concrete) rather than ISessionRun (interface)
     // because SessionManager is internal and always creates SessionRun instances.
@@ -111,32 +112,65 @@ internal sealed class SessionManager : ISessionManager
         }
     }
 
+    /// <summary>True while strategies/scene hosts are being processed, spawned, or killed.</summary>
+    internal bool IsSessionOperationInProgress => _sessionOperationDepth > 0;
+
+    /// <summary>True while a session is being disposed or the session set is clearing.</summary>
+    internal bool IsSessionTeardownInProgress => _clearingSessions || _tearingDownSessions > 0;
+
+    /// <summary>Enter a session operation that must not be interrupted by shutdown.</summary>
+    internal void EnterSessionOperation() => _sessionOperationDepth++;
+
+    /// <summary>Exit a session operation entered by <see cref="EnterSessionOperation" />.</summary>
+    internal void ExitSessionOperation()
+    {
+        if (_sessionOperationDepth == 0)
+            throw new InvalidOperationException("Session operation guard is not active.");
+        _sessionOperationDepth--;
+    }
+
     /// <inheritdoc />
     public void ProcessAllSessions(double delta, bool includeForeground = false)
     {
-        // Snapshot keys to allow modifications during iteration.
-        var keys = _sessions.Keys.ToArray();
-        foreach (var key in keys)
+        EnterSessionOperation();
+        try
         {
-            if (!includeForeground && string.Equals(key, ISessionManager.ForegroundKey, StringComparison.Ordinal))
-                continue;
-            if (!_sessions.TryGetValue(key, out var mounted) || !mounted.SyncProcess)
-                continue;
+            // Snapshot keys to allow modifications during iteration.
+            var keys = _sessions.Keys.ToArray();
+            foreach (var key in keys)
+            {
+                if (!includeForeground && string.Equals(key, ISessionManager.ForegroundKey, StringComparison.Ordinal))
+                    continue;
+                if (!_sessions.TryGetValue(key, out var mounted) || !mounted.SyncProcess)
+                    continue;
 
-            mounted.Session.SceneHost.ProcessAll(delta);
+                mounted.Session.SceneHost.ProcessAll(delta);
+            }
+        }
+        finally
+        {
+            ExitSessionOperation();
         }
     }
 
     /// <inheritdoc />
     public void KillPendingAllSessions()
     {
-        var keys = _sessions.Keys.ToArray();
-        foreach (var key in keys)
+        EnterSessionOperation();
+        try
         {
-            if (!_sessions.TryGetValue(key, out var mounted))
-                continue;
+            var keys = _sessions.Keys.ToArray();
+            foreach (var key in keys)
+            {
+                if (!_sessions.TryGetValue(key, out var mounted))
+                    continue;
 
-            mounted.Session.KillPending();
+                mounted.Session.KillPending();
+            }
+        }
+        finally
+        {
+            ExitSessionOperation();
         }
     }
 
