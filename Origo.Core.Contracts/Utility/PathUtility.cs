@@ -22,10 +22,11 @@ public static class PathUtility
     public static string NormalizeDirectoryPath(string path)
     {
         ArgumentNullException.ThrowIfNull(path);
-        // A scheme root ("user://") must keep its double slash; trimming
-        // would destroy it into the invalid "user:" prefix.
-        if (path.EndsWith("://", StringComparison.Ordinal))
-            return path;
+        // A scheme root ("user://", "user:///", "res:////") must normalize to
+        // the scheme marker; trimming would destroy it into the invalid
+        // "user:" prefix.
+        if (TryGetSchemeRoot(path, out var schemeRoot))
+            return schemeRoot;
 
         var trimmed = path.TrimEnd('/', '\\');
         if (trimmed.Length == 0)
@@ -78,11 +79,30 @@ public static class PathUtility
         if (basePath.Length == 0)
             return relativePath;
 
-        // A scheme root ("user://") must keep its double slash; trimming it
-        // would produce the invalid "user:/" prefix.
-        if (basePath.EndsWith("://", StringComparison.Ordinal))
-            return $"{basePath}{relativePath.TrimStart('/')}";
+        // A scheme root ("user://", "user:///") must keep its double slash;
+        // trimming it would produce the invalid "user:/" prefix.
+        if (TryGetSchemeRoot(basePath, out var schemeRoot))
+            return $"{schemeRoot}{relativePath.TrimStart('/')}";
         return $"{basePath.TrimEnd('/', '\\')}/{relativePath.TrimStart('/')}";
+    }
+
+    /// <summary>
+    ///     Recognizes a scheme root: a non-empty scheme, "://", and only
+    ///     separators after it. Extra separators are normalized away.
+    /// </summary>
+    private static bool TryGetSchemeRoot(string path, out string root)
+    {
+        root = string.Empty;
+        var schemeIndex = path.IndexOf("://", StringComparison.Ordinal);
+        if (schemeIndex <= 0)
+            return false;
+        for (var index = schemeIndex + 3; index < path.Length; index++)
+        {
+            if (path[index] is not ('/' or '\\'))
+                return false;
+        }
+        root = path[..(schemeIndex + 3)];
+        return true;
     }
 
     /// <summary>Gets the parent directory of the given path.</summary>

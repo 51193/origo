@@ -30,8 +30,8 @@ Behavior of `PathUtility` static path operations and `ValueInference` string-to-
 | `GetParentDirectory_NullOrEmpty_ReturnsEmpty` | null/empty input returns string.Empty |
 | `GetParentDirectory_SingleSegment_ReturnsEmpty` | Single-segment path with no parent returns string.Empty |
 | `NormalizeDirectoryPath_SchemePath_TrimsTrailingSlash` | `user://dir/` trailing slash trimmed |
-| `NormalizeDirectoryPath_SchemeRoot_IsPreserved` | `user://`/`res://` scheme roots keep double slash |
-| `Combine_SchemeRootBase_KeepsDoubleSlash` | Combining with `user://` root keeps double slash |
+| `NormalizeDirectoryPath_SchemeRoot_IsPreserved` | `user://`/`res://` scheme roots keep double slash; extra separators (`user:///`, `res:////`) normalize to the scheme root |
+| `Combine_SchemeRootBase_KeepsDoubleSlash` | Combining with `user://` or `user:///` root keeps double slash |
 | `GetParentDirectory_SchemeFile_ReturnsSchemeRoot` | File under scheme returns its scheme root (`user://foo.map` → `user://`) |
 | `GetParentDirectory_BackslashPath_ReturnsParent` | Windows backslash path parent extraction (`C:\base\sub` → `C:\base`) |
 
