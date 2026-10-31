@@ -283,7 +283,7 @@ ctx.Save.RegisterSaveMetaContributor((context) => new Dictionary<string, string>
 
 ## Path Policy
 
-`ISavePathPolicy` controls directory and file layout, and is replaceable to suit different platforms:
+`ISavePathPolicy` controls directory and file layout. It is a **Kernel-only extension point**: it is not part of the published shell API, no shell/adapter host option accepts a custom policy, and package consumers use the default layout. The shape below documents the repository implementation contract; do not depend on it from package-only game code.
 
 ```csharp
 public interface ISavePathPolicy

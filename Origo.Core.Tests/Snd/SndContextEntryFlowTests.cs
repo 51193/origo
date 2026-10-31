@@ -51,6 +51,50 @@ public class SndContextEntryFlowTests
     }
 
     [Fact]
+    public void RequestLoadMainMenuEntrySave_UsesConfiguredMainMenuLevelId()
+    {
+        var logger = new TestLogger();
+        var host = new TestSndSceneHost();
+        var runtime = TestFactory.CreateRuntime(logger, host);
+        var fs = new TestMemoryFileSystem();
+        fs.SeedFile(
+            "res://entry/entry.json",
+            """
+            {
+              "levels": {
+                "title": { "snd_scene": "res://entry/title_scene.json" }
+              },
+              "main_menu_level": "title"
+            }
+            """);
+        fs.SeedFile(
+            "res://entry/title_scene.json",
+            """
+            [
+              {
+                "name": "TitleNpc",
+                "node": { "pairs": {} },
+                "strategy": { "lifecycle_indices": [] },
+                "data": { "pairs": {} }
+              }
+            ]
+            """);
+
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root",
+            "res://initial", "res://entry/entry.json"));
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.FlushFrame();
+
+        var foreground = ctx.Runtime.SessionManager.ForegroundSession;
+        Assert.NotNull(foreground);
+        Assert.Equal("title", foreground.LevelId);
+        Assert.NotNull(host.FindByName("TitleNpc"));
+    }
+
+    [Fact]
     public void RequestLoadMainMenuEntrySave_ClearsPreviousForegroundEntities()
     {
         var logger = new TestLogger();

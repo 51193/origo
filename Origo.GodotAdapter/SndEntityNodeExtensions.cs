@@ -29,9 +29,11 @@ public static class SndEntityNodeExtensions
     /// <summary>
     ///     Godot adapter layer convenience method: resolves the node registered
     ///     under the given logical name in the entity's SND node registry and
-    ///     casts it to the specified type. Throws when no node is registered
-    ///     under that name (the SND node registry lookup is strict); only
-    ///     works when the entity is a <see cref="GodotSndEntity" />.
+    ///     casts it to the specified type. Strategies receive the inner SND
+    ///     entity, so the registry lookup is the authoritative path; the adapter
+    ///     wrapper is accepted as well. Returns null when the registered handle
+    ///     is not a Godot handle (for example in a background session), matching
+    ///     <see cref="GetNativeNode" />.
     /// </summary>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="entity" /> is null.</exception>
     public static TNode? GetNodeFromSnd<TNode>(this ISndEntity entity, string name) where TNode : Node
@@ -40,6 +42,7 @@ public static class SndEntityNodeExtensions
 
         if (entity is GodotSndEntity godotEntity)
             return godotEntity.GetNodeFromSnd<TNode>(name);
-        return null;
+
+        return entity.GetNode(name).GetNativeNode() as TNode;
     }
 }

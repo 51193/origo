@@ -65,7 +65,7 @@ An internal Godot wrapper for Core `SndEntity`:
 ### SndEntityNodeExtensions
 
 - **GetNativeNode(this INodeHandle)** → safely converts `INodeHandle` to a native `Godot.Node`. Only works when the handle is a `GodotNodeHandle`; a null handle throws `ArgumentNullException`, and a non-Godot handle returns null
-- **GetNodeFromSnd<TNode>(this ISndEntity, string)** → resolves a node by logical name in the entity's SND node registry and casts to the specified type; an unregistered name throws `InvalidOperationException`, a null entity throws `ArgumentNullException`, a non-Godot handle or type mismatch returns null. Only works when the entity is a `GodotSndEntity`
+- **GetNodeFromSnd<TNode>(this ISndEntity, string)** → resolves a node by logical name in the entity's SND node registry and casts to the specified type; an unregistered name throws `InvalidOperationException`, a null entity throws `ArgumentNullException`, a non-Godot handle or type mismatch returns null. Works for the strategy-facing inner `SndEntity` (registry lookup through its `INodeHandle`) and for the `GodotSndEntity` wrapper.
 
 ## Design Decisions
 

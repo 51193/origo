@@ -198,6 +198,7 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | Test Method | Behavior Verified | Documentation Source |
 |-------------|------------------|---------------------|
 | `RequestLoadMainMenuEntrySave_MountsForegroundAndSpawnsEntryEntities` | After loading the entry save, ProgressBlackboard is non-null, ForegroundSession is non-null, and entry entities are findable in the host | ISndLifecycleOperations |
+| `RequestLoadMainMenuEntrySave_UsesConfiguredMainMenuLevelId` | A non-default `main_menu_level` is used as the mounted foreground session level ID, not the hard-coded default | ISndLifecycleOperations |
 | `RequestLoadMainMenuEntrySave_ClearsPreviousForegroundEntities` | Entities leftover from before loading the entry save are cleared after load | ISndLifecycleOperations |
 
 ## SndContextBootstrapTests Details

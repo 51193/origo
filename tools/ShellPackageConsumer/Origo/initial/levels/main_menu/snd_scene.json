@@ -1,1 +1,23 @@
-[]
+[
+  {
+    "name": "demo_player",
+    "node": {
+      "pairs": {
+        "main": "res://Origo/demo/DemoEntity.tscn"
+      }
+    },
+    "strategy": {
+      "lifecycle_indices": [
+        "demo.tick"
+      ]
+    },
+    "data": {
+      "pairs": {
+        "hp": {
+          "type": "Int32",
+          "data": 42
+        }
+      }
+    }
+  }
+]

@@ -13,7 +13,7 @@ Verifies the parts of the adapter-layer SND entity system that **do not require 
 |------|-----------|
 | `Snd/SndEntityCollectionTests.cs` | Full entity collection capability: create/find/remove/kill marking, `RecoverFromMetaList` batch recovery with partial-failure rollback, `RemoveAllEntities`, frame processing `ProcessAll`, meta list building, `OwningSession` binding |
 | `Snd/TypedDataAssemblyLoadTests.cs` | Forces assembly loading by referencing a public GodotAdapter type; verifies the generated `[ModuleInitializer]` completes adapter kind registration |
-| `SndEntityNodeExtensionsTests.cs` | `GetNodeFromSnd<T>()` / `GetNativeNode()` contracts: non-Godot entity/handle returns null, null receiver throws `ArgumentNullException`, node handle extraction |
+| `SndEntityNodeExtensionsTests.cs` | `GetNodeFromSnd<T>()` / `GetNativeNode()` contracts: non-Godot handle returns null, unregistered nodes throw, null receiver throws `ArgumentNullException`, node handle extraction |
 | `Snd/GodotPackedSceneNodeFactoryTests.cs` | `GodotPackedSceneNodeFactory` constructor rejects a null parent (pure .NET executable; does not invoke Godot APIs) |
 
 ## SndEntityCollectionTests Details
@@ -73,7 +73,7 @@ Verifies the parts of the adapter-layer SND entity system that **do not require 
 |---------|-----------|---------|
 | `GetNativeNode_NonGodotHandle_ReturnsNull` | `GetNativeNode()` returns null when the node handle is not a Godot node handle (graceful contract deviation, no crash) | Origo.GodotAdapter/Snd |
 | `GetNativeNode_NullHandle_Throws` | `GetNativeNode()` throws `ArgumentNullException` for a null receiver (fail-fast) | Origo.GodotAdapter/Snd |
-| `GetNodeFromSnd_NonGodotEntity_ReturnsNull` | `GetNodeFromSnd<T>()` returns null when the entity is not a Godot entity | Origo.GodotAdapter/Snd |
+| `GetNodeFromSnd_NonGodotEntityWithoutRegisteredNode_Throws` | `GetNodeFromSnd<T>()` honors the strict node registry and throws when a non-Godot entity has no node registered | Origo.GodotAdapter/Snd |
 | `GetNodeFromSnd_NullEntity_Throws` | `GetNodeFromSnd<T>()` throws `ArgumentNullException` for a null receiver (fail-fast) | Origo.GodotAdapter/Snd |
 
 ## GodotPackedSceneNodeFactoryTests Details

@@ -5,7 +5,7 @@
 
 ## Overview
 
-`StrategyTestScenario` is a strategy isolation testing framework provided by the Core layer. Without starting a full runtime, you can test all lifecycle behaviors of a single strategy in isolation within a unit test.
+`StrategyTestScenario` is a repository test-support facility for strategy isolation testing (`Origo.Core.Tests/TestSupport`). It is not part of the published shell packages, so external package consumers should test their strategies through their own test harness or the package-consumer integration path described in [Shell Package Consumer](shell-package-consumer.en.md). Within this repository, it tests all lifecycle behaviors of a single strategy without starting a full runtime.
 
 ## EntityStrategy Testing
 

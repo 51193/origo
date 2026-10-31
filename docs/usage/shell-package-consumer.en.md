@@ -10,7 +10,7 @@ This smoke is the **package adoption contract** for external projects. It
 answers: can a fresh project restore the published NuGet packages, get the
 expected dependency/assets graph, compile against the public shell surface,
 start the supported entry point, and stay isolated from kernel compile assets?
-It deliberately uses minimal startup markers, not behavioral assertions.
+It uses startup markers and minimal public-surface checks, not engine-behavior assertions; the Core/Adapter fixture additionally exercises a demo-like authored level, custom strategy discovery, node mapping, and save/load so the documented demo path is verified.
 
 Behavior inside a real engine is owned by
 [Origo.GodotAdapter.Integration.Tests](../Origo.GodotAdapter.Integration.Tests/README.en.md):
@@ -54,7 +54,7 @@ The consumer fixtures are not part of `Origo.sln` and contain no `ProjectReferen
 10. Copies `tools/ConsoleBridgePackageConsumer` to a separate temporary directory, references only the `Origo.ConsoleBridge` package, and restores/builds it with `-warnaserror`; `project.assets.json` must resolve `Origo.ConsoleBridge` and `Origo.Core.Contracts`, must not resolve `Origo.Core` or `Origo.Core.Kernel`, and the sources must contain no `<ProjectReference>`. The build output must not contain Core shell or kernel runtime assemblies.
 11. Runs the ConsoleBridge consumer: it connects a real `TcpClient` over loopback, verifies that commands reach `IConsoleInputSource` and that `IConsoleOutputChannel` output arrives back at the client, and prints `CONSOLE_BRIDGE_PACKAGE_CONSUMER_OK`.
 12. Copies `tools/ConsoleBridgePackageConsumer/KernelLeakProbe.cs.template` and builds the ConsoleBridge consumer again; the build must fail with CS0246 because `Origo.Core.Runtime.OrigoRuntime` is unreachable, proving kernel compile assets do not leak through the ConsoleBridge package either.
-13. Uses `scripts/bash/download-godot.sh` to obtain the Godot engine pinned by `Origo.GodotAdapter.csproj` and runs the Core/Adapter fixture headlessly; standard output must contain `SHELL_CONSUMER_STARTUP_OK kernel=True foreground=True`, and the process must exit with code 0.
+13. Uses `scripts/bash/download-godot.sh` to obtain the Godot engine pinned by `Origo.GodotAdapter.csproj` and runs the Core/Adapter fixture headlessly. The fixture boots through `OrigoDefaultEntry`, discovers its consumer-authored `DemoStrategy`, resolves the authored entity/node from the strategy-facing entity, verifies the authored `hp` and hook data, saves/loads the slot, calls `Context.Shutdown()`, and prints `DEMO_CONSUMER_OK` plus `SHELL_CONSUMER_STARTUP_OK kernel=True foreground=True`; the process must exit 0.
 
 ## Consumer Entry
 
@@ -64,9 +64,10 @@ The consumer fixtures are not part of `Origo.sln` and contain no `ProjectReferen
 
 - Sets entry config, maps, initial save root, and save root before `base._Ready()`;
 - Calls `default(TypedData).TryGetString(...)` to prove the Contracts package carries generated members;
-- Drives the public startup pipeline through `Runtime.DriveFrame`;
-- Checks that `Origo.Core.Kernel` loaded as a runtime assembly and that a foreground session exists;
-- Calls `Context.Save.ListSaves()`, prints the startup marker, and exits.
+- Lets the default auto-discovery register the consumer-authored `DemoStrategy`, drives the public startup pipeline through `Runtime.DriveFrame`, and verifies the configured non-default `main_menu_level` session, the authored entity/node, and the demo strategy data;
+- Resolves the authored node inside `DemoStrategy` through `entity.GetNodeFromSnd<Node2D>("main")` from `Origo.GodotAdapter`, proving the strategy-facing inner entity path;
+- Saves the state through `Context.Save.RequestSaveGame`, mutates data, loads it back through `RequestLoadGame`, and verifies the restored entity and hook data;
+- Calls `Context.Shutdown()`, prints `DEMO_CONSUMER_OK` and the startup marker, and exits.
 
 `tools/ConsoleBridgePackageConsumer/Program.cs` references only the ConsoleBridge package, connects a real `TcpClient` over loopback, verifies command delivery into `IConsoleInputSource` and output delivery through `IConsoleOutputChannel`, and prints `CONSOLE_BRIDGE_PACKAGE_CONSUMER_OK`.
 
@@ -74,8 +75,48 @@ The consumer fixtures are not part of `Origo.sln` and contain no `ProjectReferen
 
 - The normal CI `godot-integration-tests` job runs this script after the Godot integration tests; local `scripts/bash/ci.sh` runs it last as well. The Windows PowerShell mirror is `scripts/powershell/package-consumer-smoke.ps1`.
 - Consumer restore/build uses a run-owned temporary NuGet package cache, and the script asserts that `project.assets.json` points at it; an ambient global package with the same Origo id/version cannot bypass the local feed and make the smoke validate stale artifacts.
-- A missing package, a release package validator failure, a missing analyzer asset, a `ProjectReference` in any consumer, unexpected adapter, ConsoleBridge, or GodotSharp resolution in the Core-only consumer, NuGet or compiler warnings, compilable kernel types, a missing Core-consumer kernel runtime assembly, a failed Core-only host startup, deferred frame flush, or missing `CORE_CONSUMER_STARTUP_OK`, unexpected Core/Kernel resolution or assemblies in the ConsoleBridge consumer, a failed ConsoleBridge round-trip or missing `CONSOLE_BRIDGE_PACKAGE_CONSUMER_OK`, a missing `unzip` while the engine cache is cold, or a failed Godot startup or missing `SHELL_CONSUMER_STARTUP_OK` all fail the job.
+- A missing package, a release package validator failure, a missing analyzer asset, a `ProjectReference` in any consumer, unexpected adapter, ConsoleBridge, or GodotSharp resolution in the Core-only consumer, NuGet or compiler warnings, compilable kernel types, a missing Core-consumer kernel runtime assembly, a failed Core-only host startup, deferred frame flush, or missing `CORE_CONSUMER_STARTUP_OK`, unexpected Core/Kernel resolution or assemblies in the ConsoleBridge consumer, a failed ConsoleBridge round-trip or missing `CONSOLE_BRIDGE_PACKAGE_CONSUMER_OK`, a missing `unzip` while the engine cache is cold, or a failed Godot startup, missing `DEMO_CONSUMER_OK` (authored level/strategy/node/save/load scenario), or missing `SHELL_CONSUMER_STARTUP_OK` all fail the job.
 - The Godot SDK pin is parsed by `scripts/bash/download-godot.sh` alone, with the adapter csproj as the authority; the smoke and the integration tests compare their pins against it, so a Godot SDK upgrade must update the adapter and the consumer fixtures in the same change.
+
+## Minimal Demo Capability Path
+
+The Core/Adapter fixture is the reference for a package-only demo:
+
+1. **Entry config** — `Origo/entry/entry.json` declares `levels` and the
+   `main_menu_level`; the configured ID is the mounted foreground session ID.
+2. **Authored level** — the level's `snd_scene.json` is an entity metadata
+   array. Each entity names its Godot scene under `node.pairs`, its lifecycle
+   strategy IDs under `strategy.lifecycle_indices`, and its initial data under
+   `data.pairs` (for example `hp: Int32 = 100`).
+3. **Consumer strategy** — a `sealed`, stateless `[StrategyIndex]` strategy in
+   the consumer assembly is discovered at bootstrap (or registered manually via
+   `ConfigureStrategies` with `AutoDiscoverStrategies = false`). Hooks such as
+   `AfterSpawn`, `AfterLoad`, and `BeforeSave` run through Core.
+4. **Presentation access** — from a strategy, use
+   `entity.GetNode("main").GetNativeNode()` or
+   `entity.GetNodeFromSnd<Node2D>("main")` (namespace `Origo.GodotAdapter`);
+   null-check because background sessions have no Godot handle.
+5. **Save/load** — `Context.Save.RequestSaveGame(id)`, pump frames until
+   `Context.Deferred.IsPersistenceIdle`, `Context.Save.ListSaves()`, mutate
+   data, then `Context.Save.RequestLoadGame(id)` and pump again. Restored
+   entities re-run `AfterLoad`; the foreground session may be replaced.
+
+The fixture keeps these checks minimal: it verifies adoption and the public
+surface, while full behavior coverage stays in the integration and unit suites.
+A complete runnable game demo is still tracked separately (#33).
+
+### Secondary Levels and New Games
+
+`entry.json` resolves only the configured main-menu level at startup. For a
+second authored level, call `Context.Save.RequestSwitchForegroundLevel(levelId)`
+and pump the frame until `IsPersistenceIdle`; when that level has no current
+payload the switch mounts an empty session, so load the level's entity file
+through `Context.Template.LoadMetaListFromFile(path)` and spawn it through
+`ForegroundSession.SpawnMany(...)`. Alternatively start a new game from a
+normal save slot (`RequestSaveGame`) rather than the packaged initial-save path,
+which expects the repository's `save_000` / `default` layout. These are the
+supported public composition points while first-class data-driven level loading
+remains a tracked capability (#44/#33).
 
 ## Consuming a release from a consumer project
 

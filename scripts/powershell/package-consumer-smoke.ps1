@@ -370,6 +370,11 @@ try {
         Write-Host $startup.Output
         throw 'Consumer startup reported SHELL_CONSUMER_STARTUP_FAILED.'
     }
+    if ($startup.Output -notmatch 'DEMO_CONSUMER_OK') {
+        Write-Host $startup.Output
+        throw 'Consumer startup did not complete the authored demo capability scenario.'
+    }
+    Write-Host 'DEMO_CONSUMER_OK'
     Write-Host 'SHELL_CONSUMER_STARTUP_OK'
     Write-Host ''
     Write-Host 'Package consumer smoke: OK'
