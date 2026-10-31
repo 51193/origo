@@ -50,6 +50,7 @@ The framework does not require game code to duplicate its runtime wiring.
 | Repository agent configuration | [agents/README](agents/README.en.md) |
 | Documentation maintenance | [META](META.en.md) |
 | Release and Changelog | [release-process](release-process.en.md) |
+| Repository maintenance changes | [maintenance-log](maintenance-log.en.md) |
 | Performance baselines | [benchmarks/README](benchmarks/README.en.md) |
 | Generated shell contract API | [generated/contract-api](generated/contract-api.en.md) |
 | Generated documentation conventions | [generated/README](generated/README.en.md) |

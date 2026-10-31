@@ -225,6 +225,7 @@ docs/                            # Documentation root (inside the origo reposito
 ├── README.en.md                # Top-level English index
 ├── META.en.md                  # Maintenance meta-instructions
 ├── release-process.en.md       # Formal releases and Changelog rules
+├── maintenance-log.en.md       # Rolling record of repository-only maintenance changes
 ├── review-process.en.md        # Review rounds, PR units, merge protocol
 ├── generated/                  # Generated, committed signature references
 ├── usage/                      # System usage documentation

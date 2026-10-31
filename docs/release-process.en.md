@@ -15,6 +15,17 @@ and pull-request units and review rules are in
 `CHANGELOG.md` follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)
 and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+The Changelog records changes that a package consumer, game code, saved data, or
+a released artifact consumer can observe. Published release status (pre-release
+or Latest), artifact names/sets, and artifact contents are user-observable and
+stay in this Changelog. Repository-only maintenance changes (CI workflow
+mechanics, scripts, provenance/validators/preflight checks that do not change the
+published result, documentation generation, and contributor workflow) are
+recorded in [maintenance-log.en.md](maintenance-log.en.md); they do not belong
+in the Changelog even when they are large or breaking for contributors. The
+maintenance log is rolling: release preparation does not clear, tag, or archive
+it.
+
 | Category | Meaning |
 |----------|---------|
 | `Added` | New features |
@@ -24,9 +35,11 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 | `Fixed` | Bug fixes |
 | `Security` | Security improvements |
 
-**Breaking changes do not get a separate category**: classify them under
-`Changed` (behavior change) or `Removed` (API removal), prefix the entry with
-`BREAKING:`, and document the migration path in the body.
+**Breaking changes do not get a separate category**: for user-observable
+changes, classify them under `Changed` (behavior change) or `Removed` (API
+removal), prefix the entry with `BREAKING:`, and document the migration path in
+the body. Contributor-only breaking changes go to the maintenance log with the
+same `BREAKING:` prefix.
 
 ### Baseline and Versions
 
@@ -59,8 +72,11 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 1. Find the last formal release tag.
 2. Compare that tag with the current HEAD.
-3. Filter out intra-version churn and categorize significant user-visible changes.
-4. Write the entries into the matching categories under `[Unreleased]`.
+3. Filter out intra-version churn and repository-only maintenance changes;
+   route the latter to `docs/maintenance-log.en.md`.
+4. Categorize significant user-visible changes and write them into the matching
+   categories under `[Unreleased]`; do not describe internal implementation
+   details that no consumer can observe.
 
 ## Weekly Snapshot Builds
 
@@ -214,6 +230,7 @@ documents the package-only restore path that the CI smoke test verifies.
 ## Related Files
 
 - [CHANGELOG.md](../CHANGELOG.md)
+- [Maintenance Log](maintenance-log.en.md)
 - [scripts/bash/verify-release.sh](../scripts/bash/verify-release.sh)
 - [scripts/bash/release-check.sh](../scripts/bash/release-check.sh)
 - [scripts/bash/validate-release-source.sh](../scripts/bash/validate-release-source.sh)
