@@ -24,6 +24,7 @@ strategy/observer machinery, and their internal file companions.
 | `SndContextParameters.cs` | Construction parameters for `SndContext`: runtime, I/O gateway, storage wiring, and optional bootstrap configuration (strategy discovery, alias/template maps, custom converters) |
 | `SndDefaults.cs` | `internal` convention values for built-in initial saves and default level IDs, shared between kernel and adapter layers |
 | `SndMappings.cs` | `internal` scene-alias → engine-resource-path and template-alias → `SndMetaData` mappings, attached to `SndWorld` and managed with the runtime lifecycle |
+| `SndShutdownState.cs` | `internal` owner of shutdown terminal/in-progress flags, nested-request consumption, and the shared cleanup-commit/retry transitions used by direct shutdown and workflow teardown |
 | `SndTemplateResolver.cs` | `internal` resolves `SndMetaData` against the loaded template path mapping with in-memory caching |
 | `SndWorld.cs` | Unified SND entry point for upper-layer game code, encapsulating the strategy pool, serialization configuration, and mappings |
 
