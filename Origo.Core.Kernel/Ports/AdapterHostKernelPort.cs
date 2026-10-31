@@ -1,16 +1,13 @@
 #pragma warning disable IDE0130 // Intentional: kernel ports are required to live in the Origo.Core.Kernel.Ports namespace.
 using System;
 using System.Collections.Generic;
-using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Console;
 using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.Abstractions.Scene;
-using Origo.Core.Blackboard;
 using Origo.Core.DataSource;
 using Origo.Core.Runtime;
 using Origo.Core.Runtime.Console;
-using Origo.Core.Save;
 using Origo.Core.Serialization;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Scene;
@@ -49,33 +46,19 @@ internal static class AdapterHostKernelPort
             ?? throw new InvalidOperationException(
                 $"{nameof(OrigoHostOptions)}.{nameof(OrigoHostOptions.FileSystem)} must be supplied for the Godot adapter host.");
 
-        var typeMapping = new TypeStringMapping();
-        var converterRegistry = DataSourceFactory.CreateDefaultRegistry(typeMapping);
-        configureRegistry?.Invoke(typeMapping, converterRegistry);
-
-        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fileSystem, logger: options.Logger);
-        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fileSystem);
-        var pathResolver = DataSourceFactory.CreatePathResolver(fileSystem);
-
-        var systemBlackboard = new PersistentBlackboard(
-            metaAccess,
-            pathResolver,
-            systemBlackboardPath,
-            dataSourceIo,
-            converterRegistry,
-            new Blackboard.Blackboard());
-        systemBlackboard.LoadFromDisk();
+        var services = HostConstruction.CreateServices(options, fileSystem, configureRegistry);
+        var systemBlackboard = HostConstruction.CreateSystemBlackboard(
+            fileSystem,
+            services,
+            systemBlackboardPath);
 
         var consoleInput = options.ConsoleInput ?? new ConsoleInputBuffer();
         var consoleOutputChannel = options.ConsoleOutputChannel ?? new ConsoleOutputChannel();
 
-        var runtime = new OrigoRuntime(
-            options.Meta,
-            options.Logger,
+        var runtime = HostConstruction.CreateRuntime(
+            options,
             sceneHost,
-            typeMapping,
-            converterRegistry,
-            dataSourceIo,
+            services,
             systemBlackboard,
             consoleInput,
             consoleOutputChannel);
@@ -92,9 +75,9 @@ internal static class AdapterHostKernelPort
         return new AdapterRuntimeBundle(
             runtime,
             sceneHost,
-            dataSourceIo,
-            metaAccess,
-            pathResolver,
+            services.DataSourceIo,
+            services.MetaAccess,
+            services.PathResolver,
             consoleInput,
             consoleOutputChannel);
     }
@@ -108,12 +91,14 @@ internal static class AdapterHostKernelPort
         ArgumentNullException.ThrowIfNull(bundle);
         ArgumentNullException.ThrowIfNull(options);
 
-        var context = new SndContext(HostContextParameters.Create(
+        var context = HostConstruction.CreateContext(
             bundle.Runtime,
-            bundle.DataSourceIo,
-            bundle.MetaAccess,
-            bundle.PathResolver,
-            options));
+            HostContextParameters.Create(
+                bundle.Runtime,
+                bundle.DataSourceIo,
+                bundle.MetaAccess,
+                bundle.PathResolver,
+                options));
 
         if (bundle.SceneHost is not ISndContextAttachableSceneHost attachableSceneHost)
         {

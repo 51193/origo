@@ -32,6 +32,21 @@ public class OrigoHostTests
     }
 
     [Fact]
+    public void HostConstruction_WithoutPersistence_UsesInMemorySystemBlackboard()
+    {
+        var options = new OrigoHostOptions
+        {
+            Meta = new OrigoMeta("Tests", "1.0.0", "test"),
+            AutoDiscoverStrategies = false,
+        };
+        var services = HostConstruction.CreateServices(options, HostUnavailableFileSystem.Instance);
+
+        var blackboard = HostConstruction.CreateSystemBlackboard(null, services, null);
+
+        Assert.IsType<Origo.Core.Blackboard.Blackboard>(blackboard);
+    }
+
+    [Fact]
     public void OrigoHost_ShouldCreateStableRuntimeAndRunBackgroundWorkflow()
     {
         var fileSystem = new MemoryFileSystem();
