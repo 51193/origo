@@ -102,6 +102,8 @@ public class PathUtilityTests
     {
         Assert.Equal("user://", PathUtility.NormalizeDirectoryPath("user://"));
         Assert.Equal("res://", PathUtility.NormalizeDirectoryPath("res://"));
+        Assert.Equal("user://", PathUtility.NormalizeDirectoryPath("user:///"));
+        Assert.Equal("res://", PathUtility.NormalizeDirectoryPath("res:////"));
     }
 
     [Fact]
@@ -141,6 +143,7 @@ public class PathUtilityTests
         Assert.Equal("user://x", PathUtility.Combine("user://", "x"));
         Assert.Equal("user://x", PathUtility.Combine("user://", "/x"));
         Assert.Equal("user://dir/x", PathUtility.Combine("user://dir", "x"));
+        Assert.Equal("user://x", PathUtility.Combine("user:///", "x"));
     }
 
     [Fact]
