@@ -8,6 +8,21 @@
 Unlike the unit test project `Origo.GodotAdapter.Tests`, this project uses `Godot.NET.Sdk` and runs in
 `godot --headless` mode, enabling verification of actual behavior of engine-dependent code.
 
+## Scope and Boundary
+
+This suite is the **behavior-in-real-engine contract**. It runs inside a real
+Godot runtime against repository project references and verifies that adapter
+and kernel integration behave correctly (commands, file-system operations,
+entity lifecycle, bootstrap/exit, observers, save/reload).
+
+It does **not** test NuGet packaging or external consumer adoption: package
+restore, dependency/assets graphs, public-package compile isolation, and
+consumer entry point startup are owned by
+[the shell package consumer smoke](../usage/shell-package-consumer.en.md).
+The CI Godot job runs this integration suite first, then the package smoke.
+Keep the responsibilities distinct: a behavior regression belongs here; a
+packaging/adoption regression belongs in the consumer smoke.
+
 ## Test Runner
 
 Integration tests use a custom lightweight runner rather than xUnit:
@@ -34,7 +49,7 @@ Integration tests use a custom lightweight runner rather than xUnit:
 |-----------|------|-------|--------------------------|
 | GodotRuntimeSmokeTests | `Tests/GodotRuntimeSmokeTests.cs` | 5 | Godot runtime smoke (GD.Print, FileAccess/DirAccess static classes, Vector2 type, SceneTree) |
 | PrivateFieldNamingIntegrationTests | `Tests/PrivateFieldNamingIntegrationTests.cs` | 1 | Reflectively scans the integration test assembly itself and verifies private fields follow the repository `_camelCase` convention |
-| GodotFileSystemIntegrationTests | `Tests/GodotFileSystemIntegrationTests.cs` | 5 | `GodotFileSystem` (`res://`/`user://` read/write, directory creation, file enumeration, deletion) |
+| GodotFileSystemIntegrationTests | `Tests/GodotFileSystemIntegrationTests.cs` | 7 | `GodotFileSystem` (`res://`/`user://` read/write, directory creation, file enumeration, rename of files and directories, deletion) |
 | GodotFileOperationsIntegrationTests | `Tests/GodotFileOperationsIntegrationTests.cs` | 8 | `GodotFileOperations` (ReadAllText/WriteAllText/Copy/Delete guards and correctness; nested writes create parent directories) |
 | GodotDirectoryOperationsIntegrationTests | `Tests/GodotDirectoryOperationsIntegrationTests.cs` | 10 | `GodotDirectoryOperations` (Create/Exists/EnumerateFiles/Recursive/EnumerateDirectories/DeleteRecursive, hidden-file enumeration/deletion) |
 | GodotNodeHandleIntegrationTests | `Tests/GodotNodeHandleIntegrationTests.cs` | 8 | `GodotNodeHandle` (Name cache, Free, SetVisible for CanvasItem/Node3D, UnsafeGetNode) |

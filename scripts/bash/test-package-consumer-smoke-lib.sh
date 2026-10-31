@@ -70,4 +70,15 @@ grep -Fq "Origo.Core.Runtime" "$CORE_LEAK_PROBE" \
 grep -Fq "OrigoRuntime" "$CORE_LEAK_PROBE" \
     || FAIL "Core-only kernel leak probe must reference OrigoRuntime."
 
+PS_SMOKE="$ROOT/scripts/powershell/package-consumer-smoke.ps1"
+[[ -f "$PS_SMOKE" ]] || FAIL "PowerShell package-consumer smoke is missing."
+grep -Fq 'tools\CorePackageConsumer' "$PS_SMOKE" \
+    || FAIL "PowerShell smoke must include the Core-only consumer fixture."
+grep -Fq 'OrigoCorePackageConsumer.csproj' "$PS_SMOKE" \
+    || FAIL "PowerShell smoke must restore/build the Core-only consumer."
+grep -Fq 'CORE_CONSUMER_STARTUP_OK' "$PS_SMOKE" \
+    || FAIL "PowerShell smoke must verify the Core-only consumer marker."
+grep -Fq 'Core kernel leak probe' "$PS_SMOKE" \
+    || FAIL "PowerShell smoke must run the Core-only kernel leak probe."
+
 echo "Package consumer smoke lib: OK"

@@ -1,7 +1,7 @@
 # Shell-only package consumer smoke test for Windows.
 # Packs the five shell/kernel packages, validates the package graph, restores
 # the tracked consumer fixtures through PackageReference only, builds them,
-# runs the public ConsoleBridge and Godot entry paths, and checks kernel
+# runs the Core-only, ConsoleBridge, and Godot entry paths, and checks kernel
 # compile-asset isolation.
 
 . (Join-Path $PSScriptRoot 'common.ps1')
@@ -21,6 +21,7 @@ $feed = Join-Path $work 'feed'
 $consumer = Join-Path $work 'consumer'
 $probe = Join-Path $work 'kernel-probe'
 $consoleConsumer = Join-Path $work 'console-consumer'
+$coreConsumer = Join-Path $work 'core-consumer'
 $packages = Join-Path $work 'packages'
 
 function Get-OrigoNuspecInfo {
@@ -220,7 +221,7 @@ function Invoke-OrigoExpectedBuildFailure {
 }
 
 try {
-    New-Item -ItemType Directory -Force -Path $feed, $consumer, $probe, $consoleConsumer, $packages | Out-Null
+    New-Item -ItemType Directory -Force -Path $feed, $consumer, $probe, $consoleConsumer, $coreConsumer, $packages | Out-Null
 
     Write-OrigoHeader 'Shell-only package consumer smoke'
     Write-Host (' package version: ' + $version)
@@ -241,6 +242,7 @@ try {
     Copy-Item -Path (Join-Path $root 'tools\ShellPackageConsumer\*') -Destination $consumer -Recurse -Force
     Copy-Item -Path (Join-Path $root 'tools\ShellPackageConsumer\*') -Destination $probe -Recurse -Force
     Copy-Item -Path (Join-Path $root 'tools\ConsoleBridgePackageConsumer\*') -Destination $consoleConsumer -Recurse -Force
+    Copy-Item -Path (Join-Path $root 'tools\CorePackageConsumer\*') -Destination $coreConsumer -Recurse -Force
 
     $nugetConfig = @"
 <?xml version="1.0" encoding="utf-8"?>
@@ -255,8 +257,9 @@ try {
     [System.IO.File]::WriteAllText((Join-Path $consumer 'nuget.config'), $nugetConfig, (New-Object System.Text.UTF8Encoding($false)))
     Copy-Item -Path (Join-Path $consumer 'nuget.config') -Destination (Join-Path $probe 'nuget.config') -Force
     Copy-Item -Path (Join-Path $consumer 'nuget.config') -Destination (Join-Path $consoleConsumer 'nuget.config') -Force
+    Copy-Item -Path (Join-Path $consumer 'nuget.config') -Destination (Join-Path $coreConsumer 'nuget.config') -Force
 
-    foreach ($fixture in @($consumer, $consoleConsumer)) {
+    foreach ($fixture in @($consumer, $consoleConsumer, $coreConsumer)) {
         $csproj = Get-ChildItem -LiteralPath $fixture -File -Filter '*.csproj' | Select-Object -First 1
         if (Select-String -LiteralPath $csproj.FullName -Pattern '<ProjectReference' -Quiet) {
             throw ('Fixture must not contain a ProjectReference: ' + $csproj.FullName)
@@ -319,6 +322,36 @@ try {
 
     Copy-Item -Path (Join-Path $probe 'KernelLeakProbe.cs.template') -Destination (Join-Path $probe 'KernelLeakProbe.cs') -Force
     Invoke-OrigoExpectedBuildFailure 'OrigoShellPackageConsumer.csproj' $probe 'Shell kernel leak probe'
+
+    Invoke-OrigoDotnet -Arguments @('restore', 'OrigoCorePackageConsumer.csproj', $versionArg) -WorkingDirectory $coreConsumer
+    $coreAssets = Get-OrigoAssets $coreConsumer
+    if ($null -eq $coreAssets) { throw 'Core-only consumer restore did not produce project.assets.json.' }
+    if (-not (Test-OrigoAssetsCache $coreAssets.FullName $packages)) {
+        throw 'Core-only consumer restore did not use the isolated NuGet package cache.'
+    }
+    foreach ($packageId in @('Origo.Core', 'Origo.Core.Contracts', 'Origo.Core.Kernel')) {
+        if (-not (Test-OrigoAssetsPackage $coreAssets.FullName $packageId)) {
+            throw ('Core-only consumer restore did not resolve ' + $packageId + '.')
+        }
+    }
+    foreach ($packageId in @('Origo.GodotAdapter', 'Origo.ConsoleBridge', 'GodotSharp')) {
+        if (Test-OrigoAssetsPackage $coreAssets.FullName $packageId) {
+            throw ('Core-only consumer unexpectedly resolved ' + $packageId + '.')
+        }
+    }
+    Invoke-OrigoDotnet -Arguments @('build', 'OrigoCorePackageConsumer.csproj', '--no-restore', '-warnaserror', $versionArg) -WorkingDirectory $coreConsumer
+    $coreRun = Invoke-OrigoDotnet -Arguments @('run', '--project', 'OrigoCorePackageConsumer.csproj', '--no-build', '--no-restore') -WorkingDirectory $coreConsumer -AllowFailure -PassThru
+    if ($coreRun.ExitCode -ne 0) {
+        Write-Host $coreRun.Output
+        throw ('Core-only consumer exited with ' + $coreRun.ExitCode + '.')
+    }
+    if ($coreRun.Output -notmatch 'CORE_CONSUMER_STARTUP_OK') {
+        Write-Host $coreRun.Output
+        throw 'Core-only consumer did not print CORE_CONSUMER_STARTUP_OK.'
+    }
+    Write-Host 'CORE_CONSUMER_STARTUP_OK'
+    Copy-Item -Path (Join-Path $coreConsumer 'KernelLeakProbe.cs.template') -Destination (Join-Path $coreConsumer 'KernelLeakProbe.cs') -Force
+    Invoke-OrigoExpectedBuildFailure 'OrigoCorePackageConsumer.csproj' $coreConsumer 'Core kernel leak probe'
 
     $godot = Get-OrigoGodotBinary
     Set-OrigoGodotUserData
