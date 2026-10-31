@@ -60,6 +60,37 @@ public class GodotFileSystemIntegrationTests
         _fs.DeleteDirectory(dir);
     }
 
+    [IntegrationTest(Description = "Rename a user:// file and verify the destination content")]
+    public void Rename_UserDir_FileMoves()
+    {
+        var source = "user://integration_test_rename_source.txt";
+        var destination = "user://integration_test_rename_target.txt";
+        _fs.WriteAllText(source, "renamed", overwrite: true);
+
+        _fs.Rename(source, destination);
+
+        IntegrationTestRunner.Assert(!_fs.Exists(source), $"Source '{source}' should not exist after rename.");
+        IntegrationTestRunner.Assert(_fs.Exists(destination), $"Destination '{destination}' should exist after rename.");
+        IntegrationTestRunner.AssertEqual("renamed", _fs.ReadAllText(destination), nameof(destination));
+        _fs.Delete(destination);
+    }
+
+    [IntegrationTest(Description = "Rename a user:// directory and verify its contents moved")]
+    public void Rename_UserDir_DirectoryMoves()
+    {
+        var source = "user://integration_test_rename_dir_source";
+        var destination = "user://integration_test_rename_dir_target";
+        _fs.CreateDirectory(source);
+        _fs.WriteAllText(_fs.CombinePath(source, "child.txt"), "child", overwrite: true);
+
+        _fs.Rename(source, destination);
+
+        IntegrationTestRunner.Assert(!_fs.DirectoryExists(source), $"Source '{source}' should not exist after rename.");
+        IntegrationTestRunner.Assert(_fs.DirectoryExists(destination), $"Destination '{destination}' should exist after rename.");
+        IntegrationTestRunner.AssertEqual("child", _fs.ReadAllText(_fs.CombinePath(destination, "child.txt")), nameof(destination));
+        _fs.DeleteDirectory(destination);
+    }
+
     [IntegrationTest(Description = "Delete a file and verify it no longer exists")]
     public void DeleteFile_UserDir_Removed()
     {

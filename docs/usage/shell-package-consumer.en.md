@@ -4,6 +4,27 @@
 
 `scripts/bash/package-consumer-smoke.sh` verifies three fresh consumers in isolated temporary directories with a run-owned temporary NuGet package cache: a Core-only console consumer that restores only the `Origo.Core` package and starts `OrigoHost` without a Godot engine, one that restores only the `Origo.Core` and `Origo.GodotAdapter` packages and starts through a real Godot `Node` entry, and one that restores only `Origo.ConsoleBridge` and completes a command/output round-trip through the public bridge path. None contains an Origo project reference or test helper.
 
+## Scope and Boundary
+
+This smoke is the **package adoption contract** for external projects. It
+answers: can a fresh project restore the published NuGet packages, get the
+expected dependency/assets graph, compile against the public shell surface,
+start the supported entry point, and stay isolated from kernel compile assets?
+It deliberately uses minimal startup markers, not behavioral assertions.
+
+Behavior inside a real engine is owned by
+[Origo.GodotAdapter.Integration.Tests](../Origo.GodotAdapter.Integration.Tests/README.en.md):
+that suite runs against repository project references and verifies command,
+file-system, lifecycle, bootstrap, and save/restore behavior. The CI Godot job
+runs the integration suite first and this smoke second; a failure here is a
+packaging/consumer-adoption failure, while a failure there is a behavior
+failure. Keep the two boundaries separate; do not grow this smoke into a
+behavior suite and do not use the integration suite to validate packaging.
+
+`scripts/bash/package-consumer-smoke.sh` is the Linux/CI implementation.
+`scripts/powershell/package-consumer-smoke.ps1` mirrors the same three
+consumers (Core-only, Core+Adapter/Godot, ConsoleBridge) for Windows.
+
 ## Version Pins
 
 | Item | Value | Authority |
@@ -51,7 +72,7 @@ The consumer fixtures are not part of `Origo.sln` and contain no `ProjectReferen
 
 ## CI and Failure Semantics
 
-- The normal CI `godot-integration-tests` job runs this script after the Godot integration tests; local `scripts/bash/ci.sh` runs it last as well.
+- The normal CI `godot-integration-tests` job runs this script after the Godot integration tests; local `scripts/bash/ci.sh` runs it last as well. The Windows PowerShell mirror is `scripts/powershell/package-consumer-smoke.ps1`.
 - Consumer restore/build uses a run-owned temporary NuGet package cache, and the script asserts that `project.assets.json` points at it; an ambient global package with the same Origo id/version cannot bypass the local feed and make the smoke validate stale artifacts.
 - A missing package, a release package validator failure, a missing analyzer asset, a `ProjectReference` in any consumer, unexpected adapter, ConsoleBridge, or GodotSharp resolution in the Core-only consumer, NuGet or compiler warnings, compilable kernel types, a missing Core-consumer kernel runtime assembly, a failed Core-only host startup, deferred frame flush, or missing `CORE_CONSUMER_STARTUP_OK`, unexpected Core/Kernel resolution or assemblies in the ConsoleBridge consumer, a failed ConsoleBridge round-trip or missing `CONSOLE_BRIDGE_PACKAGE_CONSUMER_OK`, a missing `unzip` while the engine cache is cold, or a failed Godot startup or missing `SHELL_CONSUMER_STARTUP_OK` all fail the job.
 - The Godot SDK pin is parsed by `scripts/bash/download-godot.sh` alone, with the adapter csproj as the authority; the smoke and the integration tests compare their pins against it, so a Godot SDK upgrade must update the adapter and the consumer fixtures in the same change.

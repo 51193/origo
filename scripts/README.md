@@ -69,8 +69,8 @@ Rules:
 | `format.sh` | `dotnet format --verify-no-changes` |
 | `api-inventory.sh` | Shell API inventory and previous-release comparison |
 | `benchmark.sh` | Benchmark tests and baseline comparison |
-| `godot-test.sh` | Godot headless integration tests |
-| `package-consumer-smoke.sh` | Packed-package consumer restore/build/startup smoke |
+| `godot-test.sh` | Godot headless integration behavior tests (not package adoption) |
+| `package-consumer-smoke.sh` | Packed-package consumer adoption smoke (not behavior) |
 | `lint-scripts.sh` | ShellCheck, Python syntax, workflow YAML, script self-tests |
 | `lint-commits.sh` | Conventional Commit message lint |
 | `install-dotnet.sh` | Install the `global.json` SDK |
@@ -149,8 +149,8 @@ standalone platform entry points.
 | `format.ps1` | `dotnet format --verify-no-changes` |
 | `api-inventory.ps1` | Shell API inventory and previous-release comparison |
 | `benchmark.ps1` | Benchmark tests and baseline comparison |
-| `godot-test.ps1` | Godot headless integration tests |
-| `package-consumer-smoke.ps1` | Packed-package consumer restore/build/startup smoke |
+| `godot-test.ps1` | Godot headless integration behavior tests (not package adoption) |
+| `package-consumer-smoke.ps1` | Packed-package consumer adoption smoke (not behavior) |
 | `lint-scripts.ps1` | PowerShell parse check and Python guard scripts |
 | `lint-commits.ps1` | Conventional Commit message lint |
 | `docs.ps1` | Generate or validate committed documentation artifacts |
