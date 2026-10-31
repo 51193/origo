@@ -10,5 +10,4 @@ internal static class SndDefaults
 
     public const string InitialLevelId = "default";
 
-    public const string MainMenuLevelId = "main_menu";
 }

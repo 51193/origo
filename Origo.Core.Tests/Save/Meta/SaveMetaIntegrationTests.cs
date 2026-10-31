@@ -15,12 +15,12 @@ using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Xunit;
 
-using static Origo.Core.Snd.SndDefaults;
-
 namespace Origo.Core.Tests;
 
 public class SaveMetaContributorRegistrationTests
 {
+    private const string MainMenuLevelId = "main_menu";
+
     [Fact]
     public void RegisterSaveMetaContributor_WithISaveMetaContributor_ContributesToSavePayload()
     {
