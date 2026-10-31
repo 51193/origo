@@ -36,6 +36,12 @@ push), requires exactly one such push, requires the provenance and source-archiv
 validators in order before it, and pins the release action's target_commitish so
 a missing tag can never be created at the default branch.
 
+The ``godot-integration-tests`` prerequisite job is pinned structurally as well:
+deleting the job or a step, changing the checkout ref, caches, tag-layout probe,
+apt packages, or the final Godot command, adding a job/step condition, shell, or
+environment, or adding workflow-level defaults fails the guard. Without that pin
+the release ``needs:`` edge would keep pointing at a neutralized job.
+
 Required-execution rules are structural: a required command only counts when a
 non-comment shell line actually runs it. `echo`, `true`, comments, and
 `<command> || true` masking therefore cannot satisfy a rule. The release job
@@ -136,6 +142,82 @@ RELEASE_PACK_PROJECTS = (
 )
 PACKAGE_VALIDATOR = "scripts/bash/validate-release-packages.sh"
 GODOT_JOB = "godot-integration-tests"
+GODOT_JOB_TIMEOUT = 60
+GODOT_TAG_LAYOUT_PROBE = (
+    "set -euo pipefail",
+    "for path in scripts/bash/godot-test.sh scripts/python/write-version-stamp.py; do",
+    'if [[ ! -e "$path" ]]; then',
+    'echo "ERROR: tag predates the current script layout (missing $path)." >&2',
+    "echo \"Release tags must use the scripts/bash, scripts/powershell, "
+    "scripts/python layout.\" >&2",
+    "exit 1",
+    "fi",
+    "done",
+)
+GODOT_APT_LINES = (
+    "timeout 300 sudo apt-get -o Acquire::Retries=3 update -qq",
+    "timeout 300 sudo apt-get -o Acquire::Retries=3 install -y -qq "
+    "libxcursor1 libxinerama1 libxrandr2 libasound2t64 libpulse0 libgl1 "
+    "libfontconfig1",
+)
+GODOT_NUGET_CACHE = {
+    "path": "~/.nuget/packages",
+    "key": (
+        "nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', "
+        "'**/Directory.Build.props', 'Directory.Packages.props', 'global.json') }}"
+    ),
+    "restore-keys": "nuget-${{ runner.os }}-",
+}
+GODOT_BINARY_CACHE = {
+    "path": ".godot_binary",
+    "key": (
+        "godot-${{ runner.os }}-${{ "
+        "hashFiles('Origo.GodotAdapter/Origo.GodotAdapter.csproj') }}"
+    ),
+}
+# The prerequisite job is reviewed as one ordered step tuple; every action,
+# input, command, and shell below is the complete allowed shape.
+GODOT_GATE_STEPS = (
+    {
+        "kind": "action",
+        "action": "actions/checkout",
+        "name": None,
+        "with": {"ref": RELEASE_CHECKOUT_REF},
+    },
+    {
+        "kind": "run",
+        "name": "Verify tag uses the current script layout",
+        "lines": GODOT_TAG_LAYOUT_PROBE,
+    },
+    {
+        "kind": "action",
+        "action": "actions/setup-dotnet",
+        "name": "Setup .NET",
+        "with": {"global-json-file": "global.json"},
+    },
+    {
+        "kind": "action",
+        "action": "actions/cache",
+        "name": None,
+        "with": GODOT_NUGET_CACHE,
+    },
+    {
+        "kind": "action",
+        "action": "actions/cache",
+        "name": "Cache Godot binary",
+        "with": GODOT_BINARY_CACHE,
+    },
+    {
+        "kind": "run",
+        "name": "Install Godot headless dependencies",
+        "lines": GODOT_APT_LINES,
+    },
+    {
+        "kind": "run",
+        "name": "Godot headless integration tests",
+        "lines": ("bash scripts/bash/godot-test.sh",),
+    },
+)
 RELEASE_SNAPSHOT_MARK_STEP = "Mark snapshot release as pre-release"
 # The snapshot marker is identified by its reviewed contents, not just its name.
 RELEASE_SNAPSHOT_MARK_IF = (
@@ -912,6 +994,153 @@ def _release_validators_write_errors(steps: list, allowed_lines: set[str]) -> li
     return errors
 
 
+def _godot_step_errors(step: object, expected: dict, label: str) -> list[str]:
+    """Validate one pinned step of the Godot prerequisite job."""
+    if not isinstance(step, dict):
+        return [f"{label} must be a mapping."]
+
+    errors: list[str] = []
+    reported: set[str] = set()
+    for conditional in ("if", "continue-on-error"):
+        if conditional in step:
+            reported.add(conditional)
+            errors.append(
+                f"{label} must not set '{conditional}:' because the guard "
+                "requires it to run."
+            )
+    if "env" in step:
+        reported.add("env")
+        errors.append(f"{label} must not set step 'env:'.")
+    if "working-directory" in step:
+        reported.add("working-directory")
+        errors.append(f"{label} must not set 'working-directory:'.")
+
+    kind = expected["kind"]
+    if kind == "run":
+        if "shell" in step:
+            reported.add("shell")
+            errors.append(
+                f"{label} must use the default shell, not "
+                f"shell: {step.get('shell')!r}."
+            )
+        allowed = {"name", "run"}
+    else:
+        if "shell" in step:
+            reported.add("shell")
+            errors.append(f"{label} must not set 'shell:'.")
+        allowed = {"name", "uses", "with"}
+
+    for key in sorted(set(step) - allowed - reported, key=str):
+        errors.append(f"{label} must not define '{key}:'.")
+
+    if kind == "action":
+        uses = step.get("uses")
+        if "${{" in str(uses) or not uses:
+            errors.append(
+                f"{label} must use the reviewed action "
+                f"{expected['action']!r}."
+            )
+        else:
+            action_name, separator, version = str(uses).partition("@")
+            if not separator or not version:
+                errors.append(
+                    f"{label} action reference {uses!r} must include an "
+                    "@version tag."
+                )
+            elif action_name != expected["action"]:
+                errors.append(
+                    f"{label} uses unapproved action '{action_name}'; only "
+                    "actions/checkout, actions/setup-dotnet, and actions/cache "
+                    "may run in the Godot prerequisite job."
+                )
+        if expected["name"] is not None and step.get("name") != expected["name"]:
+            errors.append(
+                f"{label} must keep its reviewed step name "
+                f"{expected['name']!r}."
+            )
+        if step.get("with", {}) != expected["with"]:
+            errors.append(
+                f"{label} must use exactly the reviewed action inputs "
+                f"{expected['with']!r}; found {step.get('with')!r}."
+            )
+        return errors
+
+    if step.get("name") != expected["name"]:
+        errors.append(
+            f"{label} must keep its reviewed step name {expected['name']!r}."
+        )
+    actual_lines = _active_lines(str(step.get("run") or ""))
+    if actual_lines != list(expected["lines"]):
+        errors.append(
+            f"{label} must run exactly the reviewed commands "
+            f"{list(expected['lines'])!r}; found {actual_lines!r}."
+        )
+    return errors
+
+
+def _godot_integration_gate_errors(workflow: dict) -> list[str]:
+    """Pin the full ``godot-integration-tests`` prerequisite job."""
+    errors: list[str] = []
+    jobs = workflow.get("jobs")
+    job = jobs.get(GODOT_JOB) if isinstance(jobs, dict) else None
+    if not isinstance(job, dict):
+        errors.append(
+            f"release workflow must define the '{GODOT_JOB}' job so the Godot "
+            "headless integration gate runs before publishing."
+        )
+        return errors
+
+    label = f"the '{GODOT_JOB}' job"
+    reported: set[str] = set()
+    for conditional in ("if", "continue-on-error"):
+        if conditional in job:
+            reported.add(conditional)
+            errors.append(
+                f"{label} must not set '{conditional}:' because the guard "
+                "requires its steps to run."
+            )
+    if "defaults" in job:
+        reported.add("defaults")
+        errors.append(f"{label} must not set job 'defaults:'.")
+    if "env" in job:
+        reported.add("env")
+        errors.append(f"{label} must not set job 'env:'.")
+    allowed = {"runs-on", "timeout-minutes", "steps"}
+    for key in sorted(set(job) - allowed - reported, key=str):
+        errors.append(f"{label} must not define '{key}:'.")
+
+    if job.get("runs-on") != "ubuntu-latest":
+        errors.append(
+            f"{label} must run on 'ubuntu-latest'; found "
+            f"{job.get('runs-on')!r}."
+        )
+    if job.get("timeout-minutes") != GODOT_JOB_TIMEOUT:
+        errors.append(
+            f"{label} must set timeout-minutes: {GODOT_JOB_TIMEOUT}; found "
+            f"{job.get('timeout-minutes')!r}."
+        )
+
+    steps = job.get("steps")
+    if not isinstance(steps, list):
+        errors.append(f"{label} must define a 'steps:' list.")
+        return errors
+    if len(steps) != len(GODOT_GATE_STEPS):
+        errors.append(
+            f"{label} must define exactly {len(GODOT_GATE_STEPS)} reviewed "
+            f"steps in order; found {len(steps)}."
+        )
+    for index, expected in enumerate(GODOT_GATE_STEPS):
+        step_label = (
+            f"{label} step {index} "
+            f"({expected['name'] or expected['action']!r})"
+        )
+        if index >= len(steps):
+            errors.append(f"{step_label} is missing.")
+            continue
+        errors.extend(_godot_step_errors(steps[index], expected, step_label))
+    return errors
+
+
 def _calls_version_helper(run: str) -> bool:
     """True when a non-comment, unmasked line really invokes the helper."""
     helper_paths = {
@@ -1516,6 +1745,19 @@ def main() -> int:
 
     errors: list[str] = []
     errors.extend(_weekly_snapshot_errors(weekly_workflow))
+    if "env" in weekly_workflow:
+        errors.append("weekly workflow must not set top-level 'env:'.")
+    for job_name, weekly_job in (weekly_workflow.get("jobs") or {}).items():
+        if isinstance(weekly_job, dict) and "env" in weekly_job:
+            errors.append(
+                f"weekly job '{job_name}' must not set 'env:'; workflow env is "
+                "not part of the reviewed snapshot path."
+            )
+    errors.extend(_godot_integration_gate_errors(workflow))
+    if "defaults" in workflow:
+        errors.append("release workflow must not set top-level 'defaults:'.")
+    if "env" in workflow:
+        errors.append("release workflow must not set top-level 'env:'.")
 
     for job_name, job in (workflow.get("jobs") or {}).items():
         if not isinstance(job, dict):

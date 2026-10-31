@@ -84,10 +84,12 @@ if command -v python3 >/dev/null 2>&1; then
         bash scripts/bash/work-identity.sh validate
     fi
     if python3 -c "import yaml" >/dev/null 2>&1; then
+        python3 scripts/python/verify-ci-workflow.py
+        PYTHONDONTWRITEBYTECODE=1 python3 scripts/python/test-verify-ci-workflow.py
         python3 scripts/python/validate-release-workflow.py
         PYTHONDONTWRITEBYTECODE=1 python3 scripts/python/test-validate-release-workflow.py
     else
-        echo "WARNING: PyYAML is not installed; skipping release-workflow guard."
+        echo "WARNING: PyYAML is not installed; skipping CI-workflow and release-workflow guards."
     fi
     PYTHONDONTWRITEBYTECODE=1 python3 scripts/python/work_identity_test.py
     PYTHONDONTWRITEBYTECODE=1 python3 scripts/python/check_test.py

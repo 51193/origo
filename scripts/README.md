@@ -127,7 +127,9 @@ mirrors the development gates but not the release pipeline; this is why
 | `check_test.py` | Regression tests for the layered-check planner |
 | `lint-pr-body.py` | PR title/body lint for squash commit messages |
 | `validate-agent-docs.py` | AGENTS.md structure and required-snippet guard |
-| `validate-release-workflow.py` | Release/weekly workflow contract guard |
+| `verify-ci-workflow.py` | Pin the CI workflow triggers, jobs, steps, and commands |
+| `test-verify-ci-workflow.py` | Tests for the CI workflow guard |
+| `validate-release-workflow.py` | Release/weekly workflow and Godot prerequisite job contract guard |
 | `test-validate-release-workflow.py` | Tests for the release workflow guard |
 | `test-validate-release-packages.py` | Exercises the release package validator |
 | `work_identity.py` | Branch/worktree identity implementation |
