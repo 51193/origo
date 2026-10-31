@@ -499,7 +499,7 @@ def _validate_job(
 
 
 def _validate_workflow(workflow: dict, errors: list[str]) -> None:
-    allowed_top_level = {"name", "on", True, "concurrency", "jobs"}
+    allowed_top_level = {"name", "on", True, "concurrency", "permissions", "jobs"}
     reported: set[object] = set()
     if "defaults" in workflow:
         reported.add("defaults")
@@ -513,6 +513,13 @@ def _validate_workflow(workflow: dict, errors: list[str]) -> None:
                 f"ci workflow must not define top-level "
                 f"'{_display_key(key)}:'."
             )
+
+    if workflow.get("permissions") != {"contents": "read"}:
+        errors.append(
+            "ci workflow must set exactly top-level permissions "
+            "{'contents': 'read'}; found "
+            f"{workflow.get('permissions')!r}."
+        )
 
     if workflow.get("name") != "CI":
         errors.append(
