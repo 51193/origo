@@ -352,6 +352,116 @@ class DocsGenerateTests(unittest.TestCase):
             finally:
                 MODULE.GENERATED_ARTIFACTS = original_artifacts
 
+    def test_github_heading_slug_matches_link_anchors(self):
+        self.assertEqual(
+            MODULE.github_heading_slug("list_saves / save / load / delete_save / switch_level"),
+            "list_saves--save--load--delete_save--switch_level",
+        )
+        self.assertEqual(MODULE.github_heading_slug("bb_set"), "bb_set")
+        self.assertEqual(
+            MODULE.github_heading_slug("`TypedData` **Data** (object?)"),
+            "typeddata-data-object",
+        )
+
+    def test_github_heading_slug_preserves_generic_identifiers(self):
+        self.assertEqual(
+            MODULE.github_heading_slug(r"ILogger\<TCategory\>"),
+            "iloggertcategory",
+        )
+        self.assertEqual(
+            MODULE.github_heading_slug(
+                "`Origo.Core.Abstractions.Logging.ILogger<out TCategory>`"
+            ),
+            "origocoreabstractionsloggingiloggerout-tcategory",
+        )
+
+    def test_validate_links_accepts_generic_heading_anchor(self):
+        original = MODULE.ROOT
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "docs").mkdir()
+            (root / "README.md").write_text(
+                "[generic](docs/README.en.md#iloggertcategory)\n", encoding="utf-8"
+            )
+            (root / "docs/README.en.md").write_text(
+                "### ILogger\\<TCategory\\>\n", encoding="utf-8"
+            )
+            MODULE.ROOT = root
+            try:
+                self.assertEqual(MODULE.validate_links(), [])
+            finally:
+                MODULE.ROOT = original
+
+    def test_validate_links_ignores_blob_line_anchor_ranges(self):
+        original = MODULE.ROOT
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "docs").mkdir()
+            (root / "README.md").write_text(
+                "[lines](docs/README.en.md#L10-L20)\n", encoding="utf-8"
+            )
+            (root / "docs/README.en.md").write_text("# Manual\n", encoding="utf-8")
+            MODULE.ROOT = root
+            try:
+                self.assertEqual(MODULE.validate_links(), [])
+            finally:
+                MODULE.ROOT = original
+
+    def test_validate_links_accepts_local_and_duplicate_heading_anchors(self):
+        original = MODULE.ROOT
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "docs").mkdir()
+            (root / "README.md").write_text(
+                "# Title\n\n## Repeat\n\n## Repeat\n\n"
+                "[same](#repeat-1) [other](docs/README.en.md#section-two) "
+                "[encoded](docs/README.en.md#section%2Dtwo)\n",
+                encoding="utf-8",
+            )
+            (root / "docs/README.en.md").write_text(
+                "# Manual\n\n## Section Two\n", encoding="utf-8"
+            )
+            MODULE.ROOT = root
+            try:
+                self.assertEqual(MODULE.validate_links(), [])
+            finally:
+                MODULE.ROOT = original
+
+    def test_validate_links_rejects_missing_local_anchor(self):
+        original = MODULE.ROOT
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "docs").mkdir()
+            (root / "README.md").write_text(
+                "# Title\n\n[bad](docs/README.en.md#missing-heading)\n",
+                encoding="utf-8",
+            )
+            (root / "docs/README.en.md").write_text("# Manual\n", encoding="utf-8")
+            MODULE.ROOT = root
+            try:
+                errors = MODULE.validate_links()
+                self.assertTrue(
+                    any("missing local anchor" in error for error in errors), errors
+                )
+            finally:
+                MODULE.ROOT = original
+
+    def test_validate_links_rejects_missing_same_file_anchor(self):
+        original = MODULE.ROOT
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "README.md").write_text(
+                "# Title\n\n[bad](#missing)\n", encoding="utf-8"
+            )
+            MODULE.ROOT = root
+            try:
+                errors = MODULE.validate_links()
+                self.assertTrue(
+                    any("missing local anchor" in error for error in errors), errors
+                )
+            finally:
+                MODULE.ROOT = original
+
     def test_validate_links_rejects_missing_local_target(self):
         original = MODULE.ROOT
         with tempfile.TemporaryDirectory() as directory:

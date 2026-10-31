@@ -87,7 +87,7 @@ Rules:
 | `work-identity.sh` | Branch/worktree identity validation |
 | `package-consumer-smoke-lib.sh` | Source-only helpers for the package smoke |
 | `test-api-inventory-parent.sh` | Bash API-inventory parent/metadata-commit regression tests |
-| `test-docs.sh` | Generated-document and local-link validation |
+| `test-docs.sh` | Generated-document, local-link, and local-anchor validation |
 | `test-check-weekly-base.sh` | Weekly snapshot base/version validation |
 | `test-dev-suite.sh` | Bash/PowerShell gate parity, test-project parity, self-test wiring, and script-map guard |
 | `test-dotnet-env.sh` | SDK bootstrap, selection, and installer regression tests |
@@ -122,7 +122,7 @@ mirrors the development gates but not the release pipeline; this is why
 | Script | Purpose |
 |---|---|
 | `check.py` | Planner/executor used by `check.sh` and `check.ps1` |
-| `docs_generate.py` | Generate committed contract API and validate local documentation links |
+| `docs_generate.py` | Generate committed contract API and validate local documentation links and heading anchors |
 | `docs_generate_test.py` | Focused tests for the documentation generator and checks |
 | `check_test.py` | Regression tests for the layered-check planner |
 | `lint-pr-body.py` | PR title/body lint for squash commit messages |
