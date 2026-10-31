@@ -612,9 +612,8 @@ public sealed class SndContext : ISndContext
             SetProgressRun(progressRun);
             MountNewProgressRun(progressRun, () =>
             {
-                progressRun.LoadAndMountForeground(SndDefaults.MainMenuLevelId);
-
-                var sndScenePath = ResolveMainMenuSndScenePath();
+                var sndScenePath = ResolveMainMenuSndScenePath(out var mainMenuLevelId);
+                progressRun.LoadAndMountForeground(mainMenuLevelId);
                 OrigoAutoInitializer.LoadAndSpawnFromFile(
                     sndScenePath,
                     Runtime.SndWorld,
@@ -672,7 +671,7 @@ public sealed class SndContext : ISndContext
     ///     entry config. The config must use the levels structure; a bare
     ///     entity array is rejected with a clear error.
     /// </summary>
-    private string ResolveMainMenuSndScenePath()
+    private string ResolveMainMenuSndScenePath(out string mainMenuLevelId)
     {
         using var entry = DataSourceIo.ReadTree(EntryConfigPath);
         if (entry.Kind != DataSourceNodeKind.Map)
@@ -685,19 +684,19 @@ public sealed class SndContext : ISndContext
             throw new InvalidOperationException(
                 $"Entry config '{EntryConfigPath}' is missing the 'main_menu_level' key.");
 
-        var mainMenuLevel = entry["main_menu_level"].AsString();
-        if (string.IsNullOrWhiteSpace(mainMenuLevel))
+        mainMenuLevelId = entry["main_menu_level"].AsString();
+        if (string.IsNullOrWhiteSpace(mainMenuLevelId))
             throw new InvalidOperationException(
                 $"Entry config '{EntryConfigPath}' has an empty 'main_menu_level'.");
 
-        if (!entry.ContainsKey("levels") || !entry["levels"].ContainsKey(mainMenuLevel))
+        if (!entry.ContainsKey("levels") || !entry["levels"].ContainsKey(mainMenuLevelId))
             throw new InvalidOperationException(
-                $"Entry config '{EntryConfigPath}' does not define level '{mainMenuLevel}' under 'levels'.");
+                $"Entry config '{EntryConfigPath}' does not define level '{mainMenuLevelId}' under 'levels'.");
 
-        var sndScenePath = entry["levels"][mainMenuLevel]["snd_scene"].AsString();
+        var sndScenePath = entry["levels"][mainMenuLevelId]["snd_scene"].AsString();
         if (string.IsNullOrWhiteSpace(sndScenePath))
             throw new InvalidOperationException(
-                $"Entry config '{EntryConfigPath}' level '{mainMenuLevel}' has an empty 'snd_scene' path.");
+                $"Entry config '{EntryConfigPath}' level '{mainMenuLevelId}' has an empty 'snd_scene' path.");
 
         return sndScenePath;
     }

@@ -25,10 +25,10 @@ public class SndEntityNodeExtensionsTests
     }
 
     [Fact]
-    public void GetNodeFromSnd_NonGodotEntity_ReturnsNull()
+    public void GetNodeFromSnd_NonGodotEntityWithoutRegisteredNode_Throws()
     {
         var entity = new InMemorySndEntity("Dummy");
-        Assert.Null(entity.GetNodeFromSnd<Godot.Node>("sprite"));
+        Assert.Throws<InvalidOperationException>(() => entity.GetNodeFromSnd<Godot.Node>("sprite"));
     }
 
     [Fact]

@@ -300,7 +300,12 @@ if grep -q "SHELL_CONSUMER_STARTUP_FAILED" <<<"$STARTUP_OUTPUT"; then
     echo "$STARTUP_OUTPUT" | tail -30
     FAIL "consumer startup reported SHELL_CONSUMER_STARTUP_FAILED."
 fi
+if ! grep -q "DEMO_CONSUMER_OK" <<<"$STARTUP_OUTPUT"; then
+    echo "$STARTUP_OUTPUT" | tail -30
+    FAIL "consumer startup did not complete the authored demo capability scenario."
+fi
 
+echo "$STARTUP_OUTPUT" | grep "DEMO_CONSUMER_OK"
 echo "$STARTUP_OUTPUT" | grep "SHELL_CONSUMER_STARTUP_OK"
 echo ""
 echo "Package consumer smoke: OK"

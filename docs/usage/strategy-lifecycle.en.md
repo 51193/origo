@@ -218,13 +218,13 @@ For entities that need multi-step plan execution (such as AI character schedulin
 [StrategyIndex("character.scheduling")]
 public sealed class CharacterSchedulingStrategy : PlanExecutionStrategyBase
 {
-    public override string IntentKey => "character.intent";
-    public override string IntentStatusKey => "character.intent_status";
-    public override string PlanStepKey => "character.plan_step";
-    public override string ActionKey => "character.action";
-    public override string ActionStatusKey => "character.action_status";
+    protected override string IntentKey => "character.intent";
+    protected override string IntentStatusKey => "character.intent_status";
+    protected override string PlanStepKey => "character.plan_step";
+    protected override string ActionKey => "character.action";
+    protected override string ActionStatusKey => "character.action_status";
 
-    public override string? ResolveNextStep(string? intent, string? currentStep, 
+    protected override string? ResolveNextStep(string intent, string currentStep,
         bool failed, ISndEntity entity)
     {
         return intent switch
@@ -236,7 +236,7 @@ public sealed class CharacterSchedulingStrategy : PlanExecutionStrategyBase
         };
     }
 
-    public override string? StepToActionIndex(string stepType)
+    protected override string? StepToActionIndex(string stepType)
     {
         return stepType switch
         {

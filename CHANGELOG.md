@@ -162,6 +162,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **Configured main-menu level IDs are honored** — `OrigoDefaultEntry.ConfigPath`
+  entry configs whose `main_menu_level` is not `main_menu` now mount the
+  foreground session with the configured level ID instead of the hard-coded
+  default, so level identity, topology, and saves match the authored entry.
+- **Strategy-facing node access works for package consumers** —
+  `GetNodeFromSnd<T>()` now resolves the node registry through the inner
+  `SndEntity` that strategies receive (not only the `GodotSndEntity` wrapper),
+  matching the documented strategy-node path and its `Origo.GodotAdapter`
+  namespace.
+- **Package-consumer smoke exercises a demo-like capability path** — the
+  Core/Adapter fixture now discovers a consumer strategy, loads an authored
+  entity/node, saves and reloads state, and verifies hook data before printing
+  `DEMO_CONSUMER_OK`; the Windows mirror runs the same scenario.
 - **CI and release Godot verification gates are structurally pinned** — `scripts/python/verify-ci-workflow.py` pins the CI workflow triggers, required jobs, matrices, environment, action inputs, step order, shells, and exact commands, so a deleted or masked required job or step fails locally. The release workflow guard now pins the complete `godot-integration-tests` job body (checkout ref, caches, apt packages, tag-layout probe, and final command) instead of only the release job's `needs:` edge. The Bash and PowerShell lint gates run the same shared guards, so the required check set cannot be neutralized by editing the workflow while the local gates stay green.
 - **Scheme-root paths with extra separators stay valid** — `PathUtility.NormalizeDirectoryPath("user:///")` and `PathUtility.Combine("user:///", "x")` now normalize to `user://` / `user://x` instead of the invalid `user:` / `user:/x`, matching the documented scheme-root contract.
 - **Shutdown is rejected during session frame processing** — a strategy/hook that calls `ISndContext.Shutdown` from `Process`, `BeforeDead`, `OnUnmounted`, or `AfterSpawn` can no longer empty the scene host mid-iteration and throw after the terminal state was committed; the context stays live and the frame can continue. A failed shutdown also clears its nested teardown request, so a later lifecycle workflow is rejected until the retryable cleanup is finished instead of committing shutdown without deleting the incomplete `current/` area.

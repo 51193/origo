@@ -42,7 +42,7 @@ map.grid_size
 
 ## Strategy-Node Interaction
 
-Strategies obtain engine nodes via `entity.GetNode("name")?.GetNativeNode()` (extension method in the `Origo.GodotAdapter.Snd` namespace). They can also use `entity.GetNodeFromSnd<TNode>("name")` to directly fetch a strongly-typed node. Core rules:
+Strategies obtain engine nodes via `entity.GetNode("name").GetNativeNode()` (extension method in the `Origo.GodotAdapter` namespace). They can also use `entity.GetNodeFromSnd<TNode>("name")` to directly fetch a strongly-typed node from the entity's node registry; this works for the strategy-facing inner `SndEntity` as well as the adapter wrapper. Core rules:
 
 1. **Always null-check**: In background sessions, `GetNode()` returns `NullNodeHandle`, and `?.GetNativeNode()` is null
 2. **Encapsulate node operations in helper classes**: Strategies should not directly manipulate the scene tree (`AddChild`, `QueueFree`, etc.)
