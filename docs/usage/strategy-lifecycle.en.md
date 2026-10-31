@@ -113,7 +113,7 @@ For engine-managed state (such as `Node3D.GlobalTransform`), there is no need to
 ```csharp
 public override void BeforeSave(ISndEntity entity, ISndContext ctx)
 {
-    var node = entity.GetNode("root")?.GetNativeNode();
+    var node = entity.GetNode("root").GetNativeNode();
     if (node is Node3D node3d)
         entity.SetData("transform", node3d.GlobalTransform);
 }

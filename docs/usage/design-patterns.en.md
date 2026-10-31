@@ -44,14 +44,14 @@ map.grid_size
 
 Strategies obtain engine nodes via `entity.GetNode("name").GetNativeNode()` (extension method in the `Origo.GodotAdapter` namespace). They can also use `entity.GetNodeFromSnd<TNode>("name")` to directly fetch a strongly-typed node from the entity's node registry; this works for the strategy-facing inner `SndEntity` as well as the adapter wrapper. Core rules:
 
-1. **Always null-check**: In background sessions, `GetNode()` returns `NullNodeHandle`, and `?.GetNativeNode()` is null
+1. **Always null-check**: `GetNode()` returns a non-null handle; in background sessions it is `NullNodeHandle`, and `GetNativeNode()` returns null
 2. **Encapsulate node operations in helper classes**: Strategies should not directly manipulate the scene tree (`AddChild`, `QueueFree`, etc.)
 3. **Access via node name mapping**: Use node names defined in Origo templates; do not traverse the scene subtree
 
 ```csharp
 public override void AfterSpawn(ISndEntity entity, ISndContext ctx)
 {
-    var node = entity.GetNode("root")?.GetNativeNode();
+    var node = entity.GetNode("root").GetNativeNode();
     if (node is Node3D node3d)
     {
         var (fx, gx) = entity.TryGetData<int>("grid_x");
@@ -63,7 +63,7 @@ public override void AfterSpawn(ISndEntity entity, ISndContext ctx)
 
 public override void AfterLoad(ISndEntity entity, ISndContext ctx)
 {
-    var node = entity.GetNode("root")?.GetNativeNode();
+    var node = entity.GetNode("root").GetNativeNode();
     if (node is Node3D node3d)
     {
         var (fx, gx) = entity.TryGetData<int>("grid_x");
@@ -232,7 +232,7 @@ public sealed class MainMenuStrategy : LifecycleStrategyBase
 {
     public override void AfterLoad(ISndEntity entity, ISndContext ctx)
     {
-        var container = entity.GetNode("root")?.GetNativeNode();
+        var container = entity.GetNode("root").GetNativeNode();
         if (container is Control ctrl)
             MenuBuilder.BuildMainMenu(ctrl, ctx);
     }
@@ -354,7 +354,7 @@ In template `strategy.indices`, only write initializer strategies (e.g., `game.e
 Entities created in background sessions have no engine node (`GetNode()` returns `NullNodeHandle`). Node access in strategy `AfterSpawn` and `AfterLoad` must always null-check:
 
 ```csharp
-var node = entity.GetNode("root")?.GetNativeNode();
+var node = entity.GetNode("root").GetNativeNode();
 if (node is Node3D n)
 {
     // Operations when node exists (foreground session)

@@ -350,7 +350,7 @@ td.TryGetBoolean(out _);
 td.TryGetString(out _);
 td.TryGetDouble(out _);
 
-// Boxed: .Data each time goes through ToObject → switch → value types must be boxed → then is T unboxed
+// Boxed baseline: reads a pre-boxed object reference and performs is T checks; construction boxes once, reads do not box
 data is int;
 data is float;
 data is bool;
@@ -358,7 +358,7 @@ data is string;
 data is double;
 ```
 
-**Benchmark**: Mixed dispatch generated **1.54x** faster than boxed (~1250 vs ~812 Mops/s), 0 byte allocation on both sides (generated side is truly zero-allocation; boxed side allocations are masked by loop reuse, but the repeated boxing logic overhead is still higher).
+**Benchmark**: Mixed dispatch generated **1.54x** faster than boxed (~1250 vs ~812 Mops/s), 0 byte allocation on both sides. The boxed baseline stores pre-boxed `object` values and excludes pool construction from the timed loop; its remaining overhead is the shared `is T` dispatch (both sides do type discrimination plus field reads), not per-read re-boxing.
 
 #### Special Handling of TryGetString
 
@@ -371,9 +371,9 @@ Why not use `(string)_ref` (castclass): `_kind == String` already proves `_ref` 
 
 ---
 
-### 4.5 Object Boundary Paths: ToObject / FromObject / Data Property
+### 4.5 Object Boundary Paths: ToObject / FromObject / Internal Boxed Access
 
-`TypedDataObjectConverter.ToObject` serves cold paths where the type is unknown at compile time (serialization, console output, `ToString`, `Data` property reads):
+`TypedDataObjectConverter.ToObject` serves cold paths where the type is unknown at compile time (serialization, console output, `ToString`, and internal type-erased conversions):
 
 ```csharp
 public static object? ToObject(TypedData td)

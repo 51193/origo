@@ -14,7 +14,7 @@ bash scripts/bash/docs.sh generate
 bash scripts/bash/docs.sh check
 ```
 
-The Bash and Windows local lint gates run the check. Link validation covers the
+The Bash and Windows local lint gates run the check. Link and local-heading-anchor validation covers the
 root Markdown files, the manual under `docs/`, the script map
 ([`scripts/README.md`](../../scripts/README.md)), and `.github/` Markdown
 (templates and repository configuration) so broken links in maintained docs are

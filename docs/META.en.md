@@ -88,7 +88,7 @@ the documented design.
 After a code PR is merged, check:
 - [ ] Is the affected module entry accurate?
 - [ ] Are interface/file lists accurate where documented?
-- [ ] Are all links valid (no 404)?
+- [ ] Are all links and local heading anchors valid?
 - [ ] Does the design decisions section reflect current design intent?
 - [ ] Do `docs/usage/` and test capability docs cover new scenarios/capabilities?
 - [ ] If release or Changelog rules changed, was `release-process.en.md` updated?
@@ -364,7 +364,7 @@ bash scripts/bash/docs.sh check
 ```
 
 The generated file is committed so documentation remains available without a
-remote generation service. `docs.sh check` also validates local Markdown links
+remote generation service. `docs.sh check` also validates local Markdown link targets and heading anchors
 across the root Markdown files, the manual under `docs/`, `scripts/README.md`,
 and `.github/` Markdown; missing directories are skipped so focused tests can
 build a minimal documentation root.

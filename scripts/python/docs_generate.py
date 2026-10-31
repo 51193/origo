@@ -14,6 +14,8 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+from html import unescape
+from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[2]
 BASELINE = ROOT / "tools" / "ApiInventoryTool" / "shell-api-baseline.json"
@@ -26,6 +28,7 @@ TYPE_RE = re.compile(r"Origo\.[A-Za-z0-9_.+`]+(?:<[^>]+>)?")
 REPO_BLOB_RE = re.compile(
     r"https://github\.com/51193/origo/(?:blob|tree)/main/([^#?)]+)"
 )
+HEADING_RE = re.compile(r"^(#{1,6})\s+(.*?)\s*#*\s*$", re.MULTILINE)
 
 
 _DECLARATION_MODIFIER_TOKENS = frozenset(
@@ -200,6 +203,47 @@ def strip_code_fences(text: str) -> str:
     return "\n".join(result)
 
 
+def github_heading_slug(text: str) -> str:
+    """Return the GitHub Markdown anchor slug for a heading's rendered text.
+
+    Inline code and escaped angle brackets are rendered text, not HTML, so
+    generic identifiers such as ``ILogger<TCategory>`` must contribute their
+    full name to the anchor. Only real inline HTML tags are removed.
+    """
+    text = unescape(text)
+    text = re.sub(r"`([^`]*)`", r"\1", text)
+    text = re.sub(r"\\([\\`*_{}\[\]()#+\-.!<>|])", r"\1", text)
+    text = re.sub(r"!\[([^\]]*)\]\([^)]*\)", r"\1", text)
+    text = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", text)
+    text = re.sub(
+        r"</?(?:a|abbr|b|br|code|em|i|kbd|mark|small|span|strong|sub|sup|u)\b[^>]*>",
+        "",
+        text,
+        flags=re.IGNORECASE,
+    )
+    text = text.strip().lower()
+    text = re.sub(r"[^\w\- ]", "", text)
+    return text.replace(" ", "-")
+
+
+def markdown_anchor_targets(path: Path) -> set[str]:
+    """Collect the anchors GitHub would generate for a Markdown document."""
+    text = strip_code_fences(path.read_text(encoding="utf-8"))
+    anchors: set[str] = set()
+    occurrences: dict[str, int] = {}
+    for match in HEADING_RE.finditer(text):
+        heading = match.group(2).strip()
+        if not heading:
+            continue
+        base = github_heading_slug(heading)
+        if not base:
+            continue
+        count = occurrences.get(base, 0)
+        occurrences[base] = count + 1
+        anchors.add(base if count == 0 else f"{base}-{count}")
+    return anchors
+
+
 def local_markdown_documents() -> list[Path]:
     """Return the tracked local Markdown documents the link check covers.
 
@@ -236,17 +280,37 @@ def validate_links() -> list[str]:
                         f"{raw_target}"
                     )
                 continue
-            if raw_target.startswith(("mailto:", "#")):
+            if raw_target.startswith("mailto:"):
                 continue
-            target = raw_target.split("#", 1)[0].split("?", 1)[0]
-            if not target:
+            if raw_target.startswith("#"):
+                resolved = path
+                fragment = raw_target[1:]
+            else:
+                target, _, fragment = raw_target.partition("#")
+                target = target.split("?", 1)[0]
+                if not target:
+                    continue
+                if "Xxx" in target or target == "path":
+                    # The manual-maintenance templates intentionally use placeholders.
+                    continue
+                resolved = (path.parent / target).resolve()
+                if not resolved.exists():
+                    errors.append(
+                        f"{path.relative_to(ROOT).as_posix()}: missing link target {raw_target}"
+                    )
+                    continue
+            if not fragment or resolved.suffix.lower() != ".md":
                 continue
-            if "Xxx" in target or target == "path":
-                # The manual-maintenance templates intentionally use placeholders.
+            fragment = unquote(fragment)
+            if re.fullmatch(r"L\d+(?:-L?\d+)?", fragment):
+                # GitHub blob-style line anchors are not heading anchors.
                 continue
-            resolved = (path.parent / target).resolve()
-            if not resolved.exists():
-                errors.append(f"{path.relative_to(ROOT).as_posix()}: missing link target {raw_target}")
+            anchors = markdown_anchor_targets(resolved)
+            if fragment not in anchors:
+                errors.append(
+                    f"{path.relative_to(ROOT).as_posix()}: missing local anchor "
+                    f"{raw_target}"
+                )
     return errors
 
 

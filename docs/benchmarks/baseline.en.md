@@ -103,13 +103,13 @@ lines emitted by `PerfReporter.EmitMetric`):
 
 ## Core Real-World Simulation Benchmarks
 
-### Heterogeneous Dictionary Iteration (2,048,000 `.Data` reads)
+### Heterogeneous Dictionary Iteration (2,048,000 Generated `ToObject` Reads)
 
-| Scenario | Generated .Data (Mops/s) | Boxed Iteration (Mops/s) | Ratio | Winner | Alloc Gen/Boxed |
+| Scenario | Generated `ToObject` (Mops/s) | Boxed plain-object dict (Mops/s) | Ratio | Winner | Alloc Gen/Boxed |
 |------|--------------------:|------------------:|:----:|:----:|----------------|
-| Heterogeneous dict `.Data` iteration | 418.27 | 3024.22 | 7.2x | Boxed | 37.49 MB / 0 B |
+| Heterogeneous dict iteration | 418.27 | 3024.22 | 7.2x | Boxed | 37.49 MB / 0 B |
 
-> This is a **synthetic worst case**: `.Data` returns `object`, value types re-box every read through `ToObject` (dataset ~80% value types → 37.49 MB per round). This calling pattern does not exist in production (see "Design Trade-offs").
+> This is a **synthetic worst case**: the generated side calls internal `TypedDataObjectConverter.ToObject` for every dictionary value (value types re-box; dataset ~80% value types → 37.49 MB per round), while the boxed side iterates a `Dictionary<string, object>` whose values are already boxed. Public `TypedData` exposes no `Data` member (see [TypedData metadata](../Origo.Core.Contracts/Snd/Metadata/README.en.md) and "Design Trade-offs").
 
 ### Factory Construction + Dictionary Insertion (500,000 iterations)
 
@@ -163,7 +163,7 @@ Documents why the current state is as it is, what trade-offs were made, and dire
 
 - **[Evaluated Not Worthwhile, Do Not Attempt] Squeezing the `TypedData` struct to 16 bytes**: The current 24 bytes (`byte _kind` + `long _inlineBits` + `object? _ref`) is the lower bound of GC-safe design — `long` and managed reference slots cannot overlap (GC must independently scan references), and the `_kind` byte has no spare bits to tuck. Squeezing to 16 bytes would require sacrificing `long`/`double`'s full 64-bit inlining, or introducing extra branching/type lookups (most likely net negative), and would change the `internal` layout (depended on by generated code and tests via `InternalsVisibleTo`). The structural gap of value type single reads and DictLookup values, which fluctuate between 0.89x and 1.24x and are mostly close to parity, originates from this and is accepted.
 
-- **`.Data` (object?) boxing only occurs on cold paths**: `.Data` boxes value types through `ToObject`, serving cold paths where the type is unknown at compile time (serialization by `DataType`, console, `ToString`); these paths inherently require `object`. Framework-internal hot/warm paths (data change signal handling, load validation, etc.) uniformly use zero-boxing `TryGetXxx`. **The "heterogeneous `.Data` iteration" benchmark (about 7.2x, 37.49 MB) is a synthetic worst case and does not correspond to any real production hot path**; removing `.Data` would only move the same boxing inside and add complexity (zero downstream dependencies, ~60 test locations depend on its convenience access). Trade-offs and recommended usage are documented in [Origo.Core.Contracts/Snd/Metadata](../Origo.Core.Contracts/Snd/Metadata/README.en.md).
+- **Boxing is confined to internal cold paths**: the generated-side `ToObject` comparator boxes value types and the boxed-side comparator iterates plain `object` values; production code has no public boxing accessor. `TypedDataObjectConverter.ToObject` serves serialization, console output, `ToString`, and other internal type-erased paths, where `object` is inherent. Framework-internal hot/warm paths (data change signal handling, load validation, etc.) uniformly use zero-boxing `TryGetXxx`. The heterogeneous benchmark (about 7.2x, 37.49 MB) is a synthetic worst case and does not correspond to any production hot path; public `TypedData` intentionally exposes no boxing value accessor. Trade-offs and recommended usage are documented in [Origo.Core.Contracts/Snd/Metadata](../Origo.Core.Contracts/Snd/Metadata/README.en.md).
 
 ## Validity Limitations
 
