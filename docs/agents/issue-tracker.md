@@ -48,6 +48,16 @@ purpose; it is not an issue tracker.
 
 **PRs as a request surface: no.**
 
+## Review findings and deferred work
+
+Deferred review findings follow
+[review-process](../review-process.en.md#deferred-findings-security-and-labels).
+This section covers only the filing mechanics: create the issue with evidence,
+current behavior, acceptance criteria, and the current state role, and link it
+from the review record. Security-sensitive findings follow the private-tracking
+rule in that document. Pull requests deliver accepted work; they are not the
+backlog record.
+
 ## When a skill says "publish to the issue tracker"
 
 Create or update the GitHub issue in `51193/origo` and synchronize its

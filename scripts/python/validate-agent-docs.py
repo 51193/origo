@@ -35,6 +35,7 @@ REQUIRED_SNIPPETS = (
     "root README",
     "numbered chapter",
     "docs/release-process.en.md",
+    "docs/review-process.en.md",
 )
 FORBIDDEN_PATTERNS = (
     re.compile(r"Before committing.{0,80}scripts/bash/ci\.sh"),
@@ -86,6 +87,21 @@ def main() -> int:
     for snippet in REQUIRED_SNIPPETS:
         if snippet not in text:
             errors.append(f"AGENTS.md is missing mandatory hard-gate text: '{snippet}'.")
+
+    prework_lines = text.splitlines()
+    try:
+        prework_start = next(
+            index for index, line in enumerate(prework_lines)
+            if line.startswith("## 0. Pre-work Gate"))
+        prework_end = next(
+            (index for index in range(prework_start + 1, len(prework_lines))
+             if prework_lines[index].startswith("## ")),
+            len(prework_lines))
+        prework = "\n".join(prework_lines[prework_start:prework_end])
+    except StopIteration:
+        prework = ""
+    if "docs/review-process.en.md" not in prework:
+        errors.append("AGENTS.md Pre-work Gate must list docs/review-process.en.md as required reading.")
 
     for pattern in FORBIDDEN_PATTERNS:
         if pattern.search(text):

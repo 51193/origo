@@ -5,7 +5,8 @@
 > session. Gates stay inline; procedure lives in linked docs; on conflict this
 > file wins and the other must be corrected in the same change.
 >
-> Must-read: this file, `docs/META.*`, `docs/release-process.*`, module docs.
+> Must-read: this file, `docs/META.*`, `docs/release-process.*`,
+> `docs/review-process.*`, module docs.
 
 ## 0. Pre-work Gate (Mandatory Reading)
 
@@ -14,9 +15,11 @@ Before reading or modifying source, read in full:
 1. **This file**.
 2. **`docs/META.en.md`** — English documentation, commits, and buffer rules.
 3. **`docs/release-process.en.md`** — release and Changelog rules.
-4. **English module docs** for the change plus upstream/downstream/related
+4. **`docs/review-process.en.md`** — review rounds, blind audit,
+   pull-request units, and merge rules.
+5. **English module docs** for the change plus upstream/downstream/related
    facilities (§1.3): the `docs/<mirror-path>/` manual entry.
-5. **`_origo_local/README.md` when present** — single-book buffer; read the
+6. **`_origo_local/README.md` when present** — single-book buffer; read the
    root README (live status/index) and every numbered chapter relevant to the
    task. Full protocol: `docs/META.en.md` §Local Agent Work Buffer.
 
@@ -104,8 +107,8 @@ collaboration contracts.
 
 - `global.json` is authoritative; never downgrade or edit it to match an already-installed SDK.
 - Branches use `<type>/<creator>/<MMDD>/<purpose>`; validate with `scripts/bash/work-identity.sh`.
-- Run `bash scripts/bash/install-dotnet.sh` to install the exact SDK (an explicit `DOTNET_INSTALL_DIR` wins; an existing repository-local `.dotnet/` is refreshed; otherwise `$HOME/.dotnet`, with the repository-local directory as the read-only-HOME fallback). Scripts source `scripts/bash/dotnet-env.sh`, which validates the selected SDK against `global.json` and fails with the fix command; use `./dotnet` only in local mode. Do not substitute per-session `PATH`/`DOTNET_ROOT`/`NUGET_PACKAGES` exports.
-- Godot binaries are separate: `scripts/bash/download-godot.sh` reads `Godot.NET.Sdk` from `Origo.GodotAdapter/Origo.GodotAdapter.csproj` and caches under `.godot_binary/`. Full rules: `docs/META.en.md` §Environment Bootstrap.
+- Run `bash scripts/bash/install-dotnet.sh` to install and validate the SDK pinned by `global.json`; scripts source `scripts/bash/dotnet-env.sh`. Do not substitute per-session `PATH`/`DOTNET_ROOT`/`NUGET_PACKAGES` exports.
+- Godot binaries are separate: `scripts/bash/download-godot.sh` reads `Godot.NET.Sdk` from `Origo.GodotAdapter/Origo.GodotAdapter.csproj` and caches under `.godot_binary/`.
 
 ### 1.11 Local Agent Work Buffer — `_origo_local/` (Untracked, Producer/Consumer)
 
@@ -137,6 +140,10 @@ chapters belong to one work item. Full tracked protocol:
 State any inapplicable step in the commit message. **Partial
 completion is forbidden.** If closing an `_origo_local` book, apply §1.11
 after steps 1–8.
+
+Every pull request carries one module or one cohesive behavior; review rounds and
+remediation additionally follow `docs/review-process.en.md` (blind audit, split
+delivery, test expansion, evidence recheck).
 
 - `lint-commits.sh` prefers `origin/main`; when unavailable it falls back to `HEAD~1` and reports it. Explicit ranges: `bash scripts/bash/lint-commits.sh <base> <head>`.
 - Enable hooks with `git config core.hooksPath .githooks`; the pre-push hook runs commit lint locally. CI adds the OS matrix, not commit lint.
@@ -202,14 +209,14 @@ Full details: `docs/release-process.en.md`. Pre-tag summary:
 2. Advance the development baseline in `Directory.Build.props` to the next planned version with a `-dev` suffix and matching numeric `AssemblyVersion` / `FileVersion`; never commit the release version on `main`. The Release workflow stamps `x.y.z` on the tag-only release commit.
 3. Move analyzer rules to `AnalyzerReleases.Shipped.md` with `## Release x.y.z`; leave no unshipped rules in `AnalyzerReleases.Unshipped.md`.
 4. Commit all release metadata and documentation changes together.
-5. Run `bash scripts/bash/release-check.sh x.y.z` on that commit (rejects a stale HEAD baseline or a target that is not newer than the latest formal `vx.y.z` tag, then checks a temporary worktree: Changelog block, empty `[Unreleased]`, analyzer tracking, stamped build properties). `docs/README.en.md` refers to the build stamp instead of copying the version.
+5. Run `bash scripts/bash/release-check.sh x.y.z` on that commit (rejects a stale HEAD baseline or a target that is not newer than the latest formal `vx.y.z` tag, then verifies the Changelog, analyzer, and stamps in a temporary worktree). `docs/README.en.md` refers to the build stamp instead of copying the version.
 6. Run `bash scripts/bash/ci.sh` and `bash scripts/bash/lint-commits.sh` on that commit; amend and rerun if either fails.
-7. Tag `vx.y.z` on the verified commit and push it; a formal tag must point at a commit reachable from `main`, or at the metadata-only release commit from an earlier run. The Release workflow verifies provenance, creates a metadata-only release commit, runs the gates, moves only the tag, and attaches the nine release artifacts (five packages, the validated source archive, the docs tar.gz/zip, and `nuget.config`) to the GitHub Release; `main` is not written. Packages are not pushed to nuget.org.
+7. Tag `vx.y.z` on the verified commit and push it; a formal tag must point at a commit reachable from `main`, or at the metadata-only release commit from an earlier run. The Release workflow verifies provenance, creates a metadata-only release commit, runs the gates, moves only the tag, and attaches the nine validated release artifacts to the GitHub Release; `main` is not written. Packages are not pushed to nuget.org.
 
 ## 7. Document Index
 
 - Manual: [English](docs/README.en.md).
-- Rules: [META](docs/META.en.md), [release process](docs/release-process.en.md).
+- Rules: [META](docs/META.en.md), [release process](docs/release-process.en.md), [review process](docs/review-process.en.md).
 - Tests: [META-TEST](docs/Origo.Core.Tests/META-TEST.en.md).
 - Modules: English entries under `docs/<module>/` and [usage](docs/usage/README.en.md).
 - Changes and tools: [CHANGELOG.md](CHANGELOG.md), `_origo_local/README.md`,

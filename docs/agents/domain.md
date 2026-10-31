@@ -6,8 +6,8 @@ takes precedence over this skill configuration.
 
 ## Before exploring code or writing a ticket
 
-1. Read `AGENTS.md`, `docs/META.en.md`, and `docs/release-process.en.md` as
-   required there.
+1. Read `AGENTS.md`, `docs/META.en.md`, `docs/release-process.en.md`, and
+   `docs/review-process.en.md` as required there.
 2. Start at `docs/README.en.md` and follow the relevant
    module README chain, including upstream, downstream, and related
    facilities.
