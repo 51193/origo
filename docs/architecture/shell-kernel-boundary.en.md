@@ -296,10 +296,11 @@ and generated nested types; unapproved additions, removals, or signature changes
 normal CI, `scripts/bash/ci.sh`, and the Release workflow. Previous-package
 validation is explicitly skipped before the first formal release with the
 first-release behavior stated. Packaged consumption (#42) is in place:
-`scripts/bash/package-consumer-smoke.sh` restores only the Core + Adapter NuGet
-packages in an isolated temporary directory, builds with warnings as errors,
-proves kernel compile-asset isolation with a CS0246 negative probe, verifies
-the kernel runtime assembly, and starts `OrigoDefaultEntry` headlessly; the
+`scripts/bash/package-consumer-smoke.sh` restores the Core-only and Core +
+Adapter NuGet packages in isolated temporary directories, builds with warnings
+as errors, proves kernel compile-asset isolation with CS0246 negative probes,
+verifies the kernel runtime assembly, starts `OrigoHost` in a console process
+without Godot, and starts `OrigoDefaultEntry` headlessly; the
 five-package set, analyzer asset, and Godot SDK pin of the packed feed are
 asserted by `scripts/bash/validate-release-packages.sh`, which the smoke runs
 against the same feed. It runs in the normal CI Godot job and local `scripts/bash/ci.sh`.

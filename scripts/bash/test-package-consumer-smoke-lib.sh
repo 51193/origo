@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Focused regression tests for scripts/bash/package-consumer-smoke-lib.sh.
+# Focused regression tests for scripts/bash/package-consumer-smoke-lib.sh and
+# the Core-only package-consumer fixture contract.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 source "$ROOT/scripts/bash/package-consumer-smoke-lib.sh"
@@ -33,5 +34,40 @@ FOUND=$(find_first_file "$WORK/tree" -type f -name "found.dll")
     || FAIL "find_first_file did not return the matching file: $FOUND"
 [[ -z "$(find_first_file "$WORK/tree" -type f -name "missing.dll")" ]] \
     || FAIL "find_first_file returned a path for a missing file."
+
+# The Core-only fixture is deliberately a single-package console project. The
+# full smoke verifies this after pack/restore; these text checks fail fast if
+# the fixture grows a ProjectReference, a second package, or a Godot SDK
+# without a full package run.
+CORE_CONSUMER_CSPROJ="$ROOT/tools/CorePackageConsumer/OrigoCorePackageConsumer.csproj"
+[[ -f "$CORE_CONSUMER_CSPROJ" ]] \
+    || FAIL "Core-only consumer fixture is missing: $CORE_CONSUMER_CSPROJ"
+CORE_PACKAGE_REFERENCES=$(grep -Fc "<PackageReference" "$CORE_CONSUMER_CSPROJ" || true)
+[[ "$CORE_PACKAGE_REFERENCES" -eq 1 ]] \
+    || FAIL "Core-only consumer must contain exactly one PackageReference: found $CORE_PACKAGE_REFERENCES"
+grep -Fq 'Include="Origo.Core"' "$CORE_CONSUMER_CSPROJ" \
+    || FAIL "Core-only consumer must reference Origo.Core."
+grep -Fq "OrigoShellPackageVersion" "$CORE_CONSUMER_CSPROJ" \
+    || FAIL "Core-only consumer must use the OrigoShellPackageVersion property."
+grep -Fq "<TargetFramework>net10.0</TargetFramework>" "$CORE_CONSUMER_CSPROJ" \
+    || FAIL "Core-only consumer must target net10.0."
+grep -Fq "<Nullable>enable</Nullable>" "$CORE_CONSUMER_CSPROJ" \
+    || FAIL "Core-only consumer must enable nullable reference types."
+grep -Fq "<OutputType>Exe</OutputType>" "$CORE_CONSUMER_CSPROJ" \
+    || FAIL "Core-only consumer must be a console executable."
+if grep -Fq "<ProjectReference" "$CORE_CONSUMER_CSPROJ"; then
+    FAIL "Core-only consumer must not contain a ProjectReference."
+fi
+if grep -Fq "Godot.NET.Sdk" "$CORE_CONSUMER_CSPROJ"; then
+    FAIL "Core-only consumer must not use a Godot SDK."
+fi
+
+CORE_LEAK_PROBE="$ROOT/tools/CorePackageConsumer/KernelLeakProbe.cs.template"
+[[ -f "$CORE_LEAK_PROBE" ]] \
+    || FAIL "Core-only kernel leak probe template is missing: $CORE_LEAK_PROBE"
+grep -Fq "Origo.Core.Runtime" "$CORE_LEAK_PROBE" \
+    || FAIL "Core-only kernel leak probe must reference the kernel namespace."
+grep -Fq "OrigoRuntime" "$CORE_LEAK_PROBE" \
+    || FAIL "Core-only kernel leak probe must reference OrigoRuntime."
 
 echo "Package consumer smoke lib: OK"

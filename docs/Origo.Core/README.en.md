@@ -70,6 +70,13 @@ supplied together: `OrigoHost.Create` rejects an options object with only
 `ConsoleInput` or only `ConsoleOutputChannel`, because a queued command would
 have no processor.
 
+The package-consumer smoke exercises this path without a Godot engine:
+`tools/CorePackageConsumer` restores only `Origo.Core`, starts `OrigoHost` over
+a temporary workspace, calls `Bootstrap()` and `DriveFrame(...)`, reads
+`Context.Save.ListSaves()`, flushes a deferred action, and fails if adapter or
+ConsoleBridge packages or kernel compile assets enter the Core-only graph. See
+[shell package consumer](../usage/shell-package-consumer.en.md).
+
 ## Architecture Constraints
 
 - **No engine dependency**: Core references no Godot or adapter assembly.
