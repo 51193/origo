@@ -16,6 +16,8 @@ process.
 - Read the commit message convention in [`docs/META.en.md`](docs/META.en.md#git-commit-message-format). The local pre-push hook runs `scripts/bash/lint-commits.sh` before Git uploads branch commits (type, 72-character subject limit, no trailing period, body lines no longer than 72 characters). Dependabot-authored commits are skipped because Dependabot generates their message and supports only a prefix; `.github/dependabot.yml` sets that prefix to `chore(deps)` for every ecosystem.
 - Read [`docs/release-process.en.md`](docs/release-process.en.md) before touching `CHANGELOG.md` or cutting a release.
 - Use the [pull request template](PULL_REQUEST_TEMPLATE.md) when opening a PR.
+- Read the [review and pull-request process](docs/review-process.en.md) before a
+  review round, a remediation series, or a cross-module change.
 - Read the [code of conduct](CODE_OF_CONDUCT.md).
 
 ## Development loop
@@ -30,6 +32,21 @@ Every change must follow this cycle (see the Development Loop section in `AGENTS
 6. Commit source, tests, Changelog, and documentation together.
 7. After the commit, run `bash scripts/bash/ci.sh` (lint-scripts + format + shell API baseline + build/test + coverage gates + benchmarks + Godot integration + shell package consumer smoke); amend and rerun if it fails.
 8. After the commit, run `bash scripts/bash/lint-commits.sh`; the local pre-push hook repeats it and remote CI does not enforce commit lint.
+
+## Pull requests
+
+- One pull request carries one module or one cohesive behavior; split unrelated
+  changes into separate PRs in merge order. Stack a child on the parent only
+  when it cannot build on `main`.
+- The PR title/body are repository-facing and become the squash commit body; do
+  not include internal review-round, severity, agent-dialogue, prompt, or local
+  work-buffer content. The audited-SHA/verdict record is allowed. AI assistance
+  may be disclosed at a high level.
+- After any amend or rebase, re-check the body's commands, coverage/test
+  numbers, and file lists against the final commit. Merge only when the required
+  checks are green, introduced findings are fixed, and pre-existing remaining
+  findings are fixed or tracked as issues.
+- Full rules: [Review and Pull-Request Process](docs/review-process.en.md).
 
 ## Dependency updates
 

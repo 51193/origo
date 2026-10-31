@@ -6,7 +6,9 @@ This file is the detailed authority for Origo **version snapshots, formal releas
 and Changelog rules**. [AGENTS.md](../AGENTS.md) remains the mandatory gate and
 routing document; if a hard gate conflicts with this file, AGENTS.md wins and
 this file must be corrected. The development loop is in AGENTS.md's Development
-Loop section; documentation maintenance rules are in [META.en.md](META.en.md).
+Loop section; documentation maintenance rules are in [META.en.md](META.en.md),
+and pull-request units and review rules are in
+[review-process.en.md](review-process.en.md).
 
 ## Changelog Conventions
 

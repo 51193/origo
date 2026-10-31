@@ -12,7 +12,7 @@ persistence.
 | Evaluating Origo | [Capabilities](usage/capabilities.en.md) and [Architecture Overview](architecture/overview.en.md) |
 | Building a game | [Usage Documentation](usage/README.en.md), then the [SND Entity Model](usage/snd-entity-model.en.md) |
 | Using an AI agent | [Agent Workflow](../AGENTS.md), [Agent Reference](usage/agent-reference.en.md), and the [generated contract API](generated/contract-api.en.md) |
-| Maintaining the framework | [Contributing](../CONTRIBUTING.md), [META](META.en.md), and [Release Process](release-process.en.md) |
+| Maintaining the framework | [Contributing](../CONTRIBUTING.md), [META](META.en.md), [Release Process](release-process.en.md), and [Review Process](review-process.en.md) |
 | Looking for a specific module | [Project Module Index](#project-module-index) |
 
 A runnable game demo and a getting-started walkthrough are intentionally not
@@ -46,6 +46,7 @@ The framework does not require game code to duplicate its runtime wiring.
 | Runtime, SND, save, and console internals | [Project Module Index](#project-module-index) |
 | Tests and their capabilities | [Test documentation](#test-documentation) |
 | Repository rules | [AGENTS.md](../AGENTS.md) |
+| Review and pull-request process | [review-process](review-process.en.md) |
 | Repository agent configuration | [agents/README](agents/README.en.md) |
 | Documentation maintenance | [META](META.en.md) |
 | Release and Changelog | [release-process](release-process.en.md) |

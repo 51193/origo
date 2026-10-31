@@ -167,6 +167,10 @@ Interface declarations, member signatures, package ownership, and overloads:
 - Run the layer-appropriate tests first, then the full local gate.
 - Do not claim a UI or gameplay behavior from headless projection alone.
 - Do not add public surface for test convenience.
+- Framework changes follow the [Review and Pull-Request
+  Process](../review-process.en.md): P1/P2 review findings and their fixes are
+  independently blind-audited, delivery uses one module or one cohesive behavior per pull request,
+  and fixes expand tests around the changed behavior.
 
 See [Strategy Testing](strategy-testing.en.md), [Strategy Lifecycle](strategy-lifecycle.en.md),
 and [Design Patterns](design-patterns.en.md) for task-specific guidance.

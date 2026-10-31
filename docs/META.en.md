@@ -75,6 +75,7 @@ the documented design.
 7. **Test capability/method change** → update the corresponding `docs/Origo.*.Tests/` capability docs
 8. **Release or Changelog rule change** → update [release-process.en.md](release-process.en.md)
 9. **AGENTS.md meta-instruction changes** → [AGENTS.md](../AGENTS.md) is authoritative on conflict; synchronize the affected sections of this document in the same change. Do not hard-code AGENTS section numbers; when a rule is owned by this document, keep the full rule here rather than a summary that can go stale.
+10. **Review, remediation, or pull-request process change** → update [review-process.en.md](review-process.en.md) and, when the pull-request text rules change, the Pull Requests and Review Units section below
 
 ### Situations NOT Requiring Documentation Update
 
@@ -200,6 +201,14 @@ does not own their names; same-repository pull request branches stay validated.
 Use `bash scripts/bash/work-identity.sh validate` or `new`; creator resolution is
 explicit `--creator`, local `origo.githubUser`, then authenticated `gh api user`.
 
+## Pull Requests and Review Units
+
+Pull requests are reviewable delivery units; scope, blind audit, remediation,
+evidence, and merge rules are owned by
+[review-process.en.md](review-process.en.md). The pull-request title is a
+Conventional Commit subject and the squash body follows §Git Commit Message
+Format.
+
 ## Layered Test Checks
 
 Use `bash scripts/bash/check.sh plan`, `quick`, `affected`, or `full`; quick requires
@@ -216,6 +225,7 @@ docs/                            # Documentation root (inside the origo reposito
 ├── README.en.md                # Top-level English index
 ├── META.en.md                  # Maintenance meta-instructions
 ├── release-process.en.md       # Formal releases and Changelog rules
+├── review-process.en.md        # Review rounds, PR units, merge protocol
 ├── generated/                  # Generated, committed signature references
 ├── usage/                      # System usage documentation
 ├── architecture/               # Architecture overview, decisions, and deferred designs
