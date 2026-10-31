@@ -41,14 +41,10 @@ public sealed class SndContext : ISndContext
     internal readonly SystemRun _systemRun;
     internal readonly List<ISaveMetaContributor> _saveMetaContributors = [];
     private bool _bootstrapped;
-    private bool _shutdown;
-    private bool _shutdownCleanupPending;
-    private bool _shutdownRetryCurrentDelete;
-    private bool _shutdownInProgress;
     private bool _switchTeardownInProgress;
-    private bool _shutdownRequestedDuringTeardown;
     private bool _bootstrapCompleted;
     private readonly SndContextParameters _parameters;
+    private readonly SndShutdownState _shutdownState = new();
     internal int _pendingPersistenceRequests;
     internal ProgressRun? _progressRun;
     private bool _workflowInProgress;
@@ -166,19 +162,19 @@ public sealed class SndContext : ISndContext
     /// <inheritdoc />
     public void Shutdown()
     {
-        if (_shutdown)
+        if (_shutdownState.IsTerminal)
             return;
 
         // A nested Shutdown from a quit hook runs while the outer call still
         // owns ProgressRun disposal. It must not commit the terminal flag or
         // clear the progress reference: the outer call continues and, on a
         // cleanup failure, keeps the retry record.
-        if (_shutdownInProgress)
+        if (_shutdownState.IsAttemptInProgress)
         {
             // A quit hook may request shutdown while RunWorkflow or an outer
             // Shutdown owns progress teardown. Do not commit terminal state
             // from here; the outer owner decides after its cleanup attempt.
-            _shutdownRequestedDuringTeardown = true;
+            _shutdownState.RequestNestedShutdown();
             return;
         }
 
@@ -201,7 +197,7 @@ public sealed class SndContext : ISndContext
         // let the workflow continue against a disposed run; reject instead and
         // let the workflow complete or fail on its own terms. Nested shutdown
         // requests from quit hooks during workflow teardown hit the
-        // _shutdownInProgress branch above and are resolved by the workflow
+        // shutdown-attempt branch above and are resolved by the workflow
         // owner after its cleanup attempt, so this guard cannot break that path.
         if (_workflowInProgress)
             throw new InvalidOperationException(
@@ -217,7 +213,7 @@ public sealed class SndContext : ISndContext
                 "SndContext.Shutdown cannot run while session entities are being " +
                 "processed, spawned, killed, or torn down.");
 
-        _shutdownInProgress = true;
+        _shutdownState.BeginAttempt();
         try
         {
             // Cancel every queued persistence/business request first: they were
@@ -227,16 +223,9 @@ public sealed class SndContext : ISndContext
             // released. The console state reset keeps its position as the next
             // teardown step.
             Exception? deferredCancelFailure = null;
-            try
-            {
-                Runtime.CancelPendingDeferredRequests();
-            }
-            catch (Exception ex)
-            {
-                deferredCancelFailure = ex;
-            }
+            CancelPendingDeferredRequests(ref deferredCancelFailure);
 
-            if (_progressRun is null && _shutdownCleanupPending)
+            if (_progressRun is null && _shutdownState.IsCleanupPending)
             {
                 // A previous attempt ran the quit hooks and released the progress
                 // run but failed on a cleanup dependency (typically the current/
@@ -252,7 +241,7 @@ public sealed class SndContext : ISndContext
                     retryFailure ??= ex;
                 }
 
-                if (_shutdownRetryCurrentDelete)
+                if (_shutdownState.RetryCurrentDelete)
                 {
                     try
                     {
@@ -267,24 +256,15 @@ public sealed class SndContext : ISndContext
                 // A retried console reset (or a consumer input source's Clear
                 // implementation) can enqueue fresh deferred work; cancel it
                 // before committing the terminal flag.
-                try
-                {
-                    Runtime.CancelPendingDeferredRequests();
-                }
-                catch (Exception ex)
-                {
-                    retryFailure ??= ex;
-                }
+                CancelPendingDeferredRequests(ref retryFailure);
 
                 if (retryFailure is not null)
                 {
-                    _shutdownRequestedDuringTeardown = false;
+                    _shutdownState.ClearNestedRequest();
                     ExceptionDispatchInfo.Capture(retryFailure).Throw();
                 }
 
-                _shutdownCleanupPending = false;
-                _shutdownRetryCurrentDelete = false;
-                _shutdown = true;
+                _shutdownState.CommitTerminalState();
                 return;
             }
 
@@ -323,33 +303,19 @@ public sealed class SndContext : ISndContext
             // deferred work (persistence requests are only rejected once the
             // terminal flag is committed). Drop that work too, so no queued
             // action can run on a frame after shutdown.
-            try
-            {
-                Runtime.CancelPendingDeferredRequests();
-            }
-            catch (Exception ex)
-            {
-                firstFailure ??= ex;
-            }
+            CancelPendingDeferredRequests(ref firstFailure);
 
+            ApplyShutdownTeardownOutcome(firstFailure, hadProgressRun);
             if (firstFailure is not null)
             {
-                _shutdownCleanupPending = true;
-                _shutdownRetryCurrentDelete = hadProgressRun;
-                // The nested shutdown request belonged to this failed attempt:
-                // the attempt remains retryable, but a later lifecycle workflow
-                // must not consume a stale request and commit terminal state.
-                _shutdownRequestedDuringTeardown = false;
+                // The nested request belonged to this failed attempt; keep the
+                // retryable cleanup but do not let a later workflow consume it.
                 ExceptionDispatchInfo.Capture(firstFailure).Throw();
             }
-
-            _shutdownCleanupPending = false;
-            _shutdownRetryCurrentDelete = false;
-            _shutdown = true;
         }
         finally
         {
-            _shutdownInProgress = false;
+            _shutdownState.EndAttempt();
         }
     }
 
@@ -472,6 +438,26 @@ public sealed class SndContext : ISndContext
             throw new InvalidOperationException(
                 "BeforeSave session-mutation guard is not active.");
         _beforeSaveSessionMutationGuardDepth--;
+    }
+
+    private void CancelPendingDeferredRequests(ref Exception? failure)
+    {
+        try
+        {
+            Runtime.CancelPendingDeferredRequests();
+        }
+        catch (Exception ex)
+        {
+            failure ??= ex;
+        }
+    }
+
+    private void ApplyShutdownTeardownOutcome(Exception? failure, bool retryCurrentDelete)
+    {
+        if (failure is null)
+            _shutdownState.CommitTerminalState();
+        else
+            _shutdownState.ScheduleCleanupRetry(retryCurrentDelete);
     }
 
     /// <summary>
@@ -724,7 +710,7 @@ public sealed class SndContext : ISndContext
     private T RunWorkflow<T>(Func<T> body)
     {
         ThrowIfShutdown();
-        if (_shutdownCleanupPending)
+        if (_shutdownState.IsCleanupPending)
             throw new InvalidOperationException(
                 "SndContext cannot start a lifecycle workflow while a previous " +
                 "shutdown cleanup is pending. Retry Shutdown to finish it.");
@@ -735,7 +721,7 @@ public sealed class SndContext : ISndContext
             Runtime.ResetConsoleState();
 
             Exception? progressTeardownFailure = null;
-            _shutdownInProgress = true;
+            _shutdownState.BeginAttempt();
             try
             {
                 ShutdownCurrentProgressAndScene();
@@ -746,39 +732,22 @@ public sealed class SndContext : ISndContext
             }
             finally
             {
-                _shutdownInProgress = false;
+                _shutdownState.EndAttempt();
             }
 
-            if (_shutdownRequestedDuringTeardown)
+            if (_shutdownState.ConsumeNestedRequest())
             {
-                _shutdownRequestedDuringTeardown = false;
-
                 // A quit hook that requested shutdown may also have queued
                 // deferred work before the terminal flag exists. Cancel it
                 // before committing shutdown, otherwise it would run on a later
                 // frame against the terminal context and keep the persistence
                 // counter non-zero. Cancellation failures join the teardown
                 // failure and keep the cleanup retryable.
-                try
-                {
-                    Runtime.CancelPendingDeferredRequests();
-                }
-                catch (Exception ex)
-                {
-                    progressTeardownFailure ??= ex;
-                }
+                CancelPendingDeferredRequests(ref progressTeardownFailure);
 
-                if (progressTeardownFailure is null)
-                {
-                    _shutdown = true;
-                }
-                else
-                {
-                    // The progress run is gone but its current/ cleanup failed;
-                    // keep the retry record so a later Shutdown can finish it.
-                    _shutdownCleanupPending = true;
-                    _shutdownRetryCurrentDelete = true;
-                }
+                // Success commits terminal state; failure keeps the cleanup
+                // retry record because the progress run is already gone.
+                ApplyShutdownTeardownOutcome(progressTeardownFailure, retryCurrentDelete: true);
             }
 
             if (progressTeardownFailure is not null)
@@ -802,7 +771,7 @@ public sealed class SndContext : ISndContext
 
     internal void ThrowIfShutdown()
     {
-        if (_shutdown)
+        if (_shutdownState.IsTerminal)
             throw new InvalidOperationException(
                 "SndContext has been shut down; bootstrap and persistence mutations (save, load, delete, continue, level-switch) are no longer accepted.");
     }
