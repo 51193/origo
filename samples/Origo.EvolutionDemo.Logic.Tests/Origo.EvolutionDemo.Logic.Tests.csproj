@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <RollForward>LatestMajor</RollForward>
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+        <UseAppHost>true</UseAppHost>
+        <RootNamespace>Origo.EvolutionDemo.Logic.Tests</RootNamespace>
+        <!-- Test method names use underscores by design; demo logic is not a shipped API. -->
+        <NoWarn>$(NoWarn);CA1707;CA1861;CA1859</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk"/>
+        <PackageReference Include="xunit.v3"/>
+        <PackageReference Include="xunit.runner.visualstudio">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Origo.EvolutionDemo.Logic\Origo.EvolutionDemo.Logic.csproj"/>
+    </ItemGroup>
+
+</Project>

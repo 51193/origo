@@ -22,6 +22,7 @@ can focus on what the game *is* rather than how its runtime is wired.
 - [Architecture](https://github.com/51193/origo/blob/main/docs/architecture/overview.en.md) — runtime and layer design.
 - [Agent workflow](https://github.com/51193/origo/blob/main/AGENTS.md) — repository development rules for agents.
 - [Contributing](https://github.com/51193/origo/blob/main/CONTRIBUTING.md) — development setup and contribution loop.
+- [Samples](samples/README.md) — playable examples, including the evolution demo.
 
 ## License
 

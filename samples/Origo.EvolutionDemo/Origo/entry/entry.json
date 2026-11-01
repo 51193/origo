@@ -1,0 +1,9 @@
+{
+  "levels": {
+    "pond": {
+      "snd_scene": "res://Origo/initial/levels/pond/snd_scene.json",
+      "type": "main_menu"
+    }
+  },
+  "main_menu_level": "pond"
+}

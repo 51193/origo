@@ -13,6 +13,59 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 ### Added
 
+- **Playable evolution demo sample** — `samples/Origo.EvolutionDemo` is a
+  runnable Godot idle sandbox with a genome/neural-network simulation, main
+  menu, creature inspector, speed controls, feeding, autosave, and three manual
+  save slots. It uses the public shell APIs and the SND save system; the
+  Godot-free genome/brain/sensor logic is covered by a dedicated test project.
+  Founders start from a calibrated foraging/steering template with a broad 10%
+  mutation pass, starter nutrients nearby, and a food bloom that ramps down over
+  the first three minutes; dying creatures drop
+  food for survivors, and all food spawns are clamped inside the larger pond.
+  Food is scarce on the expanded pond, and hunger/movement/reproduction pressure
+  is tuned so spinning lineages starve; the 300-creature cap is a rare safety
+  valve. The neural network now has per-node hidden activation genes (sigmoid,
+  linear, inverted linear, ReLU) and sin/cos rhythm sensors, so network roles and
+  timing are evolvable. A genome-length-independent appearance derivation turns
+  raw genomes into body colors, theme colors, and twelve pattern families, and a
+  live Diversity board charts genome distance, allele entropy, themes, lineages,
+  and pattern usage. Rendering interpolates between fixed simulation ticks so
+  low-speed movement stays smooth, and the HUD separates accelerated `Sim` time
+  from wall-clock `Real` time. The pond is now 10,000 world-units in radius with
+  a 3,000-creature cap and 1,200 founders. Creatures render at true world scale
+  (no minimum screen-size floor), so dense low-zoom views stay sparse; the genome
+  gained a third evolved radial spike action and rhythm sensors now start from
+  each creature's own age instead of a shared pond clock. Food is emitted in
+  deterministic clustered settlements
+  (configurable patch count/radius) instead of uniform noise, with a graded
+  radial density `(1 - r/R)^falloff`. Defaults use a wide 900-radius patch with a
+  gentle 0.55 falloff, reducing the dense core and spreading production over a
+  much larger foraging area. Pre-versioned saves migrate their old 420/1.8/250
+  patch layout to the wide profile once on load. Each patch is an SND
+  `evolution.foodsource` entity that scans local
+  and global food density and lowers its next-period spawn chance as the local
+  patch fills; local capacities keep unattended patches from monopolizing the
+  global hard cap. Sources wander randomly inside the pond and each has an
+  independent randomized 90–240 s production wave (random phase, trough, and
+  peak), producing staggered resource booms and droughts. This keeps foraging
+  grounds discoverable without filling the map.
+  The New Pond screen also has a scrollable Advanced Settings page backed by a
+  central `DemoSettings` model: map/world, energy, reproduction, spike, feeding,
+  every food-source parameter, and a new `evolution.overgrowth` SND strategy that
+  consumes excess food in overfull regions to spawn a heavily mutated descendant.
+  Settings persist with the controller entity; seed, food preset, mutation preset,
+  collision, and bloom remain on the main New Pond page. A cursor-relative wheel zoom,
+  right/middle drag pan, and `R`
+  reset make the larger space navigable; the default view is a local region rather
+  than a dense whole-pond carpet. Soft collision and the early food bloom are
+  retained as per-pond options and default to off (exposed in New Game). A spatial sensor grid,
+  adaptive AI batching, X-sweep collision, and high-density render LOD keep the
+  larger simulation interactive; a soft circular collision pass keeps bodies
+  from overlapping without rigid-body instability. Rendering culls entities to
+  the camera view, reuses decoded brains and appearance records, collapses the
+  per-frame creature-count pass, and refreshes the HUD below 10 Hz without
+  changing simulation results. The 2k–5k range was stress-tested, with 3,000
+  selected as the stable default cap.
 - **`OrigoHost` implements `IDisposable`** — hosts can be owned with
   `using var host = OrigoHost.Create(options);`; the existing idempotent
   `Dispose` remains the public shutdown path.

@@ -1,0 +1,23 @@
+<Project Sdk="Godot.NET.Sdk/4.7.2">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <EnableDynamicLoading>true</EnableDynamicLoading>
+        <Nullable>enable</Nullable>
+        <IsPackable>false</IsPackable>
+        <RootNamespace>Origo.EvolutionDemo</RootNamespace>
+        <!--
+          Sample code keeps a flat namespace and a small parameterized helper
+          constructor; modernizer-only IDE suggestions are suppressed so the
+          repository format gate stays focused on correctness.
+        -->
+        <NoWarn>$(NoWarn);IDE0290;IDE0130;IDE0305;IDE0042;IDE0090;IDE0031</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Origo.Core\Origo.Core.csproj"/>
+        <ProjectReference Include="..\..\Origo.GodotAdapter\Origo.GodotAdapter.csproj"/>
+        <ProjectReference Include="..\Origo.EvolutionDemo.Logic\Origo.EvolutionDemo.Logic.csproj"/>
+    </ItemGroup>
+
+</Project>

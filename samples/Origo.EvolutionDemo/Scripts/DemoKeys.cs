@@ -1,0 +1,84 @@
+namespace Origo.EvolutionDemo;
+
+/// <summary>TypedData keys shared by the simulation, presentation, and UI.</summary>
+internal static class DemoKeys
+{
+    public const string Kind = "evo.kind";
+    public const string ControllerKind = "controller";
+    public const string CreatureKind = "creature";
+    public const string FoodKind = "food";
+    public const string FoodSourceKind = "food_source";
+
+    public const string Phase = "evo.phase";
+    public const string PhaseMenu = "menu";
+    public const string PhaseStarting = "starting";
+    public const string PhaseRunning = "running";
+    public const string PhaseExtinct = "extinct";
+
+    public const string Seed = "evo.seed";
+    public const string MutationRate = "evo.mutationRate";
+    public const string FoodPreset = "evo.foodPreset";
+    public const string Speed = "evo.speed";
+    public const string Paused = "evo.paused";
+    public const string Time = "evo.time";
+    public const string Tick = "evo.tick";
+    public const string Accumulator = "evo.accumulator";
+    public const string FoodAccumulator = "evo.foodAccumulator";
+    public const string Initialized = "evo.initialized";
+    public const string NextCreatureId = "evo.nextCreatureId";
+    public const string NextFoodId = "evo.nextFoodId";
+    public const string NextLineageId = "evo.nextLineageId";
+    public const string MaxGeneration = "evo.maxGeneration";
+    public const string FeedRequest = "evo.feedRequest";
+
+    public const string Genome = "evo.genome";
+    public const string X = "evo.x";
+    public const string Y = "evo.y";
+    public const string Heading = "evo.heading";
+    public const string PrevX = "evo.prevX";
+    public const string PrevY = "evo.prevY";
+    public const string PrevHeading = "evo.prevHeading";
+    public const string InspectTarget = "ui.inspectTarget";
+    public const string Drive = "evo.drive";
+    public const string Turn = "evo.turn";
+    public const string SpikeDrive = "evo.spikeDrive";
+    public const string SpikeCooldown = "evo.spikeCooldown";
+    public const string SpikeFlash = "evo.spikeFlash";
+    public const string SpikeAttacks = "evo.spikeAttacks";
+    public const string SpikeKills = "evo.spikeKills";
+    public const string ConfigJson = "world.config";
+    public const string OvergrowthNextAt = "overgrowth.nextAt";
+    public const string OvergrowthCount = "overgrowth.count";
+    public const string FastForwardActive = "fastForward.active";
+    public const string FastForwardStart = "fastForward.start";
+    public const string FastForwardTarget = "fastForward.target";
+    public const string FastForwardProgress = "fastForward.progress";
+    public const string RealSeconds = "evo.realSeconds";
+    public const string CollisionEnabled = "world.collisionEnabled";
+    public const string BloomEnabled = "world.bloomEnabled";
+    public const string FoodPatchCount = "world.foodPatchCount";
+    public const string PatchIndex = "source.patchIndex";
+    public const string PatchCount = "source.patchCount";
+    public const string NextScanAt = "source.nextScanAt";
+    public const string NextSpawnAt = "source.nextSpawnAt";
+    public const string SourceSpawnCount = "source.spawnCount";
+    public const string SourceNextFoodId = "source.nextFoodId";
+    public const string LocalFood = "source.localFood";
+    public const string GlobalFood = "source.globalFood";
+    public const string LocalCapacity = "source.localCapacity";
+    public const string SourceWalkSpeed = "source.walkSpeed";
+    public const string SourceWalkNextAt = "source.walkNextAt";
+    public const string SourceWalkStep = "source.walkStep";
+    public const string CyclePeriod = "source.cyclePeriod";
+    public const string CyclePhase = "source.cyclePhase";
+    public const string CycleLow = "source.cycleLow";
+    public const string CycleHigh = "source.cycleHigh";
+    public const string Energy = "evo.energy";
+    public const string Age = "evo.age";
+    public const string Generation = "evo.generation";
+    public const string Lineage = "evo.lineage";
+    public const string Children = "evo.children";
+    public const string ReproCooldown = "evo.reproCooldown";
+    public const string Sensors = "evo.sensors";
+    public const string Outputs = "evo.outputs";
+}
