@@ -59,7 +59,8 @@ The page covers:
 
 - world radius, initial population, hard cap, body/camera-scale physics;
 - food amounts, food caps, feeding, bloom parameters;
-- mutation, metabolism, reproduction, ageing, lineage threshold;
+- brain mutation, body-length mutation, frameshift, founder mutation,
+  metabolism, reproduction, ageing, lineage threshold;
 - spike threshold/cost/radius/cooldown;
 - every food-patch/source parameter: count, radius, falloff, local capacity,
   scan/spawn/walk cadence, walk speed/turn, and all long-cycle bounds;
@@ -263,6 +264,7 @@ samples/Origo.EvolutionDemo/
   Origo/entry/entry.json        # custom level id "pond"
   Origo/initial/levels/pond/    # controller entity scene
   Origo/demo/*.tscn             # controller/creature/food/food-source placeholder nodes
+  GENOME_V2_DESIGN.md          # body codon / latent brain design baseline
   Scripts/
     DemoEntry.cs                # OrigoDefaultEntry, paths, save metadata
     DemoUi.cs                   # main menu, HUD, inspector, pause/save/load
@@ -275,8 +277,8 @@ samples/Origo.EvolutionDemo/
     OvergrowthStrategy.cs       # global high-density mutation pressure
 ```
 
-`Origo.EvolutionDemo.Logic` contains the Godot-free body codon genome, latent
-neural genome, sensor, appearance, food-patch, diversity, and central
+`Origo.EvolutionDemo.Logic` contains the Godot-free `BodyGenome`, `NeuralGenome`,
+`CreatureGenome`, sensor, appearance, food-patch, collision, diversity, and central
 `DemoSettings` layer. Its tests are in `Origo.EvolutionDemo.Logic.Tests`.
 
 ## Known first-version limits
@@ -284,6 +286,7 @@ neural genome, sensor, appearance, food-patch, diversity, and central
 - One pond, no predators, no combat.
 - Point/step mutations and body-length mutations only; no crossover.
 - Hidden topology is body-controlled within a fixed maximum latent lattice.
+- Soft collision uses each creature's body radius; it remains off by default.
 - No offline progression; the simulation runs while the game is open.
 - Procedural vector visuals only; no external art/audio assets.
 - UI text is English.

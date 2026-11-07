@@ -44,6 +44,21 @@ public sealed class CollisionTests
     }
 
     [Fact]
+    public void ResolveSweep_UsesEachBodysRadius()
+    {
+        var bodies = new[]
+        {
+            new CollisionBody { X = 0f, Y = 0f, Radius = 2f },
+            new CollisionBody { X = 5f, Y = 0f, Radius = 6f },
+        };
+
+        CreatureCollision.ResolveSweep(bodies, 500f);
+
+        var distance = MathF.Abs(bodies[1].X - bodies[0].X);
+        Assert.True(distance >= 7.9f);
+    }
+
+    [Fact]
     public void Resolve_LeavesNonOverlappingBodiesAlone()
     {
         var bodies = new[]

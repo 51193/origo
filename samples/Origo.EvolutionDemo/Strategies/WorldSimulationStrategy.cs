@@ -308,7 +308,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         collisionBodies.Clear();
         var collisionEntities = CollisionEntityScratch;
         collisionEntities.Clear();
-        var mutationRate = ReadFloat(controller, DemoKeys.MutationRate, (float)Tuning.DefaultMutationRate);
+        var bodyMutationRate = (float)Tuning.BodyMutationRate;
         var inspectTarget = ReadString(controller, DemoKeys.InspectTarget, string.Empty);
         var bloomEnabled = ReadBool(controller, DemoKeys.BloomEnabled, Tuning.EarlyFoodBloomEnabled);
         var collisionEnabled = ReadBool(controller, DemoKeys.CollisionEnabled, Tuning.CollisionEnabled);
@@ -462,7 +462,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 var children = Math.Max(0, ReadInt(entity, DemoKeys.Children, 0));
                 var childGenome = CreatureGenome.Mutate(
                     parentGenome,
-                    mutationRate,
+                    bodyMutationRate,
                     Tuning.BodyLengthMutationRate,
                     Tuning.FrameshiftMutationRate,
                     Tuning.BrainMutationRate,
@@ -537,7 +537,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             }
 
             alive++;
-            collisionBodies.Add(new CollisionBody { X = position.X, Y = position.Y });
+            collisionBodies.Add(new CollisionBody { X = position.X, Y = position.Y, Radius = creature.Body.BodyRadius });
             collisionEntities.Add(entity);
         }
 
@@ -545,11 +545,10 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         {
             var bodyArray = collisionBodies.ToArray();
             if (bodyArray.Length >= 128)
-                CreatureCollision.ResolveSweep(bodyArray, Tuning.BodyRadius, Tuning.PondRadius);
+                CreatureCollision.ResolveSweep(bodyArray, Tuning.PondRadius);
             else
                 CreatureCollision.Resolve(
                     bodyArray,
-                    Tuning.BodyRadius,
                     Tuning.PondRadius,
                     Tuning.CollisionIterations);
             for (var i = 0; i < bodyArray.Length; i++)

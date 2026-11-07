@@ -422,6 +422,7 @@ public partial class DemoUi : CanvasLayer
         }
 
         _settingsDraft.DefaultMutationRate = _pendingMutation;
+        _settingsDraft.BodyMutationRate = _pendingMutation;
         _settingsDraft.CollisionEnabled = _pendingCollision;
         _settingsDraft.EarlyFoodBloomEnabled = _pendingBloom;
         _settingsDraft.Normalize();
@@ -520,6 +521,7 @@ public partial class DemoUi : CanvasLayer
         _pendingBloom = bloom;
         _pendingSettings = _settingsDraft.Clone();
         _pendingSettings.DefaultMutationRate = mutation;
+        _pendingSettings.BodyMutationRate = mutation;
         _pendingSettings.CollisionEnabled = collision;
         _pendingSettings.EarlyFoodBloomEnabled = bloom;
 
@@ -1414,6 +1416,9 @@ public partial class DemoUi : CanvasLayer
             return;
 
         var genomes = new List<string>();
+        var bodySet = new HashSet<string>(StringComparer.Ordinal);
+        var brainSet = new HashSet<string>(StringComparer.Ordinal);
+        var combinedSet = new HashSet<string>(StringComparer.Ordinal);
         var themes = new int[CreatureAppearance.ThemeCount];
         var themeColors = new Color[CreatureAppearance.ThemeCount];
         var patterns = new int[CreatureAppearance.PatternCount];
@@ -1427,6 +1432,14 @@ public partial class DemoUi : CanvasLayer
             if (genome.Length == 0)
                 continue;
             genomes.Add(genome);
+            bodySet.Add(genome);
+            var brain = ReadString(entity, DemoKeys.BrainGenome, string.Empty);
+            if (brain.Length > 0)
+            {
+                brainSet.Add(brain);
+                combinedSet.Add(genome + "|" + brain);
+            }
+
             var look = GenomeAppearance.Derive(genome);
             if (themes[look.ThemeIndex] == 0)
                 themeColors[look.ThemeIndex] = ToColor(look.Body);
@@ -1442,7 +1455,7 @@ public partial class DemoUi : CanvasLayer
             0f, 1f);
         _diversityStats.Text = string.Create(
             CultureInfo.InvariantCulture,
-            $"Population {metrics.Population}   Unique bodies {metrics.UniqueGenomes}   " +
+            $"Population {metrics.Population}   Bodies {bodySet.Count}   Brains {brainSet.Count}   Pairs {combinedSet.Count}\n" +
             $"Mean Hamming {metrics.MeanPairwiseDistance:0.000}   Allele entropy {metrics.MeanAlleleEntropy:0.000}");
         _diversityIndex.Text = string.Create(CultureInfo.InvariantCulture, $"Diversity index  {index:0.00}");
         _diversityChart.Push(index);
@@ -1622,6 +1635,12 @@ public partial class DemoUi : CanvasLayer
             s => s.ReproductionCooldownSeconds, (s, v) => s.ReproductionCooldownSeconds = v);
         AddNumberSetting(rows, "Founder mutation %", 0f, 50f, 1f,
             s => (float)(s.FounderMutationRate * 100d), (s, v) => s.FounderMutationRate = v / 100d);
+        AddNumberSetting(rows, "Brain mutation %", 0f, 5f, 0.1f,
+            s => (float)(s.BrainMutationRate * 100d), (s, v) => s.BrainMutationRate = v / 100d);
+        AddNumberSetting(rows, "Body length mutation %", 0f, 10f, 0.1f,
+            s => (float)(s.BodyLengthMutationRate * 100d), (s, v) => s.BodyLengthMutationRate = v / 100d);
+        AddNumberSetting(rows, "Frameshift mutation %", 0f, 5f, 0.1f,
+            s => (float)(s.FrameshiftMutationRate * 100d), (s, v) => s.FrameshiftMutationRate = v / 100d);
         AddNumberSetting(rows, "Lineage mutation threshold", 1f, 30f, 1f,
             s => s.LineageMutationThreshold, (s, v) => s.LineageMutationThreshold = Mathf.RoundToInt(v));
 
