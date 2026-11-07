@@ -120,6 +120,29 @@ public sealed class BodyGenomeTests
         Assert.Throws<ArgumentException>(() => BodyGenome.Decode(new string('G', 72)));
     }
 
+    [Fact]
+    public void BodySensorMask_LeavesInactiveLatentSlotsZero()
+    {
+        var body = BodyGenome.Decode(BodyGenome.DefaultTemplate);
+        var sensors = new float[NeuralGenome.SensorSlots];
+        SensorMath.ComputeInto(
+            body,
+            new System.Numerics.Vector2(0f, 0f),
+            0f,
+            100f,
+            [],
+            [],
+            -1,
+            0.25f,
+            10_000f,
+            sensors);
+
+        Assert.True(sensors[(int)SensorId.FoodAhead] >= 0f);
+        Assert.True(sensors[(int)SensorId.WallAhead] >= 0f);
+        Assert.Equal(0f, sensors[(int)SensorId.FutureA]);
+        Assert.Equal(0f, sensors[(int)SensorId.FutureD]);
+    }
+
     private static void ReplaceCodon(char[] chars, int codonIndex, string codon)
     {
         for (var i = 0; i < 3; i++)

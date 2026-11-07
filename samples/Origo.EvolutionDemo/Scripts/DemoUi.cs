@@ -946,22 +946,30 @@ public partial class DemoUi : CanvasLayer
 
         _inspector.Visible = true;
         var lineage = ReadInt(entity, DemoKeys.Lineage, 1);
-        var genome = ReadString(entity, DemoKeys.Genome, "—");
-        var look = GenomeAppearance.Derive(genome);
+        var bodyGenome = ReadString(entity, DemoKeys.BodyGenome, "—");
+        var brainGenome = ReadString(entity, DemoKeys.BrainGenome, "—");
+        var phenotype = BodyGenome.IsStructurallyValid(bodyGenome)
+            ? BodyGenome.Decode(bodyGenome)
+            : BodyGenome.Decode(BodyGenome.DefaultTemplate);
+        var look = GenomeAppearance.Derive(bodyGenome);
         _inspectorTitle.Text = $"{_selectedName}   lineage {lineage}";
         _inspectorTitle.AddThemeColorOverride("font_color", ToColor(look.Body));
         _inspectorSwatch.Color = ToColor(look.Body);
         _inspectorLook.Text = $"{look.ThemeName} · {look.PatternName}   {look.Body.ToHex()}";
         _inspectorStats.Text = string.Create(
             CultureInfo.InvariantCulture,
-            $"Gen {ReadInt(entity, DemoKeys.Generation, 0)}    Energy {ReadFloat(entity, DemoKeys.Energy, 0f):0.0}/{Tuning.ReproductionEnergy:0}\n" +
-            $"Age {ReadFloat(entity, DemoKeys.Age, 0f):0.0}s    Children {ReadInt(entity, DemoKeys.Children, 0)}\n" +
+            $"Gen {ReadInt(entity, DemoKeys.Generation, 0)}    Energy {ReadFloat(entity, DemoKeys.Energy, 0f):0.0}/{phenotype.MaxEnergy:0}\n" +
+            $"Age {ReadFloat(entity, DemoKeys.Age, 0f):0.0}s/{phenotype.MaxAge:0}s    Children {ReadInt(entity, DemoKeys.Children, 0)}\n" +
+            $"Size {phenotype.SizeScale:0.00}  Speed {phenotype.MoveSpeed:0}  Sense {phenotype.SenseRange:0}  Spike {phenotype.SpikeRadius:0}\n" +
             $"Outputs  {ReadString(entity, DemoKeys.Outputs, "—")}\n" +
             $"Sensors  {ReadString(entity, DemoKeys.Sensors, "—")}");
-        _inspectorGenome.Text = $"Genome ({Genome.Length} hex digits)\n" + FormatGenome(genome);
-        _inspectorSensors.Text = "8 sensors (incl. sin/cos rhythm) → mixed 5 → mixed 5 → 3 actions\n" +
-            $"H1: {DescribeTypes(genome, Genome.Type1Offset, Genome.Type1Length)}\n" +
-            $"H2: {DescribeTypes(genome, Genome.Type2Offset, Genome.Type2Length)}";
+        _inspectorGenome.Text = $"Body genome ({bodyGenome.Length} hex / {bodyGenome.Length / 3} codons)\n" +
+            FormatGenome(bodyGenome) + $"\nBrain genome ({brainGenome.Length} hex)";
+        _inspectorSensors.Text =
+            $"Organs: V {phenotype.VisionOrgan} C {phenotype.CreatureSenseOrgan} R {phenotype.RhythmOrgan} S {phenotype.SpikeOrgan}\n" +
+            $"Sensors {phenotype.ActiveSensorCount}/12  Outputs {phenotype.ActiveOutputCount}/3  Layers {phenotype.HiddenLayers}  Widths {phenotype.HiddenWidth1}/{phenotype.HiddenWidth2}/{phenotype.HiddenWidth3}\n" +
+            $"H1: {DescribeTypes(brainGenome, NeuralGenome.Types1Offset, phenotype.HiddenWidth1)}\n" +
+            $"H2: {DescribeTypes(brainGenome, NeuralGenome.Types2Offset, phenotype.HiddenWidth2)}";
     }
 
     private static string DescribeTypes(string genome, int offset, int length)
@@ -1415,7 +1423,7 @@ public partial class DemoUi : CanvasLayer
             var (found, kind) = entity.TryGetData<string>(DemoKeys.Kind);
             if (!found || !string.Equals(kind, DemoKeys.CreatureKind, StringComparison.Ordinal))
                 continue;
-            var genome = ReadString(entity, DemoKeys.Genome, string.Empty);
+            var genome = ReadString(entity, DemoKeys.BodyGenome, string.Empty);
             if (genome.Length == 0)
                 continue;
             genomes.Add(genome);
@@ -1434,7 +1442,7 @@ public partial class DemoUi : CanvasLayer
             0f, 1f);
         _diversityStats.Text = string.Create(
             CultureInfo.InvariantCulture,
-            $"Population {metrics.Population}   Unique genomes {metrics.UniqueGenomes}   " +
+            $"Population {metrics.Population}   Unique bodies {metrics.UniqueGenomes}   " +
             $"Mean Hamming {metrics.MeanPairwiseDistance:0.000}   Allele entropy {metrics.MeanAlleleEntropy:0.000}");
         _diversityIndex.Text = string.Create(CultureInfo.InvariantCulture, $"Diversity index  {index:0.00}");
         _diversityChart.Push(index);
@@ -1999,7 +2007,7 @@ public partial class DemoUi : CanvasLayer
         column.AddChild(Title("ORIGO: PRIMORDIAL POOL", 30));
         var subtitle = new Label
         {
-            Text = "watch small minds evolve\nfeed the pond · inspect genomes · save a lineage",
+            Text = "watch small minds evolve\nfeed the pond · inspect bodies and brains · save a lineage",
             HorizontalAlignment = HorizontalAlignment.Center,
             Modulate = MutedColor,
         };

@@ -69,6 +69,10 @@ public static class Tuning
     public static float MaxAgeSeconds => DemoSettings.Current.MaxAgeSeconds;
     public static double DefaultMutationRate => DemoSettings.Current.DefaultMutationRate;
     public static double FounderMutationRate => DemoSettings.Current.FounderMutationRate;
+    public static double BodyMutationRate => DemoSettings.Current.BodyMutationRate;
+    public static double BrainMutationRate => DemoSettings.Current.BrainMutationRate;
+    public static double BodyLengthMutationRate => DemoSettings.Current.BodyLengthMutationRate;
+    public static double FrameshiftMutationRate => DemoSettings.Current.FrameshiftMutationRate;
     public static int LineageMutationThreshold => DemoSettings.Current.LineageMutationThreshold;
     public static bool OvergrowthEnabled => DemoSettings.Current.OvergrowthEnabled;
     public static float OvergrowthScanIntervalSeconds => DemoSettings.Current.OvergrowthScanIntervalSeconds;

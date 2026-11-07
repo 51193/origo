@@ -203,7 +203,8 @@ public partial class EvolutionWorldView : Node2D
             creatureCount++;
 
             var currentPosition = ReadPosition(entity);
-            if (!IsVisible(currentPosition, 32f, viewMin, viewMax))
+            var bodyRadius = ReadFloat(entity, DemoKeys.BodyRadius, Tuning.BodyRadius);
+            if (!IsVisible(currentPosition, bodyRadius + 32f, viewMin, viewMax))
                 continue;
             var currentHeading = ReadFloat(entity, DemoKeys.Heading, 0f);
             var previousPosition = new Vector2(
@@ -212,25 +213,25 @@ public partial class EvolutionWorldView : Node2D
             var previousHeading = ReadFloat(entity, DemoKeys.PrevHeading, currentHeading);
             var creaturePosition = previousPosition.Lerp(currentPosition, interpolation);
             var heading = LerpAngle(previousHeading, currentHeading, interpolation);
-            var genome = ReadString(entity, DemoKeys.Genome, string.Empty);
-            if (!_appearanceCache.TryGetValue(genome, out var look))
+            var bodyGenome = ReadString(entity, DemoKeys.BodyGenome, string.Empty);
+            if (!_appearanceCache.TryGetValue(bodyGenome, out var look))
             {
                 if (_appearanceCache.Count >= 2048)
                     _appearanceCache.Clear();
-                look = GenomeAppearance.Derive(genome);
-                _appearanceCache[genome] = look;
+                look = GenomeAppearance.Derive(bodyGenome);
+                _appearanceCache[bodyGenome] = look;
             }
             var body = ToColor(look.Body);
             var accent = ToColor(look.Accent);
             var energy = ReadFloat(entity, DemoKeys.Energy, 0f);
+            var maxEnergy = MathF.Max(1f, ReadFloat(entity, DemoKeys.MaxEnergy, 200f));
             var screenPosition = creaturePosition;
             var forward = new Vector2(Mathf.Cos(heading), Mathf.Sin(heading));
-            var bodyRadius = Tuning.BodyRadius;
 
-            var detailed = (ViewScale * Tuning.BodyRadius) >= 4f;
+            var detailed = (ViewScale * bodyRadius) >= 4f;
             DrawCircle(screenPosition, bodyRadius, new Color(body, 0.95f));
             if (detailed)
-                DrawPattern(screenPosition, look, accent, heading);
+                DrawPattern(screenPosition, look, accent, heading, bodyRadius);
 
             // Judgment-radius rim. A screen-constant white line keeps the body
             // legible against food, source washes, and similarly colored bodies;
@@ -262,9 +263,9 @@ public partial class EvolutionWorldView : Node2D
                 && string.Equals(SelectedName, entity.Name, StringComparison.Ordinal);
             if (!highDensity || isSelected)
             {
-                DrawLine(screenPosition, screenPosition + (forward * 14f),
+                DrawLine(screenPosition, screenPosition + (forward * (bodyRadius * 2.6f)),
                     new Color(0.95f, 0.98f, 1f, 0.9f), 2f / ViewScale);
-                var energyRatio = Mathf.Clamp(energy / Tuning.ReproductionEnergy, 0f, 1f);
+                var energyRatio = Mathf.Clamp(energy / maxEnergy, 0f, 1f);
                 DrawArc(screenPosition, bodyRadius + 4f, -Mathf.Pi / 2f,
                     -Mathf.Pi / 2f + (Mathf.Tau * energyRatio), 24, accent, 2f, true);
             }
@@ -283,9 +284,9 @@ public partial class EvolutionWorldView : Node2D
         Vector2 center,
         CreatureAppearance look,
         Color accent,
-        float heading)
+        float heading,
+        float radius)
     {
-        var radius = Tuning.BodyRadius;
         var angle = look.PatternAngle + heading;
         var direction = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
         var perpendicular = new Vector2(-direction.Y, direction.X);

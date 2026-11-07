@@ -22,7 +22,8 @@ internal static class EvolutionEntityFactory
 
     public static SndMetaData Creature(
         string name,
-        string genome,
+        Origo.EvolutionDemo.Logic.CreatureGenome genome,
+        Origo.EvolutionDemo.Logic.BodyPhenotype phenotype,
         float x,
         float y,
         float heading,
@@ -33,7 +34,25 @@ internal static class EvolutionEntityFactory
         new SndMetaFluentBuilder(name)
             .SetNode("main", CreatureScene)
             .SetString(DemoKeys.Kind, DemoKeys.CreatureKind)
-            .SetString(DemoKeys.Genome, genome)
+            .SetString(DemoKeys.BodyGenome, genome.Body)
+            .SetString(DemoKeys.BrainGenome, genome.Brain)
+            .SetFloat(DemoKeys.BodyRadius, phenotype.BodyRadius)
+            .SetFloat(DemoKeys.FoodPickupRadius, phenotype.FoodPickupRadius)
+            .SetFloat(DemoKeys.MaxEnergy, phenotype.MaxEnergy)
+            .SetFloat(DemoKeys.MoveSpeed, phenotype.MoveSpeed)
+            .SetFloat(DemoKeys.TurnSpeed, phenotype.TurnSpeed)
+            .SetFloat(DemoKeys.SenseRange, phenotype.SenseRange)
+            .SetFloat(DemoKeys.SpikeRadius, phenotype.SpikeRadius)
+            .SetFloat(DemoKeys.BasalMetabolism, phenotype.BasalMetabolism)
+            .SetFloat(DemoKeys.MaxAge, phenotype.MaxAge)
+            .SetBool(DemoKeys.SpikeOrgan, phenotype.SpikeOrgan)
+            .SetBool(DemoKeys.VisionOrgan, phenotype.VisionOrgan)
+            .SetBool(DemoKeys.RhythmOrgan, phenotype.RhythmOrgan)
+            .SetBool(DemoKeys.CreatureSenseOrgan, phenotype.CreatureSenseOrgan)
+            .SetInt(DemoKeys.HiddenLayers, phenotype.HiddenLayers)
+            .SetInt(DemoKeys.HiddenWidth1, phenotype.HiddenWidth1)
+            .SetInt(DemoKeys.HiddenWidth2, phenotype.HiddenWidth2)
+            .SetInt(DemoKeys.HiddenWidth3, phenotype.HiddenWidth3)
             .SetFloat(DemoKeys.X, x)
             .SetFloat(DemoKeys.Y, y)
             .SetFloat(DemoKeys.Heading, heading)
@@ -51,7 +70,7 @@ internal static class EvolutionEntityFactory
             .SetInt(DemoKeys.Lineage, lineage)
             .SetInt(DemoKeys.Children, 0)
             .SetFloat(DemoKeys.ReproCooldown, cooldown)
-            .SetString(DemoKeys.Sensors, "0,0,0,0,0,0")
+            .SetString(DemoKeys.Sensors, "0,0,0,0,0,0,0,0,0,0,0,0")
             .SetString(DemoKeys.Outputs, "M 0.00 / T 0.00 / S 0.00")
             .Build();
 

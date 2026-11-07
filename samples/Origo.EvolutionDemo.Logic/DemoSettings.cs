@@ -49,6 +49,10 @@ public sealed class DemoSettings
     public float MaxAgeSeconds { get; set; } = 300f;
     public double DefaultMutationRate { get; set; } = 0.015d;
     public double FounderMutationRate { get; set; } = 0.10d;
+    public double BodyMutationRate { get; set; } = 0.015d;
+    public double BrainMutationRate { get; set; } = 0.003d;
+    public double BodyLengthMutationRate { get; set; } = 0.005d;
+    public double FrameshiftMutationRate { get; set; }
     public int LineageMutationThreshold { get; set; } = 4;
 
     // Spike.
@@ -133,6 +137,10 @@ public sealed class DemoSettings
         MaxAgeSeconds = Math.Clamp(MaxAgeSeconds, 1f, 100_000f);
         DefaultMutationRate = Math.Clamp(DefaultMutationRate, 0d, 1d);
         FounderMutationRate = Math.Clamp(FounderMutationRate, 0d, 1d);
+        BodyMutationRate = Math.Clamp(BodyMutationRate, 0d, 1d);
+        BrainMutationRate = Math.Clamp(BrainMutationRate, 0d, 1d);
+        BodyLengthMutationRate = Math.Clamp(BodyLengthMutationRate, 0d, 1d);
+        FrameshiftMutationRate = Math.Clamp(FrameshiftMutationRate, 0d, 1d);
         LineageMutationThreshold = Math.Clamp(LineageMutationThreshold, 1, 1_000);
         SpikeThreshold = Math.Clamp(SpikeThreshold, 0f, 1f);
         SpikeEnergyCost = Math.Clamp(SpikeEnergyCost, 0f, 10_000f);

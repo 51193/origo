@@ -32,6 +32,25 @@ internal static class DemoKeys
     public const string FeedRequest = "evo.feedRequest";
 
     public const string Genome = "evo.genome";
+    public const string BodyGenome = "evo.bodyGenome";
+    public const string BrainGenome = "evo.brainGenome";
+    public const string BodyRadius = "evo.bodyRadius";
+    public const string FoodPickupRadius = "evo.foodPickupRadius";
+    public const string MaxEnergy = "evo.maxEnergy";
+    public const string MoveSpeed = "evo.moveSpeed";
+    public const string TurnSpeed = "evo.turnSpeed";
+    public const string SenseRange = "evo.senseRange";
+    public const string SpikeRadius = "evo.spikeRadius";
+    public const string BasalMetabolism = "evo.basalMetabolism";
+    public const string MaxAge = "evo.maxAge";
+    public const string SpikeOrgan = "evo.spikeOrgan";
+    public const string VisionOrgan = "evo.visionOrgan";
+    public const string RhythmOrgan = "evo.rhythmOrgan";
+    public const string CreatureSenseOrgan = "evo.creatureSenseOrgan";
+    public const string HiddenLayers = "evo.hiddenLayers";
+    public const string HiddenWidth1 = "evo.hiddenWidth1";
+    public const string HiddenWidth2 = "evo.hiddenWidth2";
+    public const string HiddenWidth3 = "evo.hiddenWidth3";
     public const string X = "evo.x";
     public const string Y = "evo.y";
     public const string Heading = "evo.heading";

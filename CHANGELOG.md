@@ -49,7 +49,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   independent randomized 90–240 s production wave (random phase, trough, and
   peak), producing staggered resource booms and droughts. This keeps foraging
   grounds discoverable without filling the map.
-  The New Pond screen also has a scrollable Advanced Settings page backed by a
+  The single fixed 103-digit genome is replaced by a variable-length body codon
+  genome and a fixed 372-digit latent neural genome. Body codons express size,
+  speed, sense, spike range, metabolism, lifespan, organs, appearance, and active
+  neural topology. Body mutations are ±1 nibble steps with codon-boundary
+  duplication/deletion; neural mutations are ±1 nibble steps. Numeric traits use
+  the median of valid codons, organs combine with OR, and reproductive cost grows
+  only logarithmically with body-gene length. The New Pond screen also has a scrollable Advanced Settings page backed by a
   central `DemoSettings` model: map/world, energy, reproduction, spike, feeding,
   every food-source parameter, and a new `evolution.overgrowth` SND strategy that
   consumes excess food in overfull regions to spawn a heavily mutated descendant.

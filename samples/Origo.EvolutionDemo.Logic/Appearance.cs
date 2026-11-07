@@ -110,6 +110,8 @@ public static class GenomeAppearance
             (Scan(genome, 3, 2.19f) * 5.7f)
             + (Scan(genome, 6, 1.07f) * 3.1f)
             + (Scan(genome, 7, 4.43f) * 2.3f)) * CreatureAppearance.PatternCount) % CreatureAppearance.PatternCount);
+        if (genome.Length % BodyGenome.CodonLength == 0 && BodyGenome.IsStructurallyValid(genome))
+            pattern = (CreaturePattern)(BodyGenome.Decode(genome).Pattern % CreatureAppearance.PatternCount);
         var patternAngle = Scan(genome, 7, 0.43f) * Tau;
         var patternScale = 0.48f + (Scan(genome, 5, 2.57f) * 0.34f);
         var patternFrequency = 2 + (int)(Scan(genome, 4, 1.19f) * 4.99f);

@@ -12,11 +12,11 @@ A playable idle artificial-life sandbox built on `Origo.Core` and
   at this scale, so the default local view reads as a sparse world.
 - The default camera shows a local region; wheel zoom and right-drag pan let you
   explore the space, and `R` resets to the whole pond.
-- Click a creature to inspect its 103-hex-digit genome, sensor readings, and
-  outputs.
+- Click a creature to inspect its body codons, fixed latent brain, phenotype,
+  sensor readings, and outputs.
 - Pause, change speed, drop nutrients, save, load, delete saves, or seed a new
   pond.
-- Open **Diversity** in the HUD for live genome statistics, theme/lineage
+- Open **Diversity** in the HUD for live body-genome statistics, theme/lineage
   distributions, pattern usage, and a diversity history chart.
 - Use **Iterate** to run forward to an absolute simulation time at maximum CPU
   speed while showing a progress bar plus global/instantaneous speed
@@ -38,7 +38,7 @@ earlier save.
 |-------|--------|
 | Main menu | Continue / New Game / Load Game / Quit |
 | New Game | Seed, mutation preset, food preset, collision off/soft, early bloom off/on |
-| Click creature | Open genome/stats inspector |
+| Click creature | Open body/brain/stats inspector |
 | Pause | Open pause menu; Resume returns to the pond |
 | Feed | Drop a nutrient cluster; 5-second cooldown |
 | Save | Open save slots (3 manual + auto) |
@@ -95,82 +95,36 @@ production radius is shown only as a faint translucent wash; the wash is skipped
 once its screen-space radius exceeds 75% of the viewport height, so high zoom does
 not tint the entire view or draw a screen-filling arc.
 
-## Genome
+## Genome: body codons and latent brain
 
-Every creature carries the same fixed network layout:
+Each creature carries two genomes:
 
-```
-8 sensors → 5 mixed hidden nodes → 5 mixed hidden nodes → 3 actions (tanh)
-```
+- **BodyGenome**: variable-length 3-hex codons. The high nibble is an opcode and
+  the low byte is an argument. Body codons express size, movement, perception,
+  spike range, metabolism, lifespan, organs, appearance pattern, and the active
+  neural topology.
+- **NeuralGenome**: a fixed 372-hex latent lattice. It stores the maximum
+  12-sensor, 3-hidden-layer, 8-node, 4-output network; the body selects which
+  sensors, outputs, layers, and widths are active.
 
-Sensors:
+The body codon table is deliberately sparse: only 1872 of 4096 codons are
+meaningful. Unknown opcodes/arguments stay neutral. Organs combine with OR;
+numeric traits use the median of valid codons, so duplicate genes provide
+redundancy rather than unbounded dosage.
 
-1. food ahead
-2. food left
-3. food right
-4. wall ahead
-5. other creature ahead
-6. own energy
-7. `sin(clock)` rhythm
-8. `cos(clock)` rhythm
+Default founders use a 24-codon body template and a calibrated 8→5→5→3 brain
+mapped into the latent lattice. Body size controls collision/display radius,
+food pickup radius, and maximum energy. Body changes never invalidate the fixed
+latent neural genome; they only change which latent weights are active.
 
-Actions:
+Body step mutations change one random hex digit by ±1. Body length mutations
+duplicate/delete complete codons. Neural mutations step one hex digit. Frameshift
+mutation is supported but disabled by default. Reproduction cost grows with the
+mother's body hex length through a weak logarithmic term, so redundant genes are
+cheap but not free.
 
-1. `moveDrive` (forward when above threshold)
-2. `turnDrive` (turn rate)
-3. `spikeDrive` (predatory radial strike; consumes energy and kills nearby
-   creatures, then enters a cooldown)
-
-The two hidden layers use per-node activation-type genes. A node can be:
-
-- `sig` — sigmoid
-- `sum` — pass the weighted sum through unchanged
-- `inv` — negate the weighted sum (inhibitory relay)
-- `relu` — rectified linear
-
-The genome is 103 hexadecimal digits:
-
-| Segment | Hex digits |
-|---------|-----------:|
-| sensor → hidden 1 weights | 40 |
-| hidden 1 activation types | 5 |
-| hidden 1 biases | 5 |
-| hidden 1 → hidden 2 weights | 25 |
-| hidden 2 activation types | 5 |
-| hidden 2 biases | 5 |
-| hidden 2 → action weights | 15 |
-| action biases | 3 |
-
-A weight digit is 0 (no edge), 1–7 (positive), or 8–F (negative); multiple
-incoming edges are summed before the bias and the node's activation. The rhythm
-sensors use each creature's own age, not a shared pond clock:
-`phase = age * 2π / 6s`, so every creature starts its sine/cosine at birth and
-creatures born at different times are desynchronised. Mutation changes each digit
-independently at the selected rate (0.5%, 1.5%, or 3.0%); a child may be identical
-to its parent. A birth with at least four mutated digits starts a new visible
-lineage.
-
-Spiking is a real evolved action, not a scripted effect: when `spikeDrive` rises
-above the fixed `Tuning.SpikeThreshold` (0.60; not a genome value), the creature
-spends `SpikeEnergyCost`, kills **every other creature inside `SpikeRadius`**, and
-enters a `SpikeCooldownSeconds` cooldown. Calibrated founders start with a silent
-spike bias so the first generation is not automatically predatory; mutation can
-evolve it. A successful strike draws an expanding red ring/spike flash.
-
-Founder genomes start from a **calibrated starter brain**, not a random network.
-The template explicitly leans into food, turns toward food seen on either side,
-turns away from a wall ahead, and keeps a weak rhythm-driven wander. Each founder
-then gets a broader-than-usual mutation pass (10% of its digits) and a restored
-forward bias, so the starting population is diverse but can still forage. This
-is the cold-start fix: evolution gets working material instead of having to
-rediscover locomotion and steering from scratch.
-
-An **optional food bloom** can be enabled for the first three minutes; it starts
-with a higher food target/spawn rate and ramps down to the selected abundance. It
-is off by default. Each founder also starts with a small nutrient cluster nearby,
-and a dying creature drops a small amount of food (detritus) so an early bad
-generation can feed the survivors instead of ending in a dead pond. Food spawns
-are clamped inside the pond boundary, including starter snacks and detritus.
+The legacy single 103-hex genome is no longer used by the runtime and old saves
+are intentionally not migrated.
 
 ## Appearance
 
@@ -200,12 +154,13 @@ appearance logic.
 
 ## Simulation
 
-The SND level `pond` contains one `world_controller` entity. It is also the only
-entity with a strategy (`evolution.world`): it advances a fixed 10 Hz simulation,
-reads all creature/food entity data, and schedules reproduction, food spawning,
-and death through Origo's deferred queue. Creatures and food are SND entities with
-empty Godot placeholder nodes; `EvolutionWorldView` renders the pond directly
-from their TypedData, which keeps hundreds of creatures cheap to animate.
+The SND level `pond` contains one `world_controller` entity carrying both
+`evolution.world` and `evolution.overgrowth`. The controller advances a fixed
+10 Hz simulation, reads all creature/food entity data, and schedules reproduction,
+food spawning, and death through Origo's deferred queue. Creatures and food are
+SND entities with empty Godot placeholder nodes; `EvolutionWorldView` renders the
+pond directly from their TypedData, which keeps hundreds of creatures cheap to
+animate.
 
 Food is deliberately scarce overall, but it is generated as **clustered
 settlements** rather than uniform noise: 16 deterministic patch centers receive
@@ -320,15 +275,15 @@ samples/Origo.EvolutionDemo/
     OvergrowthStrategy.cs       # global high-density mutation pressure
 ```
 
-`Origo.EvolutionDemo.Logic` contains the Godot-free genome, brain, sensor,
-appearance, food-patch, diversity, and central `DemoSettings` layer; its tests
-are in `Origo.EvolutionDemo.Logic.Tests`.
+`Origo.EvolutionDemo.Logic` contains the Godot-free body codon genome, latent
+neural genome, sensor, appearance, food-patch, diversity, and central
+`DemoSettings` layer. Its tests are in `Origo.EvolutionDemo.Logic.Tests`.
 
 ## Known first-version limits
 
 - One pond, no predators, no combat.
-- Fixed network topology and point mutations only; no crossover or variable
-  layer/node counts.
+- Point/step mutations and body-length mutations only; no crossover.
+- Hidden topology is body-controlled within a fixed maximum latent lattice.
 - No offline progression; the simulation runs while the game is open.
 - Procedural vector visuals only; no external art/audio assets.
 - UI text is English.

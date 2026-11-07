@@ -23,7 +23,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
 {
     private const double TwoPi = Math.PI * 2d;
     private const int BrainCacheLimit = 4096;
-    private static readonly Dictionary<string, Brain> BrainCache = new(StringComparer.Ordinal);
+    private static readonly Dictionary<string, NeuralBrain> BrainCache = new(StringComparer.Ordinal);
     private static readonly List<CreatureSnapshot> CreatureScratch = [];
     private static readonly List<FoodSnapshot> FoodScratch = [];
     private static readonly List<SensorPoint> NearFoodScratch = [];
@@ -184,13 +184,16 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         for (var i = 0; i < Tuning.InitialPopulation; i++)
         {
             var position = RandomPosition(rng);
+            var genome = CreatureGenome.RandomFounder(rng);
+            var phenotype = genome.Phenotype;
             metas.Add(CreateCreatureMeta(
                 CreatureName(nextCreature++),
-                Genome.RandomFounder(rng),
+                genome,
+                phenotype,
                 position.X,
                 position.Y,
                 NextHeading(rng),
-                Tuning.InitialEnergy,
+                MathF.Min(Tuning.InitialEnergy, phenotype.MaxEnergy),
                 0,
                 (i % founderLineages) + 1,
                 0f));
@@ -200,7 +203,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             // evolution can begin.
             for (var snack = 0; snack < Tuning.StartupFoodPerFounder; snack++)
             {
-                var foodPosition = ClampToPond(position + RandomOffset(rng), Tuning.FoodPickupRadius);
+                var foodPosition = ClampToPond(position + RandomOffset(rng), phenotype.FoodPickupRadius);
                 metas.Add(CreateFoodMeta(FoodName(nextFood++), foodPosition.X, foodPosition.Y));
             }
         }
@@ -264,7 +267,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     ReadFloat(entity, DemoKeys.Energy, Tuning.InitialEnergy),
                     ReadFloat(entity, DemoKeys.Age, 0f),
                     ReadFloat(entity, DemoKeys.ReproCooldown, 0f),
-                    ReadFloat(entity, DemoKeys.SpikeCooldown, 0f)));
+                    ReadFloat(entity, DemoKeys.SpikeCooldown, 0f),
+                    ReadPhenotype(entity)));
             }
             else if (string.Equals(kind, DemoKeys.FoodKind, StringComparison.Ordinal))
             {
@@ -320,7 +324,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         var spikeKills = 0;
         var tickDt = Tuning.SimulationTickSeconds;
         var pondTime = ReadFloat(controller, DemoKeys.Time, 0f);
-        var sensorBuffer = new float[Genome.SensorCount];
+        var sensorBuffer = new float[NeuralGenome.SensorSlots];
         var aiStride = Math.Max(1, (creatures.Count + Tuning.AiUpdateBatch - 1) / Tuning.AiUpdateBatch);
         var tickNumber = ReadInt(controller, DemoKeys.Tick, 0);
 
@@ -330,7 +334,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             if (creature.Entity.IsPendingKill)
                 continue;
             var entity = creature.Entity;
-            var genome = string.Empty;
+            var bodyGenome = string.Empty;
+            var brainGenome = string.Empty;
             var updateAi = tickNumber == 0 || ((i + tickNumber) % aiStride == 0);
             var drive = Math.Clamp(ReadFloat(entity, DemoKeys.Drive, 0f), 0f, 1f);
             var turn = Math.Clamp(ReadFloat(entity, DemoKeys.Turn, 0f), -1f, 1f);
@@ -338,13 +343,24 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             var output = default(BrainOutput);
             if (updateAi)
             {
-                genome = ReadString(entity, DemoKeys.Genome, string.Empty);
-                if (!Genome.IsValid(genome))
-                    genome = Genome.Random(rng);
-                var brain = GetBrain(genome);
+                bodyGenome = ReadString(entity, DemoKeys.BodyGenome, string.Empty);
+                brainGenome = ReadString(entity, DemoKeys.BrainGenome, string.Empty);
+                if (!BodyGenome.IsStructurallyValid(bodyGenome)
+                    || !NeuralGenome.IsValid(brainGenome))
+                {
+                    var fallback = CreatureGenome.RandomFounder(rng);
+                    bodyGenome = fallback.Body;
+                    brainGenome = fallback.Brain;
+                    entity.SetData(DemoKeys.BodyGenome, bodyGenome);
+                    entity.SetData(DemoKeys.BrainGenome, brainGenome);
+                }
+
+                var body = creature.Body;
+                var brain = GetBrain(bodyGenome, brainGenome);
                 sensorGrid.Query(creature.X, creature.Y, sensorGrid.Food, nearFood);
                 sensorGrid.Query(creature.X, creature.Y, sensorGrid.Creatures, nearCreatures);
                 SensorMath.ComputeInto(
+                    body,
                     new NumericsVector2(creature.X, creature.Y),
                     creature.Heading,
                     creature.Energy,
@@ -353,9 +369,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     i,
                     creature.Age * 2f * MathF.PI / Tuning.OscillatorPeriodSeconds,
                     Tuning.PondRadius,
-                    Tuning.SenseRange,
                     sensorBuffer);
-                output = brain.Evaluate(sensorBuffer);
+                output = brain.Evaluate(body, sensorBuffer);
                 drive = Math.Clamp(output.MoveDrive, 0f, 1f);
                 turn = Math.Clamp(output.TurnDrive, -1f, 1f);
                 spikeDrive = Math.Clamp(output.SpikeDrive, -1f, 1f);
@@ -363,24 +378,25 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 entity.SetData(DemoKeys.Turn, turn);
                 entity.SetData(DemoKeys.SpikeDrive, spikeDrive);
             }
-            var heading = creature.Heading + (turn * Tuning.TurnSpeed * tickDt);
+            var heading = creature.Heading + (turn * creature.Body.TurnSpeed * tickDt);
             var position = new NumericsVector2(creature.X, creature.Y);
             if (drive > Tuning.DriveThreshold)
             {
                 var forward = new NumericsVector2(MathF.Cos(heading), MathF.Sin(heading));
-                position += forward * (Tuning.CreatureSpeed * drive * tickDt);
+                position += forward * (creature.Body.MoveSpeed * drive * tickDt);
             }
 
-            var bodyLimit = Tuning.PondRadius - Tuning.BodyRadius;
+            var bodyLimit = Tuning.PondRadius - creature.Body.BodyRadius;
             if (position.LengthSquared() > bodyLimit * bodyLimit)
                 position = NumericsVector2.Normalize(position) * bodyLimit;
 
             var energy = creature.Energy;
             var age = creature.Age + tickDt;
             var cooldown = Math.Max(0f, creature.ReproCooldown - tickDt);
-            energy -= (float)((Tuning.BaseMetabolismPerSecond
+            energy -= (float)(((Tuning.BaseMetabolismPerSecond * creature.Body.BasalMetabolism)
                 + (Tuning.MoveEnergyPerSecond * drive)
                 + (Tuning.TurnEnergyPerSecond * Math.Abs(turn))) * tickDt);
+            energy = MathF.Min(energy, creature.Body.MaxEnergy);
 
             var ate = false;
             sensorGrid.Query(position.X, position.Y, sensorGrid.Food, nearFood);
@@ -390,12 +406,12 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 if (foodConsumed[foodIndex])
                     continue;
                 var delta = new NumericsVector2(foods[foodIndex].X, foods[foodIndex].Y) - position;
-                if (delta.LengthSquared() > Tuning.FoodPickupRadius * Tuning.FoodPickupRadius)
+                if (delta.LengthSquared() > creature.Body.FoodPickupRadius * creature.Body.FoodPickupRadius)
                     continue;
                 foodConsumed[foodIndex] = true;
                 foodAlive--;
                 session.RequestKillEntity(foods[foodIndex].Entity.Name);
-                energy += Tuning.FoodEnergy;
+                energy = MathF.Min(energy + Tuning.FoodEnergy, creature.Body.MaxEnergy);
                 ate = true;
                 break;
             }
@@ -419,7 +435,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                         continue;
                     var dx = target.X - position.X;
                     var dy = target.Y - position.Y;
-                    if ((dx * dx) + (dy * dy) > Tuning.SpikeRadius * Tuning.SpikeRadius)
+                    if ((dx * dx) + (dy * dy) > creature.Body.SpikeRadius * creature.Body.SpikeRadius)
                         continue;
                     session.RequestKillEntity(target.Entity.Name);
                     targets++;
@@ -434,32 +450,45 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 && cooldown <= 0f
                 && creatures.Count + pendingChildren < Tuning.PopulationCap)
             {
-                if (genome.Length == 0 || !Genome.IsValid(genome))
+                if (bodyGenome.Length == 0 || brainGenome.Length == 0)
                 {
-                    genome = ReadString(entity, DemoKeys.Genome, string.Empty);
-                    if (!Genome.IsValid(genome))
-                        genome = Genome.Random(rng);
+                    bodyGenome = ReadString(entity, DemoKeys.BodyGenome, string.Empty);
+                    brainGenome = ReadString(entity, DemoKeys.BrainGenome, string.Empty);
                 }
 
+                var parentGenome = new CreatureGenome(bodyGenome, brainGenome);
                 var generation = Math.Max(0, ReadInt(entity, DemoKeys.Generation, 0));
                 var lineage = Math.Max(0, ReadInt(entity, DemoKeys.Lineage, 1));
                 var children = Math.Max(0, ReadInt(entity, DemoKeys.Children, 0));
-                var childGenome = Genome.Mutate(genome, mutationRate, rng, out var changes);
+                var childGenome = CreatureGenome.Mutate(
+                    parentGenome,
+                    mutationRate,
+                    Tuning.BodyLengthMutationRate,
+                    Tuning.FrameshiftMutationRate,
+                    Tuning.BrainMutationRate,
+                    rng,
+                    out var changes);
                 if (changes >= Tuning.LineageMutationThreshold)
                     lineage = nextLineageId++;
-                energy -= Tuning.ReproductionParentCost;
+                var bodyLengthCost = Tuning.ReproductionParentCost
+                    * (1f + (0.05f * MathF.Log(1f + (bodyGenome.Length / 72f))));
+                energy -= bodyLengthCost;
                 cooldown = Tuning.ReproductionCooldownSeconds;
                 children++;
                 generation++;
                 maxGeneration = Math.Max(maxGeneration, generation);
-                var childPosition = ClampToPond(position + RandomOffset(rng), Tuning.BodyRadius);
+                var childPhenotype = childGenome.Phenotype;
+                var childPosition = ClampToPond(
+                    position + RandomOffset(rng),
+                    childPhenotype.BodyRadius);
                 mutations.Add(CreateCreatureMeta(
                     CreatureName(nextCreatureId++),
                     childGenome,
+                    childPhenotype,
                     childPosition.X,
                     childPosition.Y,
                     heading,
-                    Tuning.ReproductionChildEnergy,
+                    MathF.Min(Tuning.ReproductionChildEnergy, childPhenotype.MaxEnergy),
                     generation,
                     lineage,
                     0f));
@@ -487,7 +516,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     $"M {output.MoveDrive:0.00} / T {output.TurnDrive:0.00} / S {output.SpikeDrive:0.00}"));
             }
 
-            if (energy <= 0f || age >= Tuning.MaxAgeSeconds)
+            if (energy <= 0f || age >= creature.Body.MaxAge)
             {
                 // Dead matter feeds the survivors. This closes the early loop
                 // where a bad generation would otherwise leave an empty pond
@@ -497,7 +526,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     Math.Max(0, Tuning.FoodCap - (foodAlive + pendingFood)));
                 for (var bite = 0; bite < detritus; bite++)
                 {
-                    var foodPosition = ClampToPond(position + RandomOffset(rng), Tuning.FoodPickupRadius);
+                    var foodPosition = ClampToPond(position + RandomOffset(rng), creature.Body.FoodPickupRadius);
                     mutations.Add(CreateFoodMeta(FoodName(nextFoodId++), foodPosition.X, foodPosition.Y));
                     foodAlive++;
                     pendingFood++;
@@ -606,7 +635,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
 
     private static SndMetaData CreateCreatureMeta(
         string name,
-        string genome,
+        CreatureGenome genome,
+        BodyPhenotype phenotype,
         float x,
         float y,
         float heading,
@@ -614,7 +644,17 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         int generation,
         int lineage,
         float cooldown) =>
-        EvolutionEntityFactory.Creature(name, genome, x, y, heading, energy, generation, lineage, cooldown);
+        EvolutionEntityFactory.Creature(
+            name,
+            genome,
+            phenotype,
+            x,
+            y,
+            heading,
+            energy,
+            generation,
+            lineage,
+            cooldown);
 
     private static SndMetaData CreateFoodMeta(string name, float x, float y) =>
         EvolutionEntityFactory.Food(name, x, y);
@@ -780,20 +820,42 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         return Math.Min(Tuning.FoodCap, baseTarget + (int)MathF.Round(Tuning.EarlyFoodBonus * ramp));
     }
 
-    private static Brain GetBrain(string genome)
+    private static NeuralBrain GetBrain(string bodyGenome, string brainGenome)
     {
-        if (BrainCache.TryGetValue(genome, out var cached))
+        var key = bodyGenome + "|" + brainGenome;
+        if (BrainCache.TryGetValue(key, out var cached))
             return cached;
         if (BrainCache.Count >= BrainCacheLimit)
             BrainCache.Clear();
-        var brain = Genome.Decode(genome);
-        BrainCache[genome] = brain;
+        var brain = NeuralGenome.Decode(brainGenome);
+        BrainCache[key] = brain;
         return brain;
     }
 
+    private static BodyPhenotype ReadPhenotype(ISndEntity entity) => new(
+        ReadFloat(entity, DemoKeys.BodyRadius, Tuning.BodyRadius) / 5f,
+        ReadFloat(entity, DemoKeys.BodyRadius, Tuning.BodyRadius),
+        ReadFloat(entity, DemoKeys.FoodPickupRadius, Tuning.FoodPickupRadius),
+        ReadFloat(entity, DemoKeys.MaxEnergy, 200f),
+        ReadFloat(entity, DemoKeys.MoveSpeed, Tuning.CreatureSpeed),
+        ReadFloat(entity, DemoKeys.TurnSpeed, Tuning.TurnSpeed),
+        ReadFloat(entity, DemoKeys.SenseRange, Tuning.SenseRange),
+        ReadFloat(entity, DemoKeys.SpikeRadius, Tuning.SpikeRadius),
+        ReadFloat(entity, DemoKeys.BasalMetabolism, 1f),
+        ReadFloat(entity, DemoKeys.MaxAge, Tuning.MaxAgeSeconds),
+        ReadBool(entity, DemoKeys.SpikeOrgan, true),
+        ReadBool(entity, DemoKeys.RhythmOrgan, true),
+        ReadBool(entity, DemoKeys.VisionOrgan, true),
+        ReadBool(entity, DemoKeys.CreatureSenseOrgan, true),
+        ReadInt(entity, DemoKeys.HiddenLayers, 2),
+        ReadInt(entity, DemoKeys.HiddenWidth1, 5),
+        ReadInt(entity, DemoKeys.HiddenWidth2, 5),
+        ReadInt(entity, DemoKeys.HiddenWidth3, 5),
+        0);
+
     private static string FormatSensors(float[] sensors) => string.Create(
         CultureInfo.InvariantCulture,
-        $"F {sensors[0]:0.00} L {sensors[1]:0.00} R {sensors[2]:0.00} W {sensors[3]:0.00} C {sensors[4]:0.00} E {sensors[5]:0.00}");
+        $"F {sensors[0]:0.00} L {sensors[1]:0.00} R {sensors[2]:0.00} W {sensors[4]:0.00} C {sensors[3]:0.00} E {sensors[5]:0.00} R {sensors[6]:0.00} C {sensors[7]:0.00}");
 
     private static string ReadString(ISndEntity entity, string key, string fallback)
     {
@@ -828,7 +890,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         float Energy,
         float Age,
         float ReproCooldown,
-        float SpikeCooldown);
+        float SpikeCooldown,
+        BodyPhenotype Body);
 
     private readonly record struct FoodSnapshot(ISndEntity Entity, float X, float Y);
 }

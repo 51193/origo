@@ -124,14 +124,31 @@ public sealed class OvergrowthStrategy : LifecycleStrategyBase
             return;
 
         var parent = creatures[rng.Next(creatures.Count)];
-        var parentGenome = ReadString(parent, DemoKeys.Genome, string.Empty);
-        if (!Genome.IsValid(parentGenome))
+        var parentGenome = new CreatureGenome(
+            ReadString(parent, DemoKeys.BodyGenome, string.Empty),
+            ReadString(parent, DemoKeys.BrainGenome, string.Empty));
+        if (!BodyGenome.IsStructurallyValid(parentGenome.Body) || !NeuralGenome.IsValid(parentGenome.Brain))
             return;
 
         var mutationRate = Math.Clamp(Tuning.OvergrowthMutationRate, 0.01d, 1d);
-        var childGenome = Genome.Mutate(parentGenome, mutationRate, rng, out var changes);
+        var childGenome = CreatureGenome.Mutate(
+            parentGenome,
+            mutationRate,
+            mutationRate,
+            0d,
+            mutationRate,
+            rng,
+            out var changes);
         if (changes == 0)
-            childGenome = Genome.Mutate(childGenome, mutationRate, rng, out changes);
+            childGenome = CreatureGenome.Mutate(
+                childGenome,
+                mutationRate,
+                mutationRate,
+                0d,
+                mutationRate,
+                rng,
+                out changes);
+        var childPhenotype = childGenome.Phenotype;
 
         var generation = Math.Max(0, ReadInt(parent, DemoKeys.Generation, 0)) + 1;
         var lineage = Math.Max(0, ReadInt(parent, DemoKeys.Lineage, 1));
@@ -148,14 +165,15 @@ public sealed class OvergrowthStrategy : LifecycleStrategyBase
             cellCenter + new System.Numerics.Vector2(
                 (float)((rng.NextDouble() * 2d) - 1d) * cellSize * 0.35f,
                 (float)((rng.NextDouble() * 2d) - 1d) * cellSize * 0.35f),
-            Tuning.BodyRadius);
+            childPhenotype.BodyRadius);
         var child = EvolutionEntityFactory.Creature(
             EvolutionEntityFactory.CreatureName(nextCreatureId),
             childGenome,
+            childPhenotype,
             childPosition.X,
             childPosition.Y,
             (float)(rng.NextDouble() * Math.Tau),
-            Tuning.OvergrowthChildEnergy,
+            MathF.Min(Tuning.OvergrowthChildEnergy, childPhenotype.MaxEnergy),
             generation,
             lineage,
             0f);
