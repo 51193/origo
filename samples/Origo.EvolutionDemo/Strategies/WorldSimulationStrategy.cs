@@ -232,6 +232,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         controller.SetData(DemoKeys.SpikeAttacks, 0);
         controller.SetData(DemoKeys.SpikeKills, 0);
         controller.SetData(DemoKeys.Phase, DemoKeys.PhaseStarting);
+        controller.SetData(DemoKeys.GenomeVersion, 2);
 
         var session = controller.OwningSession;
         ctx.Deferred.EnqueueBusinessDeferred(() =>
@@ -832,7 +833,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
     }
 
     private static BodyPhenotype ReadPhenotype(ISndEntity entity) => new(
-        ReadFloat(entity, DemoKeys.BodyRadius, Tuning.BodyRadius) / 5f,
+        ReadFloat(entity, DemoKeys.BodyRadius, Tuning.BodyRadius) / MathF.Max(0.5f, Tuning.BodyRadiusBase),
         ReadFloat(entity, DemoKeys.BodyRadius, Tuning.BodyRadius),
         ReadFloat(entity, DemoKeys.FoodPickupRadius, Tuning.FoodPickupRadius),
         ReadFloat(entity, DemoKeys.MaxEnergy, 200f),

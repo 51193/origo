@@ -437,6 +437,7 @@ public partial class DemoUi : CanvasLayer
         controller.SetData(DemoKeys.Speed, 1);
         controller.SetData(DemoKeys.Paused, false);
         controller.SetData(DemoKeys.Phase, DemoKeys.PhaseStarting);
+        controller.SetData(DemoKeys.GenomeVersion, 2);
         controller.SetData(DemoKeys.Initialized, false);
         controller.SetData(DemoKeys.Time, 0f);
         controller.SetData(DemoKeys.Tick, 0);
@@ -466,6 +467,14 @@ public partial class DemoUi : CanvasLayer
         if (controller is null)
         {
             ShowToast("Load completed without a world controller.", true);
+            ShowMainMenu();
+            return;
+        }
+
+        if (ReadInt(controller, DemoKeys.GenomeVersion, 0) < 2)
+        {
+            controller.SetData(DemoKeys.Paused, true);
+            ShowToast("This save predates genome v2 and is not compatible.", true);
             ShowMainMenu();
             return;
         }
@@ -1597,7 +1606,7 @@ public partial class DemoUi : CanvasLayer
             s => s.FoodCap, (s, v) => s.FoodCap = Mathf.RoundToInt(v));
         AddNumberSetting(rows, "Food per second", 0f, 1_500f, 5f,
             s => s.FoodPerSecond, (s, v) => s.FoodPerSecond = v);
-        AddNumberSetting(rows, "Body radius", 1f, 20f, 0.5f,
+        AddNumberSetting(rows, "Fallback body radius", 1f, 20f, 0.5f,
             s => s.BodyRadius, (s, v) => s.BodyRadius = v);
         AddNumberSetting(rows, "Creature speed", 10f, 150f, 1f,
             s => s.CreatureSpeed, (s, v) => s.CreatureSpeed = v);
@@ -1609,7 +1618,7 @@ public partial class DemoUi : CanvasLayer
             s => s.SenseHalfAngle, (s, v) => s.SenseHalfAngle = v);
         AddNumberSetting(rows, "Simulation tick (s)", 0.05f, 0.5f, 0.01f,
             s => s.SimulationTickSeconds, (s, v) => s.SimulationTickSeconds = v);
-        AddNumberSetting(rows, "Food pickup radius", 2f, 100f, 1f,
+        AddNumberSetting(rows, "Fallback pickup radius", 2f, 100f, 1f,
             s => s.FoodPickupRadius, (s, v) => s.FoodPickupRadius = v);
         AddNumberSetting(rows, "Initial energy", 10f, 300f, 5f,
             s => s.InitialEnergy, (s, v) => s.InitialEnergy = v);
@@ -1643,6 +1652,44 @@ public partial class DemoUi : CanvasLayer
             s => (float)(s.FrameshiftMutationRate * 100d), (s, v) => s.FrameshiftMutationRate = v / 100d);
         AddNumberSetting(rows, "Lineage mutation threshold", 1f, 30f, 1f,
             s => s.LineageMutationThreshold, (s, v) => s.LineageMutationThreshold = Mathf.RoundToInt(v));
+
+        AddAdvancedSection(rows, "BODY GENE RANGES");
+        AddNumberSetting(rows, "Body radius base", 0.5f, 30f, 0.5f,
+            s => s.BodyRadiusBase, (s, v) => s.BodyRadiusBase = v);
+        AddNumberSetting(rows, "Food pickup padding", 0f, 100f, 1f,
+            s => s.FoodPickupPadding, (s, v) => s.FoodPickupPadding = v);
+        AddNumberSetting(rows, "Size min", 0.1f, 5f, 0.05f,
+            s => s.BodySizeMin, (s, v) => s.BodySizeMin = v);
+        AddNumberSetting(rows, "Size max", 0.1f, 5f, 0.05f,
+            s => s.BodySizeMax, (s, v) => s.BodySizeMax = v);
+        AddNumberSetting(rows, "Speed min", 1f, 500f, 1f,
+            s => s.BodySpeedMin, (s, v) => s.BodySpeedMin = v);
+        AddNumberSetting(rows, "Speed max", 1f, 500f, 1f,
+            s => s.BodySpeedMax, (s, v) => s.BodySpeedMax = v);
+        AddNumberSetting(rows, "Turn min", 0.05f, 20f, 0.05f,
+            s => s.BodyTurnMin, (s, v) => s.BodyTurnMin = v);
+        AddNumberSetting(rows, "Turn max", 0.05f, 20f, 0.05f,
+            s => s.BodyTurnMax, (s, v) => s.BodyTurnMax = v);
+        AddNumberSetting(rows, "Sense min", 5f, 2_000f, 5f,
+            s => s.BodySenseMin, (s, v) => s.BodySenseMin = v);
+        AddNumberSetting(rows, "Sense max", 5f, 2_000f, 5f,
+            s => s.BodySenseMax, (s, v) => s.BodySenseMax = v);
+        AddNumberSetting(rows, "Spike min", 1f, 2_000f, 1f,
+            s => s.BodySpikeMin, (s, v) => s.BodySpikeMin = v);
+        AddNumberSetting(rows, "Spike max", 1f, 2_000f, 1f,
+            s => s.BodySpikeMax, (s, v) => s.BodySpikeMax = v);
+        AddNumberSetting(rows, "Metabolism min", 0f, 100f, 0.05f,
+            s => s.BodyMetabolismMin, (s, v) => s.BodyMetabolismMin = v);
+        AddNumberSetting(rows, "Metabolism max", 0f, 100f, 0.05f,
+            s => s.BodyMetabolismMax, (s, v) => s.BodyMetabolismMax = v);
+        AddNumberSetting(rows, "Age min", 1f, 100_000f, 10f,
+            s => s.BodyAgeMin, (s, v) => s.BodyAgeMin = v);
+        AddNumberSetting(rows, "Age max", 1f, 100_000f, 10f,
+            s => s.BodyAgeMax, (s, v) => s.BodyAgeMax = v);
+        AddNumberSetting(rows, "Max energy base", 0f, 10_000f, 10f,
+            s => s.BodyMaxEnergyBase, (s, v) => s.BodyMaxEnergyBase = v);
+        AddNumberSetting(rows, "Max energy per size", 0f, 10_000f, 10f,
+            s => s.BodyMaxEnergyPerSize, (s, v) => s.BodyMaxEnergyPerSize = v);
 
         AddAdvancedSection(rows, "SPIKE");
         AddNumberSetting(rows, "Spike threshold", 0.1f, 1f, 0.05f,

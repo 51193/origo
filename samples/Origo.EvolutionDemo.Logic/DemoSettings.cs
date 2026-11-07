@@ -79,6 +79,26 @@ public sealed class DemoSettings
     public float FoodPatchFalloff { get; set; } = 0.55f;
     public int FoodPatchLocalCapacity { get; set; } = 300;
     public int FoodPatchLayoutVersion { get; set; } = 2;
+
+    // Body-gene phenotype ranges.
+    public float BodyRadiusBase { get; set; } = 5f;
+    public float FoodPickupPadding { get; set; } = 9f;
+    public float BodySizeMin { get; set; } = 0.65f;
+    public float BodySizeMax { get; set; } = 1.8f;
+    public float BodySpeedMin { get; set; } = 30f;
+    public float BodySpeedMax { get; set; } = 90f;
+    public float BodyTurnMin { get; set; } = 1.5f;
+    public float BodyTurnMax { get; set; } = 4.5f;
+    public float BodySenseMin { get; set; } = 60f;
+    public float BodySenseMax { get; set; } = 260f;
+    public float BodySpikeMin { get; set; } = 20f;
+    public float BodySpikeMax { get; set; } = 120f;
+    public float BodyMetabolismMin { get; set; } = 0.55f;
+    public float BodyMetabolismMax { get; set; } = 1.6f;
+    public float BodyAgeMin { get; set; } = 120f;
+    public float BodyAgeMax { get; set; } = 600f;
+    public float BodyMaxEnergyBase { get; set; } = 120f;
+    public float BodyMaxEnergyPerSize { get; set; } = 80f;
     public float FoodSourceScanIntervalSeconds { get; set; } = 1f;
     public float FoodSourceSpawnIntervalSeconds { get; set; } = 0.5f;
     public int FoodSourceSpawnBurst { get; set; } = 8;
@@ -177,6 +197,24 @@ public sealed class DemoSettings
         OvergrowthFoodCost = Math.Clamp(OvergrowthFoodCost, 1, OvergrowthFoodThreshold);
         OvergrowthMutationRate = Math.Clamp(OvergrowthMutationRate, 0d, 1d);
         OvergrowthChildEnergy = Math.Clamp(OvergrowthChildEnergy, 0f, 10_000f);
+        BodyRadiusBase = Math.Clamp(BodyRadiusBase, 0.5f, 30f);
+        FoodPickupPadding = Math.Clamp(FoodPickupPadding, 0f, 100f);
+        BodySizeMin = Math.Clamp(BodySizeMin, 0.1f, 5f);
+        BodySizeMax = Math.Clamp(BodySizeMax, BodySizeMin, 5f);
+        BodySpeedMin = Math.Clamp(BodySpeedMin, 1f, 500f);
+        BodySpeedMax = Math.Clamp(BodySpeedMax, BodySpeedMin, 500f);
+        BodyTurnMin = Math.Clamp(BodyTurnMin, 0.05f, 20f);
+        BodyTurnMax = Math.Clamp(BodyTurnMax, BodyTurnMin, 20f);
+        BodySenseMin = Math.Clamp(BodySenseMin, 5f, 2_000f);
+        BodySenseMax = Math.Clamp(BodySenseMax, BodySenseMin, 2_000f);
+        BodySpikeMin = Math.Clamp(BodySpikeMin, 1f, 2_000f);
+        BodySpikeMax = Math.Clamp(BodySpikeMax, BodySpikeMin, 2_000f);
+        BodyMetabolismMin = Math.Clamp(BodyMetabolismMin, 0f, 100f);
+        BodyMetabolismMax = Math.Clamp(BodyMetabolismMax, BodyMetabolismMin, 100f);
+        BodyAgeMin = Math.Clamp(BodyAgeMin, 1f, 100_000f);
+        BodyAgeMax = Math.Clamp(BodyAgeMax, BodyAgeMin, 100_000f);
+        BodyMaxEnergyBase = Math.Clamp(BodyMaxEnergyBase, 0f, 10_000f);
+        BodyMaxEnergyPerSize = Math.Clamp(BodyMaxEnergyPerSize, 0f, 10_000f);
     }
 
     /// <summary>Serializes all settings for controller/save persistence.</summary>

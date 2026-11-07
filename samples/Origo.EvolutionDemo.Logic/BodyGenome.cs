@@ -211,25 +211,25 @@ public static class BodyGenome
                     organs[argument / 16] = true;
                     break;
                 case 0x1 when argument <= 0xBF:
-                    sizes.Add(0.65f + (1.15f * argument / 191f));
+                    sizes.Add(Tuning.BodySizeMin + ((Tuning.BodySizeMax - Tuning.BodySizeMin) * argument / 191f));
                     break;
                 case 0x2 when argument <= 0x9F:
-                    speeds.Add(30f + (60f * argument / 159f));
+                    speeds.Add(Tuning.BodySpeedMin + ((Tuning.BodySpeedMax - Tuning.BodySpeedMin) * argument / 159f));
                     break;
                 case 0x3 when argument <= 0x9F:
-                    turns.Add(1.5f + (3f * argument / 159f));
+                    turns.Add(Tuning.BodyTurnMin + ((Tuning.BodyTurnMax - Tuning.BodyTurnMin) * argument / 159f));
                     break;
                 case 0x4 when argument <= 0x9F:
-                    senses.Add(60f + (200f * argument / 159f));
+                    senses.Add(Tuning.BodySenseMin + ((Tuning.BodySenseMax - Tuning.BodySenseMin) * argument / 159f));
                     break;
                 case 0x5 when argument <= 0x7F:
-                    spikes.Add(20f + (100f * argument / 127f));
+                    spikes.Add(Tuning.BodySpikeMin + ((Tuning.BodySpikeMax - Tuning.BodySpikeMin) * argument / 127f));
                     break;
                 case 0x6 when argument <= 0x7F:
-                    metabolisms.Add(0.55f + (1.05f * argument / 127f));
+                    metabolisms.Add(Tuning.BodyMetabolismMin + ((Tuning.BodyMetabolismMax - Tuning.BodyMetabolismMin) * argument / 127f));
                     break;
                 case 0x7 when argument <= 0xBF:
-                    ages.Add(120f + (480f * argument / 191f));
+                    ages.Add(Tuning.BodyAgeMin + ((Tuning.BodyAgeMax - Tuning.BodyAgeMin) * argument / 191f));
                     break;
                 case 0x8 when argument <= 0x2F:
                     layers.Add(1f + (argument / 16));
@@ -252,19 +252,19 @@ public static class BodyGenome
         }
 
         var sizeScale = Median(sizes, 1f);
-        var radius = 5f * sizeScale;
+        var radius = Tuning.BodyRadiusBase * sizeScale;
         var hiddenLayers = (int)Math.Clamp(MathF.Round(Median(layers, 2f)), 1f, 3f);
         return new BodyPhenotype(
             sizeScale,
             radius,
-            radius + 9f,
-            120f + (80f * sizeScale * sizeScale),
+            radius + Tuning.FoodPickupPadding,
+            Tuning.BodyMaxEnergyBase + (Tuning.BodyMaxEnergyPerSize * sizeScale * sizeScale),
             Median(speeds, 55f),
             Median(turns, 2.8f),
             Median(senses, 120f),
-            Median(spikes, 48f),
-            Median(metabolisms, 1f),
-            Median(ages, 300f),
+            Median(spikes, Tuning.BodySpikeMin),
+            Median(metabolisms, Tuning.BodyMetabolismMin),
+            Median(ages, Tuning.BodyAgeMin),
             organs[(int)BodyOrgan.Spike],
             organs[(int)BodyOrgan.Rhythm],
             organs[(int)BodyOrgan.Vision],

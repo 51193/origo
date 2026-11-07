@@ -81,4 +81,22 @@ public static class Tuning
     public static double OvergrowthMutationRate => DemoSettings.Current.OvergrowthMutationRate;
     public static int OvergrowthFoodCost => DemoSettings.Current.OvergrowthFoodCost;
     public static float OvergrowthChildEnergy => DemoSettings.Current.OvergrowthChildEnergy;
+    public static float BodyRadiusBase => DemoSettings.Current.BodyRadiusBase;
+    public static float FoodPickupPadding => DemoSettings.Current.FoodPickupPadding;
+    public static float BodySizeMin => DemoSettings.Current.BodySizeMin;
+    public static float BodySizeMax => DemoSettings.Current.BodySizeMax;
+    public static float BodySpeedMin => DemoSettings.Current.BodySpeedMin;
+    public static float BodySpeedMax => DemoSettings.Current.BodySpeedMax;
+    public static float BodyTurnMin => DemoSettings.Current.BodyTurnMin;
+    public static float BodyTurnMax => DemoSettings.Current.BodyTurnMax;
+    public static float BodySenseMin => DemoSettings.Current.BodySenseMin;
+    public static float BodySenseMax => DemoSettings.Current.BodySenseMax;
+    public static float BodySpikeMin => DemoSettings.Current.BodySpikeMin;
+    public static float BodySpikeMax => DemoSettings.Current.BodySpikeMax;
+    public static float BodyMetabolismMin => DemoSettings.Current.BodyMetabolismMin;
+    public static float BodyMetabolismMax => DemoSettings.Current.BodyMetabolismMax;
+    public static float BodyAgeMin => DemoSettings.Current.BodyAgeMin;
+    public static float BodyAgeMax => DemoSettings.Current.BodyAgeMax;
+    public static float BodyMaxEnergyBase => DemoSettings.Current.BodyMaxEnergyBase;
+    public static float BodyMaxEnergyPerSize => DemoSettings.Current.BodyMaxEnergyPerSize;
 }

@@ -59,6 +59,8 @@ The page covers:
 
 - world radius, initial population, hard cap, body/camera-scale physics;
 - food amounts, food caps, feeding, bloom parameters;
+- body gene ranges for size, speed, turn, sense, spike, metabolism, age, body
+  radius, pickup padding, and max-energy scaling;
 - brain mutation, body-length mutation, frameshift, founder mutation,
   metabolism, reproduction, ageing, lineage threshold;
 - spike threshold/cost/radius/cooldown;
@@ -125,7 +127,8 @@ mother's body hex length through a weak logarithmic term, so redundant genes are
 cheap but not free.
 
 The legacy single 103-hex genome is no longer used by the runtime and old saves
-are intentionally not migrated.
+are intentionally not migrated. The controller stores `evo.genomeVersion = 2`;
+the load path rejects saves without that marker.
 
 ## Appearance
 
