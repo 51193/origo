@@ -110,6 +110,22 @@ public static class NeuralGenome
     /// <summary>Creates a zero-filled neural genome (silent but structurally valid).</summary>
     public static string CreateBlank() => new('0', Length);
 
+    private const string LegacyFounderTemplate =
+        "70000070000070000070000000000000007000001111188888700000F0000700000700000771111188888700070000020200F87";
+
+    private const int LegacySensorCount = 8;
+    private const int LegacyHidden1Count = 5;
+    private const int LegacyHidden2Count = 5;
+    private const int LegacyOutputCount = 3;
+    private const int LegacyWeights0Offset = 0;
+    private const int LegacyType1Offset = 40;
+    private const int LegacyBias1Offset = 45;
+    private const int LegacyWeights1Offset = 50;
+    private const int LegacyType2Offset = 75;
+    private const int LegacyBias2Offset = 80;
+    private const int LegacyWeights2Offset = 85;
+    private const int LegacyBias3Offset = 100;
+
     /// <summary>
     ///     Builds the calibrated founder neural genome by placing the legacy
     ///     8 -> 5 -> 5 -> 3 network into the active latent slices. All latent
@@ -117,49 +133,49 @@ public static class NeuralGenome
     /// </summary>
     public static string CalibratedFounderTemplate()
     {
-        var legacy = Genome.CalibratedFounderTemplate().ToUpperInvariant();
+        var legacy = LegacyFounderTemplate.ToUpperInvariant();
         var chars = new char[Length];
         Array.Fill(chars, '0');
 
-        for (var sensor = 0; sensor < Genome.SensorCount; sensor++)
+        for (var sensor = 0; sensor < LegacySensorCount; sensor++)
         {
-            for (var hidden = 0; hidden < Genome.Hidden1Count; hidden++)
+            for (var hidden = 0; hidden < LegacyHidden1Count; hidden++)
             {
                 chars[WeightsInputOffset + (sensor * HiddenSlots) + hidden] =
-                    legacy[Genome.Weights0Offset + (sensor * Genome.Hidden1Count) + hidden];
+                    legacy[LegacyWeights0Offset + (sensor * LegacyHidden1Count) + hidden];
             }
         }
 
-        for (var first = 0; first < Genome.Hidden1Count; first++)
+        for (var first = 0; first < LegacyHidden1Count; first++)
         {
-            for (var second = 0; second < Genome.Hidden2Count; second++)
+            for (var second = 0; second < LegacyHidden2Count; second++)
             {
                 chars[WeightsHidden12Offset + (first * HiddenSlots) + second] =
-                    legacy[Genome.Weights1Offset + (first * Genome.Hidden2Count) + second];
+                    legacy[LegacyWeights1Offset + (first * LegacyHidden2Count) + second];
             }
         }
 
         // The default body uses two hidden layers, so layer-two output
         // projection carries the calibrated 5 -> 3 weights.
-        for (var second = 0; second < Genome.Hidden2Count; second++)
+        for (var second = 0; second < LegacyHidden2Count; second++)
         {
-            for (var output = 0; output < Genome.OutputCount; output++)
+            for (var output = 0; output < LegacyOutputCount; output++)
             {
                 chars[WeightsHidden2OutOffset + (second * OutputSlots) + output] =
-                    legacy[Genome.Weights2Offset + (second * Genome.OutputCount) + output];
+                    legacy[LegacyWeights2Offset + (second * LegacyOutputCount) + output];
             }
         }
 
-        for (var hidden = 0; hidden < Genome.Hidden1Count; hidden++)
+        for (var hidden = 0; hidden < LegacyHidden1Count; hidden++)
         {
-            chars[Types1Offset + hidden] = legacy[Genome.Type1Offset + hidden];
-            chars[Bias1Offset + hidden] = legacy[Genome.Bias1Offset + hidden];
-            chars[Types2Offset + hidden] = legacy[Genome.Type2Offset + hidden];
-            chars[Bias2Offset + hidden] = legacy[Genome.Bias2Offset + hidden];
+            chars[Types1Offset + hidden] = legacy[LegacyType1Offset + hidden];
+            chars[Bias1Offset + hidden] = legacy[LegacyBias1Offset + hidden];
+            chars[Types2Offset + hidden] = legacy[LegacyType2Offset + hidden];
+            chars[Bias2Offset + hidden] = legacy[LegacyBias2Offset + hidden];
         }
 
-        for (var output = 0; output < Genome.OutputCount; output++)
-            chars[OutputBiasOffset + output] = legacy[Genome.Bias3Offset + output];
+        for (var output = 0; output < LegacyOutputCount; output++)
+            chars[OutputBiasOffset + output] = legacy[LegacyBias3Offset + output];
 
         return new string(chars);
     }
@@ -288,6 +304,9 @@ public static class NeuralGenome
 
     private static float DecodeBias(int nibble) => (nibble - 7.5f) / 7.5f;
 }
+
+/// <summary>Forward-evaluated result of one creature's neural genome.</summary>
+public readonly record struct BrainOutput(float MoveDrive, float TurnDrive, float SpikeDrive);
 
 /// <summary>
 ///     Evaluates the fixed latent neural lattice for one body phenotype. Body

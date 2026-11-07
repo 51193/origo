@@ -31,7 +31,6 @@ internal static class DemoKeys
     public const string MaxGeneration = "evo.maxGeneration";
     public const string FeedRequest = "evo.feedRequest";
 
-    public const string Genome = "evo.genome";
     public const string BodyGenome = "evo.bodyGenome";
     public const string BrainGenome = "evo.brainGenome";
     public const string GenomeVersion = "evo.genomeVersion";

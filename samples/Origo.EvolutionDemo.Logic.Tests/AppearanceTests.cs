@@ -10,7 +10,7 @@ public sealed class AppearanceTests
     [Fact]
     public void Derive_IsDeterministicAndWithinGamut()
     {
-        var genome = Genome.RandomFounder(new Random(5));
+        var genome = CreatureGenome.RandomFounder(new Random(5)).Body;
         var first = GenomeAppearance.Derive(genome);
         var second = GenomeAppearance.Derive(genome);
 
@@ -26,7 +26,7 @@ public sealed class AppearanceTests
     [Fact]
     public void Derive_SingleDigitMutation_KeepsColorClose()
     {
-        var genome = Genome.RandomFounder(new Random(8));
+        var genome = CreatureGenome.RandomFounder(new Random(8)).Body;
         var chars = genome.ToCharArray();
         chars[0] = chars[0] == 'F' ? '0' : 'F';
         var mutant = new string(chars);
@@ -57,7 +57,7 @@ public sealed class AppearanceTests
     [Fact]
     public void Analyze_IdenticalGenomes_HaveZeroDiversity()
     {
-        var genomes = new List<string> { Genome.CalibratedFounderTemplate(), Genome.CalibratedFounderTemplate() };
+        var genomes = new List<string> { BodyGenome.DefaultTemplate, BodyGenome.DefaultTemplate };
         var metrics = GenomeDiversity.Analyze(genomes);
 
         Assert.Equal(2, metrics.Population);
