@@ -55,7 +55,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   neural topology. Body mutations are ±1 nibble steps with codon-boundary
   duplication/deletion; neural mutations are ±1 nibble steps. Numeric traits use
   the median of valid codons, organs combine with OR, and reproductive cost grows
-  only logarithmically with body-gene length. The legacy 103-digit genome and
+  only logarithmically with body-gene length. Long-lived ponds use larger
+  appearance/brain caches and read the full body phenotype only for the AI batch
+  instead of every creature every tick. The legacy 103-digit genome and
   8-slot sensor API have been removed; calibrated founder wiring is now a fixed
   latent-brain constant. Body-gene phenotype ranges and
   brain/length/frameshift mutation rates are configurable in Advanced Settings,

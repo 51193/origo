@@ -22,7 +22,7 @@ namespace Origo.EvolutionDemo;
 public sealed class WorldSimulationStrategy : LifecycleStrategyBase
 {
     private const double TwoPi = Math.PI * 2d;
-    private const int BrainCacheLimit = 4096;
+    private const int BrainCacheLimit = 8192;
     private static readonly Dictionary<string, NeuralBrain> BrainCache = new(StringComparer.Ordinal);
     private static readonly List<CreatureSnapshot> CreatureScratch = [];
     private static readonly List<FoodSnapshot> FoodScratch = [];
@@ -269,7 +269,15 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     ReadFloat(entity, DemoKeys.Age, 0f),
                     ReadFloat(entity, DemoKeys.ReproCooldown, 0f),
                     ReadFloat(entity, DemoKeys.SpikeCooldown, 0f),
-                    ReadPhenotype(entity)));
+                    ReadFloat(entity, DemoKeys.BodyRadius, Tuning.BodyRadius),
+                    ReadFloat(entity, DemoKeys.FoodPickupRadius, Tuning.FoodPickupRadius),
+                    ReadFloat(entity, DemoKeys.MaxEnergy, 200f),
+                    ReadFloat(entity, DemoKeys.MoveSpeed, Tuning.CreatureSpeed),
+                    ReadFloat(entity, DemoKeys.TurnSpeed, Tuning.TurnSpeed),
+                    ReadFloat(entity, DemoKeys.SenseRange, Tuning.SenseRange),
+                    ReadFloat(entity, DemoKeys.SpikeRadius, Tuning.SpikeRadius),
+                    ReadFloat(entity, DemoKeys.BasalMetabolism, 1f),
+                    ReadFloat(entity, DemoKeys.MaxAge, Tuning.MaxAgeSeconds)));
             }
             else if (string.Equals(kind, DemoKeys.FoodKind, StringComparison.Ordinal))
             {
@@ -356,7 +364,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     entity.SetData(DemoKeys.BrainGenome, brainGenome);
                 }
 
-                var body = creature.Body;
+                var body = ReadPhenotype(entity);
                 var brain = GetBrain(bodyGenome, brainGenome);
                 sensorGrid.Query(creature.X, creature.Y, sensorGrid.Food, nearFood);
                 sensorGrid.Query(creature.X, creature.Y, sensorGrid.Creatures, nearCreatures);
@@ -379,25 +387,25 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 entity.SetData(DemoKeys.Turn, turn);
                 entity.SetData(DemoKeys.SpikeDrive, spikeDrive);
             }
-            var heading = creature.Heading + (turn * creature.Body.TurnSpeed * tickDt);
+            var heading = creature.Heading + (turn * creature.TurnSpeed * tickDt);
             var position = new NumericsVector2(creature.X, creature.Y);
             if (drive > Tuning.DriveThreshold)
             {
                 var forward = new NumericsVector2(MathF.Cos(heading), MathF.Sin(heading));
-                position += forward * (creature.Body.MoveSpeed * drive * tickDt);
+                position += forward * (creature.MoveSpeed * drive * tickDt);
             }
 
-            var bodyLimit = Tuning.PondRadius - creature.Body.BodyRadius;
+            var bodyLimit = Tuning.PondRadius - creature.BodyRadius;
             if (position.LengthSquared() > bodyLimit * bodyLimit)
                 position = NumericsVector2.Normalize(position) * bodyLimit;
 
             var energy = creature.Energy;
             var age = creature.Age + tickDt;
             var cooldown = Math.Max(0f, creature.ReproCooldown - tickDt);
-            energy -= (float)(((Tuning.BaseMetabolismPerSecond * creature.Body.BasalMetabolism)
+            energy -= (float)(((Tuning.BaseMetabolismPerSecond * creature.BasalMetabolism)
                 + (Tuning.MoveEnergyPerSecond * drive)
                 + (Tuning.TurnEnergyPerSecond * Math.Abs(turn))) * tickDt);
-            energy = MathF.Min(energy, creature.Body.MaxEnergy);
+            energy = MathF.Min(energy, creature.MaxEnergy);
 
             var ate = false;
             sensorGrid.Query(position.X, position.Y, sensorGrid.Food, nearFood);
@@ -407,12 +415,12 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 if (foodConsumed[foodIndex])
                     continue;
                 var delta = new NumericsVector2(foods[foodIndex].X, foods[foodIndex].Y) - position;
-                if (delta.LengthSquared() > creature.Body.FoodPickupRadius * creature.Body.FoodPickupRadius)
+                if (delta.LengthSquared() > creature.FoodPickupRadius * creature.FoodPickupRadius)
                     continue;
                 foodConsumed[foodIndex] = true;
                 foodAlive--;
                 session.RequestKillEntity(foods[foodIndex].Entity.Name);
-                energy = MathF.Min(energy + Tuning.FoodEnergy, creature.Body.MaxEnergy);
+                energy = MathF.Min(energy + Tuning.FoodEnergy, creature.MaxEnergy);
                 ate = true;
                 break;
             }
@@ -436,7 +444,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                         continue;
                     var dx = target.X - position.X;
                     var dy = target.Y - position.Y;
-                    if ((dx * dx) + (dy * dy) > creature.Body.SpikeRadius * creature.Body.SpikeRadius)
+                    if ((dx * dx) + (dy * dy) > creature.SpikeRadius * creature.SpikeRadius)
                         continue;
                     session.RequestKillEntity(target.Entity.Name);
                     targets++;
@@ -517,7 +525,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     $"M {output.MoveDrive:0.00} / T {output.TurnDrive:0.00} / S {output.SpikeDrive:0.00}"));
             }
 
-            if (energy <= 0f || age >= creature.Body.MaxAge)
+            if (energy <= 0f || age >= creature.MaxAge)
             {
                 // Dead matter feeds the survivors. This closes the early loop
                 // where a bad generation would otherwise leave an empty pond
@@ -527,7 +535,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     Math.Max(0, Tuning.FoodCap - (foodAlive + pendingFood)));
                 for (var bite = 0; bite < detritus; bite++)
                 {
-                    var foodPosition = ClampToPond(position + RandomOffset(rng), creature.Body.FoodPickupRadius);
+                    var foodPosition = ClampToPond(position + RandomOffset(rng), creature.FoodPickupRadius);
                     mutations.Add(CreateFoodMeta(FoodName(nextFoodId++), foodPosition.X, foodPosition.Y));
                     foodAlive++;
                     pendingFood++;
@@ -538,7 +546,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             }
 
             alive++;
-            collisionBodies.Add(new CollisionBody { X = position.X, Y = position.Y, Radius = creature.Body.BodyRadius });
+            collisionBodies.Add(new CollisionBody { X = position.X, Y = position.Y, Radius = creature.BodyRadius });
             collisionEntities.Add(entity);
         }
 
@@ -891,7 +899,15 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         float Age,
         float ReproCooldown,
         float SpikeCooldown,
-        BodyPhenotype Body);
+        float BodyRadius,
+        float FoodPickupRadius,
+        float MaxEnergy,
+        float MoveSpeed,
+        float TurnSpeed,
+        float SenseRange,
+        float SpikeRadius,
+        float BasalMetabolism,
+        float MaxAge);
 
     private readonly record struct FoodSnapshot(ISndEntity Entity, float X, float Y);
 }

@@ -216,7 +216,7 @@ public partial class EvolutionWorldView : Node2D
             var bodyGenome = ReadString(entity, DemoKeys.BodyGenome, string.Empty);
             if (!_appearanceCache.TryGetValue(bodyGenome, out var look))
             {
-                if (_appearanceCache.Count >= 2048)
+                if (_appearanceCache.Count >= 8192)
                     _appearanceCache.Clear();
                 look = GenomeAppearance.Derive(bodyGenome);
                 _appearanceCache[bodyGenome] = look;
