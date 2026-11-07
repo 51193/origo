@@ -48,9 +48,12 @@ bash scripts/bash/run-evolution-demo.sh --no-build
 bash scripts/bash/run-evolution-demo.sh --headless --seconds 120
 ```
 
-The runner stores Godot's user data in the repository-local `.godot-home/`
-by default so it also works in sandboxes and containers. Override that path with
-`EVOLUTION_DEMO_HOME` when saves should persist elsewhere.
+The windowed runner stores Godot user data in `.godot-home/`; headless smoke
+uses a separate `.godot-home-smoke/`, so test runs can never overwrite player
+saves. Override them with `EVOLUTION_DEMO_HOME` and
+`EVOLUTION_DEMO_SMOKE_HOME` respectively. The runner prints the active user-data
+directory on startup. Windowed saves live under:
+`.godot-home/.local/share/godot/app_userdata/Origo Evolution Demo/evolution_demo_saves/`.
 
 ## Controls
 

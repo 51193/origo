@@ -45,6 +45,7 @@ Thumbs.db
 
 # Godot user-data home used when the real HOME/XDG directories are read-only
 .godot-home/
+.godot-home-smoke/
 
 artifacts/
 

@@ -81,8 +81,15 @@ GODOT_BIN="$(bash scripts/bash/download-godot.sh)"
 # Keep Godot's user:// data inside the repository so the demo runs in sandboxes
 # and containers where the real home directory is not writable. Override this
 # path with EVOLUTION_DEMO_HOME when persistent saves should live elsewhere.
-GODOT_HOME="${EVOLUTION_DEMO_HOME:-$ROOT/.godot-home}"
+# Windowed play and headless smoke use separate user-data roots so a smoke run
+# can never overwrite or clear the player's real save slots.
+if ((HEADLESS == 1)); then
+    GODOT_HOME="${EVOLUTION_DEMO_SMOKE_HOME:-$ROOT/.godot-home-smoke}"
+else
+    GODOT_HOME="${EVOLUTION_DEMO_HOME:-$ROOT/.godot-home}"
+fi
 mkdir -p "$GODOT_HOME/.local/share" "$GODOT_HOME/.config" "$GODOT_HOME/.cache"
+echo "Godot user data: $GODOT_HOME"
 
 run_godot() {
     HOME="$GODOT_HOME" \
