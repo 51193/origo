@@ -22,8 +22,8 @@ A playable idle artificial-life sandbox built on `Origo.Core` and
   speed while showing a progress bar plus global/instantaneous speed
   multipliers; it runs the same simulation ticks and deferred spawn/kill work as
   the normal pond.
-- The HUD `Spikes` counter is the total number of creatures killed by evolved
-  radial strikes.
+- The HUD `Spikes` counter is the number of successful directional spike hits;
+  the parenthesized `K` value is the subset drained to zero energy.
 - Speed 1x/2x/4x/8x; auto-save every 60 seconds while running.
 
 There is no direct creature control and no hard fail state: the pond is an
@@ -46,6 +46,10 @@ bash scripts/bash/run-evolution-demo.sh --no-build
 
 # Headless smoke with a chosen simulated target.
 bash scripts/bash/run-evolution-demo.sh --headless --seconds 120
+
+# 1h genome screening benchmark in the isolated smoke save home.
+bash scripts/bash/run-evolution-demo.sh --headless --seconds 5 \
+  --fast-forward 3600 --save-slot bench_1h
 ```
 
 The windowed runner stores Godot user data in `.godot-home/`; headless smoke
@@ -86,7 +90,8 @@ The page covers:
   radius, pickup padding, and max-energy scaling;
 - brain mutation, body-length mutation, frameshift, founder mutation,
   metabolism, reproduction, ageing, lineage threshold;
-- spike threshold/cost/radius/cooldown;
+- spike threshold, base cost, cost per world-unit, aim half-angle, beam radius,
+  drain fraction, range, and cooldown;
 - every food-patch/source parameter: count, radius, falloff, local capacity,
   scan/spawn/walk cadence, walk speed/turn, and all long-cycle bounds;
 - global overgrowth scan interval, cell size, food threshold, mutation rate,
@@ -153,6 +158,27 @@ The legacy single 103-hex genome is no longer used by the runtime and old saves
 are intentionally not migrated. The controller stores `evo.genomeVersion = 2`;
 the load path rejects saves without that marker, and the Load panel disables
 incompatible slots with an explicit message.
+
+### Directional spike
+
+The spike is no longer a radius AoE. The body's `SpikeOrgan` is the organ gene
+and the body `SpikeRange` codon group is the maximum shot distance. The fixed
+latent brain's fourth output slot (`Aim`) supplies a signed aim offset:
+
+```text
+aimAngle = bodyHeading + aimDrive * SpikeAimHalfAngle
+```
+
+A shot tests creatures inside a narrow ray/beam, picks the nearest valid target,
+and drains a fraction of its energy into the shooter. Energy cost is:
+
+```text
+SpikeBaseCost + SpikeCostPerUnit * shotDistance
+```
+
+A miss is charged at maximum range. The view draws the red beam from shooter to
+impact endpoint. This turns spike into a directional, distance-priced predation
+trait instead of an area clear.
 
 ## Appearance
 

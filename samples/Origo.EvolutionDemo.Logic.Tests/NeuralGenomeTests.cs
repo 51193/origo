@@ -58,6 +58,21 @@ public sealed class NeuralGenomeTests
     }
 
     [Fact]
+    public void AimOutput_IsFiniteAndSuppressedWithoutSpikeOrgan()
+    {
+        var body = BodyGenome.Decode(BodyGenome.DefaultTemplate);
+        var brain = NeuralGenome.Decode(NeuralGenome.CalibratedFounderTemplate());
+        var sensors = new float[NeuralGenome.SensorSlots];
+
+        var withSpike = brain.Evaluate(body, sensors);
+        var noSpike = brain.Evaluate(body with { SpikeOrgan = false }, sensors);
+
+        Assert.True(float.IsFinite(withSpike.AimDrive));
+        Assert.Equal(0f, noSpike.AimDrive);
+        Assert.Equal(0f, noSpike.SpikeDrive);
+    }
+
+    [Fact]
     public void Mutate_ZeroRateIsIdentity()
     {
         var parent = NeuralGenome.CalibratedFounderTemplate();

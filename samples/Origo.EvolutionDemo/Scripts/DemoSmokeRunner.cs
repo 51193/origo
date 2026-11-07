@@ -20,6 +20,8 @@ public partial class DemoSmokeRunner : Node
     private readonly DemoEntry _entry;
     private readonly float _targetSeconds;
     private readonly int _smokeSeed;
+    private readonly float _fastForwardTarget;
+    private readonly string _benchmarkSaveSlot;
     private int _state;
     private int _frame;
     private int _savedPopulation;
@@ -55,6 +57,14 @@ public partial class DemoSmokeRunner : Node
             out var seed)
             ? seed
             : 20261101;
+        _fastForwardTarget = float.TryParse(
+            OS.GetEnvironment("ORIGO_DEMO_SMOKE_FAST_FORWARD"),
+            System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture,
+            out var fastForward)
+            ? Math.Max(1f, fastForward)
+            : 3f;
+        _benchmarkSaveSlot = OS.GetEnvironment("ORIGO_DEMO_SMOKE_SAVE_SLOT");
     }
 
     public override void _Process(double delta)
@@ -372,23 +382,49 @@ public partial class DemoSmokeRunner : Node
                     throw new InvalidOperationException($"Fresh pond time did not reset (t={reset.time:0.0}).");
                 _fastForwardStartTime = reset.time;
                 _resetPopulation = reset.creatures;
-                ui.StartFastForwardForSmoke(3f);
+                ui.StartFastForwardForSmoke(_fastForwardTarget);
                 _state = 6;
                 _frame = 0;
                 break;
 
             case 6:
                 _frame++;
-                if (_frame > StartupFrameLimit * 4)
+                var fastForwardFrameLimit = Math.Max(
+                    StartupFrameLimit * 4,
+                    (int)(_fastForwardTarget / Tuning.SimulationTickSeconds) + (StartupFrameLimit * 4));
+                if (_frame > fastForwardFrameLimit)
                     throw new InvalidOperationException("Timed iteration did not complete.");
                 if (ui.IsFastForwardingForSmoke)
                     break;
                 var fastForwarded = ui.SmokeStats();
                 if (fastForwarded.time < _fastForwardStartTime + 2f)
                     throw new InvalidOperationException("Timed iteration did not advance simulation time.");
+                if (!string.IsNullOrWhiteSpace(_benchmarkSaveSlot))
+                {
+                    ui.SaveSmokeGame(_benchmarkSaveSlot);
+                    _savedPopulation = fastForwarded.creatures;
+                    _savedTime = fastForwarded.time;
+                    _state = 7;
+                    _frame = 0;
+                    break;
+                }
+
                 GD.Print($"DEMO_SMOKE_OK population={_restoredCreatures} saved_population={_savedPopulation} " +
                     $"generation={_restoredGeneration} time={_restoredTime:0.0} food={_restoredFood} " +
                     $"reset_population={_resetPopulation} fast_forward_time={fastForwarded.time:0.0}");
+                GetTree().Quit(0);
+                break;
+
+            case 7:
+                _frame++;
+                if (_frame > StartupFrameLimit * 4)
+                    throw new InvalidOperationException("Benchmark save did not complete.");
+                if (ui.IsBusyForSmoke)
+                    break;
+                if (!_entry.Context.Save.ListSaves().Contains(_benchmarkSaveSlot, StringComparer.Ordinal))
+                    throw new InvalidOperationException("Benchmark save is missing.");
+                GD.Print($"DEMO_BENCHMARK_OK population={_savedPopulation} time={_savedTime:0.0} " +
+                    $"slot={_benchmarkSaveSlot}");
                 GetTree().Quit(0);
                 break;
         }

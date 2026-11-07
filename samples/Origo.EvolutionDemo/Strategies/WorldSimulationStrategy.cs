@@ -231,6 +231,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         controller.SetData(DemoKeys.FeedRequest, 0);
         controller.SetData(DemoKeys.SpikeAttacks, 0);
         controller.SetData(DemoKeys.SpikeKills, 0);
+        controller.SetData(DemoKeys.SpikeHits, 0);
+        controller.SetData(DemoKeys.SpikeDrained, 0f);
         controller.SetData(DemoKeys.Phase, DemoKeys.PhaseStarting);
         controller.SetData(DemoKeys.GenomeVersion, 2);
 
@@ -331,6 +333,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         var alive = 0;
         var spikeAttacks = 0;
         var spikeKills = 0;
+        var spikeHits = 0;
+        var spikeDrained = 0f;
         var tickDt = Tuning.SimulationTickSeconds;
         var pondTime = ReadFloat(controller, DemoKeys.Time, 0f);
         var sensorBuffer = new float[NeuralGenome.SensorSlots];
@@ -349,6 +353,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             var drive = Math.Clamp(ReadFloat(entity, DemoKeys.Drive, 0f), 0f, 1f);
             var turn = Math.Clamp(ReadFloat(entity, DemoKeys.Turn, 0f), -1f, 1f);
             var spikeDrive = Math.Clamp(ReadFloat(entity, DemoKeys.SpikeDrive, 0f), -1f, 1f);
+            var aimDrive = Math.Clamp(ReadFloat(entity, DemoKeys.Aim, 0f), -1f, 1f);
             var output = default(BrainOutput);
             if (updateAi)
             {
@@ -383,9 +388,11 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 drive = Math.Clamp(output.MoveDrive, 0f, 1f);
                 turn = Math.Clamp(output.TurnDrive, -1f, 1f);
                 spikeDrive = Math.Clamp(output.SpikeDrive, -1f, 1f);
+                aimDrive = Math.Clamp(output.AimDrive, -1f, 1f);
                 entity.SetData(DemoKeys.Drive, drive);
                 entity.SetData(DemoKeys.Turn, turn);
                 entity.SetData(DemoKeys.SpikeDrive, spikeDrive);
+                entity.SetData(DemoKeys.Aim, aimDrive);
             }
             var heading = creature.Heading + (turn * creature.TurnSpeed * tickDt);
             var position = new NumericsVector2(creature.X, creature.Y);
@@ -430,28 +437,63 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 && energy >= Tuning.SpikeEnergyCost
                 && spikeCooldown <= 0f)
             {
-                energy -= Tuning.SpikeEnergyCost;
-                spikeCooldown = Tuning.SpikeCooldownSeconds;
-                entity.SetData(DemoKeys.SpikeFlash, pondTime);
-                var targets = 0;
-                sensorGrid.Query(position.X, position.Y, sensorGrid.Creatures, nearCreatures);
+                var aimAngle = heading + (aimDrive * Tuning.SpikeAimHalfAngleRadians);
+                var aimX = MathF.Cos(aimAngle);
+                var aimY = MathF.Sin(aimAngle);
+                var range = creature.SpikeRadius;
+                sensorGrid.Query(position.X, position.Y, range, sensorGrid.Creatures, nearCreatures);
+                var targetIndex = -1;
+                var targetDistance = float.MaxValue;
                 foreach (var point in nearCreatures)
                 {
                     if (point.Id == i)
                         continue;
-                    var target = creatures[point.Id];
-                    if (target.Entity.IsPendingKill)
+                    var candidate = creatures[point.Id];
+                    if (candidate.Entity.IsPendingKill)
                         continue;
-                    var dx = target.X - position.X;
-                    var dy = target.Y - position.Y;
-                    if ((dx * dx) + (dy * dy) > creature.SpikeRadius * creature.SpikeRadius)
+                    var dx = candidate.X - position.X;
+                    var dy = candidate.Y - position.Y;
+                    var along = (dx * aimX) + (dy * aimY);
+                    if (along <= 0f || along > range || along >= targetDistance)
                         continue;
-                    session.RequestKillEntity(target.Entity.Name);
-                    targets++;
+                    var perpendicularSquared = (dx * dx) + (dy * dy) - (along * along);
+                    var hitRadius = candidate.BodyRadius + Tuning.SpikeBeamRadius;
+                    if (perpendicularSquared > hitRadius * hitRadius)
+                        continue;
+                    targetIndex = point.Id;
+                    targetDistance = along;
                 }
 
-                spikeAttacks++;
-                spikeKills += targets;
+                var shotDistance = targetIndex >= 0 ? targetDistance : range;
+                var shotCost = Tuning.SpikeEnergyCost + (Tuning.SpikeEnergyPerUnit * shotDistance);
+                if (energy >= shotCost)
+                {
+                    energy -= shotCost;
+                    spikeCooldown = Tuning.SpikeCooldownSeconds;
+                    var endX = position.X + (aimX * shotDistance);
+                    var endY = position.Y + (aimY * shotDistance);
+                    entity.SetData(DemoKeys.SpikeFlash, pondTime);
+                    entity.SetData(DemoKeys.SpikeEndX, endX);
+                    entity.SetData(DemoKeys.SpikeEndY, endY);
+                    spikeAttacks++;
+                    if (targetIndex >= 0)
+                    {
+                        var target = creatures[targetIndex];
+                        var targetEnergy = MathF.Max(0f, target.Energy);
+                        var drained = targetEnergy * Tuning.SpikeDrainFraction;
+                        var remaining = targetEnergy - drained;
+                        target.Entity.SetData(DemoKeys.Energy, remaining);
+                        creatures[targetIndex] = target with { Energy = remaining };
+                        energy = MathF.Min(energy + drained, creature.MaxEnergy);
+                        spikeHits++;
+                        spikeDrained += drained;
+                        if (remaining <= 0f)
+                        {
+                            session.RequestKillEntity(target.Entity.Name);
+                            spikeKills++;
+                        }
+                    }
+                }
             }
 
             if (!ate
@@ -522,7 +564,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 entity.SetData(DemoKeys.Sensors, FormatSensors(sensorBuffer));
                 entity.SetData(DemoKeys.Outputs, string.Create(
                     CultureInfo.InvariantCulture,
-                    $"M {output.MoveDrive:0.00} / T {output.TurnDrive:0.00} / S {output.SpikeDrive:0.00}"));
+                    $"M {output.MoveDrive:0.00} / T {output.TurnDrive:0.00} / S {output.SpikeDrive:0.00} / A {output.AimDrive:0.00}"));
             }
 
             if (energy <= 0f || age >= creature.MaxAge)
@@ -621,6 +663,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
 
         controller.SetData(DemoKeys.SpikeAttacks, ReadInt(controller, DemoKeys.SpikeAttacks, 0) + spikeAttacks);
         controller.SetData(DemoKeys.SpikeKills, ReadInt(controller, DemoKeys.SpikeKills, 0) + spikeKills);
+        controller.SetData(DemoKeys.SpikeHits, ReadInt(controller, DemoKeys.SpikeHits, 0) + spikeHits);
+        controller.SetData(DemoKeys.SpikeDrained, ReadFloat(controller, DemoKeys.SpikeDrained, 0f) + spikeDrained);
 
         // Food sources are tick-driven, not render-frame driven: run them once
         // per fixed simulation step so walk/scan/spawn clocks are reproducible
@@ -734,17 +778,26 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             return grid;
         }
 
-        public void Query(float x, float y, List<SensorPoint>[] buckets, List<SensorPoint> target)
+        public void Query(float x, float y, List<SensorPoint>[] buckets, List<SensorPoint> target) =>
+            Query(x, y, Tuning.SenseRange, buckets, target);
+
+        public void Query(
+            float x,
+            float y,
+            float radius,
+            List<SensorPoint>[] buckets,
+            List<SensorPoint> target)
         {
             target.Clear();
             var cellX = CellCoordinate(x);
             var cellY = CellCoordinate(y);
-            for (var dy = -1; dy <= 1; dy++)
+            var cells = Math.Max(1, (int)MathF.Ceiling(radius / _cellSize));
+            for (var dy = -cells; dy <= cells; dy++)
             {
                 var row = cellY + dy;
                 if (row < 0 || row >= _dimension)
                     continue;
-                for (var dx = -1; dx <= 1; dx++)
+                for (var dx = -cells; dx <= cells; dx++)
                 {
                     var column = cellX + dx;
                     if (column < 0 || column >= _dimension)

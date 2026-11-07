@@ -63,15 +63,18 @@ internal static class EvolutionEntityFactory
             .SetFloat(DemoKeys.Drive, 0.2f)
             .SetFloat(DemoKeys.Turn, 0f)
             .SetFloat(DemoKeys.SpikeDrive, 0f)
+            .SetFloat(DemoKeys.Aim, 0f)
             .SetFloat(DemoKeys.SpikeCooldown, 0f)
             .SetFloat(DemoKeys.SpikeFlash, -1f)
+            .SetFloat(DemoKeys.SpikeEndX, 0f)
+            .SetFloat(DemoKeys.SpikeEndY, 0f)
             .SetFloat(DemoKeys.Age, 0f)
             .SetInt(DemoKeys.Generation, generation)
             .SetInt(DemoKeys.Lineage, lineage)
             .SetInt(DemoKeys.Children, 0)
             .SetFloat(DemoKeys.ReproCooldown, cooldown)
             .SetString(DemoKeys.Sensors, "0,0,0,0,0,0,0,0,0,0,0,0")
-            .SetString(DemoKeys.Outputs, "M 0.00 / T 0.00 / S 0.00")
+            .SetString(DemoKeys.Outputs, "M 0.00 / T 0.00 / S 0.00 / A 0.00")
             .Build();
 
     public static SndMetaData Food(string name, float x, float y) =>

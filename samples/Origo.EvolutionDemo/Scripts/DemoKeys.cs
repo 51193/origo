@@ -62,9 +62,14 @@ internal static class DemoKeys
     public const string Turn = "evo.turn";
     public const string SpikeDrive = "evo.spikeDrive";
     public const string SpikeCooldown = "evo.spikeCooldown";
+    public const string Aim = "evo.aim";
+    public const string SpikeEndX = "evo.spikeEndX";
+    public const string SpikeEndY = "evo.spikeEndY";
     public const string SpikeFlash = "evo.spikeFlash";
     public const string SpikeAttacks = "evo.spikeAttacks";
     public const string SpikeKills = "evo.spikeKills";
+    public const string SpikeHits = "evo.spikeHits";
+    public const string SpikeDrained = "evo.spikeDrained";
     public const string ConfigJson = "world.config";
     public const string OvergrowthNextAt = "overgrowth.nextAt";
     public const string OvergrowthCount = "overgrowth.count";

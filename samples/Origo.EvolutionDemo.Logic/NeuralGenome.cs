@@ -306,7 +306,7 @@ public static class NeuralGenome
 }
 
 /// <summary>Forward-evaluated result of one creature's neural genome.</summary>
-public readonly record struct BrainOutput(float MoveDrive, float TurnDrive, float SpikeDrive);
+public readonly record struct BrainOutput(float MoveDrive, float TurnDrive, float SpikeDrive, float AimDrive);
 
 /// <summary>
 ///     Evaluates the fixed latent neural lattice for one body phenotype. Body
@@ -416,17 +416,20 @@ public sealed class NeuralBrain
         var move = _outputBias[(int)OutputId.Move];
         var turn = _outputBias[(int)OutputId.Turn];
         var spike = _outputBias[(int)OutputId.Spike];
+        var aim = _outputBias[(int)OutputId.Aim];
         for (var node = 0; node < lastWidth; node++)
         {
             move += lastHidden[node] * outputWeights[(node * NeuralGenome.OutputSlots) + (int)OutputId.Move];
             turn += lastHidden[node] * outputWeights[(node * NeuralGenome.OutputSlots) + (int)OutputId.Turn];
             spike += lastHidden[node] * outputWeights[(node * NeuralGenome.OutputSlots) + (int)OutputId.Spike];
+            aim += lastHidden[node] * outputWeights[(node * NeuralGenome.OutputSlots) + (int)OutputId.Aim];
         }
 
         return new BrainOutput(
             MathF.Tanh(move),
             MathF.Tanh(turn),
-            body.SpikeOrgan ? MathF.Tanh(spike) : 0f);
+            body.SpikeOrgan ? MathF.Tanh(spike) : 0f,
+            body.SpikeOrgan ? MathF.Tanh(aim) : 0f);
     }
 
     /// <summary>Read-only evaluated first hidden layer for debugging.</summary>

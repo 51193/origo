@@ -55,6 +55,10 @@ public static class Tuning
     public static float DriveThreshold => DemoSettings.Current.DriveThreshold;
     public static float SpikeThreshold => DemoSettings.Current.SpikeThreshold;
     public static float SpikeEnergyCost => DemoSettings.Current.SpikeEnergyCost;
+    public static float SpikeEnergyPerUnit => DemoSettings.Current.SpikeEnergyPerUnit;
+    public static float SpikeAimHalfAngleRadians => DemoSettings.Current.SpikeAimHalfAngleRadians;
+    public static float SpikeBeamRadius => DemoSettings.Current.SpikeBeamRadius;
+    public static float SpikeDrainFraction => DemoSettings.Current.SpikeDrainFraction;
     public static float SpikeRadius => DemoSettings.Current.SpikeRadius;
     public static float SpikeCooldownSeconds => DemoSettings.Current.SpikeCooldownSeconds;
     public static float InitialEnergy => DemoSettings.Current.InitialEnergy;

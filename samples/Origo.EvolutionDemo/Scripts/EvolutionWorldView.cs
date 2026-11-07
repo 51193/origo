@@ -245,19 +245,12 @@ public partial class EvolutionWorldView : Node2D
             if (spikeFlash >= 0f && pondTime - spikeFlash < 0.55f)
             {
                 var pulse = Mathf.Clamp(1f - ((pondTime - spikeFlash) / 0.55f), 0f, 1f);
-                var spikeColor = new Color(1f, 0.32f, 0.22f, 0.45f + (0.5f * pulse));
-                DrawArc(screenPosition, bodyRadius + 6f + (8f * pulse), 0f, Mathf.Tau, 18,
-                    spikeColor, 2f / ViewScale, true);
-                for (var spike = 0; spike < 4; spike++)
-                {
-                    var spikeAngle = (spike * Mathf.Pi / 2f) + (pondTime * 1.7f);
-                    var spikeDirection = new Vector2(Mathf.Cos(spikeAngle), Mathf.Sin(spikeAngle));
-                    DrawLine(
-                        screenPosition + (spikeDirection * (bodyRadius + 2f)),
-                        screenPosition + (spikeDirection * (bodyRadius + 12f + (6f * pulse))),
-                        spikeColor,
-                        1.5f / ViewScale);
-                }
+                var spikeColor = new Color(1f, 0.32f, 0.22f, 0.35f + (0.55f * pulse));
+                var end = new Vector2(
+                    ReadFloat(entity, DemoKeys.SpikeEndX, currentPosition.X),
+                    ReadFloat(entity, DemoKeys.SpikeEndY, currentPosition.Y));
+                DrawLine(screenPosition, end, spikeColor, (1.5f + (1.5f * pulse)) / ViewScale);
+                DrawCircle(end, 3f + (3f * pulse), spikeColor);
             }
             var isSelected = SelectedName is not null
                 && string.Equals(SelectedName, entity.Name, StringComparison.Ordinal);

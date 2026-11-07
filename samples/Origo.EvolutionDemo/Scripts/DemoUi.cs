@@ -917,7 +917,7 @@ public partial class DemoUi : CanvasLayer
         var realClock = FormatClock(realSeconds);
         _hudLabel.Text = string.Create(
             CultureInfo.InvariantCulture,
-            $"Sim {simClock}  Real {realClock}  Pop {creatures}/{Tuning.PopulationCap}  Gen {ReadInt(controller, DemoKeys.MaxGeneration, 0)}  Lines {lineages.Count}  Food {food}  Spikes {ReadInt(controller, DemoKeys.SpikeKills, 0)}  OG {ReadInt(controller, DemoKeys.OvergrowthCount, 0)}{BloomSuffix(time, bloomEnabled)}  {(phase == DemoKeys.PhaseExtinct ? "EXTINCT" : paused ? "PAUSED" : $"x{speed}")}");
+            $"Sim {simClock}  Real {realClock}  Pop {creatures}/{Tuning.PopulationCap}  Gen {ReadInt(controller, DemoKeys.MaxGeneration, 0)}  Lines {lineages.Count}  Food {food}  Spikes {ReadInt(controller, DemoKeys.SpikeHits, 0)} (K {ReadInt(controller, DemoKeys.SpikeKills, 0)})  OG {ReadInt(controller, DemoKeys.OvergrowthCount, 0)}{BloomSuffix(time, bloomEnabled)}  {(phase == DemoKeys.PhaseExtinct ? "EXTINCT" : paused ? "PAUSED" : $"x{speed}")}");
         _pauseButton.Text = paused ? "Resume" : "Pause";
         _feedButton.Disabled = _feedCooldown > 0d;
         _feedButton.Text = _feedCooldown > 0d
@@ -978,7 +978,7 @@ public partial class DemoUi : CanvasLayer
             FormatGenome(bodyGenome) + $"\nBrain genome ({brainGenome.Length} hex)";
         _inspectorSensors.Text =
             $"Organs: V {phenotype.VisionOrgan} C {phenotype.CreatureSenseOrgan} R {phenotype.RhythmOrgan} S {phenotype.SpikeOrgan}\n" +
-            $"Sensors {phenotype.ActiveSensorCount}/12  Outputs {phenotype.ActiveOutputCount}/3  Layers {phenotype.HiddenLayers}  Widths {phenotype.HiddenWidth1}/{phenotype.HiddenWidth2}/{phenotype.HiddenWidth3}\n" +
+            $"Sensors {phenotype.ActiveSensorCount}/12  Outputs {phenotype.ActiveOutputCount}/4  Layers {phenotype.HiddenLayers}  Widths {phenotype.HiddenWidth1}/{phenotype.HiddenWidth2}/{phenotype.HiddenWidth3}\n" +
             $"H1: {DescribeTypes(brainGenome, NeuralGenome.Types1Offset, phenotype.HiddenWidth1)}\n" +
             $"H2: {DescribeTypes(brainGenome, NeuralGenome.Types2Offset, phenotype.HiddenWidth2)}";
     }
@@ -1701,8 +1701,17 @@ public partial class DemoUi : CanvasLayer
         AddAdvancedSection(rows, "SPIKE");
         AddNumberSetting(rows, "Spike threshold", 0.1f, 1f, 0.05f,
             s => s.SpikeThreshold, (s, v) => s.SpikeThreshold = v);
-        AddNumberSetting(rows, "Spike energy cost", 0f, 200f, 5f,
+        AddNumberSetting(rows, "Spike energy cost", 0f, 200f, 1f,
             s => s.SpikeEnergyCost, (s, v) => s.SpikeEnergyCost = v);
+        AddNumberSetting(rows, "Spike cost / unit", 0f, 10f, 0.01f,
+            s => s.SpikeEnergyPerUnit, (s, v) => s.SpikeEnergyPerUnit = v);
+        AddNumberSetting(rows, "Spike aim half-angle (deg)", 0f, 180f, 5f,
+            s => s.SpikeAimHalfAngleRadians * 180f / MathF.PI,
+            (s, v) => s.SpikeAimHalfAngleRadians = v * MathF.PI / 180f);
+        AddNumberSetting(rows, "Spike beam radius", 0.1f, 500f, 0.5f,
+            s => s.SpikeBeamRadius, (s, v) => s.SpikeBeamRadius = v);
+        AddNumberSetting(rows, "Spike drain fraction", 0f, 1f, 0.05f,
+            s => s.SpikeDrainFraction, (s, v) => s.SpikeDrainFraction = v);
         AddNumberSetting(rows, "Spike radius", 10f, 300f, 5f,
             s => s.SpikeRadius, (s, v) => s.SpikeRadius = v);
         AddNumberSetting(rows, "Spike cooldown", 0.5f, 30f, 0.5f,

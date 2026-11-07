@@ -28,7 +28,7 @@ public sealed class BodyGenomeTests
         Assert.True(body.VisionOrgan);
         Assert.True(body.CreatureSenseOrgan);
         Assert.Equal(8, body.ActiveSensorCount);
-        Assert.Equal(3, body.ActiveOutputCount);
+        Assert.Equal(4, body.ActiveOutputCount);
     }
 
     [Fact]

@@ -18,6 +18,8 @@ source "$ROOT/scripts/bash/dotnet-env.sh"
 HEADLESS=0
 RUN_BUILD=1
 SMOKE_SECONDS=60
+FAST_FORWARD_TARGET=""
+BENCHMARK_SAVE_SLOT=""
 
 usage() {
     cat <<'USAGE'
@@ -26,9 +28,12 @@ Usage:
   bash scripts/bash/run-evolution-demo.sh --headless
   bash scripts/bash/run-evolution-demo.sh --headless --seconds 120
   bash scripts/bash/run-evolution-demo.sh --no-build
+  bash scripts/bash/run-evolution-demo.sh --headless --fast-forward 3600 --save-slot bench_1h
 
 --headless runs the demo acceptance smoke instead of opening a window.
---seconds is only valid with --headless and sets its simulated target.
+--seconds sets the initial normal-speed smoke target.
+--fast-forward runs headless fast-forward to an absolute simulation time.
+--save-slot saves the benchmark result under the isolated smoke user home.
 --no-build launches an already-built demo without rebuilding.
 USAGE
 }
@@ -42,6 +47,22 @@ while (($# > 0)); do
         --no-build)
             RUN_BUILD=0
             shift
+            ;;
+        --fast-forward)
+            if (($# < 2)) || ! [[ "$2" =~ ^[1-9][0-9]*$ ]]; then
+                echo "ERROR: --fast-forward requires a positive integer." >&2
+                exit 1
+            fi
+            FAST_FORWARD_TARGET="$2"
+            shift 2
+            ;;
+        --save-slot)
+            if (($# < 2)) || [[ -z "$2" ]]; then
+                echo "ERROR: --save-slot requires a slot id." >&2
+                exit 1
+            fi
+            BENCHMARK_SAVE_SLOT="$2"
+            shift 2
             ;;
         --seconds)
             if (($# < 2)) || ! [[ "$2" =~ ^[1-9][0-9]*$ ]]; then
@@ -65,8 +86,8 @@ done
 
 if ((HEADLESS == 0)); then
     # A window runner should not pretend to support a target duration.
-    if ((SMOKE_SECONDS != 60)); then
-        echo "ERROR: --seconds is only valid with --headless." >&2
+    if ((SMOKE_SECONDS != 60)) || [[ -n "$FAST_FORWARD_TARGET" ]] || [[ -n "$BENCHMARK_SAVE_SLOT" ]]; then
+        echo "ERROR: --seconds/--fast-forward/--save-slot require --headless." >&2
         exit 1
     fi
 fi
@@ -103,6 +124,12 @@ if ((HEADLESS == 1)); then
     echo "Running headless Evolution Demo smoke (${SMOKE_SECONDS}s simulated target)..."
     export ORIGO_DEMO_SMOKE=1
     export ORIGO_DEMO_SMOKE_SECONDS="$SMOKE_SECONDS"
+    if [[ -n "$FAST_FORWARD_TARGET" ]]; then
+        export ORIGO_DEMO_SMOKE_FAST_FORWARD="$FAST_FORWARD_TARGET"
+    fi
+    if [[ -n "$BENCHMARK_SAVE_SLOT" ]]; then
+        export ORIGO_DEMO_SMOKE_SAVE_SLOT="$BENCHMARK_SAVE_SLOT"
+    fi
     run_godot --headless --path samples/Origo.EvolutionDemo --quit-after 40000
     exit 0
 fi

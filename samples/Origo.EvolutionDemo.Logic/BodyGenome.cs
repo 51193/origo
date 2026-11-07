@@ -72,8 +72,8 @@ public enum OutputId
     /// <summary>Spike action drive.</summary>
     Spike = 2,
 
-    /// <summary>Reserved future action slot.</summary>
-    Future = 3,
+    /// <summary>Signed spike aim offset around the body heading.</summary>
+    Aim = 3,
 }
 
 /// <summary>
@@ -115,7 +115,7 @@ public readonly record struct BodyPhenotype(
     public bool HasOutput(OutputId output) => output switch
     {
         OutputId.Move or OutputId.Turn => true,
-        OutputId.Spike => SpikeOrgan,
+        OutputId.Spike or OutputId.Aim => SpikeOrgan,
         _ => false,
     };
 
@@ -124,7 +124,7 @@ public readonly record struct BodyPhenotype(
         (VisionOrgan ? 3 : 0) + (CreatureSenseOrgan ? 1 : 0) + 2 + (RhythmOrgan ? 2 : 0);
 
     /// <summary>Number of currently active output slots.</summary>
-    public int ActiveOutputCount => SpikeOrgan ? 3 : 2;
+    public int ActiveOutputCount => SpikeOrgan ? 4 : 2;
 }
 
 /// <summary>

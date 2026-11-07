@@ -57,7 +57,11 @@ public sealed class DemoSettings
 
     // Spike.
     public float SpikeThreshold { get; set; } = 0.60f;
-    public float SpikeEnergyCost { get; set; } = 28f;
+    public float SpikeEnergyCost { get; set; } = 10f;
+    public float SpikeEnergyPerUnit { get; set; } = 0.10f;
+    public float SpikeAimHalfAngleRadians { get; set; } = MathF.PI / 3f;
+    public float SpikeBeamRadius { get; set; } = 4f;
+    public float SpikeDrainFraction { get; set; } = 0.5f;
     public float SpikeRadius { get; set; } = 48f;
     public float SpikeCooldownSeconds { get; set; } = 4f;
 
@@ -164,6 +168,10 @@ public sealed class DemoSettings
         LineageMutationThreshold = Math.Clamp(LineageMutationThreshold, 1, 1_000);
         SpikeThreshold = Math.Clamp(SpikeThreshold, 0f, 1f);
         SpikeEnergyCost = Math.Clamp(SpikeEnergyCost, 0f, 10_000f);
+        SpikeEnergyPerUnit = Math.Clamp(SpikeEnergyPerUnit, 0f, 100f);
+        SpikeAimHalfAngleRadians = Math.Clamp(SpikeAimHalfAngleRadians, 0f, MathF.PI);
+        SpikeBeamRadius = Math.Clamp(SpikeBeamRadius, 0.1f, 500f);
+        SpikeDrainFraction = Math.Clamp(SpikeDrainFraction, 0f, 1f);
         SpikeRadius = Math.Clamp(SpikeRadius, 1f, 2_000f);
         SpikeCooldownSeconds = Math.Clamp(SpikeCooldownSeconds, 0.05f, 3_600f);
         CollisionIterations = Math.Clamp(CollisionIterations, 1, 20);
