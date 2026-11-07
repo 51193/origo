@@ -240,7 +240,7 @@ occupied ones.
 
 Sources also **randomly walk** through the pond in 0.5-second steps at
 4–16 world-units/second, with a random heading and boundary steering. Their food
-halos therefore migrate rather than staying at fixed coordinates. Source state
+washes therefore migrate rather than staying at fixed coordinates. Source state
 (position, heading, walk speed/step, scan/spawn clocks, local counts, next food
 id) is stored on the entity, so save/load preserves the feedback loop.
 

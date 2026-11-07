@@ -23,7 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the first three minutes; dying creatures drop
   food for survivors, and all food spawns are clamped inside the larger pond.
   Food is scarce on the expanded pond, and hunger/movement/reproduction pressure
-  is tuned so spinning lineages starve; the 300-creature cap is a rare safety
+  is tuned so spinning lineages starve; the 3,000-creature cap is a rare safety
   valve. The neural network now has per-node hidden activation genes (sigmoid,
   linear, inverted linear, ReLU) and sin/cos rhythm sensors, so network roles and
   timing are evolvable. A genome-length-independent appearance derivation turns
@@ -33,8 +33,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   low-speed movement stays smooth, and the HUD separates accelerated `Sim` time
   from wall-clock `Real` time. The pond is now 10,000 world-units in radius with
   a 3,000-creature cap and 1,200 founders. Creatures render at true world scale
-  (no minimum screen-size floor), so dense low-zoom views stay sparse; the genome
-  gained a third evolved radial spike action and rhythm sensors now start from
+  (no minimum screen-size floor), so dense low-zoom views stay sparse; the body/neural genome
+  split added a directional spike action and rhythm sensors now start from
   each creature's own age instead of a shared pond clock. Food is emitted in
   deterministic clustered settlements
   (configurable patch count/radius) instead of uniform noise, with a graded
@@ -57,8 +57,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the median of valid codons, organs combine with OR, and reproductive cost grows
   only logarithmically with body-gene length. The spike is now a directional
   ray controlled by a dedicated Aim output: body SpikeRange is maximum distance,
-  cost scales with actual shot distance, and hits drain target energy into the
-  shooter. Long-lived ponds use larger
+  cost scales with actual shot distance, and lethal hits steal part of the
+  target energy and leave normal corpse food. Long-lived ponds use larger
   appearance/brain caches and read the full body phenotype only for the AI batch
   instead of every creature every tick. The legacy 103-digit genome and
   8-slot sensor API have been removed; calibrated founder wiring is now a fixed
