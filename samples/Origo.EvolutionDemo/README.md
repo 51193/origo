@@ -23,7 +23,7 @@ A playable idle artificial-life sandbox built on `Origo.Core` and
   multipliers; it runs the same simulation ticks and deferred spawn/kill work as
   the normal pond.
 - The HUD `Spikes` counter is the number of successful directional spike hits;
-  the parenthesized `K` value is the subset drained to zero energy.
+  directional hits are lethal, so the parenthesized `K` value tracks kills.
 - Speed 1x/2x/4x/8x; auto-save every 60 seconds while running.
 
 There is no direct creature control and no hard fail state: the pond is an
@@ -170,7 +170,8 @@ aimAngle = bodyHeading + aimDrive * SpikeAimHalfAngle
 ```
 
 A shot tests creatures inside a narrow ray/beam, picks the nearest valid target,
-and drains a fraction of its energy into the shooter. Energy cost is:
+kills it, steals 30% of its current energy into the shooter, and spawns the normal
+death-food amount at the target position. Energy cost is:
 
 ```text
 SpikeBaseCost + SpikeCostPerUnit * shotDistance

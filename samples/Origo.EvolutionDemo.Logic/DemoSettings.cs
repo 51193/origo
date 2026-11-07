@@ -61,7 +61,7 @@ public sealed class DemoSettings
     public float SpikeEnergyPerUnit { get; set; } = 0.10f;
     public float SpikeAimHalfAngleRadians { get; set; } = MathF.PI / 3f;
     public float SpikeBeamRadius { get; set; } = 4f;
-    public float SpikeDrainFraction { get; set; } = 0.5f;
+    public float SpikeDrainFraction { get; set; } = 0.3f;
     public float SpikeRadius { get; set; } = 48f;
     public float SpikeCooldownSeconds { get; set; } = 4f;
 

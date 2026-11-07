@@ -1710,7 +1710,7 @@ public partial class DemoUi : CanvasLayer
             (s, v) => s.SpikeAimHalfAngleRadians = v * MathF.PI / 180f);
         AddNumberSetting(rows, "Spike beam radius", 0.1f, 500f, 0.5f,
             s => s.SpikeBeamRadius, (s, v) => s.SpikeBeamRadius = v);
-        AddNumberSetting(rows, "Spike drain fraction", 0f, 1f, 0.05f,
+        AddNumberSetting(rows, "Spike steal fraction", 0f, 1f, 0.05f,
             s => s.SpikeDrainFraction, (s, v) => s.SpikeDrainFraction = v);
         AddNumberSetting(rows, "Spike radius", 10f, 300f, 5f,
             s => s.SpikeRadius, (s, v) => s.SpikeRadius = v);

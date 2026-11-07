@@ -480,17 +480,28 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     {
                         var target = creatures[targetIndex];
                         var targetEnergy = MathF.Max(0f, target.Energy);
-                        var drained = targetEnergy * Tuning.SpikeDrainFraction;
-                        var remaining = targetEnergy - drained;
-                        target.Entity.SetData(DemoKeys.Energy, remaining);
-                        creatures[targetIndex] = target with { Energy = remaining };
-                        energy = MathF.Min(energy + drained, creature.MaxEnergy);
+                        var stolen = targetEnergy * Tuning.SpikeDrainFraction;
+                        energy = MathF.Min(energy + stolen, creature.MaxEnergy);
+                        target.Entity.SetData(DemoKeys.Energy, 0f);
+                        session.RequestKillEntity(target.Entity.Name);
                         spikeHits++;
-                        spikeDrained += drained;
-                        if (remaining <= 0f)
+                        spikeKills++;
+                        spikeDrained += stolen;
+
+                        var corpseLimit = Math.Min(
+                            Tuning.DeathFoodCount,
+                            Math.Max(0, Tuning.FoodCap - (foodAlive + pendingFood)));
+                        var corpsePosition = ClampToPond(
+                            new NumericsVector2(target.X, target.Y),
+                            Tuning.FoodPickupRadius);
+                        for (var bite = 0; bite < corpseLimit; bite++)
                         {
-                            session.RequestKillEntity(target.Entity.Name);
-                            spikeKills++;
+                            mutations.Add(CreateFoodMeta(
+                                FoodName(nextFoodId++),
+                                corpsePosition.X,
+                                corpsePosition.Y));
+                            foodAlive++;
+                            pendingFood++;
                         }
                     }
                 }
