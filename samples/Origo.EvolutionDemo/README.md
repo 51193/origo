@@ -32,6 +32,26 @@ creatures that only spin in place eventually starve; successful lineages must
 find food. If every creature dies, the Extinction panel offers a new pond or an
 earlier save.
 
+## Running
+
+The repository script builds and launches the demo, or runs its headless
+acceptance smoke:
+
+```bash
+# Build and launch the windowed demo.
+bash scripts/bash/run-evolution-demo.sh
+
+# Skip the build and launch the already-built demo.
+bash scripts/bash/run-evolution-demo.sh --no-build
+
+# Headless smoke with a chosen simulated target.
+bash scripts/bash/run-evolution-demo.sh --headless --seconds 120
+```
+
+The runner stores Godot's user data in the repository-local `.godot-home/`
+by default so it also works in sandboxes and containers. Override that path with
+`EVOLUTION_DEMO_HOME` when saves should persist elsewhere.
+
 ## Controls
 
 | Input | Action |
