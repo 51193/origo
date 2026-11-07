@@ -1081,17 +1081,23 @@ public partial class DemoUi : CanvasLayer
         var title = new Label { Text = slot == DemoEntry.AutoSaveId ? "AUTO SAVE" : slot.ToUpperInvariant() };
         title.AddThemeFontSizeOverride("font_size", 16);
         info.AddChild(title);
+        var compatible = !hasSave || (entry is not null
+            && entry.MetaData.TryGetValue("demo.genomeVersion", out var version)
+            && string.Equals(version, "2", StringComparison.Ordinal));
         var details = new Label
         {
-            Text = hasSave && entry is not null ? DescribeSave(entry) : "Empty slot",
-            Modulate = hasSave ? Colors.White : MutedColor,
+            Text = !hasSave
+                ? "Empty slot"
+                : DescribeSave(entry!) + (compatible ? string.Empty : "\nINCOMPATIBLE: pre-genome-v2 save"),
+            Modulate = hasSave && compatible ? Colors.White : MutedColor,
         };
         details.AddThemeFontSizeOverride("font_size", 13);
         info.AddChild(details);
 
         if (hasSave)
         {
-            var load = MakeButton("Load", 80);
+            var load = MakeButton(compatible ? "Load" : "Incompatible", 100);
+            load.Disabled = !compatible;
             load.Pressed += () => LoadSave(slot);
             row.AddChild(load);
         }
@@ -1122,8 +1128,9 @@ public partial class DemoUi : CanvasLayer
         string Read(string key, string fallback) => meta.TryGetValue(key, out var value) ? value : fallback;
         var time = Read("demo.time", "0");
         var seconds = double.TryParse(time, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed) ? parsed : 0d;
+        var version = Read("demo.genomeVersion", "legacy");
         return $"gen {Read("demo.generation", "?")} · pop {Read("demo.population", "?")} · " +
-            $"lines {Read("demo.lineages", "?")} · {Read("demo.mutation", "?")}\n" +
+            $"lines {Read("demo.lineages", "?")} · {Read("demo.mutation", "?")} · genome {version}\n" +
             $"pond time {seconds / 60d:00}:{seconds % 60d:00} · seed {Read("demo.seed", "?")} · {Read("demo.saved", "?")}";
     }
 

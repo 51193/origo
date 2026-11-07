@@ -82,6 +82,7 @@ public partial class DemoEntry : OrigoDefaultEntry
         metadata["demo.mutation"] = $"{ReadFloat(controller, DemoKeys.MutationRate) * 100d:0.0}%";
         metadata["demo.seed"] = ReadInt(controller, DemoKeys.Seed).ToString(CultureInfo.InvariantCulture);
         metadata["demo.saved"] = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
+        metadata["demo.genomeVersion"] = ReadInt(controller, DemoKeys.GenomeVersion).ToString(CultureInfo.InvariantCulture);
         return metadata;
     }
 

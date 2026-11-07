@@ -128,7 +128,8 @@ cheap but not free.
 
 The legacy single 103-hex genome is no longer used by the runtime and old saves
 are intentionally not migrated. The controller stores `evo.genomeVersion = 2`;
-the load path rejects saves without that marker.
+the load path rejects saves without that marker, and the Load panel disables
+incompatible slots with an explicit message.
 
 ## Appearance
 
