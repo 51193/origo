@@ -21,6 +21,12 @@ public enum BodyOrgan
 
     /// <summary>Houses a multi-pellet spike battery.</summary>
     SpikeBattery = 4,
+
+    /// <summary>Digests tough food efficiently.</summary>
+    HardDigest = 5,
+
+    /// <summary>Neutralizes toxic food.</summary>
+    ToxinResistance = 6,
 }
 
 /// <summary>Stable semantic sensor slots in the latent brain.</summary>
@@ -106,7 +112,9 @@ public readonly record struct BodyPhenotype(
     bool SpikeBatteryOrgan,
     int SpikeCount,
     float SpikeSpreadRadians,
-    float SpikeJitterRadians)
+    float SpikeJitterRadians,
+    bool HardDigestOrgan,
+    bool ToxinResistanceOrgan)
 {
     /// <summary>Returns whether a semantic sensor slot is active for this body.</summary>
     public bool HasSensor(SensorId sensor) => sensor switch
@@ -165,24 +173,32 @@ public static class BodyGenome
     public static string CreateDefault() => DefaultTemplate;
 
     /// <summary>
-    ///     Creates a founder body. Half of the founders carry a spike battery
-    ///     organ; the other half start with the single-spike body and can gain
-    ///     the battery by mutation.
+    ///     Creates a founder body. Some founders carry a spike battery and some
+    ///     carry one digestive adaptation; the rest start neutral and can gain
+    ///     either organ by mutation.
     /// </summary>
     public static string RandomFounderBody(Random random)
     {
         ArgumentNullException.ThrowIfNull(random);
         var chars = DefaultTemplate.ToCharArray();
-        if (random.NextDouble() >= 0.5d)
+        var roll = random.NextDouble();
+        var replacement = roll switch
+        {
+            < 0.50d => "040",
+            < 0.72d => "050",
+            < 0.82d => "060",
+            _ => string.Empty,
+        };
+        if (replacement.Length == 0)
             return new string(chars);
 
         var neutral = "F00";
         var index = new string(chars).IndexOf(neutral, StringComparison.Ordinal);
         if (index < 0)
             return new string(chars);
-        chars[index] = '0';
-        chars[index + 1] = '4';
-        chars[index + 2] = '0';
+        chars[index] = replacement[0];
+        chars[index + 1] = replacement[1];
+        chars[index + 2] = replacement[2];
         return new string(chars);
     }
 
@@ -228,7 +244,7 @@ public static class BodyGenome
         var spikeCounts = new List<float>();
         var spikeSpreads = new List<float>();
         var spikeJitters = new List<float>();
-        var organs = new bool[5];
+        var organs = new bool[7];
 
         var codons = CodonCount(body);
         for (var index = 0; index < codons; index++)
@@ -239,7 +255,7 @@ public static class BodyGenome
 
             switch (opcode)
             {
-                case 0x0 when argument <= 0x4F:
+                case 0x0 when argument <= 0x6F:
                     organs[argument / 16] = true;
                     break;
                 case 0x1 when argument <= 0xBF:
@@ -324,7 +340,9 @@ public static class BodyGenome
             battery,
             spikeCount,
             spikeSpread,
-            spikeJitter);
+            spikeJitter,
+            organs[(int)BodyOrgan.HardDigest],
+            organs[(int)BodyOrgan.ToxinResistance]);
     }
 
     /// <summary>Applies body nibble-step, codon-length, and optional frameshift mutations.</summary>

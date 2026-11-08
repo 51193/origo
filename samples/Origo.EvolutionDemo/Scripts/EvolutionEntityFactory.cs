@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using Origo.Core.Snd.Metadata;
+using Origo.EvolutionDemo.Logic;
 
 namespace Origo.EvolutionDemo;
 
@@ -56,6 +57,8 @@ internal static class EvolutionEntityFactory
             .SetBool(DemoKeys.VisionOrgan, phenotype.VisionOrgan)
             .SetBool(DemoKeys.RhythmOrgan, phenotype.RhythmOrgan)
             .SetBool(DemoKeys.CreatureSenseOrgan, phenotype.CreatureSenseOrgan)
+            .SetBool(DemoKeys.HardDigestOrgan, phenotype.HardDigestOrgan)
+            .SetBool(DemoKeys.ToxinResistanceOrgan, phenotype.ToxinResistanceOrgan)
             .SetInt(DemoKeys.HiddenLayers, phenotype.HiddenLayers)
             .SetInt(DemoKeys.HiddenWidth1, phenotype.HiddenWidth1)
             .SetInt(DemoKeys.HiddenWidth2, phenotype.HiddenWidth2)
@@ -85,11 +88,17 @@ internal static class EvolutionEntityFactory
             .SetString(DemoKeys.Outputs, "M 0.00 / T 0.00 / S 0.00 / A 0.00")
             .Build();
 
-    public static SndMetaData Food(string name, float x, float y, bool fromCorpse = false)
+    public static SndMetaData Food(
+        string name,
+        float x,
+        float y,
+        bool fromCorpse = false,
+        FoodType foodType = FoodType.Soft)
     {
         var food = new SndMetaFluentBuilder(name)
             .SetNode("main", FoodScene)
             .SetString(DemoKeys.Kind, DemoKeys.FoodKind)
+            .SetInt(DemoKeys.FoodType, (int)foodType)
             .SetFloat(DemoKeys.X, x)
             .SetFloat(DemoKeys.Y, y);
         if (fromCorpse)

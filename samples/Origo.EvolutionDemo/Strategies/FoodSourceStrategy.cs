@@ -135,10 +135,17 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
                 point = new System.Numerics.Vector2(point.X * scale, point.Y * scale);
             }
 
+            var typeRoll = rng.NextDouble();
+            var foodType = typeRoll < Tuning.ToughFoodShare
+                ? FoodType.Tough
+                : typeRoll < Tuning.ToughFoodShare + Tuning.ToxicFoodShare
+                    ? FoodType.Toxic
+                    : FoodType.Soft;
             metas.Add(EvolutionEntityFactory.Food(
                 string.Create(CultureInfo.InvariantCulture, $"foodsrc_{patchIndex}_{nextFoodId++}"),
                 point.X,
-                point.Y));
+                point.Y,
+                foodType: foodType));
         }
 
         if (metas.Count == 0)

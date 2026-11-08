@@ -195,7 +195,18 @@ public partial class EvolutionWorldView : Node2D
             {
                 var position = ReadPosition(entity);
                 if (IsVisible(position, 8f, viewMin, viewMax))
-                    DrawCircle(position, 3.5f, new Color(0.98f, 0.78f, 0.3f, 0.95f));
+                {
+                    var foodType = ReadInt(entity, DemoKeys.FoodType, 0);
+                    var color = foodType switch
+                    {
+                        1 => new Color(0.72f, 0.46f, 0.2f, 0.98f),
+                        2 => new Color(0.52f, 0.9f, 0.42f, 0.98f),
+                        _ => new Color(0.98f, 0.78f, 0.3f, 0.95f),
+                    };
+                    var radius = foodType == 0 ? 3.5f : 4.2f;
+                    DrawCircle(position, radius, color);
+                }
+
                 continue;
             }
 

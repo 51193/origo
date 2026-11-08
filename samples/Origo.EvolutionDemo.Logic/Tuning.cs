@@ -66,6 +66,10 @@ public static class Tuning
     public static float SpikeCooldownSeconds => DemoSettings.Current.SpikeCooldownSeconds;
     public static float InitialEnergy => DemoSettings.Current.InitialEnergy;
     public static float FoodEnergy => DemoSettings.Current.FoodEnergy;
+    public static float ToughFoodEnergy => DemoSettings.Current.ToughFoodEnergy;
+    public static float ToxicFoodEnergy => DemoSettings.Current.ToxicFoodEnergy;
+    public static float ToughFoodShare => DemoSettings.Current.ToughFoodShare;
+    public static float ToxicFoodShare => DemoSettings.Current.ToxicFoodShare;
     public static float BaseMetabolismPerSecond => DemoSettings.Current.BaseMetabolismPerSecond;
     public static float MoveEnergyPerSecond => DemoSettings.Current.MoveEnergyPerSecond;
     public static float TurnEnergyPerSecond => DemoSettings.Current.TurnEnergyPerSecond;

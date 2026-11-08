@@ -32,6 +32,22 @@ public sealed class BodyGenomeTests
     }
 
     [Fact]
+    public void RandomFounderBody_CanExpressDigestiveOrgans()
+    {
+        var hard = false;
+        var toxin = false;
+        for (var seed = 0; seed < 200; seed++)
+        {
+            var body = BodyGenome.Decode(BodyGenome.RandomFounderBody(new Random(seed)));
+            hard |= body.HardDigestOrgan;
+            toxin |= body.ToxinResistanceOrgan;
+        }
+
+        Assert.True(hard);
+        Assert.True(toxin);
+    }
+
+    [Fact]
     public void RandomFounderBody_HasSomeBatteryCarriers()
     {
         var withBattery = 0;

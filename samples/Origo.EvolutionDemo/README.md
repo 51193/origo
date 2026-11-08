@@ -94,6 +94,7 @@ The page covers:
 - spike threshold, base cost, cost per world-unit, aim half-angle, beam radius,
   drain fraction, range, and cooldown;
 - carcass food interval, feeding amount/cooldown, and related world settings;
+- tough/toxic food shares and their energy values;
 - every food-patch/source parameter: count, radius, falloff, local capacity,
   scan/spawn/walk cadence, walk speed/turn, and all long-cycle bounds;
 - global overgrowth scan interval, cell size, food threshold, mutation rate,
@@ -160,6 +161,19 @@ The legacy single 103-hex genome is no longer used by the runtime and old saves
 are intentionally not migrated. The controller stores `evo.genomeVersion = 2`;
 the load path rejects saves without that marker, and the Load panel disables
 incompatible slots with an explicit message.
+
+### Food types and digestive niches
+
+Food sources can produce three food categories: soft, tough, and toxic. All
+bodies can eat every category, but tough food yields full energy only with the
+`HardDigest` organ and toxic food yields full energy only with the
+`ToxinResistance` organ. Without the matching organ, the food is still edible at
+reduced value, so a new food type cannot starve a population before digestion
+mutations appear. Founder bodies start with a mix of battery, hard-digest, and
+toxin-resistance organs.
+
+The controller records `evo.foodSoftMeals`, `evo.foodToughMeals`, and
+`evo.foodToxicMeals`, making niche divergence measurable from a save.
 
 ### Death and carcass nutrients
 

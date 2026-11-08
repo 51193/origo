@@ -39,6 +39,10 @@ public sealed class DemoSettings
     // Energy / reproduction.
     public float InitialEnergy { get; set; } = 78f;
     public float FoodEnergy { get; set; } = 18f;
+    public float ToughFoodEnergy { get; set; } = 25f;
+    public float ToxicFoodEnergy { get; set; } = 32f;
+    public float ToughFoodShare { get; set; } = 0.22f;
+    public float ToxicFoodShare { get; set; } = 0.08f;
     public float BaseMetabolismPerSecond { get; set; } = 0.55f;
     public float MoveEnergyPerSecond { get; set; } = 1.1f;
     public float TurnEnergyPerSecond { get; set; } = 0.2f;
@@ -154,6 +158,10 @@ public sealed class DemoSettings
         FoodPickupRadius = Math.Clamp(FoodPickupRadius, 1f, 500f);
         InitialEnergy = Math.Clamp(InitialEnergy, 1f, 10_000f);
         FoodEnergy = Math.Clamp(FoodEnergy, 0f, 10_000f);
+        ToughFoodEnergy = Math.Clamp(ToughFoodEnergy, 0f, 10_000f);
+        ToxicFoodEnergy = Math.Clamp(ToxicFoodEnergy, 0f, 10_000f);
+        ToughFoodShare = Math.Clamp(ToughFoodShare, 0f, 0.95f);
+        ToxicFoodShare = Math.Clamp(ToxicFoodShare, 0f, 0.95f - ToughFoodShare);
         BaseMetabolismPerSecond = Math.Clamp(BaseMetabolismPerSecond, 0f, 100f);
         MoveEnergyPerSecond = Math.Clamp(MoveEnergyPerSecond, 0f, 100f);
         TurnEnergyPerSecond = Math.Clamp(TurnEnergyPerSecond, 0f, 100f);

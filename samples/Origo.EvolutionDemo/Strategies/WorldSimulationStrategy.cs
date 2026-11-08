@@ -150,6 +150,12 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             entity.SetData(DemoKeys.CarrionFoodReleased, 0);
         if (!entity.TryGetData<int>(DemoKeys.CorpseMeals).found)
             entity.SetData(DemoKeys.CorpseMeals, 0);
+        if (!entity.TryGetData<int>(DemoKeys.FoodSoftMeals).found)
+            entity.SetData(DemoKeys.FoodSoftMeals, 0);
+        if (!entity.TryGetData<int>(DemoKeys.FoodToughMeals).found)
+            entity.SetData(DemoKeys.FoodToughMeals, 0);
+        if (!entity.TryGetData<int>(DemoKeys.FoodToxicMeals).found)
+            entity.SetData(DemoKeys.FoodToxicMeals, 0);
         if (!entity.TryGetData<int>(DemoKeys.MaxGeneration).found)
             entity.SetData(DemoKeys.MaxGeneration, 0);
         if (!entity.TryGetData<int>(DemoKeys.FeedRequest).found)
@@ -247,6 +253,9 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         controller.SetData(DemoKeys.CorpsesCreated, 0);
         controller.SetData(DemoKeys.CarrionFoodReleased, 0);
         controller.SetData(DemoKeys.CorpseMeals, 0);
+        controller.SetData(DemoKeys.FoodSoftMeals, 0);
+        controller.SetData(DemoKeys.FoodToughMeals, 0);
+        controller.SetData(DemoKeys.FoodToxicMeals, 0);
         controller.SetData(DemoKeys.Phase, DemoKeys.PhaseStarting);
         controller.SetData(DemoKeys.GenomeVersion, 2);
 
@@ -299,7 +308,9 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     ReadBool(entity, DemoKeys.SpikeBattery, false),
                     ReadInt(entity, DemoKeys.SpikeCount, 1),
                     ReadFloat(entity, DemoKeys.SpikeSpread, 0f),
-                    ReadFloat(entity, DemoKeys.SpikeJitter, 0f)));
+                    ReadFloat(entity, DemoKeys.SpikeJitter, 0f),
+                    ReadBool(entity, DemoKeys.HardDigestOrgan, false),
+                    ReadBool(entity, DemoKeys.ToxinResistanceOrgan, false)));
             }
             else if (string.Equals(kind, DemoKeys.FoodKind, StringComparison.Ordinal))
             {
@@ -307,7 +318,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     entity,
                     ReadFloat(entity, DemoKeys.X, 0f),
                     ReadFloat(entity, DemoKeys.Y, 0f),
-                    ReadBool(entity, DemoKeys.FoodFromCorpse, false)));
+                    ReadBool(entity, DemoKeys.FoodFromCorpse, false),
+                    (FoodType)Math.Clamp(ReadInt(entity, DemoKeys.FoodType, 0), 0, 2)));
             }
             else if (string.Equals(kind, DemoKeys.CorpseKind, StringComparison.Ordinal))
             {
@@ -371,6 +383,9 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         var corpsesCreated = 0;
         var carrionFoodReleased = 0;
         var corpseMeals = 0;
+        var softMeals = 0;
+        var toughMeals = 0;
+        var toxicMeals = 0;
         var maxGeneration = ReadInt(controller, DemoKeys.MaxGeneration, 0);
         var rng = new Random(unchecked((ReadInt(controller, DemoKeys.Seed, 1) * 397) ^ ReadInt(controller, DemoKeys.Tick, 0)));
         var alive = 0;
@@ -511,8 +526,22 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                         ReadInt(entity, DemoKeys.CreatureCorpseMeals, 0) + 1);
                 }
 
+                var foodType = foods[foodIndex].Type;
+                var foodEnergy = FoodMath.EnergyFor(
+                    foodType,
+                    Tuning.FoodEnergy,
+                    Tuning.ToughFoodEnergy,
+                    Tuning.ToxicFoodEnergy,
+                    creature.HardDigest,
+                    creature.ToxinResistance);
                 session.RequestKillEntity(foods[foodIndex].Entity.Name);
-                energy = MathF.Min(energy + Tuning.FoodEnergy, creature.MaxEnergy);
+                energy = MathF.Min(energy + foodEnergy, creature.MaxEnergy);
+                if (foodType == FoodType.Tough)
+                    toughMeals++;
+                else if (foodType == FoodType.Toxic)
+                    toxicMeals++;
+                else
+                    softMeals++;
                 ate = true;
                 break;
             }
@@ -811,6 +840,12 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             ReadInt(controller, DemoKeys.CarrionFoodReleased, 0) + carrionFoodReleased);
         controller.SetData(DemoKeys.CorpseMeals,
             ReadInt(controller, DemoKeys.CorpseMeals, 0) + corpseMeals);
+        controller.SetData(DemoKeys.FoodSoftMeals,
+            ReadInt(controller, DemoKeys.FoodSoftMeals, 0) + softMeals);
+        controller.SetData(DemoKeys.FoodToughMeals,
+            ReadInt(controller, DemoKeys.FoodToughMeals, 0) + toughMeals);
+        controller.SetData(DemoKeys.FoodToxicMeals,
+            ReadInt(controller, DemoKeys.FoodToxicMeals, 0) + toxicMeals);
         controller.SetData(DemoKeys.MaxGeneration, maxGeneration);
         controller.SetData(DemoKeys.FoodAccumulator, foodAccumulator);
         controller.SetData(DemoKeys.FeedRequest, feedRequest);
@@ -868,8 +903,13 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             lineage,
             cooldown);
 
-    private static SndMetaData CreateFoodMeta(string name, float x, float y, bool fromCorpse = false) =>
-        EvolutionEntityFactory.Food(name, x, y, fromCorpse);
+    private static SndMetaData CreateFoodMeta(
+        string name,
+        float x,
+        float y,
+        bool fromCorpse = false,
+        FoodType foodType = FoodType.Soft) =>
+        EvolutionEntityFactory.Food(name, x, y, fromCorpse, foodType);
 
     private static SndMetaData CreateCorpseMeta(
         string name,
@@ -1086,7 +1126,9 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         ReadBool(entity, DemoKeys.SpikeBattery, false),
         ReadInt(entity, DemoKeys.SpikeCount, 1),
         ReadFloat(entity, DemoKeys.SpikeSpread, 0f),
-        ReadFloat(entity, DemoKeys.SpikeJitter, 0f));
+        ReadFloat(entity, DemoKeys.SpikeJitter, 0f),
+        ReadBool(entity, DemoKeys.HardDigestOrgan, false),
+        ReadBool(entity, DemoKeys.ToxinResistanceOrgan, false));
 
     private static string FormatSensors(float[] sensors) => string.Create(
         CultureInfo.InvariantCulture,
@@ -1138,9 +1180,11 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         bool SpikeBattery,
         int SpikeCount,
         float SpikeSpread,
-        float SpikeJitter);
+        float SpikeJitter,
+        bool HardDigest,
+        bool ToxinResistance);
 
-    private readonly record struct FoodSnapshot(ISndEntity Entity, float X, float Y, bool FromCorpse);
+    private readonly record struct FoodSnapshot(ISndEntity Entity, float X, float Y, bool FromCorpse, FoodType Type);
 
     private readonly record struct CorpseSnapshot(
         ISndEntity Entity,

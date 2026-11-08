@@ -980,6 +980,7 @@ public partial class DemoUi : CanvasLayer
         _inspectorSensors.Text =
             $"Organs: V {phenotype.VisionOrgan} C {phenotype.CreatureSenseOrgan} R {phenotype.RhythmOrgan} S {phenotype.SpikeOrgan}\n" +
             $"Sensors {phenotype.ActiveSensorCount}/12  Outputs {phenotype.ActiveOutputCount}/4  Layers {phenotype.HiddenLayers}  Widths {phenotype.HiddenWidth1}/{phenotype.HiddenWidth2}/{phenotype.HiddenWidth3}\n" +
+            $"Diet organs Hard {phenotype.HardDigestOrgan}  ToxinRes {phenotype.ToxinResistanceOrgan}\n" +
             $"H1: {DescribeTypes(brainGenome, NeuralGenome.Types1Offset, phenotype.HiddenWidth1)}\n" +
             $"H2: {DescribeTypes(brainGenome, NeuralGenome.Types2Offset, phenotype.HiddenWidth2)}";
     }
@@ -1771,6 +1772,14 @@ public partial class DemoUi : CanvasLayer
             s => s.DeathFoodCount, (s, v) => s.DeathFoodCount = Mathf.RoundToInt(v));
         AddNumberSetting(rows, "Carcass food interval", 0.1f, 60f, 0.05f,
             s => s.CarcassFoodIntervalSeconds, (s, v) => s.CarcassFoodIntervalSeconds = v);
+        AddNumberSetting(rows, "Tough food share", 0f, 0.95f, 0.01f,
+            s => s.ToughFoodShare, (s, v) => s.ToughFoodShare = v);
+        AddNumberSetting(rows, "Toxic food share", 0f, 0.95f, 0.01f,
+            s => s.ToxicFoodShare, (s, v) => s.ToxicFoodShare = v);
+        AddNumberSetting(rows, "Tough food energy", 0f, 200f, 1f,
+            s => s.ToughFoodEnergy, (s, v) => s.ToughFoodEnergy = v);
+        AddNumberSetting(rows, "Toxic food energy", 0f, 200f, 1f,
+            s => s.ToxicFoodEnergy, (s, v) => s.ToxicFoodEnergy = v);
         AddNumberSetting(rows, "Feed amount", 0f, 200f, 5f,
             s => s.FeedFoodCount, (s, v) => s.FeedFoodCount = Mathf.RoundToInt(v));
         AddNumberSetting(rows, "Feed cooldown", 0f, 30f, 0.5f,
