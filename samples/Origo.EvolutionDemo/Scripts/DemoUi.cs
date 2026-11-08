@@ -972,6 +972,7 @@ public partial class DemoUi : CanvasLayer
             $"Gen {ReadInt(entity, DemoKeys.Generation, 0)}    Energy {ReadFloat(entity, DemoKeys.Energy, 0f):0.0}/{phenotype.MaxEnergy:0}\n" +
             $"Age {ReadFloat(entity, DemoKeys.Age, 0f):0.0}s/{phenotype.MaxAge:0}s    Children {ReadInt(entity, DemoKeys.Children, 0)}\n" +
             $"Size {phenotype.SizeScale:0.00}  Speed {phenotype.MoveSpeed:0}  Sense {phenotype.SenseRange:0}  Spike {phenotype.SpikeRadius:0}\n" +
+            $"Battery {phenotype.SpikeBatteryOrgan}  Count {phenotype.SpikeCount}  Spread {phenotype.SpikeSpreadRadians * 180f / MathF.PI:0}°  Jitter {phenotype.SpikeJitterRadians * 180f / MathF.PI:0}°\n" +
             $"Outputs  {ReadString(entity, DemoKeys.Outputs, "—")}\n" +
             $"Sensors  {ReadString(entity, DemoKeys.Sensors, "—")}");
         _inspectorGenome.Text = $"Body genome ({bodyGenome.Length} hex / {bodyGenome.Length / 3} codons)\n" +
@@ -1703,6 +1704,10 @@ public partial class DemoUi : CanvasLayer
             s => s.SpikeThreshold, (s, v) => s.SpikeThreshold = v);
         AddNumberSetting(rows, "Spike energy cost", 0f, 200f, 1f,
             s => s.SpikeEnergyCost, (s, v) => s.SpikeEnergyCost = v);
+        AddNumberSetting(rows, "Spike cost / pellet", 0f, 100f, 1f,
+            s => s.SpikePerPelletCost, (s, v) => s.SpikePerPelletCost = v);
+        AddNumberSetting(rows, "Spike cooldown / extra pellet", 0f, 10f, 0.05f,
+            s => s.SpikeCooldownPerExtraPellet, (s, v) => s.SpikeCooldownPerExtraPellet = v);
         AddNumberSetting(rows, "Spike cost / unit", 0f, 10f, 0.01f,
             s => s.SpikeEnergyPerUnit, (s, v) => s.SpikeEnergyPerUnit = v);
         AddNumberSetting(rows, "Spike aim half-angle (deg)", 0f, 180f, 5f,

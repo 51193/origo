@@ -32,6 +32,32 @@ public sealed class BodyGenomeTests
     }
 
     [Fact]
+    public void RandomFounderBody_HasSomeBatteryCarriers()
+    {
+        var withBattery = 0;
+        var withoutBattery = 0;
+        for (var seed = 0; seed < 200; seed++)
+        {
+            var body = BodyGenome.Decode(BodyGenome.RandomFounderBody(new Random(seed)));
+            if (body.SpikeBatteryOrgan)
+            {
+                withBattery++;
+                Assert.InRange(body.SpikeCount, 2, 8);
+                Assert.True(body.SpikeSpreadRadians > 0f);
+            }
+            else
+            {
+                withoutBattery++;
+                Assert.Equal(1, body.SpikeCount);
+                Assert.Equal(0f, body.SpikeSpreadRadians);
+            }
+        }
+
+        Assert.InRange(withBattery, 70, 130);
+        Assert.InRange(withoutBattery, 70, 130);
+    }
+
+    [Fact]
     public void UnknownCodonsAreNeutralAndUseDefaults()
     {
         var body = BodyGenome.Decode(new string('F', 72));

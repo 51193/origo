@@ -17,7 +17,7 @@ public sealed record CreatureGenome(string Body, string Brain)
     public static CreatureGenome RandomFounder(Random random)
     {
         ArgumentNullException.ThrowIfNull(random);
-        return new CreatureGenome(BodyGenome.DefaultTemplate, NeuralGenome.RandomFounder(random));
+        return new CreatureGenome(BodyGenome.RandomFounderBody(random), NeuralGenome.RandomFounder(random));
     }
 
     /// <summary>Mutates both genomes and returns the combined number of changes.</summary>

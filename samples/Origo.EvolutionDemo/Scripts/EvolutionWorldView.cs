@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using Godot;
 using Origo.Core.Abstractions.Entity;
 using Origo.EvolutionDemo.Logic;
@@ -246,11 +247,29 @@ public partial class EvolutionWorldView : Node2D
             {
                 var pulse = Mathf.Clamp(1f - ((pondTime - spikeFlash) / 0.55f), 0f, 1f);
                 var spikeColor = new Color(1f, 0.32f, 0.22f, 0.35f + (0.55f * pulse));
-                var end = new Vector2(
-                    ReadFloat(entity, DemoKeys.SpikeEndX, currentPosition.X),
-                    ReadFloat(entity, DemoKeys.SpikeEndY, currentPosition.Y));
-                DrawLine(screenPosition, end, spikeColor, (1.5f + (1.5f * pulse)) / ViewScale);
-                DrawCircle(end, 3f + (3f * pulse), spikeColor);
+                var fan = ReadString(entity, DemoKeys.SpikeFan, string.Empty);
+                if (fan.Length > 0)
+                {
+                    foreach (var part in fan.Split(';', StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        var pair = part.Split(',', StringSplitOptions.RemoveEmptyEntries);
+                        if (pair.Length != 2
+                            || !float.TryParse(pair[0], NumberStyles.Float, CultureInfo.InvariantCulture, out var endX)
+                            || !float.TryParse(pair[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var endY))
+                            continue;
+                        var end = new Vector2(endX, endY);
+                        DrawLine(screenPosition, end, spikeColor, (1.2f + (1.2f * pulse)) / ViewScale);
+                        DrawCircle(end, 2.5f + (2.5f * pulse), spikeColor);
+                    }
+                }
+                else
+                {
+                    var end = new Vector2(
+                        ReadFloat(entity, DemoKeys.SpikeEndX, currentPosition.X),
+                        ReadFloat(entity, DemoKeys.SpikeEndY, currentPosition.Y));
+                    DrawLine(screenPosition, end, spikeColor, (1.5f + (1.5f * pulse)) / ViewScale);
+                    DrawCircle(end, 3f + (3f * pulse), spikeColor);
+                }
             }
             var isSelected = SelectedName is not null
                 && string.Equals(SelectedName, entity.Name, StringComparison.Ordinal);

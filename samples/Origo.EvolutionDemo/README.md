@@ -162,19 +162,24 @@ incompatible slots with an explicit message.
 ### Directional spike
 
 The spike is no longer a radius AoE. The body's `SpikeOrgan` is the organ gene
-and the body `SpikeRange` codon group is the maximum shot distance. The fixed
-latent brain's fourth output slot (`Aim`) supplies a signed aim offset:
+and the body `SpikeRange` codon group is the maximum shot distance. A
+`SpikeBattery` organ plus `SpikeCount` / `SpikeSpread` / `SpikeJitter` codons
+turn the action into a salvo of rays; half of calibrated founders carry the
+battery. The fixed latent brain's fourth output slot (`Aim`) supplies a signed
+aim offset:
 
 ```text
 aimAngle = bodyHeading + aimDrive * SpikeAimHalfAngle
 ```
 
-A shot tests creatures inside a narrow ray/beam, picks the nearest valid target,
-kills it, steals 30% of its current energy into the shooter, and spawns the normal
-death-food amount at the target position. Energy cost is:
+Each pellet tests creatures inside a narrow ray/beam, picks the nearest valid
+target not already hit by this salvo, kills it, steals 30% of its current energy
+into the shooter, and spawns the normal death-food amount at the target position.
+The fan count, angle, and per-pellet jitter come from body genes. Energy cost is:
 
 ```text
-SpikeBaseCost + SpikeCostPerUnit * shotDistance
+SpikeBaseCost + SpikePerPelletCost * pelletCount
++ SpikeCostPerUnit * shotDistance
 ```
 
 A miss is charged at maximum range. The view draws the red beam from shooter to

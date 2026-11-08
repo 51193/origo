@@ -18,6 +18,9 @@ public enum BodyOrgan
 
     /// <summary>Enables the forward creature sensor.</summary>
     CreatureSense = 3,
+
+    /// <summary>Houses a multi-pellet spike battery.</summary>
+    SpikeBattery = 4,
 }
 
 /// <summary>Stable semantic sensor slots in the latent brain.</summary>
@@ -99,7 +102,11 @@ public readonly record struct BodyPhenotype(
     int HiddenWidth1,
     int HiddenWidth2,
     int HiddenWidth3,
-    int Pattern)
+    int Pattern,
+    bool SpikeBatteryOrgan,
+    int SpikeCount,
+    float SpikeSpreadRadians,
+    float SpikeJitterRadians)
 {
     /// <summary>Returns whether a semantic sensor slot is active for this body.</summary>
     public bool HasSensor(SensorId sensor) => sensor switch
@@ -150,12 +157,34 @@ public static class BodyGenome
     /// <summary>Default founder body template (24 codons, 72 hex digits).</summary>
     public const string DefaultTemplate =
         "13A242345430524637748818949A49B49000010020030C00" +
-        "F00F00F00F00F00F00F00F00";
+        "D0AE41F2AF00F00F00F00F00";
 
     private const string HexDigits = "0123456789ABCDEF";
 
     /// <summary>Returns a default calibrated body genome.</summary>
     public static string CreateDefault() => DefaultTemplate;
+
+    /// <summary>
+    ///     Creates a founder body. Half of the founders carry a spike battery
+    ///     organ; the other half start with the single-spike body and can gain
+    ///     the battery by mutation.
+    /// </summary>
+    public static string RandomFounderBody(Random random)
+    {
+        ArgumentNullException.ThrowIfNull(random);
+        var chars = DefaultTemplate.ToCharArray();
+        if (random.NextDouble() >= 0.5d)
+            return new string(chars);
+
+        var neutral = "F00";
+        var index = new string(chars).IndexOf(neutral, StringComparison.Ordinal);
+        if (index < 0)
+            return new string(chars);
+        chars[index] = '0';
+        chars[index + 1] = '4';
+        chars[index + 2] = '0';
+        return new string(chars);
+    }
 
     /// <summary>True when the raw body string contains only hex characters and is non-empty.</summary>
     public static bool IsStructurallyValid(string? body)
@@ -196,7 +225,10 @@ public static class BodyGenome
         var widths2 = new List<float>();
         var widths3 = new List<float>();
         var patterns = new List<float>();
-        var organs = new bool[4];
+        var spikeCounts = new List<float>();
+        var spikeSpreads = new List<float>();
+        var spikeJitters = new List<float>();
+        var organs = new bool[5];
 
         var codons = CodonCount(body);
         for (var index = 0; index < codons; index++)
@@ -207,7 +239,7 @@ public static class BodyGenome
 
             switch (opcode)
             {
-                case 0x0 when argument <= 0x3F:
+                case 0x0 when argument <= 0x4F:
                     organs[argument / 16] = true;
                     break;
                 case 0x1 when argument <= 0xBF:
@@ -246,6 +278,15 @@ public static class BodyGenome
                 case 0xC when argument <= 0xBF:
                     patterns.Add(argument % CreatureAppearance.PatternCount);
                     break;
+                case 0xD when argument <= 0x3F:
+                    spikeCounts.Add(2f + (6f * argument / 63f));
+                    break;
+                case 0xE when argument <= 0x9F:
+                    spikeSpreads.Add((15f + (85f * argument / 159f)) * MathF.PI / 180f);
+                    break;
+                case 0xF when argument <= 0x7F:
+                    spikeJitters.Add((12f * argument / 127f) * MathF.PI / 180f);
+                    break;
                 default:
                     break;
             }
@@ -254,6 +295,12 @@ public static class BodyGenome
         var sizeScale = Median(sizes, 1f);
         var radius = Tuning.BodyRadiusBase * sizeScale;
         var hiddenLayers = (int)Math.Clamp(MathF.Round(Median(layers, 2f)), 1f, 3f);
+        var battery = organs[(int)BodyOrgan.SpikeBattery];
+        var spikeCount = battery
+            ? Math.Clamp((int)MathF.Round(Median(spikeCounts, 3f)), 2, 8)
+            : 1;
+        var spikeSpread = battery ? Median(spikeSpreads, MathF.PI / 4f) : 0f;
+        var spikeJitter = battery ? Median(spikeJitters, 0f) : 0f;
         return new BodyPhenotype(
             sizeScale,
             radius,
@@ -273,7 +320,11 @@ public static class BodyGenome
             (int)Math.Clamp(MathF.Round(Median(widths1, 5f)), 1f, 8f),
             (int)Math.Clamp(MathF.Round(Median(widths2, 5f)), 1f, 8f),
             (int)Math.Clamp(MathF.Round(Median(widths3, 5f)), 1f, 8f),
-            (int)MathF.Round(Median(patterns, 0f)));
+            (int)MathF.Round(Median(patterns, 0f)),
+            battery,
+            spikeCount,
+            spikeSpread,
+            spikeJitter);
     }
 
     /// <summary>Applies body nibble-step, codon-length, and optional frameshift mutations.</summary>

@@ -44,6 +44,11 @@ internal static class DemoKeys
     public const string BasalMetabolism = "evo.basalMetabolism";
     public const string MaxAge = "evo.maxAge";
     public const string SpikeOrgan = "evo.spikeOrgan";
+    public const string SpikeBattery = "evo.spikeBattery";
+    public const string SpikeCount = "evo.spikeCount";
+    public const string SpikeSpread = "evo.spikeSpread";
+    public const string SpikeJitter = "evo.spikeJitter";
+    public const string SpikeFan = "evo.spikeFan";
     public const string VisionOrgan = "evo.visionOrgan";
     public const string RhythmOrgan = "evo.rhythmOrgan";
     public const string CreatureSenseOrgan = "evo.creatureSenseOrgan";
