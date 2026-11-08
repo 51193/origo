@@ -85,13 +85,17 @@ internal static class EvolutionEntityFactory
             .SetString(DemoKeys.Outputs, "M 0.00 / T 0.00 / S 0.00 / A 0.00")
             .Build();
 
-    public static SndMetaData Food(string name, float x, float y) =>
-        new SndMetaFluentBuilder(name)
+    public static SndMetaData Food(string name, float x, float y, bool fromCorpse = false)
+    {
+        var food = new SndMetaFluentBuilder(name)
             .SetNode("main", FoodScene)
             .SetString(DemoKeys.Kind, DemoKeys.FoodKind)
             .SetFloat(DemoKeys.X, x)
-            .SetFloat(DemoKeys.Y, y)
-            .Build();
+            .SetFloat(DemoKeys.Y, y);
+        if (fromCorpse)
+            food.SetBool(DemoKeys.FoodFromCorpse, true);
+        return food.Build();
+    }
 
     public static SndMetaData Corpse(
         string name,

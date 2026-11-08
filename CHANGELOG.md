@@ -59,7 +59,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   ray controlled by a dedicated Aim output: body SpikeRange is maximum distance,
   cost scales with actual shot distance, and lethal hits steal part of the
   target energy. Dead creatures now leave decaying carcasses that release
-  death food in timed pulses, creating local scavenging hotspots. Long-lived
+  death food in timed pulses and attract creatures through the existing food
+  senses; corpse-sourced meals are counted as scavenging evidence. Long-lived
   ponds use larger
   appearance/brain caches and read the full body phenotype only for the AI batch
   instead of every creature every tick. The legacy 103-digit genome and

@@ -168,7 +168,11 @@ death food. The corpse persists and releases its `DeathFoodCount` nutrients in
 pulses at `CarcassFoodIntervalSeconds`; released food is normal pond food. If
 the global food cap is full, the corpse waits and preserves its timer until
 capacity frees up. This turns kill sites into temporary feeding hotspots and
-gives scavenging lineages a reason to follow combat.
+gives scavenging lineages a reason to follow combat. Corpses also appear as
+food-like attractors to the existing food sensors, so creatures steer toward
+them without a new neural sensor slot. Food released by a corpse is tagged, and
+the controller counts actual corpse meals (`evo.corpseMeals`) as evidence of
+scavenging.
 
 ### Directional spike
 

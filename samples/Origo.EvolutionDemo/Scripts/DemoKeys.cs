@@ -32,6 +32,9 @@ internal static class DemoKeys
     public const string NextCorpseId = "evo.nextCorpseId";
     public const string CorpsesCreated = "evo.corpsesCreated";
     public const string CarrionFoodReleased = "evo.carrionFoodReleased";
+    public const string CorpseMeals = "evo.corpseMeals";
+    public const string CreatureCorpseMeals = "evo.creatureCorpseMeals";
+    public const string FoodFromCorpse = "food.fromCorpse";
     public const string CorpseFoodRemaining = "corpse.foodRemaining";
     public const string CorpseFoodTotal = "corpse.foodTotal";
     public const string CorpseTimer = "corpse.timer";
