@@ -199,6 +199,22 @@ public partial class EvolutionWorldView : Node2D
                 continue;
             }
 
+            if (string.Equals(kind, DemoKeys.CorpseKind, StringComparison.Ordinal))
+            {
+                var position = ReadPosition(entity);
+                if (IsVisible(position, 14f, viewMin, viewMax))
+                {
+                    var remaining = ReadInt(entity, DemoKeys.CorpseFoodRemaining, 1);
+                    var total = Math.Max(1, ReadInt(entity, DemoKeys.CorpseFoodTotal, 1));
+                    var fade = Mathf.Clamp(remaining / (float)total, 0f, 1f);
+                    DrawCircle(position, 5f, new Color(0.32f, 0.12f, 0.09f, 0.55f + (0.3f * fade)));
+                    DrawArc(position, 6.5f + (2f * fade), 0f, Mathf.Tau, 14,
+                        new Color(0.78f, 0.28f, 0.18f, 0.55f), 1.2f / ViewScale, true);
+                }
+
+                continue;
+            }
+
             if (!string.Equals(kind, DemoKeys.CreatureKind, StringComparison.Ordinal))
                 continue;
             creatureCount++;
@@ -413,6 +429,12 @@ public partial class EvolutionWorldView : Node2D
     {
         var (found, value) = entity.TryGetData<string>(key);
         return found && value is not null ? value : fallback;
+    }
+
+    private static int ReadInt(ISndEntity entity, string key, int fallback)
+    {
+        var (found, value) = entity.TryGetData<int>(key);
+        return found ? value : fallback;
     }
 
     private static float ReadFloat(ISndEntity entity, string key, float fallback)

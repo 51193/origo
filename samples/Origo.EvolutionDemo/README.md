@@ -93,6 +93,7 @@ The page covers:
   metabolism, reproduction, ageing, lineage threshold;
 - spike threshold, base cost, cost per world-unit, aim half-angle, beam radius,
   drain fraction, range, and cooldown;
+- carcass food interval, feeding amount/cooldown, and related world settings;
 - every food-patch/source parameter: count, radius, falloff, local capacity,
   scan/spawn/walk cadence, walk speed/turn, and all long-cycle bounds;
 - global overgrowth scan interval, cell size, food threshold, mutation rate,
@@ -159,6 +160,15 @@ The legacy single 103-hex genome is no longer used by the runtime and old saves
 are intentionally not migrated. The controller stores `evo.genomeVersion = 2`;
 the load path rejects saves without that marker, and the Load panel disables
 incompatible slots with an explicit message.
+
+### Death and carcass nutrients
+
+A dead creature becomes a `corpse` entity instead of immediately spawning all
+death food. The corpse persists and releases its `DeathFoodCount` nutrients in
+pulses at `CarcassFoodIntervalSeconds`; released food is normal pond food. If
+the global food cap is full, the corpse waits and preserves its timer until
+capacity frees up. This turns kill sites into temporary feeding hotspots and
+gives scavenging lineages a reason to follow combat.
 
 ### Directional spike
 

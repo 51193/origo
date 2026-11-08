@@ -58,7 +58,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   only logarithmically with body-gene length. The spike is now a directional
   ray controlled by a dedicated Aim output: body SpikeRange is maximum distance,
   cost scales with actual shot distance, and lethal hits steal part of the
-  target energy and leave normal corpse food. Long-lived ponds use larger
+  target energy. Dead creatures now leave decaying carcasses that release
+  death food in timed pulses, creating local scavenging hotspots. Long-lived
+  ponds use larger
   appearance/brain caches and read the full body phenotype only for the AI batch
   instead of every creature every tick. The legacy 103-digit genome and
   8-slot sensor API have been removed; calibrated founder wiring is now a fixed

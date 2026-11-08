@@ -31,6 +31,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
     private static readonly List<SndMetaData> MutationScratch = [];
     private static readonly List<CollisionBody> CollisionBodyScratch = [];
     private static readonly List<ISndEntity> CollisionEntityScratch = [];
+    private static readonly List<CorpseSnapshot> CorpseScratch = [];
     private static SensorPoint[] FoodPointScratch = [];
     private static SensorPoint[] CreaturePointScratch = [];
     private static bool[] FoodConsumedScratch = [];
@@ -141,6 +142,12 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             entity.SetData(DemoKeys.NextFoodId, 1);
         if (!entity.TryGetData<int>(DemoKeys.NextLineageId).found)
             entity.SetData(DemoKeys.NextLineageId, 1);
+        if (!entity.TryGetData<int>(DemoKeys.NextCorpseId).found)
+            entity.SetData(DemoKeys.NextCorpseId, 1);
+        if (!entity.TryGetData<int>(DemoKeys.CorpsesCreated).found)
+            entity.SetData(DemoKeys.CorpsesCreated, 0);
+        if (!entity.TryGetData<int>(DemoKeys.CarrionFoodReleased).found)
+            entity.SetData(DemoKeys.CarrionFoodReleased, 0);
         if (!entity.TryGetData<int>(DemoKeys.MaxGeneration).found)
             entity.SetData(DemoKeys.MaxGeneration, 0);
         if (!entity.TryGetData<int>(DemoKeys.FeedRequest).found)
@@ -179,6 +186,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         var metas = new List<SndMetaData>();
         var nextCreature = 1;
         var nextFood = 1;
+        var nextCorpse = 1;
         const int founderLineages = 6;
 
         for (var i = 0; i < Tuning.InitialPopulation; i++)
@@ -221,6 +229,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         controller.SetData(DemoKeys.Initialized, true);
         controller.SetData(DemoKeys.NextCreatureId, nextCreature);
         controller.SetData(DemoKeys.NextFoodId, nextFood);
+        controller.SetData(DemoKeys.NextCorpseId, nextCorpse);
         controller.SetData(DemoKeys.NextLineageId, founderLineages + 1);
         controller.SetData(DemoKeys.MaxGeneration, 0);
         controller.SetData(DemoKeys.Time, 0f);
@@ -233,6 +242,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         controller.SetData(DemoKeys.SpikeKills, 0);
         controller.SetData(DemoKeys.SpikeHits, 0);
         controller.SetData(DemoKeys.SpikeDrained, 0f);
+        controller.SetData(DemoKeys.CorpsesCreated, 0);
+        controller.SetData(DemoKeys.CarrionFoodReleased, 0);
         controller.SetData(DemoKeys.Phase, DemoKeys.PhaseStarting);
         controller.SetData(DemoKeys.GenomeVersion, 2);
 
@@ -252,6 +263,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         creatures.Clear();
         var foods = FoodScratch;
         foods.Clear();
+        var corpses = CorpseScratch;
+        corpses.Clear();
         foreach (var entity in entities)
         {
             if (entity.IsPendingKill)
@@ -291,6 +304,17 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     entity,
                     ReadFloat(entity, DemoKeys.X, 0f),
                     ReadFloat(entity, DemoKeys.Y, 0f)));
+            }
+            else if (string.Equals(kind, DemoKeys.CorpseKind, StringComparison.Ordinal))
+            {
+                corpses.Add(new CorpseSnapshot(
+                    entity,
+                    ReadFloat(entity, DemoKeys.X, 0f),
+                    ReadFloat(entity, DemoKeys.Y, 0f),
+                    ReadInt(entity, DemoKeys.CorpseFoodRemaining, 0),
+                    ReadFloat(entity, DemoKeys.CorpseTimer, 0f),
+                    ReadFloat(entity, DemoKeys.CorpseInterval,
+                        Tuning.CarcassFoodIntervalSeconds)));
             }
         }
 
@@ -332,6 +356,9 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         var nextCreatureId = ReadInt(controller, DemoKeys.NextCreatureId, 1);
         var nextLineageId = ReadInt(controller, DemoKeys.NextLineageId, 1);
         var nextFoodId = ReadInt(controller, DemoKeys.NextFoodId, 1);
+        var nextCorpseId = ReadInt(controller, DemoKeys.NextCorpseId, 1);
+        var corpsesCreated = 0;
+        var carrionFoodReleased = 0;
         var maxGeneration = ReadInt(controller, DemoKeys.MaxGeneration, 0);
         var rng = new Random(unchecked((ReadInt(controller, DemoKeys.Seed, 1) * 397) ^ ReadInt(controller, DemoKeys.Tick, 0)));
         var alive = 0;
@@ -344,6 +371,37 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         var sensorBuffer = new float[NeuralGenome.SensorSlots];
         var aiStride = Math.Max(1, (creatures.Count + Tuning.AiUpdateBatch - 1) / Tuning.AiUpdateBatch);
         var tickNumber = ReadInt(controller, DemoKeys.Tick, 0);
+
+        foreach (var corpse in corpses)
+        {
+            if (corpse.Entity.IsPendingKill)
+                continue;
+            var freeSlots = Math.Max(0, Tuning.FoodCap - (foodAlive + pendingFood));
+            var release = CarcassMath.Advance(
+                corpse.Timer,
+                corpse.Remaining,
+                corpse.Interval,
+                tickDt,
+                freeSlots);
+            for (var pulse = 0; pulse < release.Pulses; pulse++)
+            {
+                var foodPosition = ClampToPond(
+                    new NumericsVector2(corpse.X, corpse.Y) + RandomOffset(rng),
+                    Tuning.FoodPickupRadius);
+                mutations.Add(CreateFoodMeta(
+                    FoodName(nextFoodId++),
+                    foodPosition.X,
+                    foodPosition.Y));
+                foodAlive++;
+                pendingFood++;
+                carrionFoodReleased++;
+            }
+
+            corpse.Entity.SetData(DemoKeys.CorpseFoodRemaining, release.Remaining);
+            corpse.Entity.SetData(DemoKeys.CorpseTimer, release.Timer);
+            if (release.Remaining <= 0)
+                session.RequestKillEntity(corpse.Entity.Name);
+        }
 
         for (var i = 0; i < creatures.Count; i++)
         {
@@ -551,20 +609,18 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                         spikeKills++;
                         spikeDrained += stolen;
 
-                        var corpseLimit = Math.Min(
-                            Tuning.DeathFoodCount,
-                            Math.Max(0, Tuning.FoodCap - (foodAlive + pendingFood)));
                         var corpsePosition = ClampToPond(
                             new NumericsVector2(target.X, target.Y),
                             Tuning.FoodPickupRadius);
-                        for (var bite = 0; bite < corpseLimit; bite++)
+                        if (Tuning.DeathFoodCount > 0)
                         {
-                            mutations.Add(CreateFoodMeta(
-                                FoodName(nextFoodId++),
+                            mutations.Add(CreateCorpseMeta(
+                                CorpseName(nextCorpseId++),
                                 corpsePosition.X,
-                                corpsePosition.Y));
-                            foodAlive++;
-                            pendingFood++;
+                                corpsePosition.Y,
+                                Tuning.DeathFoodCount,
+                                Tuning.CarcassFoodIntervalSeconds));
+                            corpsesCreated++;
                         }
                     }
                 }
@@ -643,18 +699,18 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
 
             if (energy <= 0f || age >= creature.MaxAge)
             {
-                // Dead matter feeds the survivors. This closes the early loop
-                // where a bad generation would otherwise leave an empty pond
-                // with no nutrient recovery path.
-                var detritus = Math.Min(
-                    Tuning.DeathFoodCount,
-                    Math.Max(0, Tuning.FoodCap - (foodAlive + pendingFood)));
-                for (var bite = 0; bite < detritus; bite++)
+                // Dead matter becomes a decaying carcass. The carcass persists
+                // briefly and releases its nutrient pulses over time instead of
+                // dropping all food in the same tick.
+                if (Tuning.DeathFoodCount > 0)
                 {
-                    var foodPosition = ClampToPond(position + RandomOffset(rng), creature.FoodPickupRadius);
-                    mutations.Add(CreateFoodMeta(FoodName(nextFoodId++), foodPosition.X, foodPosition.Y));
-                    foodAlive++;
-                    pendingFood++;
+                    mutations.Add(CreateCorpseMeta(
+                        CorpseName(nextCorpseId++),
+                        position.X,
+                        position.Y,
+                        Tuning.DeathFoodCount,
+                        Tuning.CarcassFoodIntervalSeconds));
+                    corpsesCreated++;
                 }
 
                 session.RequestKillEntity(entity.Name);
@@ -725,6 +781,11 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         controller.SetData(DemoKeys.NextCreatureId, nextCreatureId);
         controller.SetData(DemoKeys.NextLineageId, nextLineageId);
         controller.SetData(DemoKeys.NextFoodId, nextFoodId);
+        controller.SetData(DemoKeys.NextCorpseId, nextCorpseId);
+        controller.SetData(DemoKeys.CorpsesCreated,
+            ReadInt(controller, DemoKeys.CorpsesCreated, 0) + corpsesCreated);
+        controller.SetData(DemoKeys.CarrionFoodReleased,
+            ReadInt(controller, DemoKeys.CarrionFoodReleased, 0) + carrionFoodReleased);
         controller.SetData(DemoKeys.MaxGeneration, maxGeneration);
         controller.SetData(DemoKeys.FoodAccumulator, foodAccumulator);
         controller.SetData(DemoKeys.FeedRequest, feedRequest);
@@ -784,6 +845,14 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
 
     private static SndMetaData CreateFoodMeta(string name, float x, float y) =>
         EvolutionEntityFactory.Food(name, x, y);
+
+    private static SndMetaData CreateCorpseMeta(
+        string name,
+        float x,
+        float y,
+        int foodRemaining,
+        float intervalSeconds) =>
+        EvolutionEntityFactory.Corpse(name, x, y, foodRemaining, intervalSeconds);
 
     private sealed class SensorGrid
     {
@@ -938,6 +1007,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
     private static string CreatureName(int id) => $"creature_{id:000000}";
 
     private static string FoodName(int id) => $"food_{id:000000}";
+
+    private static string CorpseName(int id) => $"corpse_{id:000000}";
     private static string SourceName(int patch) => $"food_source_{patch:000}";
 
     private static int FoodTargetForPreset(int preset, float time, bool bloomEnabled)
@@ -1045,4 +1116,12 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         float SpikeJitter);
 
     private readonly record struct FoodSnapshot(ISndEntity Entity, float X, float Y);
+
+    private readonly record struct CorpseSnapshot(
+        ISndEntity Entity,
+        float X,
+        float Y,
+        int Remaining,
+        float Timer,
+        float Interval);
 }

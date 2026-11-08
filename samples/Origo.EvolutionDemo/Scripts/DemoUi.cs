@@ -917,7 +917,7 @@ public partial class DemoUi : CanvasLayer
         var realClock = FormatClock(realSeconds);
         _hudLabel.Text = string.Create(
             CultureInfo.InvariantCulture,
-            $"Sim {simClock}  Real {realClock}  Pop {creatures}/{Tuning.PopulationCap}  Gen {ReadInt(controller, DemoKeys.MaxGeneration, 0)}  Lines {lineages.Count}  Food {food}  Spikes {ReadInt(controller, DemoKeys.SpikeHits, 0)} (K {ReadInt(controller, DemoKeys.SpikeKills, 0)})  OG {ReadInt(controller, DemoKeys.OvergrowthCount, 0)}{BloomSuffix(time, bloomEnabled)}  {(phase == DemoKeys.PhaseExtinct ? "EXTINCT" : paused ? "PAUSED" : $"x{speed}")}");
+            $"Sim {simClock}  Real {realClock}  Pop {creatures}/{Tuning.PopulationCap}  Gen {ReadInt(controller, DemoKeys.MaxGeneration, 0)}  Lines {lineages.Count}  Food {food}  Spikes {ReadInt(controller, DemoKeys.SpikeHits, 0)} (K {ReadInt(controller, DemoKeys.SpikeKills, 0)})  OG {ReadInt(controller, DemoKeys.OvergrowthCount, 0)}  Carc {ReadInt(controller, DemoKeys.CorpsesCreated, 0)}/{ReadInt(controller, DemoKeys.CarrionFoodReleased, 0)}{BloomSuffix(time, bloomEnabled)}  {(phase == DemoKeys.PhaseExtinct ? "EXTINCT" : paused ? "PAUSED" : $"x{speed}")}");
         _pauseButton.Text = paused ? "Resume" : "Pause";
         _feedButton.Disabled = _feedCooldown > 0d;
         _feedButton.Text = _feedCooldown > 0d
@@ -1769,6 +1769,8 @@ public partial class DemoUi : CanvasLayer
             s => s.StartupFoodPerFounder, (s, v) => s.StartupFoodPerFounder = Mathf.RoundToInt(v));
         AddNumberSetting(rows, "Death food", 0f, 20f, 1f,
             s => s.DeathFoodCount, (s, v) => s.DeathFoodCount = Mathf.RoundToInt(v));
+        AddNumberSetting(rows, "Carcass food interval", 0.1f, 60f, 0.05f,
+            s => s.CarcassFoodIntervalSeconds, (s, v) => s.CarcassFoodIntervalSeconds = v);
         AddNumberSetting(rows, "Feed amount", 0f, 200f, 5f,
             s => s.FeedFoodCount, (s, v) => s.FeedFoodCount = Mathf.RoundToInt(v));
         AddNumberSetting(rows, "Feed cooldown", 0f, 30f, 0.5f,

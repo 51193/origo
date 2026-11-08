@@ -76,6 +76,7 @@ public sealed class DemoSettings
     public float EarlyFoodSpawnBonus { get; set; } = 50f;
     public int StartupFoodPerFounder { get; set; } = 1;
     public int DeathFoodCount { get; set; } = 2;
+    public float CarcassFoodIntervalSeconds { get; set; } = 1.25f;
     public int FeedFoodCount { get; set; } = 40;
     public float FeedCooldownSeconds { get; set; } = 5f;
 
@@ -184,6 +185,7 @@ public sealed class DemoSettings
         EarlyFoodSpawnBonus = Math.Clamp(EarlyFoodSpawnBonus, 0f, 10_000f);
         StartupFoodPerFounder = Math.Clamp(StartupFoodPerFounder, 0, 100);
         DeathFoodCount = Math.Clamp(DeathFoodCount, 0, 200);
+        CarcassFoodIntervalSeconds = Math.Clamp(CarcassFoodIntervalSeconds, 0.1f, 60f);
         FeedFoodCount = Math.Clamp(FeedFoodCount, 0, 10_000);
         FeedCooldownSeconds = Math.Clamp(FeedCooldownSeconds, 0f, 3_600f);
         FoodPatchCount = Math.Clamp(FoodPatchCount, 0, 256);

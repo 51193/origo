@@ -8,6 +8,7 @@ internal static class DemoKeys
     public const string CreatureKind = "creature";
     public const string FoodKind = "food";
     public const string FoodSourceKind = "food_source";
+    public const string CorpseKind = "corpse";
 
     public const string Phase = "evo.phase";
     public const string PhaseMenu = "menu";
@@ -28,6 +29,13 @@ internal static class DemoKeys
     public const string NextCreatureId = "evo.nextCreatureId";
     public const string NextFoodId = "evo.nextFoodId";
     public const string NextLineageId = "evo.nextLineageId";
+    public const string NextCorpseId = "evo.nextCorpseId";
+    public const string CorpsesCreated = "evo.corpsesCreated";
+    public const string CarrionFoodReleased = "evo.carrionFoodReleased";
+    public const string CorpseFoodRemaining = "corpse.foodRemaining";
+    public const string CorpseFoodTotal = "corpse.foodTotal";
+    public const string CorpseTimer = "corpse.timer";
+    public const string CorpseInterval = "corpse.interval";
     public const string MaxGeneration = "evo.maxGeneration";
     public const string FeedRequest = "evo.feedRequest";
 

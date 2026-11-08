@@ -20,6 +20,9 @@ internal static class EvolutionEntityFactory
     public static string FoodName(int id) =>
         string.Create(CultureInfo.InvariantCulture, $"food_{id:000000}");
 
+    public static string CorpseName(int id) =>
+        string.Create(CultureInfo.InvariantCulture, $"corpse_{id:000000}");
+
     public static SndMetaData Creature(
         string name,
         Origo.EvolutionDemo.Logic.CreatureGenome genome,
@@ -88,5 +91,22 @@ internal static class EvolutionEntityFactory
             .SetString(DemoKeys.Kind, DemoKeys.FoodKind)
             .SetFloat(DemoKeys.X, x)
             .SetFloat(DemoKeys.Y, y)
+            .Build();
+
+    public static SndMetaData Corpse(
+        string name,
+        float x,
+        float y,
+        int foodRemaining,
+        float intervalSeconds) =>
+        new SndMetaFluentBuilder(name)
+            .SetNode("main", FoodScene)
+            .SetString(DemoKeys.Kind, DemoKeys.CorpseKind)
+            .SetFloat(DemoKeys.X, x)
+            .SetFloat(DemoKeys.Y, y)
+            .SetInt(DemoKeys.CorpseFoodRemaining, foodRemaining)
+            .SetInt(DemoKeys.CorpseFoodTotal, foodRemaining)
+            .SetFloat(DemoKeys.CorpseTimer, 0f)
+            .SetFloat(DemoKeys.CorpseInterval, intervalSeconds)
             .Build();
 }

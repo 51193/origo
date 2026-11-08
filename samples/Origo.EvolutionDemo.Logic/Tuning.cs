@@ -36,6 +36,7 @@ public static class Tuning
     public static bool EarlyFoodBloomEnabled => DemoSettings.Current.EarlyFoodBloomEnabled;
     public static int StartupFoodPerFounder => DemoSettings.Current.StartupFoodPerFounder;
     public static int DeathFoodCount => DemoSettings.Current.DeathFoodCount;
+    public static float CarcassFoodIntervalSeconds => DemoSettings.Current.CarcassFoodIntervalSeconds;
     public static float EarlyFoodBonus => DemoSettings.Current.EarlyFoodBonus;
     public static float EarlyFoodRampSeconds => DemoSettings.Current.EarlyFoodRampSeconds;
     public static float EarlyFoodSpawnBonus => DemoSettings.Current.EarlyFoodSpawnBonus;
