@@ -58,8 +58,8 @@ public sealed class DemoSettings
     // Spike.
     public float SpikeThreshold { get; set; } = 0.60f;
     public float SpikeEnergyCost { get; set; } = 10f;
-    public float SpikePerPelletCost { get; set; } = 8f;
-    public float SpikeCooldownPerExtraPellet { get; set; } = 0.5f;
+    public float SpikePerPelletCost { get; set; } = 2.5f;
+    public float SpikeCooldownPerExtraPellet { get; set; } = 0.25f;
     public float SpikeEnergyPerUnit { get; set; } = 0.10f;
     public float SpikeAimHalfAngleRadians { get; set; } = MathF.PI / 3f;
     public float SpikeBeamRadius { get; set; } = 4f;

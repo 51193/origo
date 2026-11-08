@@ -88,6 +88,7 @@ The page covers:
 - food amounts, food caps, feeding, bloom parameters;
 - body gene ranges for size, speed, turn, sense, spike, metabolism, age, body
   radius, pickup padding, and max-energy scaling;
+- spike salvo base/per-pellet/distance cost and cooldown per extra pellet;
 - brain mutation, body-length mutation, frameshift, founder mutation,
   metabolism, reproduction, ageing, lineage threshold;
 - spike threshold, base cost, cost per world-unit, aim half-angle, beam radius,

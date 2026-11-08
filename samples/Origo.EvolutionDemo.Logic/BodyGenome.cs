@@ -157,7 +157,7 @@ public static class BodyGenome
     /// <summary>Default founder body template (24 codons, 72 hex digits).</summary>
     public const string DefaultTemplate =
         "13A242345430524637748818949A49B49000010020030C00" +
-        "D0AE41F2AF00F00F00F00F00";
+        "D0AE1CF2AF2AF2AF2AF00F00";
 
     private const string HexDigits = "0123456789ABCDEF";
 
