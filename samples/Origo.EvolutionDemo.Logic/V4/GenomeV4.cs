@@ -27,6 +27,8 @@ public enum OrganKindV4 : ushort
     HardDigest = 4,
     ToxinResistance = 5,
     Armor = 6,
+    Rhythm = 7,
+    CreatureSense = 8,
 }
 
 /// <summary>Neural node kinds.</summary>
@@ -47,6 +49,8 @@ public enum SensorKindV4 : ushort
     Energy = 5,
     CreatureAhead = 6,
     CorpseAhead = 7,
+    Sin = 8,
+    Cos = 9,
 }
 
 /// <summary>Action interface identifiers. New actions extend this registry.</summary>
@@ -85,6 +89,7 @@ public enum LifeTraitKindV4 : ushort
     SenseRange = 4,
     Metabolism = 5,
     MaxAge = 6,
+    SpikeRange = 7,
 }
 
 /// <summary>A regulatory condition attached to a gene.</summary>

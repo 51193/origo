@@ -161,4 +161,116 @@ public static class GenomeV4Factory
 
         return new GenomeV4(genes, next);
     }
+
+    /// <summary>
+    ///     Creates a V4 demonstration founder: body traits and organs are expressed
+    ///     from genes, and the brain is a variable graph with reflex edges plus a
+    ///     small random hidden layer. This replaces the fixed calibrated lattice
+    ///     without reducing the founder's phenotype surface.
+    /// </summary>
+    public static GenomeV4 CreateDemoFounder(Random random)
+    {
+        ArgumentNullException.ThrowIfNull(random);
+        var genes = new List<GeneV4>();
+        var next = 1u;
+        uint Add(GeneKind kind, byte[] payload, byte copies = 1)
+        {
+            var id = next++;
+            genes.Add(new GeneV4(id, kind, copies, 1f, payload));
+            return id;
+        }
+
+        Add(GeneKind.BodySegment, GenePayloadV4.BodySegment(1f, 0.6f));
+        Add(GeneKind.LifeHistory, GenePayloadV4.LifeHistory(LifeTraitKindV4.Size,
+            0.75f + ((float)random.NextDouble() * 0.5f)));
+        Add(GeneKind.LifeHistory, GenePayloadV4.LifeHistory(LifeTraitKindV4.Speed,
+            40f + ((float)random.NextDouble() * 40f)));
+        Add(GeneKind.LifeHistory, GenePayloadV4.LifeHistory(LifeTraitKindV4.TurnSpeed,
+            2f + ((float)random.NextDouble() * 2f)));
+        Add(GeneKind.LifeHistory, GenePayloadV4.LifeHistory(LifeTraitKindV4.SenseRange,
+            100f + ((float)random.NextDouble() * 80f)));
+        Add(GeneKind.LifeHistory, GenePayloadV4.LifeHistory(LifeTraitKindV4.SpikeRange,
+            35f + ((float)random.NextDouble() * 45f)));
+        Add(GeneKind.LifeHistory, GenePayloadV4.LifeHistory(LifeTraitKindV4.Metabolism,
+            0.55f + ((float)random.NextDouble() * 0.4f)));
+        Add(GeneKind.LifeHistory, GenePayloadV4.LifeHistory(LifeTraitKindV4.MaxAge,
+            180f + ((float)random.NextDouble() * 220f)));
+
+        Add(GeneKind.Organ, GenePayloadV4.Organ(OrganKindV4.Vision, 0.5f));
+        Add(GeneKind.Organ, GenePayloadV4.Organ(OrganKindV4.SpikeOrgan, 0.8f));
+        if (random.NextDouble() < 0.5)
+            Add(GeneKind.Organ, GenePayloadV4.Organ(OrganKindV4.SpikeBattery, 1f),
+                (byte)(2 + random.Next(3)));
+        if (random.NextDouble() < 0.7)
+            Add(GeneKind.Organ, GenePayloadV4.Organ(OrganKindV4.HardDigest, 1f));
+        if (random.NextDouble() < 0.35)
+            Add(GeneKind.Organ, GenePayloadV4.Organ(OrganKindV4.ToxinResistance, 1f));
+        if (random.NextDouble() < 0.5)
+            Add(GeneKind.Organ, GenePayloadV4.Organ(OrganKindV4.Rhythm, 0.5f));
+        if (random.NextDouble() < 0.5)
+            Add(GeneKind.Organ, GenePayloadV4.Organ(OrganKindV4.CreatureSense, 0.5f));
+
+        // Sensor and output interface nodes.
+        List<uint> sensorIds = [];
+        sensorIds.Add(Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Sensor,
+            (ushort)SensorKindV4.FoodAhead, ActivationKindV4.Linear, 0f)));
+        sensorIds.Add(Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Sensor,
+            (ushort)SensorKindV4.FoodLeft, ActivationKindV4.Linear, 0f)));
+        sensorIds.Add(Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Sensor,
+            (ushort)SensorKindV4.FoodRight, ActivationKindV4.Linear, 0f)));
+        sensorIds.Add(Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Sensor,
+            (ushort)SensorKindV4.WallAhead, ActivationKindV4.Linear, 0f)));
+        sensorIds.Add(Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Sensor,
+            (ushort)SensorKindV4.CreatureAhead, ActivationKindV4.Linear, 0f)));
+        sensorIds.Add(Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Sensor,
+            (ushort)SensorKindV4.Energy, ActivationKindV4.Linear, 0f)));
+        sensorIds.Add(Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Sensor,
+            (ushort)SensorKindV4.Sin, ActivationKindV4.Linear, 0f)));
+        sensorIds.Add(Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Sensor,
+            (ushort)SensorKindV4.Cos, ActivationKindV4.Linear, 0f)));
+        var outputMove = Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Output,
+            (ushort)ActionKindV4.Move, ActivationKindV4.Tanh, 0f));
+        var outputTurn = Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Output,
+            (ushort)ActionKindV4.Turn, ActivationKindV4.Tanh, 0f));
+        var outputSpike = Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Output,
+            (ushort)ActionKindV4.Spike, ActivationKindV4.Tanh, -2f));
+        var outputAim = Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Output,
+            (ushort)ActionKindV4.Aim, ActivationKindV4.Tanh, 0f));
+
+        // Direct reflexes provide reasonable founder behavior.
+        Add(GeneKind.Reflex, GenePayloadV4.Reflex(SensorKindV4.FoodAhead, ActionKindV4.Move, 0.8f));
+        Add(GeneKind.Reflex, GenePayloadV4.Reflex(SensorKindV4.FoodLeft, ActionKindV4.Turn, -0.7f));
+        Add(GeneKind.Reflex, GenePayloadV4.Reflex(SensorKindV4.FoodRight, ActionKindV4.Turn, 0.7f));
+
+        // A small hidden layer gives mutation room without imposing the old
+        // fixed three-layer topology.
+        var hidden = new List<uint>();
+        var hiddenCount = 2 + random.Next(5);
+        for (var i = 0; i < hiddenCount; i++)
+        {
+            var id = Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Interneuron, 0,
+                ActivationKindV4.Tanh, (float)((random.NextDouble() * 0.4d) - 0.2d)));
+            hidden.Add(id);
+        }
+
+        var sensorGeneIds = sensorIds.ToArray();
+        var outputGeneIds = new[] { outputMove, outputTurn, outputSpike, outputAim };
+        foreach (var hiddenId in hidden)
+        {
+            Add(GeneKind.Synapse, GenePayloadV4.Synapse(
+                sensorGeneIds[random.Next(sensorGeneIds.Length)],
+                hiddenId,
+                (float)((random.NextDouble() * 0.6d) - 0.3d)));
+            Add(GeneKind.Synapse, GenePayloadV4.Synapse(
+                hiddenId,
+                outputGeneIds[random.Next(outputGeneIds.Length)],
+                (float)((random.NextDouble() * 0.6d) - 0.3d)));
+        }
+
+        return new GenomeV4(genes, next);
+    }
+
+
+
+
 }
