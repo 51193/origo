@@ -146,6 +146,10 @@ stable-ID genes, not a fixed codon table:
   new interfaces are registered rather than allocated as fixed genome slots.
   `CarrionSense` is the first post-migration sensor gene: it exposes a corpse
   direction to the neural graph and is displayed by the inspector.
+- **Registry-driven sensor runtime** — compiled phenotypes expose only their
+  expressed SensorPorts/ActionPorts. The demo evaluates those ports through the
+  sensor registry instead of a fixed 12-slot switch. Action dispatch is the next
+  seam to generalize.
 - **Energy budget** — body tissue, neural tissue, and genome complexity all cost
   maintenance. Cheap reflex creatures and expensive large-brain creatures can
   coexist.

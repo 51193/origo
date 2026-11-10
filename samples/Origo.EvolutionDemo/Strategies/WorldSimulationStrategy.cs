@@ -406,7 +406,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         var carrionDetections = 0;
         var tickDt = Tuning.SimulationTickSeconds;
         var pondTime = ReadFloat(controller, DemoKeys.Time, 0f);
-        var sensorBuffer = new float[CreatureGenome.SensorSlots];
+        var sensorBuffer = new float[64];
         var aiStride = Math.Max(1, (creatures.Count + Tuning.AiUpdateBatch - 1) / Tuning.AiUpdateBatch);
         var tickNumber = ReadInt(controller, DemoKeys.Tick, 0);
 
@@ -471,19 +471,24 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 var (brainPhenotype, compiledBrain) = GetBrainPhenotype(bodyGenome);
                 sensorGrid.Query(creature.X, creature.Y, sensorGrid.Food, nearFood);
                 sensorGrid.Query(creature.X, creature.Y, sensorGrid.Creatures, nearCreatures);
-                SensorMath.ComputeInto(
-                    body,
-                    new NumericsVector2(creature.X, creature.Y),
-                    creature.Heading,
-                    creature.Energy,
-                    CollectionsMarshal.AsSpan(nearFood),
-                    CollectionsMarshal.AsSpan(nearCreatures),
-                    corpsePoints.AsSpan(0, corpses.Count),
-                    i,
-                    creature.Age * 2f * MathF.PI / Tuning.OscillatorPeriodSeconds,
-                    Tuning.PondRadius,
+                DemoSensorRuntime.ComputeInto(
+                    brainPhenotype,
+                    new DemoSensorContext
+                    {
+                        Position = new System.Numerics.Vector2(creature.X, creature.Y),
+                        Heading = creature.Heading,
+                        Energy = creature.Energy,
+                        MaxEnergy = creature.MaxEnergy,
+                        SenseRange = body.SenseRange,
+                        Food = nearFood,
+                        Creatures = nearCreatures,
+                        Corpses = new ArraySegment<SensorPoint>(corpsePoints, 0, corpses.Count),
+                        SelfId = i,
+                        OscillatorPhase = creature.Age * 2f * MathF.PI / Tuning.OscillatorPeriodSeconds,
+                        ArenaRadius = Tuning.PondRadius,
+                    },
                     sensorBuffer);
-                if (body.CarrionSenseOrgan && sensorBuffer[(int)SensorId.CarrionAhead] > 0f)
+                if (sensorBuffer[(int)SensorKindV4.CorpseAhead] > 0f)
                     carrionDetections++;
                 output = DemoPhenotypeAdapter.ToBrainOutput(body, compiledBrain, sensorBuffer);
                 drive = Math.Clamp(output.MoveDrive, 0f, 1f);

@@ -86,22 +86,11 @@ public static class DemoPhenotypeAdapter
     }
 
     /// <summary>Adapts V4 action outputs to the demo's legacy BrainOutput.</summary>
-    public static BrainOutput ToBrainOutput(BodyPhenotype body, PhenotypeV4 phenotype, ReadOnlySpan<float> legacySensors)
-    {
-        ArgumentNullException.ThrowIfNull(phenotype);
-        return ToBrainOutput(body, GenomeV4Compiler.CompileBrain(phenotype), legacySensors);
-    }
-
-    /// <summary>Evaluates a precompiled graph without rebuilding it per tick.</summary>
-    public static BrainOutput ToBrainOutput(
-        BodyPhenotype body,
-        CompiledBrainV4 brain,
-        ReadOnlySpan<float> legacySensors)
+    public static BrainOutput ToBrainOutput(BodyPhenotype body, CompiledBrainV4 brain, ReadOnlySpan<float> sensorValues)
     {
         ArgumentNullException.ThrowIfNull(brain);
-        var sensors = ToSensorValues(body, legacySensors);
-        var actions = new float[16];
-        brain.Evaluate(sensors, actions);
+        var actions = new float[64];
+        brain.Evaluate(sensorValues, actions);
         var spike = body.SpikeOrgan ? Math.Clamp(actions[(int)ActionKindV4.Spike], -1f, 1f) : 0f;
         var aim = body.SpikeOrgan ? Math.Clamp(actions[(int)ActionKindV4.Aim], -1f, 1f) : 0f;
         return new BrainOutput(
@@ -109,6 +98,14 @@ public static class DemoPhenotypeAdapter
             Math.Clamp(actions[(int)ActionKindV4.Turn], -1f, 1f),
             spike,
             aim);
+    }
+
+    /// <summary>Adapts V4 action outputs to the demo's legacy BrainOutput.</summary>
+    public static BrainOutput ToBrainOutput(BodyPhenotype body, PhenotypeV4 phenotype, ReadOnlySpan<float> legacySensors)
+    {
+        ArgumentNullException.ThrowIfNull(phenotype);
+        var sensors = ToSensorValues(body, legacySensors);
+        return ToBrainOutput(body, GenomeV4Compiler.CompileBrain(phenotype), sensors);
     }
 
     private static float TraitOrDefault(PhenotypeV4 phenotype, LifeTraitKindV4 trait, float fallback) =>
