@@ -23,7 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the first three minutes; dying creatures drop
   food for survivors, and all food spawns are clamped inside the larger pond.
   Food is scarce on the expanded pond, and hunger/movement/reproduction pressure
-  is tuned so spinning lineages starve; the 3,000-creature cap is a rare safety
+  is tuned so spinning lineages starve; the 2,500-creature cap is a rare safety
   valve. The neural network now has per-node hidden activation genes (sigmoid,
   linear, inverted linear, ReLU) and sin/cos rhythm sensors, so network roles and
   timing are evolvable. A genome-length-independent appearance derivation turns
@@ -32,7 +32,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   and pattern usage. Rendering interpolates between fixed simulation ticks so
   low-speed movement stays smooth, and the HUD separates accelerated `Sim` time
   from wall-clock `Real` time. The pond is now 10,000 world-units in radius with
-  a 3,000-creature cap and 1,200 founders. Creatures render at true world scale
+  a 2,500-creature cap and 900 founders. Creatures render at true world scale
   (no minimum screen-size floor), so dense low-zoom views stay sparse; the body/neural genome
   split added a directional spike action and rhythm sensors now start from
   each creature's own age instead of a shared pond clock. Food is emitted in
@@ -61,7 +61,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   only logarithmically with body-gene length. The spike is now a directional
   ray controlled by a dedicated Aim output: body SpikeRange is maximum distance,
   cost scales with actual shot distance, and lethal hits steal part of the
-  target energy. Dead creatures now leave decaying carcasses that release
+  target energy. Defaults keep predation frequent (low drive threshold, wide
+  beam, cheap shots), and kills make the shooter a veteran: its rendered body
+  grows and tints toward gold, with scavenged corpse meals adding to the same
+  trophy, while the inherited genome stays unchanged. Dead creatures now leave
+  decaying carcasses that release
   death food in timed pulses and attract creatures through the existing food
   senses; corpse-sourced meals are counted as scavenging evidence. Food sources
   now produce soft, tough, and toxic categories, with body-coded HardDigest and

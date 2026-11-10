@@ -659,6 +659,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                         spikeHits++;
                         spikeKills++;
                         spikeDrained += stolen;
+                        entity.SetData(DemoKeys.Kills, ReadInt(entity, DemoKeys.Kills, 0) + 1);
 
                         var corpsePosition = ClampToPond(
                             new NumericsVector2(target.X, target.Y),
@@ -979,7 +980,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         {
             0 => 2500,
             2 => 5500,
-            _ => 4000,
+            _ => 3000,
         };
         if (!bloomEnabled)
             return Math.Min(Tuning.FoodCap, baseTarget);

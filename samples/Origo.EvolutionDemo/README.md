@@ -6,8 +6,8 @@ A playable idle artificial-life sandbox built on `Origo.Core` and
 ## What you do
 
 - Start a pond from the main menu or load a saved lineage.
-- Watch 1,200 founders forage, move, reproduce, mutate, and die in a huge
-  circular pond (10,000 world-units in radius; up to 3,000 creatures; the cap is
+- Watch 900 founders forage, move, reproduce, mutate, and die in a huge
+  circular pond (10,000 world-units in radius; up to 2,500 creatures; the cap is
   a safety valve, not a normal operating limit). Creatures are deliberately small
   at this scale, so the default local view reads as a sparse world.
 - The default camera shows a local region; wheel zoom and right-drag pan let you
@@ -201,10 +201,13 @@ aim offset:
 aimAngle = bodyHeading + aimDrive * SpikeAimHalfAngle
 ```
 
-Each pellet tests creatures inside a narrow ray/beam, picks the nearest valid
-target not already hit by this salvo, kills it, steals 30% of its current energy
-into the shooter, and spawns the normal death-food amount at the target position.
-The fan count, angle, and per-pellet jitter come from body genes. Energy cost is:
+Each pellet tests creatures inside a ray/beam, picks the nearest valid target
+not already hit by this salvo, kills it, steals 70% of its current energy into
+the shooter, and spawns the normal death-food amount at the target position.
+The defaults make predation a routine part of the pond rather than a rare
+event: a low `0.05` drive threshold, a wide 32-unit beam, a 1.0 s cooldown, and
+a cheap base cost. The fan count, angle, and per-pellet jitter come from body
+genes. Energy cost is:
 
 ```text
 SpikeBaseCost + SpikePerPelletCost * pelletCount
@@ -214,6 +217,10 @@ SpikeBaseCost + SpikePerPelletCost * pelletCount
 A miss is charged at maximum range. The view draws the red beam from shooter to
 impact endpoint. This turns spike into a directional, distance-priced predation
 trait instead of an area clear.
+
+Every kill makes the shooter a veteran: its rendered body grows by up to 75%
+and its body color blends toward gold as it accumulates kills and scavenged
+corpse meals. The growth is cosmetic and is not inherited by offspring.
 
 ## Appearance
 
@@ -237,6 +244,12 @@ rhythm details.
 - Pattern angle, scale, and frequency are also genome-derived; no per-creature
   random seed is stored outside the genome.
 
+Veteran growth is displayed on top of the genome-derived look: bodies grow by up
+to 75% and tint toward gold as the creature gathers spike kills and scavenged
+corpse meals, so a successful predator is visibly larger and warmer than its
+offspring. The growth is cosmetic, not inherited, and is reported in the
+inspector as Kills, Scavenged, and Growth.
+
 The inspector shows the theme, pattern, and body hex color for the selected
 creature. The Diversity board derives its metrics from genomes through the same
 appearance logic.
@@ -259,9 +272,9 @@ entity. Within each patch the radial density is graded as
 food is densest at the core and smoothly thins toward the rim, with a sparse
 halo instead of a hard uniform-disk
 edge. Patch centers are derived from the pond seed, so save/load preserves the
-layout. The food target is about 4,000 over the 10,000-radius pond; movement and
+layout. The food target is about 3,000 over the 10,000-radius pond; movement and
 metabolism are expensive enough that an orbiting creature that never finds a
-patch will starve, and the 3,000-creature cap remains a safety valve.
+patch will starve, and the 2,500-creature cap remains a safety valve.
 
 ### Adaptive SND food sources
 
@@ -274,7 +287,7 @@ The scan counts patch food through the tick's spatial grid and reads the pond's
 global food total from the same tick snapshot, so a source never walks the whole
 session; existing saves keep the clocks they persisted. The spawn chance is
 `(1 - localFood/localCapacity) * cycleFactor`, so food-rich patches stop producing
-while empty patches recover. Each source has a local capacity of 300 food,
+while empty patches recover. Each source has a local capacity of 240 food,
 keeping unattended patches from consuming the global hard cap and starving
 occupied ones.
 
@@ -337,7 +350,7 @@ there is no minimum screen-size expansion, so at low zoom they become tiny dots
 instead of overlapping into blobs. The camera fits the whole pond on `R`, but
 starts zoomed into a local region; wheel zoom is cursor-relative and right/middle
 drag pans with focus clamping. Zoom in to inspect bodies and patterns. The HUD
-exposes the 3,000 hard cap so it is visible when the safety valve is approached.
+exposes the 2,500 hard cap so it is visible when the safety valve is approached.
 
 Movement uses render interpolation: every tick stores previous/current position
 and heading, and the view lerps between them using the controller's simulation

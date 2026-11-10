@@ -1018,6 +1018,9 @@ public partial class DemoUi : CanvasLayer
             ? BodyGenome.Decode(bodyGenome)
             : BodyGenome.Decode(BodyGenome.DefaultTemplate);
         var look = GenomeAppearance.Derive(bodyGenome);
+        var kills = ReadInt(entity, DemoKeys.Kills, 0);
+        var scavenged = ReadInt(entity, DemoKeys.CreatureCorpseMeals, 0);
+        var growthPercent = (GrowthScaling.SizeMultiplier(kills, scavenged) - 1f) * 100f;
         _inspectorTitle.Text = $"{_selectedName}   lineage {lineage}";
         _inspectorTitle.AddThemeColorOverride("font_color", ToColor(look.Body));
         _inspectorSwatch.Color = ToColor(look.Body);
@@ -1026,6 +1029,7 @@ public partial class DemoUi : CanvasLayer
             CultureInfo.InvariantCulture,
             $"Gen {ReadInt(entity, DemoKeys.Generation, 0)}    Energy {ReadFloat(entity, DemoKeys.Energy, 0f):0.0}/{phenotype.MaxEnergy:0}\n" +
             $"Age {ReadFloat(entity, DemoKeys.Age, 0f):0.0}s/{phenotype.MaxAge:0}s    Children {ReadInt(entity, DemoKeys.Children, 0)}\n" +
+            $"Kills {kills}    Scavenged {scavenged}    Growth +{growthPercent:0}%\n" +
             $"Size {phenotype.SizeScale:0.00}  Speed {phenotype.MoveSpeed:0}  Sense {phenotype.SenseRange:0}  Spike {phenotype.SpikeRadius:0}\n" +
             $"Battery {phenotype.SpikeBatteryOrgan}  Count {phenotype.SpikeCount}  Spread {phenotype.SpikeSpreadRadians * 180f / MathF.PI:0}°  Jitter {phenotype.SpikeJitterRadians * 180f / MathF.PI:0}°\n" +
             $"Outputs  {ReadString(entity, DemoKeys.Outputs, "—")}\n" +

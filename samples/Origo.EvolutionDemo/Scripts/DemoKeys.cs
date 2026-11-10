@@ -124,6 +124,7 @@ internal static class DemoKeys
     public const string Generation = "evo.generation";
     public const string Lineage = "evo.lineage";
     public const string Children = "evo.children";
+    public const string Kills = "evo.kills";
     public const string ReproCooldown = "evo.reproCooldown";
     public const string Sensors = "evo.sensors";
     public const string Outputs = "evo.outputs";

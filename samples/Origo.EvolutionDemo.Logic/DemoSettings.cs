@@ -19,8 +19,8 @@ public sealed class DemoSettings
 
     // World / population.
     public float PondRadius { get; set; } = 10_000f;
-    public int InitialPopulation { get; set; } = 1_200;
-    public int PopulationCap { get; set; } = 3_000;
+    public int InitialPopulation { get; set; } = 900;
+    public int PopulationCap { get; set; } = 2_500;
     public int InitialFood { get; set; } = 2_000;
     public int FoodCap { get; set; } = 6_000;
     public float FoodPerSecond { get; set; } = 250f;
@@ -46,10 +46,10 @@ public sealed class DemoSettings
     public float BaseMetabolismPerSecond { get; set; } = 0.55f;
     public float MoveEnergyPerSecond { get; set; } = 1.1f;
     public float TurnEnergyPerSecond { get; set; } = 0.2f;
-    public float ReproductionEnergy { get; set; } = 110f;
-    public float ReproductionParentCost { get; set; } = 55f;
-    public float ReproductionChildEnergy { get; set; } = 35f;
-    public float ReproductionCooldownSeconds { get; set; } = 8f;
+    public float ReproductionEnergy { get; set; } = 140f;
+    public float ReproductionParentCost { get; set; } = 70f;
+    public float ReproductionChildEnergy { get; set; } = 30f;
+    public float ReproductionCooldownSeconds { get; set; } = 10f;
     public float MaxAgeSeconds { get; set; } = 300f;
     public double DefaultMutationRate { get; set; } = 0.015d;
     public double FounderMutationRate { get; set; } = 0.10d;
@@ -60,16 +60,16 @@ public sealed class DemoSettings
     public int LineageMutationThreshold { get; set; } = 4;
 
     // Spike.
-    public float SpikeThreshold { get; set; } = 0.60f;
-    public float SpikeEnergyCost { get; set; } = 10f;
-    public float SpikePerPelletCost { get; set; } = 2.5f;
-    public float SpikeCooldownPerExtraPellet { get; set; } = 0.25f;
-    public float SpikeEnergyPerUnit { get; set; } = 0.10f;
+    public float SpikeThreshold { get; set; } = 0.05f;
+    public float SpikeEnergyCost { get; set; } = 3f;
+    public float SpikePerPelletCost { get; set; } = 1f;
+    public float SpikeCooldownPerExtraPellet { get; set; } = 0.10f;
+    public float SpikeEnergyPerUnit { get; set; } = 0.04f;
     public float SpikeAimHalfAngleRadians { get; set; } = MathF.PI / 3f;
-    public float SpikeBeamRadius { get; set; } = 4f;
-    public float SpikeDrainFraction { get; set; } = 0.3f;
+    public float SpikeBeamRadius { get; set; } = 32f;
+    public float SpikeDrainFraction { get; set; } = 0.70f;
     public float SpikeRadius { get; set; } = 48f;
-    public float SpikeCooldownSeconds { get; set; } = 4f;
+    public float SpikeCooldownSeconds { get; set; } = 1.0f;
 
     // Collision / bloom / feeding.
     public bool CollisionEnabled { get; set; }
@@ -88,7 +88,7 @@ public sealed class DemoSettings
     public int FoodPatchCount { get; set; } = 16;
     public float FoodPatchRadius { get; set; } = 900f;
     public float FoodPatchFalloff { get; set; } = 0.55f;
-    public int FoodPatchLocalCapacity { get; set; } = 300;
+    public int FoodPatchLocalCapacity { get; set; } = 240;
     public int FoodPatchLayoutVersion { get; set; } = 2;
 
     // Body-gene phenotype ranges.

@@ -302,21 +302,33 @@ public partial class EvolutionWorldView : Node2D
             }
             var body = ToColor(look.Body);
             var accent = ToColor(look.Accent);
+            var kills = ReadInt(entity, DemoKeys.Kills, 0);
+            var scavenged = ReadInt(entity, DemoKeys.CreatureCorpseMeals, 0);
+            var growth = GrowthScaling.SizeMultiplier(kills, scavenged);
+            var tint = GrowthScaling.TintStrength(kills, scavenged);
+            var drawRadius = bodyRadius * growth;
+            if (tint > 0f)
+            {
+                var veteranGold = new Color(1f, 0.82f, 0.32f, 1f);
+                body = body.Lerp(veteranGold, tint);
+                accent = accent.Lerp(veteranGold, tint * 0.6f);
+            }
+
             var energy = ReadFloat(entity, DemoKeys.Energy, 0f);
             var maxEnergy = MathF.Max(1f, ReadFloat(entity, DemoKeys.MaxEnergy, 200f));
             var screenPosition = creaturePosition;
             var forward = new Vector2(Mathf.Cos(heading), Mathf.Sin(heading));
 
-            var detailed = (ViewScale * bodyRadius) >= 4f;
-            DrawCircle(screenPosition, bodyRadius, new Color(body, 0.95f));
+            var detailed = (ViewScale * drawRadius) >= 4f;
+            DrawCircle(screenPosition, drawRadius, new Color(body, 0.95f));
             if (detailed)
-                DrawPattern(screenPosition, look, accent, heading, bodyRadius);
+                DrawPattern(screenPosition, look, accent, heading, drawRadius);
 
             // Judgment-radius rim. A screen-constant white line keeps the body
             // legible against food, source washes, and similarly colored bodies;
             // at extreme zoom-out only this minimum-width ring is inflated by
             // sub-pixel amounts, never the filled body itself.
-            var rimRadius = MathF.Max(bodyRadius, 1.4f / ViewScale);
+            var rimRadius = MathF.Max(drawRadius, 1.4f / ViewScale);
             DrawArc(screenPosition, rimRadius, 0f, Mathf.Tau, 20,
                 new Color(1f, 1f, 1f, 0.66f), 1.15f / ViewScale, true);
 
@@ -353,15 +365,15 @@ public partial class EvolutionWorldView : Node2D
                 && string.Equals(SelectedName, entity.Name, StringComparison.Ordinal);
             if (!highDensity || isSelected)
             {
-                DrawLine(screenPosition, screenPosition + (forward * (bodyRadius * 2.6f)),
+                DrawLine(screenPosition, screenPosition + (forward * (drawRadius * 2.6f)),
                     new Color(0.95f, 0.98f, 1f, 0.9f), 2f / ViewScale);
                 var energyRatio = Mathf.Clamp(energy / maxEnergy, 0f, 1f);
-                DrawArc(screenPosition, bodyRadius + 4f, -Mathf.Pi / 2f,
+                DrawArc(screenPosition, drawRadius + 4f, -Mathf.Pi / 2f,
                     -Mathf.Pi / 2f + (Mathf.Tau * energyRatio), 24, accent, 2f, true);
             }
 
             if (isSelected)
-                DrawArc(screenPosition, bodyRadius + 9f, 0f, Mathf.Tau, 32,
+                DrawArc(screenPosition, drawRadius + 9f, 0f, Mathf.Tau, 32,
                     new Color(1f, 1f, 1f, 0.95f), 2.5f / ViewScale, true);
         }
 

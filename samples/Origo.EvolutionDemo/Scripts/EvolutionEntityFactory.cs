@@ -83,6 +83,7 @@ internal static class EvolutionEntityFactory
             .SetInt(DemoKeys.Generation, generation)
             .SetInt(DemoKeys.Lineage, lineage)
             .SetInt(DemoKeys.Children, 0)
+            .SetInt(DemoKeys.Kills, 0)
             .SetFloat(DemoKeys.ReproCooldown, cooldown)
             .SetString(DemoKeys.Sensors, "0,0,0,0,0,0,0,0,0,0,0,0")
             .SetString(DemoKeys.Outputs, "M 0.00 / T 0.00 / S 0.00 / A 0.00")
