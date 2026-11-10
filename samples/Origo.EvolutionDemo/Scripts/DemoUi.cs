@@ -1042,7 +1042,7 @@ public partial class DemoUi : CanvasLayer
         _inspectorSensors.Text =
             $"Organs: V {phenotype.VisionOrgan} C {phenotype.CreatureSenseOrgan} R {phenotype.RhythmOrgan} S {phenotype.SpikeOrgan}\n" +
             $"Sensors {phenotype.ActiveSensorCount}/12  Outputs {phenotype.ActiveOutputCount}/4\n" +
-            $"Diet organs Hard {phenotype.HardDigestOrgan}  ToxinRes {phenotype.ToxinResistanceOrgan}";
+            $"Diet organs Hard {phenotype.HardDigestOrgan}  ToxinRes {phenotype.ToxinResistanceOrgan}  CarrionSense {phenotype.CarrionSenseOrgan}";
     }
 
 

@@ -101,6 +101,27 @@ public class SensorMathTests
         Assert.All(sensors, static value => Assert.InRange(value, 0f, 1f));
     }
 
+    [Fact]
+    public void CarrionSensor_SeesCorpseInForwardCone()
+    {
+        var body = Body with { CarrionSenseOrgan = true };
+        var sensors = new float[CreatureGenome.SensorSlots];
+        var corpses = new[] { new SensorPoint(0, new Vector2(50f, 0f)) };
+        SensorMath.ComputeInto(
+            body,
+            Origin,
+            HeadingRight,
+            60f,
+            [],
+            [],
+            corpses,
+            0,
+            0f,
+            Tuning.PondRadius,
+            sensors);
+        Assert.True(sensors[(int)SensorId.CarrionAhead] > 0f);
+    }
+
     private static float[] Compute(
         ReadOnlySpan<SensorPoint> food,
         ReadOnlySpan<SensorPoint> creatures,
@@ -116,6 +137,7 @@ public class SensorMathTests
             energy,
             food,
             creatures,
+            [],
             0,
             phase,
             Tuning.PondRadius,

@@ -29,6 +29,7 @@ public enum OrganKindV4 : ushort
     Armor = 6,
     Rhythm = 7,
     CreatureSense = 8,
+    CarrionSense = 9,
 }
 
 /// <summary>Neural node kinds.</summary>

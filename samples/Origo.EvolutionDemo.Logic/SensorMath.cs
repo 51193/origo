@@ -20,6 +20,7 @@ public static class SensorMath
         float energy,
         ReadOnlySpan<SensorPoint> food,
         ReadOnlySpan<SensorPoint> creatures,
+        ReadOnlySpan<SensorPoint> corpses,
         int selfId,
         float oscillatorPhase,
         float arenaRadius,
@@ -51,6 +52,10 @@ public static class SensorMath
             sensors[(int)SensorId.Sin] = MathF.Sin(oscillatorPhase);
             sensors[(int)SensorId.Cos] = MathF.Cos(oscillatorPhase);
         }
+
+        if (body.CarrionSenseOrgan)
+            sensors[(int)SensorId.CarrionAhead] =
+                BestInCone(position, forward, corpses, body.SenseRange, cosHalfAngle);
     }
 
     private static float BestInCone(

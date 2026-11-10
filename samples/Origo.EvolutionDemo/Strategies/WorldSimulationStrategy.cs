@@ -34,6 +34,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
     private static readonly List<CorpseSnapshot> CorpseScratch = [];
     private static SensorPoint[] FoodPointScratch = [];
     private static SensorPoint[] CreaturePointScratch = [];
+    private static SensorPoint[] CorpsePointScratch = [];
     private static bool[] FoodConsumedScratch = [];
 
     /// <inheritdoc/>
@@ -150,6 +151,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             entity.SetData(DemoKeys.CarrionFoodReleased, 0);
         if (!entity.TryGetData<int>(DemoKeys.CorpseMeals).found)
             entity.SetData(DemoKeys.CorpseMeals, 0);
+        if (!entity.TryGetData<int>(DemoKeys.CarrionDetections).found)
+            entity.SetData(DemoKeys.CarrionDetections, 0);
         if (!entity.TryGetData<int>(DemoKeys.FoodSoftMeals).found)
             entity.SetData(DemoKeys.FoodSoftMeals, 0);
         if (!entity.TryGetData<int>(DemoKeys.FoodToughMeals).found)
@@ -253,6 +256,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         controller.SetData(DemoKeys.CorpsesCreated, 0);
         controller.SetData(DemoKeys.CarrionFoodReleased, 0);
         controller.SetData(DemoKeys.CorpseMeals, 0);
+        controller.SetData(DemoKeys.CarrionDetections, 0);
         controller.SetData(DemoKeys.FoodSoftMeals, 0);
         controller.SetData(DemoKeys.FoodToughMeals, 0);
         controller.SetData(DemoKeys.FoodToxicMeals, 0);
@@ -354,6 +358,12 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         for (var i = 0; i < creatures.Count; i++)
             creaturePoints[i] = new SensorPoint(i, new NumericsVector2(creatures[i].X, creatures[i].Y));
 
+        if (CorpsePointScratch.Length < corpses.Count)
+            CorpsePointScratch = new SensorPoint[corpses.Count];
+        var corpsePoints = CorpsePointScratch;
+        for (var i = 0; i < corpses.Count; i++)
+            corpsePoints[i] = new SensorPoint(i, new NumericsVector2(corpses[i].X, corpses[i].Y));
+
         var sensorGrid = SensorGrid.Build(foodPoints, sensableFoodCount, creaturePoints, creatures.Count);
         var nearFood = NearFoodScratch;
         nearFood.Clear();
@@ -393,6 +403,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         var spikeKills = 0;
         var spikeHits = 0;
         var spikeDrained = 0f;
+        var carrionDetections = 0;
         var tickDt = Tuning.SimulationTickSeconds;
         var pondTime = ReadFloat(controller, DemoKeys.Time, 0f);
         var sensorBuffer = new float[CreatureGenome.SensorSlots];
@@ -467,10 +478,13 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     creature.Energy,
                     CollectionsMarshal.AsSpan(nearFood),
                     CollectionsMarshal.AsSpan(nearCreatures),
+                    corpsePoints.AsSpan(0, corpses.Count),
                     i,
                     creature.Age * 2f * MathF.PI / Tuning.OscillatorPeriodSeconds,
                     Tuning.PondRadius,
                     sensorBuffer);
+                if (body.CarrionSenseOrgan && sensorBuffer[(int)SensorId.CarrionAhead] > 0f)
+                    carrionDetections++;
                 output = DemoPhenotypeAdapter.ToBrainOutput(body, compiledBrain, sensorBuffer);
                 drive = Math.Clamp(output.MoveDrive, 0f, 1f);
                 turn = Math.Clamp(output.TurnDrive, -1f, 1f);
@@ -839,6 +853,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             ReadInt(controller, DemoKeys.CarrionFoodReleased, 0) + carrionFoodReleased);
         controller.SetData(DemoKeys.CorpseMeals,
             ReadInt(controller, DemoKeys.CorpseMeals, 0) + corpseMeals);
+        controller.SetData(DemoKeys.CarrionDetections,
+            ReadInt(controller, DemoKeys.CarrionDetections, 0) + carrionDetections);
         controller.SetData(DemoKeys.FoodSoftMeals,
             ReadInt(controller, DemoKeys.FoodSoftMeals, 0) + softMeals);
         controller.SetData(DemoKeys.FoodToughMeals,
@@ -1026,11 +1042,12 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         ReadFloat(entity, DemoKeys.SpikeSpread, 0f),
         ReadFloat(entity, DemoKeys.SpikeJitter, 0f),
         ReadBool(entity, DemoKeys.HardDigestOrgan, false),
-        ReadBool(entity, DemoKeys.ToxinResistanceOrgan, false));
+        ReadBool(entity, DemoKeys.ToxinResistanceOrgan, false),
+        ReadBool(entity, DemoKeys.CarrionSenseOrgan, false));
 
     private static string FormatSensors(float[] sensors) => string.Create(
         CultureInfo.InvariantCulture,
-        $"F {sensors[0]:0.00} L {sensors[1]:0.00} R {sensors[2]:0.00} W {sensors[4]:0.00} C {sensors[3]:0.00} E {sensors[5]:0.00} R {sensors[6]:0.00} C {sensors[7]:0.00}");
+        $"F {sensors[0]:0.00} L {sensors[1]:0.00} R {sensors[2]:0.00} W {sensors[4]:0.00} C {sensors[3]:0.00} E {sensors[5]:0.00} S/C {sensors[6]:0.00}/{sensors[7]:0.00} Carrion {sensors[8]:0.00}");
 
     private static string ReadString(ISndEntity entity, string key, string fallback)
     {

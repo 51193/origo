@@ -59,6 +59,7 @@ internal static class EvolutionEntityFactory
             .SetBool(DemoKeys.CreatureSenseOrgan, phenotype.CreatureSenseOrgan)
             .SetBool(DemoKeys.HardDigestOrgan, phenotype.HardDigestOrgan)
             .SetBool(DemoKeys.ToxinResistanceOrgan, phenotype.ToxinResistanceOrgan)
+            .SetBool(DemoKeys.CarrionSenseOrgan, phenotype.CarrionSenseOrgan)
             .SetInt(DemoKeys.HiddenLayers, phenotype.HiddenLayers)
             .SetInt(DemoKeys.HiddenWidth1, phenotype.HiddenWidth1)
             .SetInt(DemoKeys.HiddenWidth2, phenotype.HiddenWidth2)

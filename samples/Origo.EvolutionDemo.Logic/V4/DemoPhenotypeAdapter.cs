@@ -54,7 +54,8 @@ public static class DemoPhenotypeAdapter
             MathF.PI / 4f,
             0f,
             organs.Any(static organ => organ.Kind == OrganKindV4.HardDigest),
-            organs.Any(static organ => organ.Kind == OrganKindV4.ToxinResistance));
+            organs.Any(static organ => organ.Kind == OrganKindV4.ToxinResistance),
+            organs.Any(static organ => organ.Kind == OrganKindV4.CarrionSense));
     }
 
     /// <summary>Maps the legacy 12-slot sensor buffer into V4 sensor interface values.</summary>
@@ -77,6 +78,9 @@ public static class DemoPhenotypeAdapter
             values[(int)SensorKindV4.Sin] = legacySensors[(int)SensorId.Sin];
             values[(int)SensorKindV4.Cos] = legacySensors[(int)SensorId.Cos];
         }
+
+        if (body.CarrionSenseOrgan)
+            values[(int)SensorKindV4.CorpseAhead] = legacySensors[(int)SensorId.CarrionAhead];
 
         return values;
     }

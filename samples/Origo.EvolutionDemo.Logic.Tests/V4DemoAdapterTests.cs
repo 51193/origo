@@ -18,6 +18,7 @@ public sealed class V4DemoAdapterTests
             Assert.True(float.IsFinite(body.MoveSpeed));
             Assert.True(body.SenseRange > 0f);
             Assert.True(body.VisionOrgan);
+            Assert.True(float.IsFinite(body.MaxAge));
 
             var sensors = new float[12];
             sensors[(int)SensorId.FoodAhead] = 0.8f;

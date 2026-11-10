@@ -41,6 +41,8 @@ internal static class DemoKeys
     public const string FoodToxicMeals = "evo.foodToxicMeals";
     public const string HardDigestOrgan = "evo.hardDigestOrgan";
     public const string ToxinResistanceOrgan = "evo.toxinResistanceOrgan";
+    public const string CarrionSenseOrgan = "evo.carrionSenseOrgan";
+    public const string CarrionDetections = "evo.carrionDetections";
     public const string CorpseFoodRemaining = "corpse.foodRemaining";
     public const string CorpseFoodTotal = "corpse.foodTotal";
     public const string CorpseTimer = "corpse.timer";

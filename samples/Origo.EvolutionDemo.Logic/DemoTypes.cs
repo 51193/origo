@@ -13,7 +13,7 @@ public enum SensorId
     Energy = 5,
     Sin = 6,
     Cos = 7,
-    FutureA = 8,
+    CarrionAhead = 8,
     FutureB = 9,
     FutureC = 10,
     FutureD = 11,
@@ -57,7 +57,8 @@ public readonly record struct BodyPhenotype(
     float SpikeSpreadRadians,
     float SpikeJitterRadians,
     bool HardDigestOrgan,
-    bool ToxinResistanceOrgan)
+    bool ToxinResistanceOrgan,
+    bool CarrionSenseOrgan)
 {
     /// <summary>Returns whether a semantic sensor slot is active for this body.</summary>
     public bool HasSensor(SensorId sensor) => sensor switch
@@ -66,6 +67,7 @@ public readonly record struct BodyPhenotype(
         SensorId.CreatureAhead => CreatureSenseOrgan,
         SensorId.WallAhead or SensorId.Energy => true,
         SensorId.Sin or SensorId.Cos => RhythmOrgan,
+        SensorId.CarrionAhead => CarrionSenseOrgan,
         _ => false,
     };
 
@@ -78,7 +80,8 @@ public readonly record struct BodyPhenotype(
     };
 
     public int ActiveSensorCount =>
-        (VisionOrgan ? 3 : 0) + (CreatureSenseOrgan ? 1 : 0) + 2 + (RhythmOrgan ? 2 : 0);
+        (VisionOrgan ? 3 : 0) + (CreatureSenseOrgan ? 1 : 0) + 2
+        + (RhythmOrgan ? 2 : 0) + (CarrionSenseOrgan ? 1 : 0);
 
     public int ActiveOutputCount => SpikeOrgan ? 4 : 2;
 }

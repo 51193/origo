@@ -142,6 +142,10 @@ stable-ID genes, not a fixed codon table:
   There is no fixed 372-hex latent lattice, no fixed 12-sensor array, and no fixed
   hidden-layer shape.
 - **Regulation** — genes can require low food, nearby predators, or low energy.
+- **Interface registry** — sensor/action definitions have stable IDs and labels;
+  new interfaces are registered rather than allocated as fixed genome slots.
+  `CarrionSense` is the first post-migration sensor gene: it exposes a corpse
+  direction to the neural graph and is displayed by the inspector.
 - **Energy budget** — body tissue, neural tissue, and genome complexity all cost
   maintenance. Cheap reflex creatures and expensive large-brain creatures can
   coexist.

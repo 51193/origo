@@ -209,6 +209,8 @@ public static class GenomeV4Factory
             Add(GeneKind.Organ, GenePayloadV4.Organ(OrganKindV4.Rhythm, 0.5f));
         if (random.NextDouble() < 0.5)
             Add(GeneKind.Organ, GenePayloadV4.Organ(OrganKindV4.CreatureSense, 0.5f));
+        if (random.NextDouble() < 0.5)
+            Add(GeneKind.Organ, GenePayloadV4.Organ(OrganKindV4.CarrionSense, 0.5f));
 
         // Sensor and output interface nodes.
         List<uint> sensorIds = [];
@@ -228,6 +230,8 @@ public static class GenomeV4Factory
             (ushort)SensorKindV4.Sin, ActivationKindV4.Linear, 0f)));
         sensorIds.Add(Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Sensor,
             (ushort)SensorKindV4.Cos, ActivationKindV4.Linear, 0f)));
+        sensorIds.Add(Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Sensor,
+            (ushort)SensorKindV4.CorpseAhead, ActivationKindV4.Linear, 0f)));
         var outputMove = Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Output,
             (ushort)ActionKindV4.Move, ActivationKindV4.Tanh, 0f));
         var outputTurn = Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Output,
