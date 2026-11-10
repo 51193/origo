@@ -255,8 +255,9 @@ Food is deliberately scarce overall, but it is generated as **clustered
 settlements** rather than uniform noise: 16 deterministic patch centers receive
 initial and manually-fed food, and each patch is driven by its own SND food-source
 entity. Within each patch the radial density is graded as
-`(1 - r/R)^falloff` (`falloff = 1.8` by default): food is densest at the core and
-smoothly thins toward the rim, with a sparse halo instead of a hard uniform-disk
+`(1 - r/R)^falloff` (`falloff = 0.55` by default for the 900-radius patch):
+food is densest at the core and smoothly thins toward the rim, with a sparse
+halo instead of a hard uniform-disk
 edge. Patch centers are derived from the pond seed, so save/load preserves the
 layout. The food target is about 4,000 over the 10,000-radius pond; movement and
 metabolism are expensive enough that an orbiting creature that never finds a
@@ -265,8 +266,13 @@ patch will starve, and the 3,000-creature cap remains a safety valve.
 ### Adaptive SND food sources
 
 Each patch owns a `food_source_<n>` entity with the `evolution.foodsource`
-strategy. Once per second it scans food near its current position and globally;
-every half second it attempts a small spawn burst. The spawn chance is
+strategy. Once per second it scans food near its current position; every half
+second it attempts a small spawn burst. Scan, spawn, and walk clocks start at a
+deterministic per-source phase offset derived from the pond seed and patch
+index, so the sixteen sources never scan or spawn on the same simulation tick.
+The scan counts patch food through the tick's spatial grid and reads the pond's
+global food total from the same tick snapshot, so a source never walks the whole
+session; existing saves keep the clocks they persisted. The spawn chance is
 `(1 - localFood/localCapacity) * cycleFactor`, so food-rich patches stop producing
 while empty patches recover. Each source has a local capacity of 300 food,
 keeping unattended patches from consuming the global hard cap and starving

@@ -42,12 +42,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   gentle 0.55 falloff, reducing the dense core and spreading production over a
   much larger foraging area. Pre-versioned saves migrate their old 420/1.8/250
   patch layout to the wide profile once on load. Each patch is an SND
-  `evolution.foodsource` entity that scans local
-  and global food density and lowers its next-period spawn chance as the local
-  patch fills; local capacities keep unattended patches from monopolizing the
-  global hard cap. Sources wander randomly inside the pond and each has an
-  independent randomized 90–240 s production wave (random phase, trough, and
-  peak), producing staggered resource booms and droughts. This keeps foraging
+  `evolution.foodsource` entity that counts local food through the tick's
+  spatial grid, reads the shared global food total from the same tick, and
+  lowers its next-period spawn chance as the local patch fills; per-source
+  phase-offset scan/spawn clocks keep the sixteen sources from scanning or
+  spawning on the same simulation tick; local capacities keep unattended
+  patches from monopolizing the global hard cap. Sources wander randomly
+  inside the pond and each has an independent randomized 90–240 s production
+  wave (random phase, trough, and peak), producing staggered resource booms
+  and droughts. This keeps foraging
   grounds discoverable without filling the map.
   The single fixed 103-digit genome is replaced by a variable-length body codon
   genome and a fixed 372-digit latent neural genome. Body codons express size,

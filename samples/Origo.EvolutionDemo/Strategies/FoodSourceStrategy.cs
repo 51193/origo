@@ -37,10 +37,15 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
     }
 
     /// <summary>Runs every food source exactly once for one simulation tick.</summary>
-    internal static void TickAll(ISndEntity controller, ISndContext ctx)
+    internal static void TickAll(
+        ISndEntity controller,
+        ISndContext ctx,
+        SensorGrid grid,
+        int foodCount)
     {
         ArgumentNullException.ThrowIfNull(controller);
         ArgumentNullException.ThrowIfNull(ctx);
+        ArgumentNullException.ThrowIfNull(grid);
         var session = controller.OwningSession;
         foreach (var source in session.GetEntities())
         {
@@ -49,11 +54,16 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
             var (found, kind) = source.TryGetData<string>(DemoKeys.Kind);
             if (!found || !string.Equals(kind, SourceKind, StringComparison.Ordinal))
                 continue;
-            TickSource(source, controller, ctx);
+            TickSource(source, controller, ctx, grid, foodCount);
         }
     }
 
-    private static void TickSource(ISndEntity entity, ISndEntity controller, ISndContext ctx)
+    private static void TickSource(
+        ISndEntity entity,
+        ISndEntity controller,
+        ISndContext ctx,
+        SensorGrid grid,
+        int foodCount)
     {
         var session = entity.OwningSession;
         var time = ReadFloat(controller, DemoKeys.Time, 0f);
@@ -64,7 +74,7 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
         var nextScan = ReadFloat(entity, DemoKeys.NextScanAt, 0f);
         if (time >= nextScan)
         {
-            var scan = Scan(entity, controller, session);
+            var scan = Scan(entity, controller, grid, foodCount);
             entity.SetData(DemoKeys.LocalFood, scan.Local);
             entity.SetData(DemoKeys.GlobalFood, scan.Global);
             entity.SetData(DemoKeys.LocalCapacity, scan.Capacity);
@@ -201,27 +211,32 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
         entity.SetData(DemoKeys.SourceWalkNextAt, nextWalk);
     }
 
+    /// <summary>
+    ///     Counts the food inside the source's patch. The local count comes from
+    ///     the tick's spatial grid (foods only: corpse points carry ids at or
+    ///     above <paramref name="foodCount" />), and the global count is the
+    ///     controller snapshot's food total, so a source never has to walk the
+    ///     whole session.
+    /// </summary>
     private static (int Local, int Global, int Capacity) Scan(
         ISndEntity source,
         ISndEntity controller,
-        ISessionRun session)
+        SensorGrid grid,
+        int foodCount)
     {
-        var center = new System.Numerics.Vector2(
-            ReadFloat(source, DemoKeys.X, 0f),
-            ReadFloat(source, DemoKeys.Y, 0f));
-        var radiusSquared = Tuning.FoodPatchRadius * Tuning.FoodPatchRadius;
+        var centerX = ReadFloat(source, DemoKeys.X, 0f);
+        var centerY = ReadFloat(source, DemoKeys.Y, 0f);
+        var radius = Tuning.FoodPatchRadius;
+        var radiusSquared = radius * radius;
+        var localFood = new List<SensorPoint>();
+        grid.Query(centerX, centerY, radius, grid.Food, localFood);
         var local = 0;
-        var global = 0;
-        foreach (var entity in session.GetEntities())
+        foreach (var point in localFood)
         {
-            var (found, kind) = entity.TryGetData<string>(DemoKeys.Kind);
-            if (!found || !string.Equals(kind, DemoKeys.FoodKind, StringComparison.Ordinal))
+            if (point.Id >= foodCount)
                 continue;
-            global++;
-            var x = ReadFloat(entity, DemoKeys.X, 0f);
-            var y = ReadFloat(entity, DemoKeys.Y, 0f);
-            var dx = x - center.X;
-            var dy = y - center.Y;
+            var dx = point.Position.X - centerX;
+            var dy = point.Position.Y - centerY;
             if ((dx * dx) + (dy * dy) <= radiusSquared)
                 local++;
         }
@@ -236,17 +251,37 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
             capacity += (int)MathF.Round(bonus / patchCount);
         }
 
-        return (local, global, Math.Max(1, capacity));
+        return (local, foodCount, Math.Max(1, capacity));
     }
 
     private static void EnsureDefaults(ISndEntity entity)
     {
         if (!entity.TryGetData<string>(DemoKeys.Kind).found)
             entity.SetData(DemoKeys.Kind, SourceKind);
+
+        var seed = ReadInt(entity, DemoKeys.Seed, 1);
+        var index = ReadInt(entity, DemoKeys.PatchIndex, 0);
+
+        // Sources must not share clock phases: sixteen aligned scans or spawn
+        // bursts in one tick are a visible frame spike. Each source starts its
+        // clocks at a deterministic offset derived from the pond seed and its
+        // patch index; loaded saves keep the clocks they persisted.
         if (!entity.TryGetData<float>(DemoKeys.NextScanAt).found)
-            entity.SetData(DemoKeys.NextScanAt, 0f);
+            entity.SetData(
+                DemoKeys.NextScanAt,
+                FoodSourceCadence.Phase(
+                    seed,
+                    index,
+                    FoodSourceCadence.Channel.Scan,
+                    MathF.Max(0.02f, Tuning.FoodSourceScanIntervalSeconds)));
         if (!entity.TryGetData<float>(DemoKeys.NextSpawnAt).found)
-            entity.SetData(DemoKeys.NextSpawnAt, 0f);
+            entity.SetData(
+                DemoKeys.NextSpawnAt,
+                FoodSourceCadence.Phase(
+                    seed,
+                    index,
+                    FoodSourceCadence.Channel.Spawn,
+                    MathF.Max(0.02f, Tuning.FoodSourceSpawnIntervalSeconds)));
         if (!entity.TryGetData<int>(DemoKeys.SourceSpawnCount).found)
             entity.SetData(DemoKeys.SourceSpawnCount, 0);
         if (!entity.TryGetData<int>(DemoKeys.SourceNextFoodId).found)
@@ -258,8 +293,6 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
         if (!entity.TryGetData<int>(DemoKeys.LocalCapacity).found)
             entity.SetData(DemoKeys.LocalCapacity, Tuning.FoodPatchLocalCapacity);
 
-        var seed = ReadInt(entity, DemoKeys.Seed, 1);
-        var index = ReadInt(entity, DemoKeys.PatchIndex, 0);
         var patchCount = Math.Max(1, ReadInt(entity, DemoKeys.PatchCount, 1));
         var rng = new Random(unchecked((seed * 22695477) ^ ((index + 1) * 1013904223)));
         if (!entity.TryGetData<float>(DemoKeys.X).found)
@@ -276,7 +309,13 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
                 Tuning.FoodSourceWalkSpeedMin
                 + ((float)rng.NextDouble() * (Tuning.FoodSourceWalkSpeedMax - Tuning.FoodSourceWalkSpeedMin)));
         if (!entity.TryGetData<float>(DemoKeys.SourceWalkNextAt).found)
-            entity.SetData(DemoKeys.SourceWalkNextAt, 0f);
+            entity.SetData(
+                DemoKeys.SourceWalkNextAt,
+                FoodSourceCadence.Phase(
+                    seed,
+                    index,
+                    FoodSourceCadence.Channel.Walk,
+                    MathF.Max(0.02f, Tuning.FoodSourceWalkIntervalSeconds)));
         if (!entity.TryGetData<int>(DemoKeys.SourceWalkStep).found)
             entity.SetData(DemoKeys.SourceWalkStep, 0);
         if (!entity.TryGetData<float>(DemoKeys.CyclePeriod).found)
