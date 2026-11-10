@@ -404,6 +404,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         var spikeHits = 0;
         var spikeDrained = 0f;
         var carrionDetections = 0;
+        var actionBuffer = new float[64];
         var tickDt = Tuning.SimulationTickSeconds;
         var pondTime = ReadFloat(controller, DemoKeys.Time, 0f);
         var sensorBuffer = new float[64];
@@ -455,7 +456,6 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             var turn = Math.Clamp(ReadFloat(entity, DemoKeys.Turn, 0f), -1f, 1f);
             var spikeDrive = Math.Clamp(ReadFloat(entity, DemoKeys.SpikeDrive, 0f), -1f, 1f);
             var aimDrive = Math.Clamp(ReadFloat(entity, DemoKeys.Aim, 0f), -1f, 1f);
-            var output = default(BrainOutput);
             if (updateAi)
             {
                 bodyGenome = ReadString(entity, DemoKeys.BodyGenome, string.Empty);
@@ -490,11 +490,11 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     sensorBuffer);
                 if (sensorBuffer[(int)SensorKindV4.CorpseAhead] > 0f)
                     carrionDetections++;
-                output = DemoPhenotypeAdapter.ToBrainOutput(body, compiledBrain, sensorBuffer);
-                drive = Math.Clamp(output.MoveDrive, 0f, 1f);
-                turn = Math.Clamp(output.TurnDrive, -1f, 1f);
-                spikeDrive = Math.Clamp(output.SpikeDrive, -1f, 1f);
-                aimDrive = Math.Clamp(output.AimDrive, -1f, 1f);
+                DemoActionRuntime.Evaluate(brainPhenotype, compiledBrain, sensorBuffer, actionBuffer);
+                drive = Math.Clamp(actionBuffer[(int)ActionKindV4.Move], 0f, 1f);
+                turn = Math.Clamp(actionBuffer[(int)ActionKindV4.Turn], -1f, 1f);
+                spikeDrive = Math.Clamp(actionBuffer[(int)ActionKindV4.Spike], -1f, 1f);
+                aimDrive = Math.Clamp(actionBuffer[(int)ActionKindV4.Aim], -1f, 1f);
                 entity.SetData(DemoKeys.Drive, drive);
                 entity.SetData(DemoKeys.Turn, turn);
                 entity.SetData(DemoKeys.SpikeDrive, spikeDrive);
@@ -764,7 +764,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 entity.SetData(DemoKeys.Sensors, FormatSensors(sensorBuffer));
                 entity.SetData(DemoKeys.Outputs, string.Create(
                     CultureInfo.InvariantCulture,
-                    $"M {output.MoveDrive:0.00} / T {output.TurnDrive:0.00} / S {output.SpikeDrive:0.00} / A {output.AimDrive:0.00}"));
+                    $"M {drive:0.00} / T {turn:0.00} / S {spikeDrive:0.00} / A {aimDrive:0.00}"));
             }
 
             if (energy <= 0f || age >= creature.MaxAge)
