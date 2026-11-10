@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <RollForward>LatestMajor</RollForward>
+        <IsPackable>false</IsPackable>
+        <RootNamespace>Origo.EvolutionDemo.V4Bench</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Origo.EvolutionDemo.Logic\Origo.EvolutionDemo.Logic.csproj"/>
+    </ItemGroup>
+
+</Project>

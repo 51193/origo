@@ -50,6 +50,14 @@ This is a developer verification path, not a framework gate. Setting
 `ORIGO_DEMO_SCREENSHOT_DIR` additionally writes `menu.png`/`game.png` captures
 for local UI review.
 
+### Genome v4 prototype and benchmark
+
+The clean Genome v4 architecture, tests, and mock benchmark live in
+[`Origo.EvolutionDemo.Logic/V4`](Origo.EvolutionDemo.Logic/V4/README.md) and
+[`Origo.EvolutionDemo.GenomeV4.Bench`](Origo.EvolutionDemo.GenomeV4.Bench/).
+The benchmark is intentionally independent of the playable runtime until the
+migration is complete.
+
 ### Logic tests
 
 ```bash

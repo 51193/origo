@@ -38,6 +38,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Origo.EvolutionDemo.Logic.T
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Origo.EvolutionDemo", "samples\Origo.EvolutionDemo\Origo.EvolutionDemo.csproj", "{A9E2486E-D6B1-41B0-B0D5-06F79D9F732A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Origo.EvolutionDemo.GenomeV4.Bench", "samples\Origo.EvolutionDemo.GenomeV4.Bench\Origo.EvolutionDemo.GenomeV4.Bench.csproj", "{AC870B44-104E-487E-A5B0-89A18F64CFB5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -252,6 +254,18 @@ Global
 		{A9E2486E-D6B1-41B0-B0D5-06F79D9F732A}.Release|x64.Build.0 = Debug|Any CPU
 		{A9E2486E-D6B1-41B0-B0D5-06F79D9F732A}.Release|x86.ActiveCfg = Debug|Any CPU
 		{A9E2486E-D6B1-41B0-B0D5-06F79D9F732A}.Release|x86.Build.0 = Debug|Any CPU
+		{AC870B44-104E-487E-A5B0-89A18F64CFB5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC870B44-104E-487E-A5B0-89A18F64CFB5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC870B44-104E-487E-A5B0-89A18F64CFB5}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{AC870B44-104E-487E-A5B0-89A18F64CFB5}.Debug|x64.Build.0 = Debug|Any CPU
+		{AC870B44-104E-487E-A5B0-89A18F64CFB5}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{AC870B44-104E-487E-A5B0-89A18F64CFB5}.Debug|x86.Build.0 = Debug|Any CPU
+		{AC870B44-104E-487E-A5B0-89A18F64CFB5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC870B44-104E-487E-A5B0-89A18F64CFB5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AC870B44-104E-487E-A5B0-89A18F64CFB5}.Release|x64.ActiveCfg = Release|Any CPU
+		{AC870B44-104E-487E-A5B0-89A18F64CFB5}.Release|x64.Build.0 = Release|Any CPU
+		{AC870B44-104E-487E-A5B0-89A18F64CFB5}.Release|x86.ActiveCfg = Release|Any CPU
+		{AC870B44-104E-487E-A5B0-89A18F64CFB5}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -262,5 +276,6 @@ Global
 		{56C252CB-CBE8-49F5-91FC-BCCBFA75A4CC} = {5D20AA90-6969-D8BD-9DCD-8634F4692FDA}
 		{78D9AE16-59C9-47B4-AE9E-81C49595455B} = {5D20AA90-6969-D8BD-9DCD-8634F4692FDA}
 		{A9E2486E-D6B1-41B0-B0D5-06F79D9F732A} = {5D20AA90-6969-D8BD-9DCD-8634F4692FDA}
+		{AC870B44-104E-487E-A5B0-89A18F64CFB5} = {5D20AA90-6969-D8BD-9DCD-8634F4692FDA}
 	EndGlobalSection
 EndGlobal
