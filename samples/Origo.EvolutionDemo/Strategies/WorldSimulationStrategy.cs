@@ -22,7 +22,6 @@ namespace Origo.EvolutionDemo;
 public sealed class WorldSimulationStrategy : LifecycleStrategyBase
 {
     private const double TwoPi = Math.PI * 2d;
-    private const int BrainCacheLimit = 8192;
     private static readonly Dictionary<string, NeuralBrain> BrainCache = new(StringComparer.Ordinal);
     private static readonly List<CreatureSnapshot> CreatureScratch = [];
     private static readonly List<FoodSnapshot> FoodScratch = [];
@@ -994,8 +993,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         var key = bodyGenome + "|" + brainGenome;
         if (BrainCache.TryGetValue(key, out var cached))
             return cached;
-        if (BrainCache.Count >= BrainCacheLimit)
-            BrainCache.Clear();
+        if (BrainCache.Count >= CacheEviction.DefaultLimit)
+            CacheEviction.TrimOldestHalf(BrainCache);
         var brain = NeuralGenome.Decode(brainGenome);
         BrainCache[key] = brain;
         return brain;

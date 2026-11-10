@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using Godot;
 using Origo.Core.Abstractions.Entity;
+using Origo.Core.Abstractions.Lifecycle;
 using Origo.EvolutionDemo.Logic;
 
 namespace Origo.EvolutionDemo;
@@ -28,11 +29,24 @@ public partial class EvolutionWorldView : Node2D
     /// <summary>World point displayed at the viewport center.</summary>
     public Vector2 Focus { get; private set; }
 
-    /// <summary>Currently selected creature name; drawn with a highlight.</summary>
-    public string? SelectedName { get; set; }
-
+    private string? _selectedName;
+    private ISessionRun? _cachedSession;
+    private ISndEntity? _controller;
     private int _lastCreatureCount;
     private readonly Dictionary<string, CreatureAppearance> _appearanceCache = new(StringComparer.Ordinal);
+
+    /// <summary>Currently selected creature name; drawn with a highlight.</summary>
+    public string? SelectedName
+    {
+        get => _selectedName;
+        set
+        {
+            if (string.Equals(_selectedName, value, StringComparison.Ordinal))
+                return;
+            _selectedName = value;
+            QueueRedraw();
+        }
+    }
 
     public EvolutionWorldView(DemoEntry entry)
     {
@@ -135,7 +149,44 @@ public partial class EvolutionWorldView : Node2D
         && worldPosition.Y >= viewMin.Y - margin
         && worldPosition.Y <= viewMax.Y + margin;
 
-    public override void _Process(double delta) => QueueRedraw();
+    public override void _Process(double delta)
+    {
+        var session = _entry.Runtime.SessionManager.ForegroundSession;
+        if (session is null)
+        {
+            QueueRedraw();
+            return;
+        }
+
+        var controller = ResolveController(session);
+        if (controller is null)
+            return;
+        var phase = ReadString(controller, DemoKeys.Phase, DemoKeys.PhaseMenu);
+        var animating = !ReadBool(controller, DemoKeys.Paused, false)
+            && !ReadBool(controller, DemoKeys.FastForwardActive, false)
+            && (string.Equals(phase, DemoKeys.PhaseRunning, StringComparison.Ordinal)
+                || string.Equals(phase, DemoKeys.PhaseStarting, StringComparison.Ordinal));
+        if (animating)
+            QueueRedraw();
+    }
+
+    /// <summary>
+    ///     Resolves and caches the pond controller so the per-frame draw does not
+    ///     linearly scan the session for it. The cache is dropped when the
+    ///     foreground session changes or the cached entity is gone.
+    /// </summary>
+    private ISndEntity? ResolveController(ISessionRun session)
+    {
+        if (!ReferenceEquals(session, _cachedSession))
+        {
+            _cachedSession = session;
+            _controller = null;
+        }
+
+        if (_controller is null || _controller.IsPendingKill)
+            _controller = session.FindByName(DemoEntry.ControllerName);
+        return _controller;
+    }
 
     public override void _Draw()
     {
@@ -148,7 +199,7 @@ public partial class EvolutionWorldView : Node2D
         if (session is null)
             return;
 
-        var controller = session.FindByName(DemoEntry.ControllerName);
+        var controller = ResolveController(session);
         var pondTime = controller is null ? 0f : ReadFloat(controller, DemoKeys.Time, 0f);
         var interpolation = 1f;
         if (controller is not null
@@ -244,8 +295,8 @@ public partial class EvolutionWorldView : Node2D
             var bodyGenome = ReadString(entity, DemoKeys.BodyGenome, string.Empty);
             if (!_appearanceCache.TryGetValue(bodyGenome, out var look))
             {
-                if (_appearanceCache.Count >= 8192)
-                    _appearanceCache.Clear();
+                if (_appearanceCache.Count >= CacheEviction.DefaultLimit)
+                    CacheEviction.TrimOldestHalf(_appearanceCache);
                 look = GenomeAppearance.Derive(bodyGenome);
                 _appearanceCache[bodyGenome] = look;
             }
@@ -454,4 +505,9 @@ public partial class EvolutionWorldView : Node2D
         return found ? value : fallback;
     }
 
+    private static bool ReadBool(ISndEntity entity, string key, bool fallback)
+    {
+        var (found, value) = entity.TryGetData<bool>(key);
+        return found ? value : fallback;
+    }
 }

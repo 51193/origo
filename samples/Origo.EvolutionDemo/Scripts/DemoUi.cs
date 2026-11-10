@@ -112,6 +112,11 @@ public partial class DemoUi : CanvasLayer
     private double _diversityTimer;
     private string? _selectedName;
     private string _pendingSaveSlot = string.Empty;
+    private ISessionRun? _cachedSession;
+    private ISndEntity? _cachedController;
+    private ISessionRun? _cachedInspectSession;
+    private string? _cachedInspectName;
+    private ISndEntity? _cachedInspectEntity;
 
     public DemoUi(DemoEntry entry)
     {
@@ -164,9 +169,9 @@ public partial class DemoUi : CanvasLayer
         {
             _hudRefreshTimer = 0.15d;
             UpdateHud();
+            UpdateInspector();
         }
 
-        UpdateInspector();
         UpdateDiversity(delta);
         UpdateToast(delta);
         HandleExtinctionState();
@@ -239,6 +244,7 @@ public partial class DemoUi : CanvasLayer
             _inspector.Visible = false;
         else
             _inspector.Visible = true;
+        UpdateInspector();
     }
 
     private void TryInitialize()
@@ -256,8 +262,57 @@ public partial class DemoUi : CanvasLayer
         ShowMainMenu();
     }
 
-    private ISndEntity? FindController() =>
-        _entry.Runtime.SessionManager.ForegroundSession?.FindByName(DemoEntry.ControllerName);
+    /// <summary>
+    ///     Resolves and caches the pond controller. The linear name scan runs
+    ///     again only after the foreground session changes or the entity is gone.
+    /// </summary>
+    private ISndEntity? FindController()
+    {
+        var session = _entry.Runtime.SessionManager.ForegroundSession;
+        if (session is null)
+        {
+            _cachedSession = null;
+            _cachedController = null;
+            return null;
+        }
+
+        if (!ReferenceEquals(session, _cachedSession))
+        {
+            _cachedSession = session;
+            _cachedController = null;
+        }
+
+        if (_cachedController is null || _cachedController.IsPendingKill)
+            _cachedController = session.FindByName(DemoEntry.ControllerName);
+        return _cachedController;
+    }
+
+    /// <summary>
+    ///     Resolves and caches the inspected creature for the current session and
+    ///     selection name; the inspector no longer scans the session per frame.
+    /// </summary>
+    private ISndEntity? FindSelectedCreature(ISessionRun? session)
+    {
+        if (session is null || _selectedName is null)
+        {
+            _cachedInspectSession = null;
+            _cachedInspectName = null;
+            _cachedInspectEntity = null;
+            return null;
+        }
+
+        if (!ReferenceEquals(session, _cachedInspectSession)
+            || !string.Equals(_selectedName, _cachedInspectName, StringComparison.Ordinal))
+        {
+            _cachedInspectSession = session;
+            _cachedInspectName = _selectedName;
+            _cachedInspectEntity = null;
+        }
+
+        if (_cachedInspectEntity is null || _cachedInspectEntity.IsPendingKill)
+            _cachedInspectEntity = session.FindByName(_selectedName);
+        return _cachedInspectEntity;
+    }
 
     private void ShowMainMenu()
     {
@@ -946,7 +1001,7 @@ public partial class DemoUi : CanvasLayer
             return;
         }
         var session = _entry.Runtime.SessionManager.ForegroundSession;
-        var entity = session?.FindByName(_selectedName);
+        var entity = FindSelectedCreature(session);
         if (entity is null)
         {
             _selectedName = null;
