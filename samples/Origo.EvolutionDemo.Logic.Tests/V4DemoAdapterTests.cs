@@ -8,7 +8,7 @@ namespace Origo.EvolutionDemo.Logic.Tests;
 public sealed class V4DemoAdapterTests
 {
     [Fact]
-    public void DemoFounder_AdaptsToBodyPhenotypeAndBrain()
+    public void DemoFounder_AdaptsToBodyPhenotype()
     {
         for (var seed = 0; seed < 100; seed++)
         {
@@ -19,18 +19,6 @@ public sealed class V4DemoAdapterTests
             Assert.True(body.SenseRange > 0f);
             Assert.True(body.VisionOrgan);
             Assert.True(float.IsFinite(body.MaxAge));
-
-            var sensors = new float[12];
-            sensors[(int)SensorId.FoodAhead] = 0.8f;
-            sensors[(int)SensorId.Energy] = 0.5f;
-            var phenotype = GenomeV4Compiler.Compile(genome, ExpressionContextV4.Neutral);
-            var output = DemoPhenotypeAdapter.ToBrainOutput(body, phenotype, sensors);
-            Assert.True(float.IsFinite(output.MoveDrive));
-            Assert.True(float.IsFinite(output.TurnDrive));
-            Assert.True(float.IsFinite(output.SpikeDrive));
-            Assert.True(float.IsFinite(output.AimDrive));
-            Assert.InRange(output.MoveDrive, -1f, 1f);
-            Assert.InRange(output.TurnDrive, -1f, 1f);
         }
     }
 

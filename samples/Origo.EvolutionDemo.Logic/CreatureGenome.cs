@@ -9,9 +9,6 @@ namespace Origo.EvolutionDemo.Logic;
 /// </summary>
 public sealed class CreatureGenome
 {
-    /// <summary>Stable demo sensor-slot count used by the legacy SensorMath path.</summary>
-    public const int SensorSlots = 12;
-
     public CreatureGenome(GenomeV4 genome)
     {
         ArgumentNullException.ThrowIfNull(genome);

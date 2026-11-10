@@ -6,8 +6,8 @@ namespace Origo.EvolutionDemo.Logic.V4;
 
 /// <summary>
 ///     Maps a compiled V4 phenotype onto the legacy demo's presentation-facing
-///     BodyPhenotype and BrainOutput while the runtime is migrated. This is a
-///     temporary adapter, not a fixed genome representation.
+///     BodyPhenotype for rendering and physics. The runtime sensors/actions are
+///     now supplied by the V4 port registries, not this adapter.
 /// </summary>
 public static class DemoPhenotypeAdapter
 {
@@ -56,56 +56,6 @@ public static class DemoPhenotypeAdapter
             organs.Any(static organ => organ.Kind == OrganKindV4.HardDigest),
             organs.Any(static organ => organ.Kind == OrganKindV4.ToxinResistance),
             organs.Any(static organ => organ.Kind == OrganKindV4.CarrionSense));
-    }
-
-    /// <summary>Maps the legacy 12-slot sensor buffer into V4 sensor interface values.</summary>
-    public static float[] ToSensorValues(BodyPhenotype body, ReadOnlySpan<float> legacySensors)
-    {
-        var values = new float[16];
-        if (body.VisionOrgan)
-        {
-            values[(int)SensorKindV4.FoodAhead] = legacySensors[(int)SensorId.FoodAhead];
-            values[(int)SensorKindV4.FoodLeft] = legacySensors[(int)SensorId.FoodLeft];
-            values[(int)SensorKindV4.FoodRight] = legacySensors[(int)SensorId.FoodRight];
-        }
-
-        if (body.CreatureSenseOrgan)
-            values[(int)SensorKindV4.CreatureAhead] = legacySensors[(int)SensorId.CreatureAhead];
-        values[(int)SensorKindV4.WallAhead] = legacySensors[(int)SensorId.WallAhead];
-        values[(int)SensorKindV4.Energy] = legacySensors[(int)SensorId.Energy];
-        if (body.RhythmOrgan)
-        {
-            values[(int)SensorKindV4.Sin] = legacySensors[(int)SensorId.Sin];
-            values[(int)SensorKindV4.Cos] = legacySensors[(int)SensorId.Cos];
-        }
-
-        if (body.CarrionSenseOrgan)
-            values[(int)SensorKindV4.CorpseAhead] = legacySensors[(int)SensorId.CarrionAhead];
-
-        return values;
-    }
-
-    /// <summary>Adapts V4 action outputs to the demo's legacy BrainOutput.</summary>
-    public static BrainOutput ToBrainOutput(BodyPhenotype body, CompiledBrainV4 brain, ReadOnlySpan<float> sensorValues)
-    {
-        ArgumentNullException.ThrowIfNull(brain);
-        var actions = new float[64];
-        brain.Evaluate(sensorValues, actions);
-        var spike = body.SpikeOrgan ? Math.Clamp(actions[(int)ActionKindV4.Spike], -1f, 1f) : 0f;
-        var aim = body.SpikeOrgan ? Math.Clamp(actions[(int)ActionKindV4.Aim], -1f, 1f) : 0f;
-        return new BrainOutput(
-            Math.Clamp(actions[(int)ActionKindV4.Move], -1f, 1f),
-            Math.Clamp(actions[(int)ActionKindV4.Turn], -1f, 1f),
-            spike,
-            aim);
-    }
-
-    /// <summary>Adapts V4 action outputs to the demo's legacy BrainOutput.</summary>
-    public static BrainOutput ToBrainOutput(BodyPhenotype body, PhenotypeV4 phenotype, ReadOnlySpan<float> legacySensors)
-    {
-        ArgumentNullException.ThrowIfNull(phenotype);
-        var sensors = ToSensorValues(body, legacySensors);
-        return ToBrainOutput(body, GenomeV4Compiler.CompileBrain(phenotype), sensors);
     }
 
     private static float TraitOrDefault(PhenotypeV4 phenotype, LifeTraitKindV4 trait, float fallback) =>
