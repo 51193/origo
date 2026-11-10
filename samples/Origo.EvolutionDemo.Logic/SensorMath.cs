@@ -25,8 +25,8 @@ public static class SensorMath
         float arenaRadius,
         Span<float> sensors)
     {
-        if (sensors.Length != NeuralGenome.SensorSlots)
-            throw new ArgumentException($"Expected {NeuralGenome.SensorSlots} sensor slots.", nameof(sensors));
+        if (sensors.Length != CreatureGenome.SensorSlots)
+            throw new ArgumentException($"Expected {CreatureGenome.SensorSlots} sensor slots.", nameof(sensors));
 
         sensors.Clear();
         var forward = new Vector2(MathF.Cos(heading), MathF.Sin(heading));

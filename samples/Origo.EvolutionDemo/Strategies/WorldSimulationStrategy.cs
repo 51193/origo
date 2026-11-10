@@ -8,6 +8,7 @@ using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Strategy;
 using Origo.EvolutionDemo.Logic;
+using Origo.EvolutionDemo.Logic.V4;
 using NumericsVector2 = System.Numerics.Vector2;
 
 namespace Origo.EvolutionDemo;
@@ -22,7 +23,7 @@ namespace Origo.EvolutionDemo;
 public sealed class WorldSimulationStrategy : LifecycleStrategyBase
 {
     private const double TwoPi = Math.PI * 2d;
-    private static readonly Dictionary<string, NeuralBrain> BrainCache = new(StringComparer.Ordinal);
+    private static readonly Dictionary<string, (PhenotypeV4 Phenotype, CompiledBrainV4 Brain)> BrainCache = new(StringComparer.Ordinal);
     private static readonly List<CreatureSnapshot> CreatureScratch = [];
     private static readonly List<FoodSnapshot> FoodScratch = [];
     private static readonly List<SensorPoint> NearFoodScratch = [];
@@ -256,7 +257,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         controller.SetData(DemoKeys.FoodToughMeals, 0);
         controller.SetData(DemoKeys.FoodToxicMeals, 0);
         controller.SetData(DemoKeys.Phase, DemoKeys.PhaseStarting);
-        controller.SetData(DemoKeys.GenomeVersion, 2);
+        controller.SetData(DemoKeys.GenomeVersion, 4);
 
         var session = controller.OwningSession;
         ctx.Deferred.EnqueueBusinessDeferred(() =>
@@ -394,7 +395,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         var spikeDrained = 0f;
         var tickDt = Tuning.SimulationTickSeconds;
         var pondTime = ReadFloat(controller, DemoKeys.Time, 0f);
-        var sensorBuffer = new float[NeuralGenome.SensorSlots];
+        var sensorBuffer = new float[CreatureGenome.SensorSlots];
         var aiStride = Math.Max(1, (creatures.Count + Tuning.AiUpdateBatch - 1) / Tuning.AiUpdateBatch);
         var tickNumber = ReadInt(controller, DemoKeys.Tick, 0);
 
@@ -448,18 +449,15 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             {
                 bodyGenome = ReadString(entity, DemoKeys.BodyGenome, string.Empty);
                 brainGenome = ReadString(entity, DemoKeys.BrainGenome, string.Empty);
-                if (!BodyGenome.IsStructurallyValid(bodyGenome)
-                    || !NeuralGenome.IsValid(brainGenome))
+                if (!CreatureGenome.TryDecode(bodyGenome, out _))
                 {
                     var fallback = CreatureGenome.RandomFounder(rng);
                     bodyGenome = fallback.Body;
-                    brainGenome = fallback.Brain;
                     entity.SetData(DemoKeys.BodyGenome, bodyGenome);
-                    entity.SetData(DemoKeys.BrainGenome, brainGenome);
                 }
 
                 var body = ReadPhenotype(entity);
-                var brain = GetBrain(bodyGenome, brainGenome);
+                var (brainPhenotype, compiledBrain) = GetBrainPhenotype(bodyGenome);
                 sensorGrid.Query(creature.X, creature.Y, sensorGrid.Food, nearFood);
                 sensorGrid.Query(creature.X, creature.Y, sensorGrid.Creatures, nearCreatures);
                 SensorMath.ComputeInto(
@@ -473,7 +471,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     creature.Age * 2f * MathF.PI / Tuning.OscillatorPeriodSeconds,
                     Tuning.PondRadius,
                     sensorBuffer);
-                output = brain.Evaluate(body, sensorBuffer);
+                output = DemoPhenotypeAdapter.ToBrainOutput(body, compiledBrain, sensorBuffer);
                 drive = Math.Clamp(output.MoveDrive, 0f, 1f);
                 turn = Math.Clamp(output.TurnDrive, -1f, 1f);
                 spikeDrive = Math.Clamp(output.SpikeDrive, -1f, 1f);
@@ -683,13 +681,14 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 && cooldown <= 0f
                 && creatures.Count + pendingChildren < Tuning.PopulationCap)
             {
-                if (bodyGenome.Length == 0 || brainGenome.Length == 0)
+                if (bodyGenome.Length == 0)
                 {
                     bodyGenome = ReadString(entity, DemoKeys.BodyGenome, string.Empty);
-                    brainGenome = ReadString(entity, DemoKeys.BrainGenome, string.Empty);
                 }
 
-                var parentGenome = new CreatureGenome(bodyGenome, brainGenome);
+                if (!CreatureGenome.TryDecode(bodyGenome, out var decodedParent))
+                    continue;
+                var parentGenome = decodedParent!;
                 var generation = Math.Max(0, ReadInt(entity, DemoKeys.Generation, 0));
                 var lineage = Math.Max(0, ReadInt(entity, DemoKeys.Lineage, 1));
                 var children = Math.Max(0, ReadInt(entity, DemoKeys.Children, 0));
@@ -704,7 +703,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 if (changes >= Tuning.LineageMutationThreshold)
                     lineage = nextLineageId++;
                 var bodyLengthCost = Tuning.ReproductionParentCost
-                    * (1f + (0.05f * MathF.Log(1f + (bodyGenome.Length / 72f))));
+                    * (1f + (0.05f * MathF.Log(1f + (parentGenome.GeneCount / 24f))));
                 energy -= bodyLengthCost;
                 cooldown = Tuning.ReproductionCooldownSeconds;
                 children++;
@@ -989,16 +988,17 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         return Math.Min(Tuning.FoodCap, baseTarget + (int)MathF.Round(Tuning.EarlyFoodBonus * ramp));
     }
 
-    private static NeuralBrain GetBrain(string bodyGenome, string brainGenome)
+    private static (PhenotypeV4 Phenotype, CompiledBrainV4 Brain) GetBrainPhenotype(string bodyGenome)
     {
-        var key = bodyGenome + "|" + brainGenome;
-        if (BrainCache.TryGetValue(key, out var cached))
+        if (BrainCache.TryGetValue(bodyGenome, out var cached))
             return cached;
         if (BrainCache.Count >= CacheEviction.DefaultLimit)
             CacheEviction.TrimOldestHalf(BrainCache);
-        var brain = NeuralGenome.Decode(brainGenome);
-        BrainCache[key] = brain;
-        return brain;
+        var genome = CreatureGenome.FromSerialized(bodyGenome);
+        var phenotype = GenomeV4Compiler.Compile(genome.Genome, ExpressionContextV4.Neutral);
+        var entry = (phenotype, GenomeV4Compiler.CompileBrain(phenotype));
+        BrainCache[bodyGenome] = entry;
+        return entry;
     }
 
     private static BodyPhenotype ReadPhenotype(ISndEntity entity) => new(

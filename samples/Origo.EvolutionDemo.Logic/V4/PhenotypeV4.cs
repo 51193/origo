@@ -317,6 +317,7 @@ public sealed class CompiledBrainV4
     private readonly int[] _incomingStart;
     private readonly NeuralEdgeV4[] _incoming;
     private readonly Dictionary<ulong, int> _indexById;
+    private readonly float[] _values;
 
     internal CompiledBrainV4(NeuralGraphV4 graph)
     {
@@ -382,6 +383,7 @@ public sealed class CompiledBrainV4
 
         _indexById = _nodes.Select((node, index) => (node.Id, index))
             .ToDictionary(static pair => pair.Id, static pair => pair.index);
+        _values = new float[_nodes.Length];
         _incomingStart = new int[_nodes.Length + 1];
         for (var i = 0; i < _nodes.Length; i++)
             _incomingStart[i + 1] = _incomingStart[i] + incomingCounts[i];
@@ -399,7 +401,8 @@ public sealed class CompiledBrainV4
     /// <summary>Evaluates one tick. Sensor values are indexed by the sensor interface id.</summary>
     public void Evaluate(ReadOnlySpan<float> sensorValues, Span<float> actionValues)
     {
-        var values = new float[_nodes.Length];
+        var values = _values;
+        Array.Clear(values);
         for (var i = 0; i < _nodes.Length; i++)
         {
             var node = _nodes[i];

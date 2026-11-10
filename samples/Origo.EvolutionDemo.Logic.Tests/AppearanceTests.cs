@@ -57,7 +57,7 @@ public sealed class AppearanceTests
     [Fact]
     public void Analyze_IdenticalGenomes_HaveZeroDiversity()
     {
-        var genomes = new List<string> { BodyGenome.DefaultTemplate, BodyGenome.DefaultTemplate };
+        var genomes = new List<string> { CreatureGenome.RandomFounder(new Random(3)).Body, CreatureGenome.RandomFounder(new Random(3)).Body };
         var metrics = GenomeDiversity.Analyze(genomes);
 
         Assert.Equal(2, metrics.Population);

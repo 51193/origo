@@ -85,7 +85,16 @@ public static class DemoPhenotypeAdapter
     public static BrainOutput ToBrainOutput(BodyPhenotype body, PhenotypeV4 phenotype, ReadOnlySpan<float> legacySensors)
     {
         ArgumentNullException.ThrowIfNull(phenotype);
-        var brain = GenomeV4Compiler.CompileBrain(phenotype);
+        return ToBrainOutput(body, GenomeV4Compiler.CompileBrain(phenotype), legacySensors);
+    }
+
+    /// <summary>Evaluates a precompiled graph without rebuilding it per tick.</summary>
+    public static BrainOutput ToBrainOutput(
+        BodyPhenotype body,
+        CompiledBrainV4 brain,
+        ReadOnlySpan<float> legacySensors)
+    {
+        ArgumentNullException.ThrowIfNull(brain);
         var sensors = ToSensorValues(body, legacySensors);
         var actions = new float[16];
         brain.Evaluate(sensors, actions);

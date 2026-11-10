@@ -9,7 +9,12 @@ public class SensorMathTests
 {
     private static readonly Vector2 Origin = Vector2.Zero;
     private const float HeadingRight = 0f;
-    private static readonly BodyPhenotype Body = BodyGenome.Decode(BodyGenome.DefaultTemplate);
+    private static readonly BodyPhenotype Body = CreatureGenome.RandomFounder(new Random(4)).Phenotype with
+    {
+        VisionOrgan = true,
+        RhythmOrgan = true,
+        CreatureSenseOrgan = true,
+    };
 
     [Fact]
     public void Compute_FoodAhead_IsStrongerWhenCloser()
@@ -103,7 +108,7 @@ public class SensorMathTests
         float energy = 60f,
         float phase = 0f)
     {
-        var sensors = new float[NeuralGenome.SensorSlots];
+        var sensors = new float[CreatureGenome.SensorSlots];
         SensorMath.ComputeInto(
             Body,
             position ?? Origin,

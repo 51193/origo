@@ -57,7 +57,7 @@ public sealed class DemoSettings
     public double BrainMutationRate { get; set; } = 0.003d;
     public double BodyLengthMutationRate { get; set; } = 0.005d;
     public double FrameshiftMutationRate { get; set; }
-    public int LineageMutationThreshold { get; set; } = 4;
+    public int LineageMutationThreshold { get; set; } = 2;
 
     // Spike.
     public float SpikeThreshold { get; set; } = 0.05f;

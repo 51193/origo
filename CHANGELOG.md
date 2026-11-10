@@ -72,12 +72,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   ToxinResistance organs unlocking their full energy value. Long-lived
   ponds use larger
   appearance/brain caches and read the full body phenotype only for the AI batch
-  instead of every creature every tick. The legacy 103-digit genome and
-  8-slot sensor API have been removed; calibrated founder wiring is now a fixed
-  latent-brain constant. Body-gene phenotype ranges and
-  brain/length/frameshift mutation rates are configurable in Advanced Settings,
-  soft collision uses each creature's radius, and saves without genome-version 2
-  are rejected at load. The New Pond screen also has a scrollable Advanced Settings page backed by a
+  instead of every creature every tick. The legacy genome classes have been
+  removed; the demo compiles Genome v4 directly into its runtime phenotype and
+  neural graph. Saves without genome-version 4 are rejected at load. The New Pond screen also has a scrollable Advanced Settings page backed by a
   central `DemoSettings` model: map/world, energy, reproduction, spike, feeding,
   every food-source parameter, and a new `evolution.overgrowth` SND strategy that
   consumes excess food in overfull regions to spawn a heavily mutated descendant.

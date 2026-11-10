@@ -12,7 +12,7 @@ A playable idle artificial-life sandbox built on `Origo.Core` and
   at this scale, so the default local view reads as a sparse world.
 - The default camera shows a local region; wheel zoom and right-drag pan let you
   explore the space, and `R` resets to the whole pond.
-- Click a creature to inspect its body codons, fixed latent brain, phenotype,
+- Click a creature to inspect its V4 genome graph, phenotype,
   sensor readings, and outputs.
 - Pause, change speed, drop nutrients, save, load, delete saves, or seed a new
   pond.
@@ -129,38 +129,35 @@ production radius is shown only as a faint translucent wash; the wash is skipped
 once its screen-space radius exceeds 75% of the viewport height, so high zoom does
 not tint the entire view or draw a screen-filling arc.
 
-## Genome: body codons and latent brain
+## Genome: Genome v4 graph
 
-Each creature carries two genomes:
+Each creature carries one canonical V4 genome. The genome is a list of
+stable-ID genes, not a fixed codon table:
 
-- **BodyGenome**: variable-length 3-hex codons. The high nibble is an opcode and
-  the low byte is an argument. Body codons express size, movement, perception,
-  spike range, metabolism, lifespan, organs, appearance pattern, and the active
-  neural topology.
-- **NeuralGenome**: a fixed 372-hex latent lattice. It stores the maximum
-  12-sensor, 3-hidden-layer, 8-node, 4-output network; the body selects which
-  sensors, outputs, layers, and widths are active.
+- **Gene** — identity, kind, copy count, expression, typed payload, and
+  regulatory conditions.
+- **BodyPlan** — arbitrary segment and organ instances. Organ copy count is a
+  gene property; there is no fixed organ-slot array.
+- **NeuralGraph** — sensor, interneuron, and output nodes plus synapse genes.
+  There is no fixed 372-hex latent lattice, no fixed 12-sensor array, and no fixed
+  hidden-layer shape.
+- **Regulation** — genes can require low food, nearby predators, or low energy.
+- **Energy budget** — body tissue, neural tissue, and genome complexity all cost
+  maintenance. Cheap reflex creatures and expensive large-brain creatures can
+  coexist.
 
-The body codon table is deliberately sparse: only 1872 of 4096 codons are
-meaningful. Unknown opcodes/arguments stay neutral. Organs combine with OR;
-numeric traits use the median of valid codons, so duplicate genes provide
-redundancy rather than unbounded dosage.
+The controller stores `evo.genomeVersion = 4`. Older saves are intentionally
+not migrated; the Load panel rejects them with an explicit message. Genome
+serialization is a canonical binary codec with a hex representation for SND
+entities and debugging.
 
-Default founders use a 24-codon body template and a calibrated 8→5→5→3 brain
-mapped into the latent lattice. Body size controls collision/display radius,
-food pickup radius, and maximum energy. Body changes never invalidate the fixed
-latent neural genome; they only change which latent weights are active.
+Mutations operate on stable gene identities: expression, copy count,
+duplication/deletion, payload parameters, neurons, synapses, organs, and
+regulatory links. A mutation is accepted only if the resulting genome validates
+and compiles, so random search stays in viable phenotype space.
 
-Body step mutations change one random hex digit by ±1. Body length mutations
-duplicate/delete complete codons. Neural mutations step one hex digit. Frameshift
-mutation is supported but disabled by default. Reproduction cost grows with the
-mother's body hex length through a weak logarithmic term, so redundant genes are
-cheap but not free.
-
-The legacy single 103-hex genome is no longer used by the runtime and old saves
-are intentionally not migrated. The controller stores `evo.genomeVersion = 2`;
-the load path rejects saves without that marker, and the Load panel disables
-incompatible slots with an explicit message.
+The detailed architecture and mock benchmark are in
+[`Origo.EvolutionDemo.Logic/V4/README.md`](../Origo.EvolutionDemo.Logic/V4/README.md).
 
 ### Food types and digestive niches
 
@@ -371,7 +368,7 @@ samples/Origo.EvolutionDemo/
   Origo/entry/entry.json        # custom level id "pond"
   Origo/initial/levels/pond/    # controller entity scene
   Origo/demo/*.tscn             # controller/creature/food/food-source placeholder nodes
-  GENOME_V2_DESIGN.md          # body codon / latent brain design baseline
+  GENOME_V4_DESIGN.md          # Genome v4 architecture baseline
   Scripts/
     DemoEntry.cs                # OrigoDefaultEntry, paths, save metadata
     DemoUi.cs                   # main menu, HUD, inspector, pause/save/load
@@ -384,15 +381,17 @@ samples/Origo.EvolutionDemo/
     OvergrowthStrategy.cs       # global high-density mutation pressure
 ```
 
-`Origo.EvolutionDemo.Logic` contains the Godot-free `BodyGenome`, `NeuralGenome`,
-`CreatureGenome`, sensor, appearance, food-patch, collision, diversity, and central
+`Origo.EvolutionDemo.Logic` contains the Godot-free V4 genome, phenotype
+adapters, sensor, appearance, food-patch, collision, diversity, and central
 `DemoSettings` layer. Its tests are in `Origo.EvolutionDemo.Logic.Tests`.
 
 ## Known first-version limits
 
-- One pond, no predators, no combat.
+- One pond; predation, scavenging, and food niches are present, but there are no
+  scripted goals or direct creature control.
 - Point/step mutations and body-length mutations only; no crossover.
-- Hidden topology is body-controlled within a fixed maximum latent lattice.
+- Neural topology is gene-expressed within safety and energy caps; no fixed
+  latent lattice.
 - Soft collision uses each creature's body radius; it remains off by default.
 - No offline progression; the simulation runs while the game is open.
 - Procedural vector visuals only; no external art/audio assets.

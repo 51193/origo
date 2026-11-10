@@ -124,10 +124,10 @@ public sealed class OvergrowthStrategy : LifecycleStrategyBase
             return;
 
         var parent = creatures[rng.Next(creatures.Count)];
-        var parentGenome = new CreatureGenome(
-            ReadString(parent, DemoKeys.BodyGenome, string.Empty),
-            ReadString(parent, DemoKeys.BrainGenome, string.Empty));
-        if (!BodyGenome.IsStructurallyValid(parentGenome.Body) || !NeuralGenome.IsValid(parentGenome.Brain))
+        if (!CreatureGenome.TryDecode(
+                ReadString(parent, DemoKeys.BodyGenome, string.Empty),
+                out var parentGenome)
+            || parentGenome is null)
             return;
 
         var mutationRate = Math.Clamp(Tuning.OvergrowthMutationRate, 0.01d, 1d);

@@ -8,6 +8,7 @@ using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Save.Meta;
 using Origo.Core.Snd;
 using Origo.EvolutionDemo.Logic;
+using Origo.EvolutionDemo.Logic.V4;
 
 namespace Origo.EvolutionDemo;
 
@@ -492,7 +493,7 @@ public partial class DemoUi : CanvasLayer
         controller.SetData(DemoKeys.Speed, 1);
         controller.SetData(DemoKeys.Paused, false);
         controller.SetData(DemoKeys.Phase, DemoKeys.PhaseStarting);
-        controller.SetData(DemoKeys.GenomeVersion, 2);
+        controller.SetData(DemoKeys.GenomeVersion, 4);
         controller.SetData(DemoKeys.Initialized, false);
         controller.SetData(DemoKeys.Time, 0f);
         controller.SetData(DemoKeys.Tick, 0);
@@ -526,10 +527,10 @@ public partial class DemoUi : CanvasLayer
             return;
         }
 
-        if (ReadInt(controller, DemoKeys.GenomeVersion, 0) < 2)
+        if (ReadInt(controller, DemoKeys.GenomeVersion, 0) < 4)
         {
             controller.SetData(DemoKeys.Paused, true);
-            ShowToast("This save predates genome v2 and is not compatible.", true);
+            ShowToast("This save predates genome v4 and is not compatible.", true);
             ShowMainMenu();
             return;
         }
@@ -1012,11 +1013,12 @@ public partial class DemoUi : CanvasLayer
 
         _inspector.Visible = true;
         var lineage = ReadInt(entity, DemoKeys.Lineage, 1);
-        var bodyGenome = ReadString(entity, DemoKeys.BodyGenome, "—");
-        var brainGenome = ReadString(entity, DemoKeys.BrainGenome, "—");
-        var phenotype = BodyGenome.IsStructurallyValid(bodyGenome)
-            ? BodyGenome.Decode(bodyGenome)
-            : BodyGenome.Decode(BodyGenome.DefaultTemplate);
+        var bodyGenome = ReadString(entity, DemoKeys.BodyGenome, string.Empty);
+        var genome = CreatureGenome.TryDecode(bodyGenome, out var decoded)
+            ? decoded!
+            : CreatureGenome.RandomFounder(new Random(0));
+        var phenotype = genome.Phenotype;
+        var v4Phenotype = GenomeV4Compiler.Compile(genome.Genome, ExpressionContextV4.Neutral);
         var look = GenomeAppearance.Derive(bodyGenome);
         var kills = ReadInt(entity, DemoKeys.Kills, 0);
         var scavenged = ReadInt(entity, DemoKeys.CreatureCorpseMeals, 0);
@@ -1034,34 +1036,15 @@ public partial class DemoUi : CanvasLayer
             $"Battery {phenotype.SpikeBatteryOrgan}  Count {phenotype.SpikeCount}  Spread {phenotype.SpikeSpreadRadians * 180f / MathF.PI:0}°  Jitter {phenotype.SpikeJitterRadians * 180f / MathF.PI:0}°\n" +
             $"Outputs  {ReadString(entity, DemoKeys.Outputs, "—")}\n" +
             $"Sensors  {ReadString(entity, DemoKeys.Sensors, "—")}");
-        _inspectorGenome.Text = $"Body genome ({bodyGenome.Length} hex / {bodyGenome.Length / 3} codons)\n" +
-            FormatGenome(bodyGenome) + $"\nBrain genome ({brainGenome.Length} hex)";
+        _inspectorGenome.Text = $"V4 genome: {genome.GeneCount} genes, {v4Phenotype.Brain.Nodes.Count} neural nodes, " +
+            $"{v4Phenotype.Brain.Edges.Count} synapses, {v4Phenotype.Body.Organs.Count} organs\n" +
+            FormatGenome(genome.Body);
         _inspectorSensors.Text =
             $"Organs: V {phenotype.VisionOrgan} C {phenotype.CreatureSenseOrgan} R {phenotype.RhythmOrgan} S {phenotype.SpikeOrgan}\n" +
-            $"Sensors {phenotype.ActiveSensorCount}/12  Outputs {phenotype.ActiveOutputCount}/4  Layers {phenotype.HiddenLayers}  Widths {phenotype.HiddenWidth1}/{phenotype.HiddenWidth2}/{phenotype.HiddenWidth3}\n" +
-            $"Diet organs Hard {phenotype.HardDigestOrgan}  ToxinRes {phenotype.ToxinResistanceOrgan}\n" +
-            $"H1: {DescribeTypes(brainGenome, NeuralGenome.Types1Offset, phenotype.HiddenWidth1)}\n" +
-            $"H2: {DescribeTypes(brainGenome, NeuralGenome.Types2Offset, phenotype.HiddenWidth2)}";
+            $"Sensors {phenotype.ActiveSensorCount}/12  Outputs {phenotype.ActiveOutputCount}/4\n" +
+            $"Diet organs Hard {phenotype.HardDigestOrgan}  ToxinRes {phenotype.ToxinResistanceOrgan}";
     }
 
-    private static string DescribeTypes(string genome, int offset, int length)
-    {
-        if (genome.Length < offset + length)
-            return "—";
-        var types = new string[length];
-        for (var i = 0; i < length; i++)
-        {
-            types[i] = char.ToUpperInvariant(genome[offset + i]) switch
-            {
-                '0' or '4' or '8' or 'C' => "sig",
-                '1' or '5' or '9' or 'D' => "sum",
-                '2' or '6' or 'A' or 'E' => "inv",
-                _ => "relu",
-            };
-        }
-
-        return string.Join(" ", types);
-    }
 
     private static string FormatGenome(string genome)
     {
