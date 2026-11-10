@@ -1041,10 +1041,8 @@ public partial class DemoUi : CanvasLayer
             FormatGenome(genome.Body);
         _inspectorSensors.Text =
             $"Organs: V {phenotype.VisionOrgan} C {phenotype.CreatureSenseOrgan} R {phenotype.RhythmOrgan} S {phenotype.SpikeOrgan}\n" +
-            $"Sensors {phenotype.ActiveSensorCount}/12  Outputs {phenotype.ActiveOutputCount}/4\n" +
             $"Diet organs Hard {phenotype.HardDigestOrgan}  ToxinRes {phenotype.ToxinResistanceOrgan}  CarrionSense {phenotype.CarrionSenseOrgan}\n" +
-            $"Sensor ports {string.Join(", ", v4Phenotype.SensorPorts.Select(id => InterfaceRegistryV4.SensorDefinitions.TryGetValue(id, out var s) ? s.DisplayName : id.ToString(CultureInfo.InvariantCulture)))}\n" +
-            $"Action ports {string.Join(", ", v4Phenotype.ActionPorts.Select(id => InterfaceRegistryV4.ActionDefinitions.TryGetValue(id, out var a) ? a.DisplayName : id.ToString(CultureInfo.InvariantCulture)))}";
+            PhenotypeInspectorV4.Inspect(v4Phenotype).Describe();
     }
 
 

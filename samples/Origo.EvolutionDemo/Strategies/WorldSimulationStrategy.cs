@@ -36,6 +36,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
     private static SensorPoint[] CreaturePointScratch = [];
     private static SensorPoint[] CorpsePointScratch = [];
     private static bool[] FoodConsumedScratch = [];
+    private static readonly DemoActionEffectState ActionStateScratch = new();
 
     /// <inheritdoc/>
     public override void AfterSpawn(ISndEntity entity, ISndContext ctx)
@@ -456,6 +457,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             var turn = Math.Clamp(ReadFloat(entity, DemoKeys.Turn, 0f), -1f, 1f);
             var spikeDrive = Math.Clamp(ReadFloat(entity, DemoKeys.SpikeDrive, 0f), -1f, 1f);
             var aimDrive = Math.Clamp(ReadFloat(entity, DemoKeys.Aim, 0f), -1f, 1f);
+            PhenotypeV4? brainPhenotype = null;
             if (updateAi)
             {
                 bodyGenome = ReadString(entity, DemoKeys.BodyGenome, string.Empty);
@@ -468,11 +470,12 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 }
 
                 var body = ReadPhenotype(entity);
-                var (brainPhenotype, compiledBrain) = GetBrainPhenotype(bodyGenome);
+                var (phenotype, compiledBrain) = GetBrainPhenotype(bodyGenome);
+                brainPhenotype = phenotype;
                 sensorGrid.Query(creature.X, creature.Y, sensorGrid.Food, nearFood);
                 sensorGrid.Query(creature.X, creature.Y, sensorGrid.Creatures, nearCreatures);
                 DemoSensorRuntime.ComputeInto(
-                    brainPhenotype,
+                    phenotype,
                     new DemoSensorContext
                     {
                         Position = new System.Numerics.Vector2(creature.X, creature.Y),
@@ -490,7 +493,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     sensorBuffer);
                 if (sensorBuffer[(int)SensorKindV4.CorpseAhead] > 0f)
                     carrionDetections++;
-                DemoActionRuntime.Evaluate(brainPhenotype, compiledBrain, sensorBuffer, actionBuffer);
+                DemoActionRuntime.Evaluate(phenotype, compiledBrain, sensorBuffer, actionBuffer);
                 drive = Math.Clamp(actionBuffer[(int)ActionKindV4.Move], 0f, 1f);
                 turn = Math.Clamp(actionBuffer[(int)ActionKindV4.Turn], -1f, 1f);
                 spikeDrive = Math.Clamp(actionBuffer[(int)ActionKindV4.Spike], -1f, 1f);
@@ -500,13 +503,20 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 entity.SetData(DemoKeys.SpikeDrive, spikeDrive);
                 entity.SetData(DemoKeys.Aim, aimDrive);
             }
-            var heading = creature.Heading + (turn * creature.TurnSpeed * tickDt);
-            var position = new NumericsVector2(creature.X, creature.Y);
-            if (drive > Tuning.DriveThreshold)
-            {
-                var forward = new NumericsVector2(MathF.Cos(heading), MathF.Sin(heading));
-                position += forward * (creature.MoveSpeed * drive * tickDt);
-            }
+            brainPhenotype ??= GetBrainPhenotype(
+                ReadString(entity, DemoKeys.BodyGenome, string.Empty)).Phenotype;
+            actionBuffer[(int)ActionKindV4.Move] = drive;
+            actionBuffer[(int)ActionKindV4.Turn] = turn;
+            actionBuffer[(int)ActionKindV4.Spike] = spikeDrive;
+            actionBuffer[(int)ActionKindV4.Aim] = aimDrive;
+            ActionStateScratch.Position = new System.Numerics.Vector2(creature.X, creature.Y);
+            ActionStateScratch.Heading = creature.Heading;
+            ActionStateScratch.MoveSpeed = creature.MoveSpeed;
+            ActionStateScratch.TurnSpeed = creature.TurnSpeed;
+            ActionStateScratch.DeltaSeconds = tickDt;
+            DemoActionEffectRegistry.Apply(brainPhenotype, actionBuffer, ActionStateScratch);
+            var heading = ActionStateScratch.Heading;
+            var position = new NumericsVector2(ActionStateScratch.Position.X, ActionStateScratch.Position.Y);
 
             var bodyLimit = Tuning.PondRadius - creature.BodyRadius;
             if (position.LengthSquared() > bodyLimit * bodyLimit)
