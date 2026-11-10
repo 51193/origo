@@ -233,7 +233,7 @@ public static class GenomeV4Factory
         var outputTurn = Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Output,
             (ushort)ActionKindV4.Turn, ActivationKindV4.Tanh, 0f));
         var outputSpike = Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Output,
-            (ushort)ActionKindV4.Spike, ActivationKindV4.Tanh, -2f));
+            (ushort)ActionKindV4.Spike, ActivationKindV4.Tanh, -0.5f));
         var outputAim = Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Output,
             (ushort)ActionKindV4.Aim, ActivationKindV4.Tanh, 0f));
 
@@ -241,6 +241,7 @@ public static class GenomeV4Factory
         Add(GeneKind.Reflex, GenePayloadV4.Reflex(SensorKindV4.FoodAhead, ActionKindV4.Move, 0.8f));
         Add(GeneKind.Reflex, GenePayloadV4.Reflex(SensorKindV4.FoodLeft, ActionKindV4.Turn, -0.7f));
         Add(GeneKind.Reflex, GenePayloadV4.Reflex(SensorKindV4.FoodRight, ActionKindV4.Turn, 0.7f));
+        Add(GeneKind.Reflex, GenePayloadV4.Reflex(SensorKindV4.CreatureAhead, ActionKindV4.Spike, 1.0f));
 
         // A small hidden layer gives mutation room without imposing the old
         // fixed three-layer topology.
