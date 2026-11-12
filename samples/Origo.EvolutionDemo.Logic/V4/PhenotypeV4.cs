@@ -123,8 +123,8 @@ public static class GenomeV4Compiler
         var body = new BodyPlanV4(segments, organs, traits);
         var brain = new NeuralGraphV4(nodes, edges);
         var energy = new EnergyBudgetV4(bodyCost, brainCost, genomeCost, maintenance);
-        var sensorPorts = BuildSensorPorts(organs);
-        var actionPorts = BuildActionPorts(organs);
+        var sensorPorts = OrganInterfaceRegistryV4.BuildSensorPorts(organs);
+        var actionPorts = OrganInterfaceRegistryV4.BuildActionPorts(organs);
         _ = sensorNodes;
         _ = actionNodes;
         return new PhenotypeV4(genome, body, brain, energy, sensorPorts, actionPorts);
@@ -277,47 +277,6 @@ public static class GenomeV4Compiler
 
         if (visited != incoming.Count)
             throw new InvalidDataException("Expressed neural graph contains a cycle.");
-    }
-
-    private static List<ushort> BuildSensorPorts(IReadOnlyList<OrganInstanceV4> organs)
-    {
-        var ports = new List<ushort>
-        {
-            (ushort)SensorKindV4.WallAhead,
-            (ushort)SensorKindV4.Energy,
-        };
-        if (organs.Any(static organ => organ.Kind == OrganKindV4.Vision))
-        {
-            ports.Add((ushort)SensorKindV4.FoodAhead);
-            ports.Add((ushort)SensorKindV4.FoodLeft);
-            ports.Add((ushort)SensorKindV4.FoodRight);
-        }
-
-        if (organs.Any(static organ => organ.Kind == OrganKindV4.CreatureSense))
-            ports.Add((ushort)SensorKindV4.CreatureAhead);
-        if (organs.Any(static organ => organ.Kind == OrganKindV4.Rhythm))
-        {
-            ports.Add((ushort)SensorKindV4.Sin);
-            ports.Add((ushort)SensorKindV4.Cos);
-        }
-
-        if (organs.Any(static organ => organ.Kind == OrganKindV4.CarrionSense))
-            ports.Add((ushort)SensorKindV4.CorpseAhead);
-        return ports;
-    }
-
-    private static List<ushort> BuildActionPorts(IReadOnlyList<OrganInstanceV4> organs)
-    {
-        var ports = new List<ushort>();
-        if (organs.Any(static organ => organ.Kind == OrganKindV4.Sprint))
-            ports.Add((ushort)ActionKindV4.Sprint);
-        ports.Add((ushort)ActionKindV4.Turn);
-        ports.Add((ushort)ActionKindV4.Aim);
-        ports.Add((ushort)ActionKindV4.Move);
-        if (organs.Any(static organ => organ.Kind == OrganKindV4.SpikeOrgan))
-            ports.Add((ushort)ActionKindV4.Spike);
-
-        return ports;
     }
 
     /// <summary>Compiles a phenotype's neural graph for repeated runtime evaluation.</summary>

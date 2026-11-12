@@ -1040,8 +1040,6 @@ public partial class DemoUi : CanvasLayer
             $"{v4Phenotype.Brain.Edges.Count} synapses, {v4Phenotype.Body.Organs.Count} organs\n" +
             FormatGenome(genome.Body);
         _inspectorSensors.Text =
-            $"Organs: V {phenotype.VisionOrgan} C {phenotype.CreatureSenseOrgan} R {phenotype.RhythmOrgan} S {phenotype.SpikeOrgan}\n" +
-            $"Diet organs Hard {phenotype.HardDigestOrgan}  ToxinRes {phenotype.ToxinResistanceOrgan}  CarrionSense {phenotype.CarrionSenseOrgan}\n" +
             PhenotypeInspectorV4.Inspect(v4Phenotype).Describe();
     }
 
