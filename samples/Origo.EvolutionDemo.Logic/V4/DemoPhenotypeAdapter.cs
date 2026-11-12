@@ -38,17 +38,10 @@ public static class DemoPhenotypeAdapter
             TraitOrDefault(phenotype, LifeTraitKindV4.SpikeRange, Tuning.SpikeRadius),
             TraitOrDefault(phenotype, LifeTraitKindV4.Metabolism, 1f),
             TraitOrDefault(phenotype, LifeTraitKindV4.MaxAge, Tuning.MaxAgeSeconds),
-            organs.Any(static organ => organ.Kind == OrganKindV4.SpikeOrgan),
-            organs.Any(static organ => organ.Kind == OrganKindV4.Rhythm),
-            organs.Any(static organ => organ.Kind == OrganKindV4.Vision),
-            organs.Any(static organ => organ.Kind == OrganKindV4.CreatureSense),
-            spikeBattery.Count > 0,
+            DemoOrganMaskBuilder.FromOrgans(organs),
             spikeCount,
             MathF.PI / 4f,
-            0f,
-            organs.Any(static organ => organ.Kind == OrganKindV4.HardDigest),
-            organs.Any(static organ => organ.Kind == OrganKindV4.ToxinResistance),
-            organs.Any(static organ => organ.Kind == OrganKindV4.CarrionSense));
+            0f);
     }
 
     private static float TraitOrDefault(PhenotypeV4 phenotype, LifeTraitKindV4 trait, float fallback) =>

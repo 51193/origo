@@ -39,9 +39,6 @@ internal static class DemoKeys
     public const string FoodSoftMeals = "evo.foodSoftMeals";
     public const string FoodToughMeals = "evo.foodToughMeals";
     public const string FoodToxicMeals = "evo.foodToxicMeals";
-    public const string HardDigestOrgan = "evo.hardDigestOrgan";
-    public const string ToxinResistanceOrgan = "evo.toxinResistanceOrgan";
-    public const string CarrionSenseOrgan = "evo.carrionSenseOrgan";
     public const string CarrionDetections = "evo.carrionDetections";
     public const string SprintDrive = "evo.sprintDrive";
     public const string SprintActions = "evo.sprintActions";
@@ -64,15 +61,11 @@ internal static class DemoKeys
     public const string SpikeRadius = "evo.spikeRadius";
     public const string BasalMetabolism = "evo.basalMetabolism";
     public const string MaxAge = "evo.maxAge";
-    public const string SpikeOrgan = "evo.spikeOrgan";
-    public const string SpikeBattery = "evo.spikeBattery";
+    public const string OrganMask = "evo.organMask";
     public const string SpikeCount = "evo.spikeCount";
     public const string SpikeSpread = "evo.spikeSpread";
     public const string SpikeJitter = "evo.spikeJitter";
     public const string SpikeFan = "evo.spikeFan";
-    public const string VisionOrgan = "evo.visionOrgan";
-    public const string RhythmOrgan = "evo.rhythmOrgan";
-    public const string CreatureSenseOrgan = "evo.creatureSenseOrgan";
     public const string X = "evo.x";
     public const string Y = "evo.y";
     public const string Heading = "evo.heading";

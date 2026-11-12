@@ -313,12 +313,10 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     ReadFloat(entity, DemoKeys.SpikeRadius, Tuning.SpikeRadius),
                     ReadFloat(entity, DemoKeys.BasalMetabolism, 1f),
                     ReadFloat(entity, DemoKeys.MaxAge, Tuning.MaxAgeSeconds),
-                    ReadBool(entity, DemoKeys.SpikeBattery, false),
+                    ReadInt(entity, DemoKeys.OrganMask, 0),
                     ReadInt(entity, DemoKeys.SpikeCount, 1),
                     ReadFloat(entity, DemoKeys.SpikeSpread, 0f),
-                    ReadFloat(entity, DemoKeys.SpikeJitter, 0f),
-                    ReadBool(entity, DemoKeys.HardDigestOrgan, false),
-                    ReadBool(entity, DemoKeys.ToxinResistanceOrgan, false)));
+                    ReadFloat(entity, DemoKeys.SpikeJitter, 0f)));
             }
             else if (string.Equals(kind, DemoKeys.FoodKind, StringComparison.Ordinal))
             {
@@ -999,17 +997,10 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         ReadFloat(entity, DemoKeys.SpikeRadius, Tuning.SpikeRadius),
         ReadFloat(entity, DemoKeys.BasalMetabolism, 1f),
         ReadFloat(entity, DemoKeys.MaxAge, Tuning.MaxAgeSeconds),
-        ReadBool(entity, DemoKeys.SpikeOrgan, true),
-        ReadBool(entity, DemoKeys.RhythmOrgan, true),
-        ReadBool(entity, DemoKeys.VisionOrgan, true),
-        ReadBool(entity, DemoKeys.CreatureSenseOrgan, true),
-        ReadBool(entity, DemoKeys.SpikeBattery, false),
+        ReadInt(entity, DemoKeys.OrganMask, 0),
         ReadInt(entity, DemoKeys.SpikeCount, 1),
         ReadFloat(entity, DemoKeys.SpikeSpread, 0f),
-        ReadFloat(entity, DemoKeys.SpikeJitter, 0f),
-        ReadBool(entity, DemoKeys.HardDigestOrgan, false),
-        ReadBool(entity, DemoKeys.ToxinResistanceOrgan, false),
-        ReadBool(entity, DemoKeys.CarrionSenseOrgan, false));
+        ReadFloat(entity, DemoKeys.SpikeJitter, 0f));
 
     private static string FormatSensors(float[] sensors) => string.Create(
         CultureInfo.InvariantCulture,
@@ -1058,12 +1049,15 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         float SpikeRadius,
         float BasalMetabolism,
         float MaxAge,
-        bool SpikeBattery,
+        int OrganMask,
         int SpikeCount,
         float SpikeSpread,
-        float SpikeJitter,
-        bool HardDigest,
-        bool ToxinResistance);
+        float SpikeJitter)
+    {
+        public bool SpikeBattery => (OrganMask & (int)DemoOrganMaskV4.SpikeBattery) != 0;
+        public bool HardDigest => (OrganMask & (int)DemoOrganMaskV4.HardDigest) != 0;
+        public bool ToxinResistance => (OrganMask & (int)DemoOrganMaskV4.ToxinResistance) != 0;
+    }
 
     private readonly record struct FoodSnapshot(ISndEntity Entity, float X, float Y, bool FromCorpse, FoodType Type);
 
