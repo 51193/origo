@@ -154,6 +154,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             entity.SetData(DemoKeys.CorpseMeals, 0);
         if (!entity.TryGetData<int>(DemoKeys.CarrionDetections).found)
             entity.SetData(DemoKeys.CarrionDetections, 0);
+        if (!entity.TryGetData<int>(DemoKeys.SprintActions).found)
+            entity.SetData(DemoKeys.SprintActions, 0);
         if (!entity.TryGetData<int>(DemoKeys.FoodSoftMeals).found)
             entity.SetData(DemoKeys.FoodSoftMeals, 0);
         if (!entity.TryGetData<int>(DemoKeys.FoodToughMeals).found)
@@ -258,6 +260,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         controller.SetData(DemoKeys.CarrionFoodReleased, 0);
         controller.SetData(DemoKeys.CorpseMeals, 0);
         controller.SetData(DemoKeys.CarrionDetections, 0);
+        controller.SetData(DemoKeys.SprintActions, 0);
         controller.SetData(DemoKeys.FoodSoftMeals, 0);
         controller.SetData(DemoKeys.FoodToughMeals, 0);
         controller.SetData(DemoKeys.FoodToxicMeals, 0);
@@ -405,6 +408,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         var spikeHits = 0;
         var spikeDrained = 0f;
         var carrionDetections = 0;
+        var sprintActions = 0;
         var actionBuffer = new float[64];
         var tickDt = Tuning.SimulationTickSeconds;
         var pondTime = ReadFloat(controller, DemoKeys.Time, 0f);
@@ -457,6 +461,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             var turn = Math.Clamp(ReadFloat(entity, DemoKeys.Turn, 0f), -1f, 1f);
             var spikeDrive = Math.Clamp(ReadFloat(entity, DemoKeys.SpikeDrive, 0f), -1f, 1f);
             var aimDrive = Math.Clamp(ReadFloat(entity, DemoKeys.Aim, 0f), -1f, 1f);
+            var sprintDrive = Math.Clamp(ReadFloat(entity, DemoKeys.SprintDrive, 0f), -1f, 1f);
             PhenotypeV4? brainPhenotype = null;
             if (updateAi)
             {
@@ -498,10 +503,12 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 turn = Math.Clamp(actionBuffer[(int)ActionKindV4.Turn], -1f, 1f);
                 spikeDrive = Math.Clamp(actionBuffer[(int)ActionKindV4.Spike], -1f, 1f);
                 aimDrive = Math.Clamp(actionBuffer[(int)ActionKindV4.Aim], -1f, 1f);
+                sprintDrive = Math.Clamp(actionBuffer[(int)ActionKindV4.Sprint], -1f, 1f);
                 entity.SetData(DemoKeys.Drive, drive);
                 entity.SetData(DemoKeys.Turn, turn);
                 entity.SetData(DemoKeys.SpikeDrive, spikeDrive);
                 entity.SetData(DemoKeys.Aim, aimDrive);
+                entity.SetData(DemoKeys.SprintDrive, sprintDrive);
             }
             brainPhenotype ??= GetBrainPhenotype(
                 ReadString(entity, DemoKeys.BodyGenome, string.Empty)).Phenotype;
@@ -509,11 +516,15 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             actionBuffer[(int)ActionKindV4.Turn] = turn;
             actionBuffer[(int)ActionKindV4.Spike] = spikeDrive;
             actionBuffer[(int)ActionKindV4.Aim] = aimDrive;
+            actionBuffer[(int)ActionKindV4.Sprint] = sprintDrive;
+            if (sprintDrive > 0.4f)
+                sprintActions++;
             ActionStateScratch.Position = new System.Numerics.Vector2(creature.X, creature.Y);
             ActionStateScratch.Heading = creature.Heading;
             ActionStateScratch.MoveSpeed = creature.MoveSpeed;
             ActionStateScratch.TurnSpeed = creature.TurnSpeed;
             ActionStateScratch.DeltaSeconds = tickDt;
+            ActionStateScratch.MoveSpeedMultiplier = 1f;
             DemoActionEffectRegistry.Apply(brainPhenotype, actionBuffer, ActionStateScratch);
             var heading = ActionStateScratch.Heading;
             var position = new NumericsVector2(ActionStateScratch.Position.X, ActionStateScratch.Position.Y);
@@ -813,6 +824,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             ReadInt(controller, DemoKeys.CorpseMeals, 0) + corpseMeals);
         controller.SetData(DemoKeys.CarrionDetections,
             ReadInt(controller, DemoKeys.CarrionDetections, 0) + carrionDetections);
+        controller.SetData(DemoKeys.SprintActions,
+            ReadInt(controller, DemoKeys.SprintActions, 0) + sprintActions);
         controller.SetData(DemoKeys.FoodSoftMeals,
             ReadInt(controller, DemoKeys.FoodSoftMeals, 0) + softMeals);
         controller.SetData(DemoKeys.FoodToughMeals,

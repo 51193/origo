@@ -71,6 +71,7 @@ internal static class EvolutionEntityFactory
             .SetFloat(DemoKeys.Turn, 0f)
             .SetFloat(DemoKeys.SpikeDrive, 0f)
             .SetFloat(DemoKeys.Aim, 0f)
+            .SetFloat(DemoKeys.SprintDrive, 0f)
             .SetFloat(DemoKeys.SpikeCooldown, 0f)
             .SetFloat(DemoKeys.SpikeFlash, -1f)
             .SetFloat(DemoKeys.SpikeEndX, 0f)

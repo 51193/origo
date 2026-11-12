@@ -30,6 +30,7 @@ public enum OrganKindV4 : ushort
     Rhythm = 7,
     CreatureSense = 8,
     CarrionSense = 9,
+    Sprint = 10,
 }
 
 /// <summary>Neural node kinds.</summary>
@@ -61,6 +62,7 @@ public enum ActionKindV4 : ushort
     Turn = 2,
     Spike = 3,
     Aim = 4,
+    Sprint = 5,
 }
 
 /// <summary>Activation functions available to V4 neural nodes.</summary>

@@ -34,6 +34,7 @@ public static class InterfaceRegistryV4
         RegisterAction(new ActionDefinitionV4((ushort)ActionKindV4.Turn, "turn", "Turn"));
         RegisterAction(new ActionDefinitionV4((ushort)ActionKindV4.Spike, "spike", "Spike"));
         RegisterAction(new ActionDefinitionV4((ushort)ActionKindV4.Aim, "aim", "Aim"));
+        RegisterAction(new ActionDefinitionV4((ushort)ActionKindV4.Sprint, "sprint", "Sprint"));
     }
 
     public static IReadOnlyDictionary<ushort, SensorDefinitionV4> SensorDefinitions => Sensors;

@@ -308,11 +308,11 @@ public static class GenomeV4Compiler
 
     private static List<ushort> BuildActionPorts(IReadOnlyList<OrganInstanceV4> organs)
     {
-        var ports = new List<ushort>
-        {
-            (ushort)ActionKindV4.Move,
-            (ushort)ActionKindV4.Turn,
-        };
+        var ports = new List<ushort>();
+        if (organs.Any(static organ => organ.Kind == OrganKindV4.Sprint))
+            ports.Add((ushort)ActionKindV4.Sprint);
+        ports.Add((ushort)ActionKindV4.Move);
+        ports.Add((ushort)ActionKindV4.Turn);
         if (organs.Any(static organ => organ.Kind == OrganKindV4.SpikeOrgan))
         {
             ports.Add((ushort)ActionKindV4.Spike);

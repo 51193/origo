@@ -211,6 +211,8 @@ public static class GenomeV4Factory
             Add(GeneKind.Organ, GenePayloadV4.Organ(OrganKindV4.CreatureSense, 0.5f));
         if (random.NextDouble() < 0.5)
             Add(GeneKind.Organ, GenePayloadV4.Organ(OrganKindV4.CarrionSense, 0.5f));
+        if (random.NextDouble() < 0.5)
+            Add(GeneKind.Organ, GenePayloadV4.Organ(OrganKindV4.Sprint, 0.5f));
 
         // Sensor and output interface nodes.
         List<uint> sensorIds = [];
@@ -240,6 +242,8 @@ public static class GenomeV4Factory
             (ushort)ActionKindV4.Spike, ActivationKindV4.Tanh, -0.5f));
         var outputAim = Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Output,
             (ushort)ActionKindV4.Aim, ActivationKindV4.Tanh, 0f));
+        var outputSprint = Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Output,
+            (ushort)ActionKindV4.Sprint, ActivationKindV4.Tanh, 0.5f));
 
         // Direct reflexes provide reasonable founder behavior.
         Add(GeneKind.Reflex, GenePayloadV4.Reflex(SensorKindV4.FoodAhead, ActionKindV4.Move, 0.8f));
@@ -259,7 +263,7 @@ public static class GenomeV4Factory
         }
 
         var sensorGeneIds = sensorIds.ToArray();
-        var outputGeneIds = new[] { outputMove, outputTurn, outputSpike, outputAim };
+        var outputGeneIds = new[] { outputMove, outputTurn, outputSpike, outputAim, outputSprint };
         foreach (var hiddenId in hidden)
         {
             Add(GeneKind.Synapse, GenePayloadV4.Synapse(

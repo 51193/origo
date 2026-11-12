@@ -12,6 +12,7 @@ public sealed class DemoActionEffectState
     public float MoveSpeed { get; set; }
     public float TurnSpeed { get; set; }
     public float DeltaSeconds { get; set; }
+    public float MoveSpeedMultiplier { get; set; } = 1f;
 }
 
 /// <summary>
@@ -30,7 +31,7 @@ public static class DemoActionEffectRegistry
             if (value <= Tuning.DriveThreshold)
                 return;
             var forward = new Vector2(MathF.Cos(state.Heading), MathF.Sin(state.Heading));
-            state.Position += forward * (state.MoveSpeed * value * state.DeltaSeconds);
+            state.Position += forward * (state.MoveSpeed * state.MoveSpeedMultiplier * value * state.DeltaSeconds);
         });
         Register(ActionKindV4.Turn, static (state, value) =>
         {
@@ -38,6 +39,11 @@ public static class DemoActionEffectRegistry
         });
         Register(ActionKindV4.Spike, static (_, _) => { });
         Register(ActionKindV4.Aim, static (_, _) => { });
+        Register(ActionKindV4.Sprint, static (state, value) =>
+        {
+            if (value > 0.4f)
+                state.MoveSpeedMultiplier = 1.6f;
+        });
     }
 
     /// <summary>Registers or replaces one action effect.</summary>
