@@ -453,7 +453,6 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 continue;
             var entity = creature.Entity;
             var bodyGenome = string.Empty;
-            var brainGenome = string.Empty;
             var updateAi = tickNumber == 0 || ((i + tickNumber) % aiStride == 0);
             var drive = Math.Clamp(ReadFloat(entity, DemoKeys.Drive, 0f), 0f, 1f);
             var turn = Math.Clamp(ReadFloat(entity, DemoKeys.Turn, 0f), -1f, 1f);
@@ -464,7 +463,6 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             if (updateAi)
             {
                 bodyGenome = ReadString(entity, DemoKeys.BodyGenome, string.Empty);
-                brainGenome = ReadString(entity, DemoKeys.BrainGenome, string.Empty);
                 if (!CreatureGenome.TryDecode(bodyGenome, out _))
                 {
                     var fallback = CreatureGenome.RandomFounder(rng);

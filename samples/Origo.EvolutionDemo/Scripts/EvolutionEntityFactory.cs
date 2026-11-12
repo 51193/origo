@@ -39,7 +39,6 @@ internal static class EvolutionEntityFactory
             .SetNode("main", CreatureScene)
             .SetString(DemoKeys.Kind, DemoKeys.CreatureKind)
             .SetString(DemoKeys.BodyGenome, genome.Body)
-            .SetString(DemoKeys.BrainGenome, genome.Brain)
             .SetFloat(DemoKeys.BodyRadius, phenotype.BodyRadius)
             .SetFloat(DemoKeys.FoodPickupRadius, phenotype.FoodPickupRadius)
             .SetFloat(DemoKeys.MaxEnergy, phenotype.MaxEnergy)

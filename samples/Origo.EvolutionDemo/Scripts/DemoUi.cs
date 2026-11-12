@@ -1477,8 +1477,6 @@ public partial class DemoUi : CanvasLayer
 
         var genomes = new List<string>();
         var bodySet = new HashSet<string>(StringComparer.Ordinal);
-        var brainSet = new HashSet<string>(StringComparer.Ordinal);
-        var combinedSet = new HashSet<string>(StringComparer.Ordinal);
         var themes = new int[CreatureAppearance.ThemeCount];
         var themeColors = new Color[CreatureAppearance.ThemeCount];
         var patterns = new int[CreatureAppearance.PatternCount];
@@ -1493,13 +1491,6 @@ public partial class DemoUi : CanvasLayer
                 continue;
             genomes.Add(genome);
             bodySet.Add(genome);
-            var brain = ReadString(entity, DemoKeys.BrainGenome, string.Empty);
-            if (brain.Length > 0)
-            {
-                brainSet.Add(brain);
-                combinedSet.Add(genome + "|" + brain);
-            }
-
             var look = GenomeAppearance.Derive(genome);
             if (themes[look.ThemeIndex] == 0)
                 themeColors[look.ThemeIndex] = ToColor(look.Body);
@@ -1515,7 +1506,7 @@ public partial class DemoUi : CanvasLayer
             0f, 1f);
         _diversityStats.Text = string.Create(
             CultureInfo.InvariantCulture,
-            $"Population {metrics.Population}   Bodies {bodySet.Count}   Brains {brainSet.Count}   Pairs {combinedSet.Count}\n" +
+            $"Population {metrics.Population}   Genomes {bodySet.Count}   Lineages {lineages.Count}\n" +
             $"Mean Hamming {metrics.MeanPairwiseDistance:0.000}   Allele entropy {metrics.MeanAlleleEntropy:0.000}");
         _diversityIndex.Text = string.Create(CultureInfo.InvariantCulture, $"Diversity index  {index:0.00}");
         _diversityChart.Push(index);

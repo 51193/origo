@@ -50,7 +50,6 @@ internal static class DemoKeys
     public const string FeedRequest = "evo.feedRequest";
 
     public const string BodyGenome = "evo.bodyGenome";
-    public const string BrainGenome = "evo.brainGenome";
     public const string GenomeVersion = "evo.genomeVersion";
     public const string BodyRadius = "evo.bodyRadius";
     public const string FoodPickupRadius = "evo.foodPickupRadius";
