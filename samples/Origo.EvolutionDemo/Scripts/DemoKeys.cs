@@ -71,10 +71,6 @@ internal static class DemoKeys
     public const string VisionOrgan = "evo.visionOrgan";
     public const string RhythmOrgan = "evo.rhythmOrgan";
     public const string CreatureSenseOrgan = "evo.creatureSenseOrgan";
-    public const string HiddenLayers = "evo.hiddenLayers";
-    public const string HiddenWidth1 = "evo.hiddenWidth1";
-    public const string HiddenWidth2 = "evo.hiddenWidth2";
-    public const string HiddenWidth3 = "evo.hiddenWidth3";
     public const string X = "evo.x";
     public const string Y = "evo.y";
     public const string Heading = "evo.heading";

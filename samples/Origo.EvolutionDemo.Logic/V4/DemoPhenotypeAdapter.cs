@@ -27,8 +27,6 @@ public static class DemoPhenotypeAdapter
         var bodyRadius = Tuning.BodyRadiusBase * size;
         var spikeBattery = organs.Where(static organ => organ.Kind == OrganKindV4.SpikeBattery).ToList();
         var spikeCount = Math.Clamp(spikeBattery.Count, 1, 8);
-        var pattern = Math.Abs(BitConverter.ToInt32(
-            System.Security.Cryptography.SHA256.HashData(GenomeV4Codec.Serialize(phenotype.Genome)), 0)) % 12;
         return new BodyPhenotype(
             size,
             bodyRadius,
@@ -44,11 +42,6 @@ public static class DemoPhenotypeAdapter
             organs.Any(static organ => organ.Kind == OrganKindV4.Rhythm),
             organs.Any(static organ => organ.Kind == OrganKindV4.Vision),
             organs.Any(static organ => organ.Kind == OrganKindV4.CreatureSense),
-            0,
-            0,
-            0,
-            0,
-            pattern,
             spikeBattery.Count > 0,
             spikeCount,
             MathF.PI / 4f,
