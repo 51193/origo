@@ -577,104 +577,47 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 && energy >= Tuning.SpikeEnergyCost
                 && spikeCooldown <= 0f)
             {
-                var count = creature.SpikeBattery
-                    ? Math.Clamp(creature.SpikeCount, 2, 8)
-                    : 1;
-                var spread = creature.SpikeBattery
-                    ? MathF.Max(0f, creature.SpikeSpread)
-                    : 0f;
-                var jitter = creature.SpikeBattery
-                    ? MathF.Max(0f, creature.SpikeJitter)
-                    : 0f;
-                var aimAngle = heading + (aimDrive * Tuning.SpikeAimHalfAngleRadians);
-                var range = creature.SpikeRadius;
-                sensorGrid.Query(position.X, position.Y, range, sensorGrid.Creatures, nearCreatures);
-                var pelletTargets = new int[count];
-                var pelletDistances = new float[count];
-                var pelletEnds = new string[count];
-                var hitTargets = new int[count];
-                var hitCount = 0;
-                var maxHitDistance = 0f;
-                for (var pellet = 0; pellet < count; pellet++)
+                sensorGrid.Query(position.X, position.Y, creature.SpikeRadius, sensorGrid.Creatures, nearCreatures);
+                var targets = new List<SpikeTargetV4>(nearCreatures.Count);
+                foreach (var point in nearCreatures)
                 {
-                    var fanOffset = count == 1
-                        ? 0f
-                        : -spread * 0.5f + (spread * ((pellet + 0.5f) / count));
-                    var pelletAngle = aimAngle + fanOffset
-                        + ((float)((rng.NextDouble() * 2d) - 1d) * jitter);
-                    var aimX = MathF.Cos(pelletAngle);
-                    var aimY = MathF.Sin(pelletAngle);
-                    var targetIndex = -1;
-                    var targetDistance = float.MaxValue;
-                    foreach (var point in nearCreatures)
-                    {
-                        if (point.Id == i)
-                            continue;
-                        var candidate = creatures[point.Id];
-                        if (candidate.Entity.IsPendingKill)
-                            continue;
-                        var alreadyHit = false;
-                        for (var h = 0; h < hitCount; h++)
-                        {
-                            if (hitTargets[h] != point.Id)
-                                continue;
-                            alreadyHit = true;
-                            break;
-                        }
-
-                        if (alreadyHit)
-                            continue;
-                        var dx = candidate.X - position.X;
-                        var dy = candidate.Y - position.Y;
-                        var along = (dx * aimX) + (dy * aimY);
-                        if (along <= 0f || along > range || along >= targetDistance)
-                            continue;
-                        var perpendicularSquared = (dx * dx) + (dy * dy) - (along * along);
-                        var hitRadius = candidate.BodyRadius + Tuning.SpikeBeamRadius;
-                        if (perpendicularSquared > hitRadius * hitRadius)
-                            continue;
-                        targetIndex = point.Id;
-                        targetDistance = along;
-                    }
-
-                    var endX = position.X + (aimX * range);
-                    var endY = position.Y + (aimY * range);
-                    if (targetIndex >= 0)
-                    {
-                        pelletTargets[pellet] = targetIndex;
-                        pelletDistances[pellet] = targetDistance;
-                        hitTargets[hitCount++] = targetIndex;
-                        maxHitDistance = MathF.Max(maxHitDistance, targetDistance);
-                        endX = position.X + (aimX * targetDistance);
-                        endY = position.Y + (aimY * targetDistance);
-                    }
-                    else
-                    {
-                        pelletTargets[pellet] = -1;
-                    }
-
-                    pelletEnds[pellet] = string.Create(
-                        CultureInfo.InvariantCulture,
-                        $"{endX:0.###},{endY:0.###}");
+                    if (point.Id == i)
+                        continue;
+                    var candidate = creatures[point.Id];
+                    if (candidate.Entity.IsPendingKill)
+                        continue;
+                    targets.Add(new SpikeTargetV4(
+                        point.Id,
+                        new System.Numerics.Vector2(candidate.X, candidate.Y),
+                        candidate.Energy,
+                        candidate.BodyRadius,
+                        candidate.Entity.IsPendingKill));
                 }
 
-                var shotDistance = maxHitDistance > 0f ? maxHitDistance : range;
-                var shotCost = Tuning.SpikeEnergyCost
-                    + (Tuning.SpikePerPelletCost * count)
-                    + (Tuning.SpikeEnergyPerUnit * shotDistance);
-                if (energy >= shotCost)
+                var plan = DemoSpikeActionCommand.Plan(new SpikePlanInputV4(
+                    i,
+                    new System.Numerics.Vector2(position.X, position.Y),
+                    heading,
+                    aimDrive,
+                    creature.SpikeRadius,
+                    creature.SpikeBattery,
+                    creature.SpikeCount,
+                    creature.SpikeSpread,
+                    creature.SpikeJitter,
+                    targets,
+                    rng));
+                if (energy >= plan.Cost)
                 {
-                    energy -= shotCost;
+                    energy -= plan.Cost;
                     spikeCooldown = Tuning.SpikeCooldownSeconds
-                        + (Tuning.SpikeCooldownPerExtraPellet * Math.Max(0, count - 1));
+                        + (Tuning.SpikeCooldownPerExtraPellet * Math.Max(0, plan.PelletCount - 1));
                     entity.SetData(DemoKeys.SpikeFlash, pondTime);
                     entity.SetData(DemoKeys.SpikeEndX, position.X);
                     entity.SetData(DemoKeys.SpikeEndY, position.Y);
-                    entity.SetData(DemoKeys.SpikeFan, string.Join(';', pelletEnds));
+                    entity.SetData(DemoKeys.SpikeFan, plan.Fan);
                     spikeAttacks++;
-                    for (var pellet = 0; pellet < count; pellet++)
+                    foreach (var targetIndex in plan.TargetIds)
                     {
-                        var targetIndex = pelletTargets[pellet];
                         if (targetIndex < 0)
                             continue;
                         var target = creatures[targetIndex];
