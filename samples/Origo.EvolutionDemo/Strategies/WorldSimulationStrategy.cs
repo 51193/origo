@@ -265,7 +265,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         controller.SetData(DemoKeys.FoodToughMeals, 0);
         controller.SetData(DemoKeys.FoodToxicMeals, 0);
         controller.SetData(DemoKeys.Phase, DemoKeys.PhaseStarting);
-        controller.SetData(DemoKeys.GenomeVersion, 4);
+        controller.SetData(DemoKeys.GenomeVersion, 5);
 
         var session = controller.OwningSession;
         ctx.Deferred.EnqueueBusinessDeferred(() =>
@@ -523,6 +523,44 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             ActionStateScratch.TurnSpeed = creature.TurnSpeed;
             ActionStateScratch.DeltaSeconds = tickDt;
             ActionStateScratch.MoveSpeedMultiplier = 1f;
+            ActionStateScratch.AimDrive = aimDrive;
+            ActionStateScratch.SpikeRange = creature.SpikeRadius;
+            ActionStateScratch.SpikeBattery = creature.SpikeBattery;
+            ActionStateScratch.SpikeCount = creature.SpikeCount;
+            ActionStateScratch.SpikeSpread = creature.SpikeSpread;
+            ActionStateScratch.SpikeJitter = creature.SpikeJitter;
+            ActionStateScratch.Random = rng;
+            ActionStateScratch.SpikePlan = null;
+            var spikeTargets = new List<SpikeTargetV4>();
+            var hasSpikePort = false;
+            foreach (var port in brainPhenotype.ActionPorts)
+            {
+                if (port != (ushort)ActionKindV4.Spike)
+                    continue;
+                hasSpikePort = true;
+                break;
+            }
+
+            if (hasSpikePort)
+            {
+                sensorGrid.Query(creature.X, creature.Y, creature.SpikeRadius, sensorGrid.Creatures, nearCreatures);
+                foreach (var point in nearCreatures)
+                {
+                    if (point.Id == i)
+                        continue;
+                    var candidate = creatures[point.Id];
+                    if (candidate.Entity.IsPendingKill)
+                        continue;
+                    spikeTargets.Add(new SpikeTargetV4(
+                        point.Id,
+                        new System.Numerics.Vector2(candidate.X, candidate.Y),
+                        candidate.Energy,
+                        candidate.BodyRadius,
+                        candidate.Entity.IsPendingKill));
+                }
+            }
+
+            ActionStateScratch.SpikeTargets = spikeTargets;
             DemoActionEffectRegistry.Apply(brainPhenotype, actionBuffer, ActionStateScratch);
             var heading = ActionStateScratch.Heading;
             var position = new NumericsVector2(ActionStateScratch.Position.X, ActionStateScratch.Position.Y);
@@ -582,77 +620,46 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             }
 
             var spikeCooldown = Math.Max(0f, creature.SpikeCooldown - tickDt);
-            if (spikeDrive >= Tuning.SpikeThreshold
-                && energy >= Tuning.SpikeEnergyCost
+            var shotPlan = ActionStateScratch.SpikePlan;
+            if (shotPlan is not null
+                && energy >= shotPlan.Cost
                 && spikeCooldown <= 0f)
             {
-                sensorGrid.Query(position.X, position.Y, creature.SpikeRadius, sensorGrid.Creatures, nearCreatures);
-                var targets = new List<SpikeTargetV4>(nearCreatures.Count);
-                foreach (var point in nearCreatures)
+                energy -= shotPlan.Cost;
+                spikeCooldown = Tuning.SpikeCooldownSeconds
+                    + (Tuning.SpikeCooldownPerExtraPellet * Math.Max(0, shotPlan.PelletCount - 1));
+                entity.SetData(DemoKeys.SpikeFlash, pondTime);
+                entity.SetData(DemoKeys.SpikeEndX, position.X);
+                entity.SetData(DemoKeys.SpikeEndY, position.Y);
+                entity.SetData(DemoKeys.SpikeFan, shotPlan.Fan);
+                spikeAttacks++;
+                foreach (var targetIndex in shotPlan.TargetIds)
                 {
-                    if (point.Id == i)
+                    if (targetIndex < 0)
                         continue;
-                    var candidate = creatures[point.Id];
-                    if (candidate.Entity.IsPendingKill)
-                        continue;
-                    targets.Add(new SpikeTargetV4(
-                        point.Id,
-                        new System.Numerics.Vector2(candidate.X, candidate.Y),
-                        candidate.Energy,
-                        candidate.BodyRadius,
-                        candidate.Entity.IsPendingKill));
-                }
+                    var target = creatures[targetIndex];
+                    var targetEnergy = MathF.Max(0f, target.Energy);
+                    var stolen = targetEnergy * Tuning.SpikeDrainFraction;
+                    energy = MathF.Min(energy + stolen, creature.MaxEnergy);
+                    target.Entity.SetData(DemoKeys.Energy, 0f);
+                    session.RequestKillEntity(target.Entity.Name);
+                    spikeHits++;
+                    spikeKills++;
+                    spikeDrained += stolen;
+                    entity.SetData(DemoKeys.Kills, ReadInt(entity, DemoKeys.Kills, 0) + 1);
 
-                var plan = DemoSpikeActionCommand.Plan(new SpikePlanInputV4(
-                    i,
-                    new System.Numerics.Vector2(position.X, position.Y),
-                    heading,
-                    aimDrive,
-                    creature.SpikeRadius,
-                    creature.SpikeBattery,
-                    creature.SpikeCount,
-                    creature.SpikeSpread,
-                    creature.SpikeJitter,
-                    targets,
-                    rng));
-                if (energy >= plan.Cost)
-                {
-                    energy -= plan.Cost;
-                    spikeCooldown = Tuning.SpikeCooldownSeconds
-                        + (Tuning.SpikeCooldownPerExtraPellet * Math.Max(0, plan.PelletCount - 1));
-                    entity.SetData(DemoKeys.SpikeFlash, pondTime);
-                    entity.SetData(DemoKeys.SpikeEndX, position.X);
-                    entity.SetData(DemoKeys.SpikeEndY, position.Y);
-                    entity.SetData(DemoKeys.SpikeFan, plan.Fan);
-                    spikeAttacks++;
-                    foreach (var targetIndex in plan.TargetIds)
+                    var corpsePosition = ClampToPond(
+                        new NumericsVector2(target.X, target.Y),
+                        Tuning.FoodPickupRadius);
+                    if (Tuning.DeathFoodCount > 0)
                     {
-                        if (targetIndex < 0)
-                            continue;
-                        var target = creatures[targetIndex];
-                        var targetEnergy = MathF.Max(0f, target.Energy);
-                        var stolen = targetEnergy * Tuning.SpikeDrainFraction;
-                        energy = MathF.Min(energy + stolen, creature.MaxEnergy);
-                        target.Entity.SetData(DemoKeys.Energy, 0f);
-                        session.RequestKillEntity(target.Entity.Name);
-                        spikeHits++;
-                        spikeKills++;
-                        spikeDrained += stolen;
-                        entity.SetData(DemoKeys.Kills, ReadInt(entity, DemoKeys.Kills, 0) + 1);
-
-                        var corpsePosition = ClampToPond(
-                            new NumericsVector2(target.X, target.Y),
-                            Tuning.FoodPickupRadius);
-                        if (Tuning.DeathFoodCount > 0)
-                        {
-                            mutations.Add(CreateCorpseMeta(
-                                CorpseName(nextCorpseId++),
-                                corpsePosition.X,
-                                corpsePosition.Y,
-                                Tuning.DeathFoodCount,
-                                Tuning.CarcassFoodIntervalSeconds));
-                            corpsesCreated++;
-                        }
+                        mutations.Add(CreateCorpseMeta(
+                            CorpseName(nextCorpseId++),
+                            corpsePosition.X,
+                            corpsePosition.Y,
+                            Tuning.DeathFoodCount,
+                            Tuning.CarcassFoodIntervalSeconds));
+                        corpsesCreated++;
                     }
                 }
             }

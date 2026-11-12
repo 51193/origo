@@ -493,7 +493,7 @@ public partial class DemoUi : CanvasLayer
         controller.SetData(DemoKeys.Speed, 1);
         controller.SetData(DemoKeys.Paused, false);
         controller.SetData(DemoKeys.Phase, DemoKeys.PhaseStarting);
-        controller.SetData(DemoKeys.GenomeVersion, 4);
+        controller.SetData(DemoKeys.GenomeVersion, 5);
         controller.SetData(DemoKeys.Initialized, false);
         controller.SetData(DemoKeys.Time, 0f);
         controller.SetData(DemoKeys.Tick, 0);
@@ -527,10 +527,10 @@ public partial class DemoUi : CanvasLayer
             return;
         }
 
-        if (ReadInt(controller, DemoKeys.GenomeVersion, 0) < 4)
+        if (ReadInt(controller, DemoKeys.GenomeVersion, 0) < 5)
         {
             controller.SetData(DemoKeys.Paused, true);
-            ShowToast("This save predates genome v4 and is not compatible.", true);
+            ShowToast("This save predates genome v5 and is not compatible.", true);
             ShowMainMenu();
             return;
         }

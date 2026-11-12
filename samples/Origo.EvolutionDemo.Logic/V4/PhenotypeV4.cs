@@ -311,13 +311,11 @@ public static class GenomeV4Compiler
         var ports = new List<ushort>();
         if (organs.Any(static organ => organ.Kind == OrganKindV4.Sprint))
             ports.Add((ushort)ActionKindV4.Sprint);
-        ports.Add((ushort)ActionKindV4.Move);
         ports.Add((ushort)ActionKindV4.Turn);
+        ports.Add((ushort)ActionKindV4.Aim);
+        ports.Add((ushort)ActionKindV4.Move);
         if (organs.Any(static organ => organ.Kind == OrganKindV4.SpikeOrgan))
-        {
             ports.Add((ushort)ActionKindV4.Spike);
-            ports.Add((ushort)ActionKindV4.Aim);
-        }
 
         return ports;
     }

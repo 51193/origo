@@ -74,7 +74,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   appearance/brain caches and read the full body phenotype only for the AI batch
   instead of every creature every tick. The legacy genome classes have been
   removed; the demo compiles Genome v4 directly into its runtime phenotype and
-  neural graph. Saves without genome-version 4 are rejected at load. The New Pond screen also has a scrollable Advanced Settings page backed by a
+  neural graph. Saves without genome-version 5 are rejected at load. The New Pond screen also has a scrollable Advanced Settings page backed by a
   central `DemoSettings` model: map/world, energy, reproduction, spike, feeding,
   every food-source parameter, and a new `evolution.overgrowth` SND strategy that
   consumes excess food in overfull regions to spawn a heavily mutated descendant.

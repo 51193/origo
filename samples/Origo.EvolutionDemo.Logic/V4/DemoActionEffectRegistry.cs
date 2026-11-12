@@ -13,6 +13,15 @@ public sealed class DemoActionEffectState
     public float TurnSpeed { get; set; }
     public float DeltaSeconds { get; set; }
     public float MoveSpeedMultiplier { get; set; } = 1f;
+    public float AimDrive { get; set; }
+    public float SpikeRange { get; set; }
+    public bool SpikeBattery { get; set; }
+    public int SpikeCount { get; set; }
+    public float SpikeSpread { get; set; }
+    public float SpikeJitter { get; set; }
+    public IReadOnlyList<SpikeTargetV4> SpikeTargets { get; set; } = [];
+    public Random? Random { get; set; }
+    public SpikePlanV4? SpikePlan { get; set; }
 }
 
 /// <summary>
@@ -37,8 +46,24 @@ public static class DemoActionEffectRegistry
         {
             state.Heading += value * state.TurnSpeed * state.DeltaSeconds;
         });
-        Register(ActionKindV4.Spike, static (_, _) => { });
-        Register(ActionKindV4.Aim, static (_, _) => { });
+        Register(ActionKindV4.Aim, static (state, value) => state.AimDrive = value);
+        Register(ActionKindV4.Spike, static (state, value) =>
+        {
+            if (value < Tuning.SpikeThreshold || state.Random is null)
+                return;
+            state.SpikePlan = DemoSpikeActionCommand.Plan(new SpikePlanInputV4(
+                -1,
+                state.Position,
+                state.Heading,
+                state.AimDrive,
+                state.SpikeRange,
+                state.SpikeBattery,
+                state.SpikeCount,
+                state.SpikeSpread,
+                state.SpikeJitter,
+                state.SpikeTargets,
+                state.Random));
+        });
         Register(ActionKindV4.Sprint, static (state, value) =>
         {
             if (value > 0.4f)
