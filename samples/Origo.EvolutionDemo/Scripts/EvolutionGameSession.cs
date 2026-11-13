@@ -19,6 +19,10 @@ public sealed class EvolutionGameSession
     public ISndContext Context { get; }
     public GameplayRuntime Runtime { get; }
 
+    /// <summary>
+    ///     Registers after the SND context is constructed. Frame-time strategies
+    ///     resolve the session lazily; bootstrap-time hooks must not require it.
+    /// </summary>
     public static void Register(EvolutionGameSession session)
     {
         ArgumentNullException.ThrowIfNull(session);

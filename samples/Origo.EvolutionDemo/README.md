@@ -133,7 +133,7 @@ not tint the entire view or draw a screen-filling arc.
 
 Gameplay content is registered through `GameplayContentRegistry` and applied
 through `GameplayRuntime`. Demo code obtains the runtime from the context-scoped
-`EvolutionGameSession`; the process-global runtime singleton has been removed. The runtime owns the current immutable content
+`EvolutionGameSession`; the runtime is no longer resolved through a process-global singleton. The runtime owns the current immutable content
 snapshot, progression state, unlock service, and mechanic resolver. The fixed tick is driven by
 `GameplayPipeline` with distinct systems per phase:
 
