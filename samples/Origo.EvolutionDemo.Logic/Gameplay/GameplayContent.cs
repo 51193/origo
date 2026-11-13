@@ -154,9 +154,11 @@ public sealed class GameplayContentRegistry
             foreach (var key in handler.RequiredNumericData)
             {
                 if (!variant.Data.TryGetValue(key, out var raw)
-                    || !double.TryParse(raw, NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out _))
+                    || !float.TryParse(raw, NumberStyles.Float,
+                        System.Globalization.CultureInfo.InvariantCulture, out var numeric)
+                    || !float.IsFinite(numeric))
                     throw new InvalidOperationException(
-                        $"Variant '{variant.Id}' handler '{handler.Id}' needs numeric data '{key}'.");
+                        $"Variant '{variant.Id}' handler '{handler.Id}' needs finite numeric data '{key}'.");
             }
         }
 

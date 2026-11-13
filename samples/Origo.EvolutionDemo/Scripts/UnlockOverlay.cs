@@ -115,6 +115,12 @@ public partial class UnlockOverlay : CanvasLayer
         column.AddChild(close);
     }
 
+    public override void _Process(double delta)
+    {
+        if (_panel.Visible)
+            Refresh();
+    }
+
     public override void _Input(InputEvent @event)
     {
         if (@event is not InputEventKey { Pressed: true, Echo: false } key)
@@ -160,7 +166,8 @@ public partial class UnlockOverlay : CanvasLayer
                 .OrderBy(static unlock => unlock.Id, StringComparer.Ordinal)
                 .Select(static unlock =>
                     $"{unlock.Id}:{unlock.Cost}:{unlock.Title}:{unlock.Category}:" +
-                    $"{string.Join(',', unlock.Prerequisites)}:{string.Join(',', unlock.Grants)}"));
+                    $"{string.Join(',', unlock.Prerequisites)}:{string.Join(',', unlock.Grants)}:" +
+                    $"{string.Join(',', unlock.RequiredMilestones)}"));
         if (string.Equals(fingerprint, _contentFingerprint, StringComparison.Ordinal)
             && _rows.GetChildCount() > 0)
         {

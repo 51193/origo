@@ -28,7 +28,7 @@ internal static class GameplayProfileStore
         {
             json = File.ReadAllText(Path);
         }
-        catch (IOException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             GD.PushWarning("Gameplay profile could not be read; using placeholder defaults.");
             return false;
@@ -54,7 +54,7 @@ internal static class GameplayProfileStore
             File.WriteAllText(temp, json);
             File.Move(temp, Path, overwrite: true);
         }
-        catch (IOException ex)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             GD.PushWarning($"Gameplay profile save failed: {ex.Message}");
         }
@@ -69,7 +69,7 @@ internal static class GameplayProfileStore
         {
             File.Move(Path, quarantine, overwrite: true);
         }
-        catch (IOException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             // A quarantined profile is a warning, not a second launch blocker.
         }

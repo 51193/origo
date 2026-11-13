@@ -180,6 +180,29 @@ public sealed class GameplayRuntime
         };
     }
 
+    /// <summary>Evaluates declarative milestones against world metrics.</summary>
+    public void EvaluateMilestones(double lifetimeSeconds, double population, double kills)
+    {
+        if (Content.Milestones.Count == 0)
+            return;
+        foreach (var milestone in Content.Milestones.Values)
+        {
+            if (Progression.CompletedMilestones.Contains(milestone.Id))
+                continue;
+            var value = milestone.EventKey switch
+            {
+                "lifetimeSeconds" => lifetimeSeconds,
+                "population" => population,
+                "kills" => kills,
+                _ => double.MinValue,
+            };
+            if (value < milestone.Threshold)
+                continue;
+            Progression.CompletedMilestones.Add(milestone.Id);
+            Progression.Points += milestone.RewardPoints;
+        }
+    }
+
     public static GameplayRuntime? Current { get; set; }
 
     public static GameplayRuntime EnsureCurrent() => Current ??= CreateDefault();

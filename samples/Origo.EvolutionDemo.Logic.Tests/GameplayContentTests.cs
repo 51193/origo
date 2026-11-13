@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Origo.EvolutionDemo.Logic.Gameplay;
 using Xunit;
@@ -40,6 +41,27 @@ public sealed class GameplayContentTests
         var (content, services) = host.Load();
         Assert.NotNull(content);
         Assert.Empty(services.Systems);
+    }
+
+    [Fact]
+    public void Registry_RejectsUnknownHandler()
+    {
+        var registry = new GameplayContentRegistry();
+        registry.AddUnlock(new UnlockDefinition("unlock.core", "core", "core", 0, [], [], []));
+        registry.AddVariant(new MechanicVariant("bad", "death.handler", "missing", null,
+            "unlock.core", [], 0, new Dictionary<string, string>()));
+        Assert.Throws<InvalidOperationException>(() => registry.BuildSnapshot());
+    }
+
+    [Fact]
+    public void Registry_RejectsMissingRequiredNumericData()
+    {
+        var registry = new GameplayContentRegistry();
+        registry.AddHandler(new GameplayHandlerDefinition("corpse", ["interval"]));
+        registry.AddUnlock(new UnlockDefinition("unlock.core", "core", "core", 0, [], [], []));
+        registry.AddVariant(new MechanicVariant("bad", "death.handler", "corpse", null,
+            "unlock.core", [], 0, new Dictionary<string, string>()));
+        Assert.Throws<InvalidOperationException>(() => registry.BuildSnapshot());
     }
 
     private static GameplayContentSnapshot BuildContent()

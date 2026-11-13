@@ -33,6 +33,30 @@ public sealed class GameplayRuntimeTests
     }
 
     [Fact]
+    public void Milestone_AwardsPlaceholderPointsOnce()
+    {
+        var runtime = GameplayRuntime.CreateDefault();
+        runtime.ApplyExternalPack("""
+        {
+          "schemaVersion": 1,
+          "content": [],
+          "unlocks": [],
+          "variants": [],
+          "milestones": [
+            { "id": "milestone.kills3", "eventKey": "kills", "threshold": 3,
+              "rewardPoints": 25, "grants": [] }
+          ]
+        }
+        """);
+        var before = runtime.Progression.Points;
+        runtime.EvaluateMilestones(0, 0, 3);
+        Assert.Equal(before + 25, runtime.Progression.Points);
+        Assert.Contains("milestone.kills3", runtime.Progression.CompletedMilestones);
+        runtime.EvaluateMilestones(0, 0, 10);
+        Assert.Equal(before + 25, runtime.Progression.Points);
+    }
+
+    [Fact]
     public void EnrichmentSpawn_IsOnlySelectedAfterUnlock()
     {
         var runtime = GameplayRuntime.CreateDefault();

@@ -763,9 +763,11 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     {
                         if (!deathVariant.Data.TryGetValue("interval", out var rawInterval)
                             || !float.TryParse(rawInterval, NumberStyles.Float,
-                                CultureInfo.InvariantCulture, out var interval))
+                                CultureInfo.InvariantCulture, out var interval)
+                            || !float.IsFinite(interval)
+                            || interval <= 0f)
                             throw new InvalidOperationException(
-                                $"Death variant '{deathVariant.Id}' needs a numeric interval.");
+                                $"Death variant '{deathVariant.Id}' needs a positive finite interval.");
                         mutations.Add(CreateCorpseMeta(
                             CorpseName(nextCorpseId++),
                             position.X,
@@ -889,7 +891,12 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         // no two sources scan or spawn on the same tick.
         FoodSourceStrategy.TickAll(controller, ctx, sensorGrid, foods.Count);
 
-        GameplayRuntime.EnsureCurrent().Progression.LifetimeSeconds += tickDt;
+        var gameplayRuntime = GameplayRuntime.EnsureCurrent();
+        gameplayRuntime.Progression.LifetimeSeconds += tickDt;
+        gameplayRuntime.EvaluateMilestones(
+            gameplayRuntime.Progression.LifetimeSeconds,
+            alive,
+            ReadInt(controller, DemoKeys.SpikeKills, 0) + spikeKills);
 
         if (alive == 0 && pendingChildren == 0 && ReadBool(controller, DemoKeys.Initialized, false))
             controller.SetData(DemoKeys.Phase, DemoKeys.PhaseExtinct);
