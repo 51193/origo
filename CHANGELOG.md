@@ -13,6 +13,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 ### Added
 
+- **Idle gameplay migration for the evolution demo** — gameplay content now
+  flows through an immutable content registry with a module host, phase-based
+  system pipeline, generic unlock service, and mutually exclusive mechanic
+  variants. JSON content packs under `samples/Origo.EvolutionDemo/Content` are
+  hot-reloaded at a frame boundary; invalid packs leave the active snapshot
+  untouched. The demo persists progression (placeholder Evolution Points,
+  unlocked ids, milestones, lifetime) on the world controller and rejects saves
+  older than version 6. A generic `U`-key unlock shop is generated from unlock
+  definitions. Founder and mutation generation filter genes, organs, actions,
+  and sensors through the same unlock gate; the death handler resolves one
+  variant from its mechanic group, and an unlockable enrichment-spawn variant
+  can create founders at food sources. Content reload is supported; C# handlers,
+  systems, and SND strategies remain startup-loaded.
 - **Playable evolution demo sample** — `samples/Origo.EvolutionDemo` is a
   runnable Godot idle sandbox with a genome/neural-network simulation, main
   menu, creature inspector, speed controls, feeding, autosave, and three manual

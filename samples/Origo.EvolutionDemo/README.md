@@ -129,6 +129,35 @@ production radius is shown only as a faint translucent wash; the wash is skipped
 once its screen-space radius exceeds 75% of the viewport height, so high zoom does
 not tint the entire view or draw a screen-filling arc.
 
+## Idle unlocks and content packs
+
+Gameplay content is registered through `GameplayContentRegistry` and applied
+through `GameplayRuntime`. The runtime owns the current immutable content
+snapshot, progression state, unlock service, mechanic resolver, and system
+pipeline. Content is always registered before it is gated, so locked and
+unlocked content share the same validation path.
+
+The controller persists progression as `game.points`, `game.unlocked`,
+`game.milestones`, and `game.lifetimeSeconds`. Save version 6 rejects older
+saves. Evolution Points currently start at a very large placeholder value; the
+unlock shop is functional, but economy balancing is intentionally deferred.
+
+Press `U` while a pond is running to open the generic unlock shop. Rows are
+generated from `UnlockDefinition` data, not from a hardcoded organ list. Buying
+an unlock writes the progression back to the controller immediately.
+
+JSON content packs live under `Content/` and are polled by
+`DemoContentWatcher`. A valid pack is merged into the built-in content at a
+frame boundary; invalid packs leave the running snapshot untouched. Content
+reload only; C# handlers, systems, and SND strategies remain startup-loaded.
+
+Mutually exclusive mechanics use `MechanicGroup` variants. The death handler
+selects exactly one variant for a death event; the default corpse-pulse variant
+preserves the existing behavior. `unlock.spawn.enrichment` enables the
+enrichment spawn variant, which can create a new founder at a food source. Gene,
+organ, action, and sensor availability is filtered through the same unlock gate
+before founders or mutations are generated.
+
 ## Genome: Genome v4 graph
 
 Each creature carries one canonical V4 genome. The genome is a list of
@@ -377,9 +406,13 @@ samples/Origo.EvolutionDemo/
   Origo/initial/levels/pond/    # controller entity scene
   Origo/demo/*.tscn             # controller/creature/food/food-source placeholder nodes
   GENOME_V4_DESIGN.md          # Genome v4 architecture baseline
+  Content/                      # hot-reloadable gameplay content packs
   Scripts/
     DemoEntry.cs                # OrigoDefaultEntry, paths, save metadata
+    DemoContentWatcher.cs       # content pack polling + atomic apply
     DemoUi.cs                   # main menu, HUD, inspector, pause/save/load
+    UnlockOverlay.cs            # generic U-key unlock shop
+    GameplayStateSync.cs        # progression persistence on the controller
     DemoSmokeRunner.cs          # optional headless acceptance runner
     EvolutionWorldView.cs       # pond/creature/food drawing
     EvolutionEntityFactory.cs   # shared creature/food spawn metadata
