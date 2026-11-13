@@ -142,8 +142,9 @@ The controller mirrors progression as `game.points`, `game.unlocked`,
 `game.milestones`, and `game.lifetimeSeconds` for save snapshots. A separate
 `user://gameplay_profile.json` is the authoritative meta-progression store: it
 survives New Game and application restarts by design, because idle unlocks are
-account-wide. Profile writes use a temp file plus atomic move; unreadable or
-corrupt profiles are quarantined and gameplay falls back to defaults. Save version 6 rejects older saves. Evolution Points currently start at a very large placeholder value; the
+account-wide. Profile writes use a temp file plus atomic move; unreadable
+profiles are warned and skipped, corrupt JSON is quarantined with a warning, and
+gameplay falls back to placeholder defaults. Save version 6 rejects older saves. Evolution Points currently start at a very large placeholder value; the
 unlock shop is functional, but economy balancing is intentionally deferred.
 
 Press `U` while a pond is running to open the generic unlock shop. Rows are
