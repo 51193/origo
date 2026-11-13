@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Origo.EvolutionDemo.Logic.V4;
 
 namespace Origo.EvolutionDemo.Logic.Gameplay;
 
@@ -29,6 +30,15 @@ public sealed class DefaultGameplayContentModule : IGameplayModule
         AddContent(content, "gene.action.spike", "action", "unlock.core");
         AddContent(content, "gene.action.aim", "action", "unlock.core");
         AddContent(content, "gene.action.sprint", "action", "unlock.core");
+        AddContent(content, "gene.sensor.food_ahead", "sensor", "unlock.core");
+        AddContent(content, "gene.sensor.food_left", "sensor", "unlock.core");
+        AddContent(content, "gene.sensor.food_right", "sensor", "unlock.core");
+        AddContent(content, "gene.sensor.wall_ahead", "sensor", "unlock.core");
+        AddContent(content, "gene.sensor.energy", "sensor", "unlock.core");
+        AddContent(content, "gene.sensor.creature_ahead", "sensor", "unlock.core");
+        AddContent(content, "gene.sensor.corpse_ahead", "sensor", "unlock.core");
+        AddContent(content, "gene.sensor.sin", "sensor", "unlock.core");
+        AddContent(content, "gene.sensor.cos", "sensor", "unlock.core");
         AddContent(content, "mechanic.death.instant_food", "mechanic", "unlock.core");
         AddContent(content, "mechanic.death.corpse_pulse", "mechanic", "unlock.core");
         AddContent(content, "mechanic.spawn.base", "mechanic", "unlock.core");
@@ -70,6 +80,7 @@ public sealed class GameplayRuntime
         Progression = progression;
         Unlocks = new UnlockService(content, progression);
         Resolver = new MechanicResolver(content, Unlocks);
+        ConfigureGenomeGate();
         Modules = modules;
         Pipeline = pipeline;
         Progression.UnlockedIds.Add("unlock.core");
@@ -97,6 +108,7 @@ public sealed class GameplayRuntime
         Content = registry.BuildSnapshot();
         Unlocks = new UnlockService(Content, Progression);
         Resolver = new MechanicResolver(Content, Unlocks);
+        ConfigureGenomeGate();
     }
 
     /// <summary>Applies an external JSON pack while retaining core content and progression.</summary>
@@ -120,6 +132,7 @@ public sealed class GameplayRuntime
         Content = registry.BuildSnapshot();
         Unlocks = new UnlockService(Content, Progression);
         Resolver = new MechanicResolver(Content, Unlocks);
+        ConfigureGenomeGate();
     }
 
     public static GameplayRuntime CreateDefault()
@@ -133,6 +146,25 @@ public sealed class GameplayRuntime
     }
 
     /// <summary>Demo-scoped runtime; replaced by a scoped host during later migration.</summary>
+    private void ConfigureGenomeGate()
+    {
+        GenomeContentGate.OrganFilter = organ =>
+        {
+            var id = GameplayContentIds.ForOrgan(organ);
+            return id is null || Unlocks.IsContentAvailable(id);
+        };
+        GenomeContentGate.ActionFilter = action =>
+        {
+            var id = GameplayContentIds.ForAction(action);
+            return id is null || Unlocks.IsContentAvailable(id);
+        };
+        GenomeContentGate.SensorFilter = sensor =>
+        {
+            var id = GameplayContentIds.ForSensor(sensor);
+            return id is null || Unlocks.IsContentAvailable(id);
+        };
+    }
+
     public static GameplayRuntime? Current { get; set; }
 
     public static GameplayRuntime EnsureCurrent() => Current ??= CreateDefault();

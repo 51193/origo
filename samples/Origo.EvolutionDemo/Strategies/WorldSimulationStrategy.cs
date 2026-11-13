@@ -51,6 +51,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
     {
         ArgumentNullException.ThrowIfNull(entity);
         EnsureDefaults(entity);
+        GameplayStateSync.Load(entity, GameplayRuntime.EnsureCurrent());
     }
 
     /// <inheritdoc/>
@@ -266,7 +267,9 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         controller.SetData(DemoKeys.FoodToughMeals, 0);
         controller.SetData(DemoKeys.FoodToxicMeals, 0);
         controller.SetData(DemoKeys.Phase, DemoKeys.PhaseStarting);
-        controller.SetData(DemoKeys.GenomeVersion, 5);
+        controller.SetData(DemoKeys.GenomeVersion, 6);
+        var gameplay = GameplayRuntime.EnsureCurrent();
+        GameplayStateSync.Save(controller, gameplay);
 
         var session = controller.OwningSession;
         ctx.Deferred.EnqueueBusinessDeferred(() =>

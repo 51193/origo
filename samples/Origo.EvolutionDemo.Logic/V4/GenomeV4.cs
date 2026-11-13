@@ -627,10 +627,25 @@ public static class GenomeV4Mutator
             1 => NeuronKindV4.Interneuron,
             _ => NeuronKindV4.Output,
         };
+        var sensorCandidates = new[]
+        {
+            SensorKindV4.FoodAhead, SensorKindV4.FoodLeft, SensorKindV4.FoodRight,
+            SensorKindV4.WallAhead, SensorKindV4.Energy, SensorKindV4.CreatureAhead,
+            SensorKindV4.CorpseAhead, SensorKindV4.Sin, SensorKindV4.Cos,
+        }.Where(GenomeContentGate.IsSensorAllowed).ToArray();
+        var actionCandidates = new[]
+        {
+            ActionKindV4.Move, ActionKindV4.Turn, ActionKindV4.Spike,
+            ActionKindV4.Aim, ActionKindV4.Sprint,
+        }.Where(GenomeContentGate.IsActionAllowed).ToArray();
+        if (kind == NeuronKindV4.Sensor && sensorCandidates.Length == 0)
+            return;
+        if (kind == NeuronKindV4.Output && actionCandidates.Length == 0)
+            return;
         var interfaceId = kind switch
         {
-            NeuronKindV4.Sensor => (ushort)(1 + random.Next(7)),
-            NeuronKindV4.Output => (ushort)(1 + random.Next(4)),
+            NeuronKindV4.Sensor => (ushort)sensorCandidates[random.Next(sensorCandidates.Length)],
+            NeuronKindV4.Output => (ushort)actionCandidates[random.Next(actionCandidates.Length)],
             _ => (ushort)0,
         };
         AddGene(genome, GeneKind.Neuron, GenePayloadV4.Neuron(
@@ -655,16 +670,37 @@ public static class GenomeV4Mutator
 
     private static void AddReflex(GenomeV4 genome, Random random)
     {
+        var sensors = new[]
+        {
+            SensorKindV4.FoodAhead, SensorKindV4.FoodLeft, SensorKindV4.FoodRight,
+            SensorKindV4.WallAhead, SensorKindV4.Energy, SensorKindV4.CreatureAhead,
+            SensorKindV4.CorpseAhead, SensorKindV4.Sin, SensorKindV4.Cos,
+        }.Where(GenomeContentGate.IsSensorAllowed).ToArray();
+        var actions = new[]
+        {
+            ActionKindV4.Move, ActionKindV4.Turn, ActionKindV4.Spike,
+            ActionKindV4.Aim, ActionKindV4.Sprint,
+        }.Where(GenomeContentGate.IsActionAllowed).ToArray();
+        if (sensors.Length == 0 || actions.Length == 0)
+            return;
         AddGene(genome, GeneKind.Reflex, GenePayloadV4.Reflex(
-            (SensorKindV4)(1 + random.Next(7)),
-            (ActionKindV4)(1 + random.Next(4)),
+            sensors[random.Next(sensors.Length)],
+            actions[random.Next(actions.Length)],
             (float)((random.NextDouble() * 2d) - 1d)));
     }
 
     private static void AddOrgan(GenomeV4 genome, Random random)
     {
+        var allowed = new[]
+        {
+            OrganKindV4.Vision, OrganKindV4.SpikeOrgan, OrganKindV4.SpikeBattery,
+            OrganKindV4.HardDigest, OrganKindV4.ToxinResistance, OrganKindV4.Rhythm,
+            OrganKindV4.CreatureSense, OrganKindV4.CarrionSense, OrganKindV4.Sprint,
+        }.Where(GenomeContentGate.IsOrganAllowed).ToArray();
+        if (allowed.Length == 0)
+            return;
         AddGene(genome, GeneKind.Organ, GenePayloadV4.Organ(
-            (OrganKindV4)(1 + random.Next(6)),
+            allowed[random.Next(allowed.Length)],
             (float)(0.5d + random.NextDouble())));
     }
 

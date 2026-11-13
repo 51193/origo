@@ -196,60 +196,64 @@ public static class GenomeV4Factory
         Add(GeneKind.LifeHistory, GenePayloadV4.LifeHistory(LifeTraitKindV4.MaxAge,
             180f + ((float)random.NextDouble() * 220f)));
 
-        Add(GeneKind.Organ, GenePayloadV4.Organ(OrganKindV4.Vision, 0.5f));
-        Add(GeneKind.Organ, GenePayloadV4.Organ(OrganKindV4.SpikeOrgan, 0.8f));
-        if (random.NextDouble() < 0.5)
-            Add(GeneKind.Organ, GenePayloadV4.Organ(OrganKindV4.SpikeBattery, 1f),
-                (byte)(2 + random.Next(3)));
-        if (random.NextDouble() < 0.7)
-            Add(GeneKind.Organ, GenePayloadV4.Organ(OrganKindV4.HardDigest, 1f));
-        if (random.NextDouble() < 0.35)
-            Add(GeneKind.Organ, GenePayloadV4.Organ(OrganKindV4.ToxinResistance, 1f));
-        if (random.NextDouble() < 0.5)
-            Add(GeneKind.Organ, GenePayloadV4.Organ(OrganKindV4.Rhythm, 0.5f));
-        if (random.NextDouble() < 0.5)
-            Add(GeneKind.Organ, GenePayloadV4.Organ(OrganKindV4.CreatureSense, 0.5f));
-        if (random.NextDouble() < 0.5)
-            Add(GeneKind.Organ, GenePayloadV4.Organ(OrganKindV4.CarrionSense, 0.5f));
-        if (random.NextDouble() < 0.5)
-            Add(GeneKind.Organ, GenePayloadV4.Organ(OrganKindV4.Sprint, 0.5f));
+        void AddOrganIfAllowed(OrganKindV4 kind, float size, double chance = 1d, byte copies = 1)
+        {
+            if (GenomeContentGate.IsOrganAllowed(kind) && random.NextDouble() < chance)
+                Add(GeneKind.Organ, GenePayloadV4.Organ(kind, size), copies);
+        }
 
-        // Sensor and output interface nodes.
-        List<uint> sensorIds = [];
-        sensorIds.Add(Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Sensor,
-            (ushort)SensorKindV4.FoodAhead, ActivationKindV4.Linear, 0f)));
-        sensorIds.Add(Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Sensor,
-            (ushort)SensorKindV4.FoodLeft, ActivationKindV4.Linear, 0f)));
-        sensorIds.Add(Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Sensor,
-            (ushort)SensorKindV4.FoodRight, ActivationKindV4.Linear, 0f)));
-        sensorIds.Add(Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Sensor,
-            (ushort)SensorKindV4.WallAhead, ActivationKindV4.Linear, 0f)));
-        sensorIds.Add(Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Sensor,
-            (ushort)SensorKindV4.CreatureAhead, ActivationKindV4.Linear, 0f)));
-        sensorIds.Add(Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Sensor,
-            (ushort)SensorKindV4.Energy, ActivationKindV4.Linear, 0f)));
-        sensorIds.Add(Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Sensor,
-            (ushort)SensorKindV4.Sin, ActivationKindV4.Linear, 0f)));
-        sensorIds.Add(Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Sensor,
-            (ushort)SensorKindV4.Cos, ActivationKindV4.Linear, 0f)));
-        sensorIds.Add(Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Sensor,
-            (ushort)SensorKindV4.CorpseAhead, ActivationKindV4.Linear, 0f)));
-        var outputMove = Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Output,
-            (ushort)ActionKindV4.Move, ActivationKindV4.Tanh, 0f));
-        var outputTurn = Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Output,
-            (ushort)ActionKindV4.Turn, ActivationKindV4.Tanh, 0f));
-        var outputSpike = Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Output,
-            (ushort)ActionKindV4.Spike, ActivationKindV4.Tanh, -0.5f));
-        var outputAim = Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Output,
-            (ushort)ActionKindV4.Aim, ActivationKindV4.Tanh, 0f));
-        var outputSprint = Add(GeneKind.Neuron, GenePayloadV4.Neuron(NeuronKindV4.Output,
-            (ushort)ActionKindV4.Sprint, ActivationKindV4.Tanh, 0.5f));
+        AddOrganIfAllowed(OrganKindV4.Vision, 0.5f);
+        AddOrganIfAllowed(OrganKindV4.SpikeOrgan, 0.8f);
+        AddOrganIfAllowed(OrganKindV4.SpikeBattery, 1f, 0.5d, (byte)(2 + random.Next(3)));
+        AddOrganIfAllowed(OrganKindV4.HardDigest, 1f, 0.7d);
+        AddOrganIfAllowed(OrganKindV4.ToxinResistance, 1f, 0.35d);
+        AddOrganIfAllowed(OrganKindV4.Rhythm, 0.5f, 0.5d);
+        AddOrganIfAllowed(OrganKindV4.CreatureSense, 0.5f, 0.5d);
+        AddOrganIfAllowed(OrganKindV4.CarrionSense, 0.5f, 0.5d);
+        AddOrganIfAllowed(OrganKindV4.Sprint, 0.5f, 0.5d);
 
-        // Direct reflexes provide reasonable founder behavior.
-        Add(GeneKind.Reflex, GenePayloadV4.Reflex(SensorKindV4.FoodAhead, ActionKindV4.Move, 0.8f));
-        Add(GeneKind.Reflex, GenePayloadV4.Reflex(SensorKindV4.FoodLeft, ActionKindV4.Turn, -0.7f));
-        Add(GeneKind.Reflex, GenePayloadV4.Reflex(SensorKindV4.FoodRight, ActionKindV4.Turn, 0.7f));
-        Add(GeneKind.Reflex, GenePayloadV4.Reflex(SensorKindV4.CreatureAhead, ActionKindV4.Spike, 1.0f));
+        var sensorIds = new List<uint>();
+        void AddSensorIfAllowed(SensorKindV4 sensor)
+        {
+            if (GenomeContentGate.IsSensorAllowed(sensor))
+                sensorIds.Add(Add(GeneKind.Neuron, GenePayloadV4.Neuron(
+                    NeuronKindV4.Sensor, (ushort)sensor, ActivationKindV4.Linear, 0f)));
+        }
+
+        AddSensorIfAllowed(SensorKindV4.FoodAhead);
+        AddSensorIfAllowed(SensorKindV4.FoodLeft);
+        AddSensorIfAllowed(SensorKindV4.FoodRight);
+        AddSensorIfAllowed(SensorKindV4.WallAhead);
+        AddSensorIfAllowed(SensorKindV4.CreatureAhead);
+        AddSensorIfAllowed(SensorKindV4.Energy);
+        AddSensorIfAllowed(SensorKindV4.Sin);
+        AddSensorIfAllowed(SensorKindV4.Cos);
+        AddSensorIfAllowed(SensorKindV4.CorpseAhead);
+
+        var outputIds = new List<uint>();
+        void AddOutputIfAllowed(ActionKindV4 action, float bias)
+        {
+            if (GenomeContentGate.IsActionAllowed(action))
+                outputIds.Add(Add(GeneKind.Neuron, GenePayloadV4.Neuron(
+                    NeuronKindV4.Output, (ushort)action, ActivationKindV4.Tanh, bias)));
+        }
+
+        AddOutputIfAllowed(ActionKindV4.Move, 0f);
+        AddOutputIfAllowed(ActionKindV4.Turn, 0f);
+        AddOutputIfAllowed(ActionKindV4.Spike, -0.5f);
+        AddOutputIfAllowed(ActionKindV4.Aim, 0f);
+        AddOutputIfAllowed(ActionKindV4.Sprint, 0.5f);
+
+        void AddReflexIfAllowed(SensorKindV4 sensor, ActionKindV4 action, float gain)
+        {
+            if (GenomeContentGate.IsSensorAllowed(sensor) && GenomeContentGate.IsActionAllowed(action))
+                Add(GeneKind.Reflex, GenePayloadV4.Reflex(sensor, action, gain));
+        }
+
+        AddReflexIfAllowed(SensorKindV4.FoodAhead, ActionKindV4.Move, 0.8f);
+        AddReflexIfAllowed(SensorKindV4.FoodLeft, ActionKindV4.Turn, -0.7f);
+        AddReflexIfAllowed(SensorKindV4.FoodRight, ActionKindV4.Turn, 0.7f);
+        AddReflexIfAllowed(SensorKindV4.CreatureAhead, ActionKindV4.Spike, 1.0f);
 
         // A small hidden layer gives mutation room without imposing the old
         // fixed three-layer topology.
@@ -263,7 +267,9 @@ public static class GenomeV4Factory
         }
 
         var sensorGeneIds = sensorIds.ToArray();
-        var outputGeneIds = new[] { outputMove, outputTurn, outputSpike, outputAim, outputSprint };
+        var outputGeneIds = outputIds.ToArray();
+        if (sensorGeneIds.Length == 0 || outputGeneIds.Length == 0)
+            return new GenomeV4(genes, next);
         foreach (var hiddenId in hidden)
         {
             Add(GeneKind.Synapse, GenePayloadV4.Synapse(

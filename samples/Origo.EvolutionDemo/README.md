@@ -154,7 +154,7 @@ stable-ID genes, not a fixed codon table:
   maintenance. Cheap reflex creatures and expensive large-brain creatures can
   coexist.
 
-The controller stores `evo.genomeVersion = 5`. Older saves are intentionally
+The controller stores `evo.genomeVersion = 6`. Older saves are intentionally
 not migrated; the Load panel rejects them with an explicit message. Genome
 serialization is a canonical binary codec with a hex representation for SND
 entities and debugging.

@@ -51,6 +51,10 @@ internal static class DemoKeys
 
     public const string BodyGenome = "evo.bodyGenome";
     public const string GenomeVersion = "evo.genomeVersion";
+    public const string GameplayPoints = "game.points";
+    public const string GameplayUnlocked = "game.unlocked";
+    public const string GameplayMilestones = "game.milestones";
+    public const string GameplayLifetimeSeconds = "game.lifetimeSeconds";
     public const string BodyRadius = "evo.bodyRadius";
     public const string FoodPickupRadius = "evo.foodPickupRadius";
     public const string MaxEnergy = "evo.maxEnergy";

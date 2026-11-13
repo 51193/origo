@@ -45,6 +45,7 @@ public partial class DemoEntry : OrigoDefaultEntry
         AddChild(WorldView);
         Ui = new DemoUi(this);
         AddChild(Ui);
+        AddChild(new UnlockOverlay(this));
         AddChild(new DemoContentWatcher());
         if (string.Equals(OS.GetEnvironment("ORIGO_DEMO_SMOKE"), "1", StringComparison.Ordinal))
             AddChild(new DemoSmokeRunner(this));

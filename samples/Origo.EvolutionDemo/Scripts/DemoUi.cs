@@ -8,6 +8,7 @@ using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Save.Meta;
 using Origo.Core.Snd;
 using Origo.EvolutionDemo.Logic;
+using Origo.EvolutionDemo.Logic.Gameplay;
 using Origo.EvolutionDemo.Logic.V4;
 
 namespace Origo.EvolutionDemo;
@@ -263,6 +264,17 @@ public partial class DemoUi : CanvasLayer
         ShowMainMenu();
     }
 
+    /// <summary>Current pond controller for gameplay services.</summary>
+    public ISndEntity? GameplayController => FindController();
+
+    /// <summary>Persists the current progression state after a UI unlock.</summary>
+    public void PersistGameplayProgression()
+    {
+        var controller = FindController();
+        if (controller is not null)
+            GameplayStateSync.Save(controller, GameplayRuntime.EnsureCurrent());
+    }
+
     /// <summary>
     ///     Resolves and caches the pond controller. The linear name scan runs
     ///     again only after the foreground session changes or the entity is gone.
@@ -493,7 +505,7 @@ public partial class DemoUi : CanvasLayer
         controller.SetData(DemoKeys.Speed, 1);
         controller.SetData(DemoKeys.Paused, false);
         controller.SetData(DemoKeys.Phase, DemoKeys.PhaseStarting);
-        controller.SetData(DemoKeys.GenomeVersion, 5);
+        controller.SetData(DemoKeys.GenomeVersion, 6);
         controller.SetData(DemoKeys.Initialized, false);
         controller.SetData(DemoKeys.Time, 0f);
         controller.SetData(DemoKeys.Tick, 0);
@@ -527,10 +539,10 @@ public partial class DemoUi : CanvasLayer
             return;
         }
 
-        if (ReadInt(controller, DemoKeys.GenomeVersion, 0) < 5)
+        if (ReadInt(controller, DemoKeys.GenomeVersion, 0) < 6)
         {
             controller.SetData(DemoKeys.Paused, true);
-            ShowToast("This save predates genome v5 and is not compatible.", true);
+            ShowToast("This save predates genome v6 and is not compatible.", true);
             ShowMainMenu();
             return;
         }
@@ -1052,7 +1064,8 @@ public partial class DemoUi : CanvasLayer
         return string.Join(" ", groups);
     }
 
-    private void ShowToast(string message, bool error = false)
+    /// <summary>Shows a transient HUD toast.</summary>
+    public void ShowToast(string message, bool error = false)
     {
         _toastLabel.Text = message;
         _toastLabel.AddThemeColorOverride("font_color", error ? new Color(1f, 0.55f, 0.5f) : AccentColor);
@@ -1335,7 +1348,7 @@ public partial class DemoUi : CanvasLayer
 
         _hintLabel = new Label
         {
-            Text = "Wheel zoom · right-drag pan · R reset view · click a creature to inspect.",
+            Text = "Wheel zoom · right-drag pan · R reset view · click a creature to inspect · U unlocks.",
             HorizontalAlignment = HorizontalAlignment.Center,
             MouseFilter = Control.MouseFilterEnum.Ignore,
         };
