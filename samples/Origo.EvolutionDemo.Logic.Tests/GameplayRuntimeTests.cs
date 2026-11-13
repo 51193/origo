@@ -57,6 +57,27 @@ public sealed class GameplayRuntimeTests
     }
 
     [Fact]
+    public void Milestone_CanGrantUnlock()
+    {
+        var runtime = GameplayRuntime.CreateDefault();
+        Assert.False(runtime.Unlocks.IsUnlocked("unlock.spawn.enrichment"));
+        runtime.ApplyExternalPack("""
+        {
+          "schemaVersion": 1,
+          "content": [],
+          "unlocks": [],
+          "variants": [],
+          "milestones": [
+            { "id": "milestone.reward", "eventKey": "lifetimeSeconds", "threshold": 1,
+              "rewardPoints": 0, "grants": [], "unlockGrants": ["unlock.spawn.enrichment"] }
+          ]
+        }
+        """);
+        runtime.EvaluateMilestones(1, 0, 0);
+        Assert.True(runtime.Unlocks.IsUnlocked("unlock.spawn.enrichment"));
+    }
+
+    [Fact]
     public void EnrichmentSpawn_IsOnlySelectedAfterUnlock()
     {
         var runtime = GameplayRuntime.CreateDefault();

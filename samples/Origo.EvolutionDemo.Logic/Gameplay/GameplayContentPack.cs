@@ -49,6 +49,7 @@ public static class GameplayContentPackLoader
             Milestones = pack.Milestones?.Select(static milestone => milestone with
             {
                 Grants = milestone.Grants ?? [],
+                UnlockGrants = milestone.UnlockGrants ?? [],
             }).ToArray() ?? [],
         };
     }
@@ -93,6 +94,7 @@ public static class GameplayContentPackLoader
     private static MilestoneDefinition Normalize(MilestoneDefinition milestone) => milestone with
     {
         Grants = milestone.Grants ?? [],
+        UnlockGrants = milestone.UnlockGrants ?? [],
     };
 
     private static void Validate(GameplayContentPack pack)

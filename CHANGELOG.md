@@ -15,8 +15,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **Idle gameplay migration for the evolution demo** — gameplay content now
   flows through an immutable content registry with a module host, generic unlock
-  service, and mutually exclusive mechanic variants; the phase pipeline is the
-  module-system extension surface. JSON content packs under `samples/Origo.EvolutionDemo/Content` are
+  service, and mutually exclusive mechanic variants. The fixed tick is driven by
+  a phase pipeline whose core, food-source, and progression systems execute in
+  order; modules can append systems. JSON content packs under `samples/Origo.EvolutionDemo/Content` are
   hot-reloaded at a frame boundary; invalid packs leave the active snapshot
   untouched. The demo persists progression (placeholder Evolution Points,
   unlocked ids, milestones, lifetime) on the world controller and rejects saves

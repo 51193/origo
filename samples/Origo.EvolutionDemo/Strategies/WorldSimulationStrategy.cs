@@ -280,6 +280,16 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
 
     private static void SimulateTick(ISndEntity controller, ISndContext ctx)
     {
+        GameplayRuntime.EnsureCurrent().Pipeline.Tick(
+            new EvolutionTickContext(controller, ctx, Tuning.SimulationTickSeconds),
+            static _ => true);
+    }
+
+    /// <summary>Runs the core simulation system for one fixed tick.</summary>
+    internal static void RunCoreSimulation(EvolutionTickContext world)
+    {
+        var controller = world.Controller;
+        var ctx = world.SndContext;
         var session = controller.OwningSession;
         var entities = session.GetEntities();
         var creatures = CreatureScratch;
@@ -883,20 +893,10 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         controller.SetData(DemoKeys.SpikeHits, ReadInt(controller, DemoKeys.SpikeHits, 0) + spikeHits);
         controller.SetData(DemoKeys.SpikeDrained, ReadFloat(controller, DemoKeys.SpikeDrained, 0f) + spikeDrained);
 
-        // Food sources are tick-driven, not render-frame driven: run them once
-        // per fixed simulation step so walk/scan/spawn clocks are reproducible
-        // at every speed and during timed iteration. They reuse this tick's
-        // spatial grid and the snapshot food count instead of rescanning the
-        // whole session; the sources' scan/spawn clocks are phase-staggered so
-        // no two sources scan or spawn on the same tick.
-        FoodSourceStrategy.TickAll(controller, ctx, sensorGrid, foods.Count);
-
-        var gameplayRuntime = GameplayRuntime.EnsureCurrent();
-        gameplayRuntime.Progression.LifetimeSeconds += tickDt;
-        gameplayRuntime.EvaluateMilestones(
-            gameplayRuntime.Progression.LifetimeSeconds,
-            alive,
-            ReadInt(controller, DemoKeys.SpikeKills, 0));
+        world.SensorGrid = sensorGrid;
+        world.FoodCount = foods.Count;
+        world.Alive = alive;
+        world.SpikeKillsTotal = ReadInt(controller, DemoKeys.SpikeKills, 0);
 
         if (alive == 0 && pendingChildren == 0 && ReadBool(controller, DemoKeys.Initialized, false))
             controller.SetData(DemoKeys.Phase, DemoKeys.PhaseExtinct);

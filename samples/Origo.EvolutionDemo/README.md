@@ -133,9 +133,12 @@ not tint the entire view or draw a screen-filling arc.
 
 Gameplay content is registered through `GameplayContentRegistry` and applied
 through `GameplayRuntime`. The runtime owns the current immutable content
-snapshot, progression state, unlock service, and mechanic resolver; the phase
-pipeline is the extension surface for module systems. Milestone definitions are
-evaluated against lifetime, population, and kill metrics each simulation tick. Content is always registered before it is gated, so locked and
+snapshot, progression state, unlock service, and mechanic resolver. The fixed
+tick is driven by `GameplayPipeline`: core creature simulation, food-source
+environment, and progression run as ordered systems, and modules can append
+systems through `GameplayModuleServices`. Milestone definitions are evaluated
+against lifetime, population, and kill metrics each simulation tick and may
+award points and unlock ids. Content is always registered before it is gated, so locked and
 unlocked content share the same validation path.
 
 The controller mirrors progression as `game.points`, `game.unlocked`,

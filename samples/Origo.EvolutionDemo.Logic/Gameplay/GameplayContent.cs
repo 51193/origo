@@ -41,7 +41,8 @@ public sealed record MilestoneDefinition(
     string EventKey,
     double Threshold,
     long RewardPoints,
-    IReadOnlyList<string> Grants);
+    IReadOnlyList<string> Grants,
+    IReadOnlyList<string>? UnlockGrants = null);
 
 /// <summary>Immutable gameplay content snapshot applied atomically at a tick boundary.</summary>
 public sealed class GameplayContentSnapshot(
@@ -193,9 +194,15 @@ public sealed class GameplayContentRegistry
         }
 
         foreach (var milestone in _milestones.Values)
+        {
             foreach (var grant in milestone.Grants)
                 if (!_content.ContainsKey(grant))
                     throw new InvalidOperationException(
                         $"Milestone '{milestone.Id}' references missing grant '{grant}'.");
+            foreach (var grant in milestone.UnlockGrants ?? [])
+                if (!_unlocks.ContainsKey(grant))
+                    throw new InvalidOperationException(
+                        $"Milestone '{milestone.Id}' references missing unlock '{grant}'.");
+        }
     }
 }

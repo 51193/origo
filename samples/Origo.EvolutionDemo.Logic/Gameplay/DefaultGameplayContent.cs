@@ -200,6 +200,8 @@ public sealed class GameplayRuntime
                 continue;
             Progression.CompletedMilestones.Add(milestone.Id);
             Progression.Points += milestone.RewardPoints;
+            foreach (var unlock in milestone.UnlockGrants ?? [])
+                Progression.UnlockedIds.Add(unlock);
         }
     }
 

@@ -33,6 +33,7 @@ public partial class DemoEntry : OrigoDefaultEntry
     {
         GameplayRuntime.Current = GameplayRuntime.CreateDefault();
         GameplayProfileStore.TryLoad(GameplayRuntime.Current);
+        DemoGameplaySystems.Register(GameplayRuntime.Current);
         ConfigPath = "res://Origo/entry/entry.json";
         SceneAliasMapPath = "res://Origo/maps/scene_aliases.map";
         SndTemplateMapPath = "res://Origo/maps/snd_templates.map";

@@ -426,6 +426,7 @@ public partial class DemoUi : CanvasLayer
             {
                 _autoSaveTimer = 0d;
                 PersistRealSeconds();
+                PersistGameplayProgression();
                 _pendingSaveSlot = DemoEntry.AutoSaveId;
                 _pending = PendingWork.SaveAfterRequest;
                 _busy = true;
@@ -742,6 +743,7 @@ public partial class DemoUi : CanvasLayer
             return;
         SetGamePaused(true);
         PersistRealSeconds();
+        PersistGameplayProgression();
         _pendingSaveSlot = saveId;
         _pending = PendingWork.SaveAfterRequest;
         _busy = true;
@@ -2146,6 +2148,7 @@ public partial class DemoUi : CanvasLayer
         }
 
         _hudRefreshTimer = 0;
+        PersistGameplayProgression();
         UpdateHud();
     }
 
