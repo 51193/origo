@@ -42,10 +42,14 @@ public sealed class DefaultGameplayContentModule : IGameplayModule
         AddContent(content, "mechanic.death.instant_food", "mechanic", "unlock.core");
         AddContent(content, "mechanic.death.corpse_pulse", "mechanic", "unlock.core");
         AddContent(content, "mechanic.spawn.base", "mechanic", "unlock.core");
+        AddContent(content, "mechanic.spawn.enrichment", "mechanic", "unlock.spawn.enrichment");
 
         content.AddUnlock(new UnlockDefinition(
             "unlock.core", "Core evolution", "core", 0, [], [],
             []));
+        content.AddUnlock(new UnlockDefinition(
+            "unlock.spawn.enrichment", "Enrichment spawning", "mechanics", 5_000,
+            ["unlock.core"], ["mechanic.spawn.enrichment"], []));
 
         content.AddVariant(new MechanicVariant(
             "death.instant_food", "death.handler", "instant_food", null,
@@ -60,6 +64,12 @@ public sealed class DefaultGameplayContentModule : IGameplayModule
         content.AddVariant(new MechanicVariant(
             "spawn.base", "spawn.policy", "base_spawn", null,
             "unlock.core", [], 0, new Dictionary<string, string>()));
+        content.AddVariant(new MechanicVariant(
+            "spawn.enrichment", "spawn.policy", "food_enrichment_spawn", null,
+            "unlock.spawn.enrichment", [], 20, new Dictionary<string, string>
+            {
+                ["chance"] = "0.08",
+            }));
     }
 
     private static void AddContent(GameplayContentRegistry content, string id, string kind, string unlockId) =>

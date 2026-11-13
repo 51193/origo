@@ -31,4 +31,14 @@ public sealed class GameplayRuntimeTests
         Assert.Equal("spawn.rich", runtime.Resolver.Resolve("spawn.policy")?.Id);
         Assert.True(runtime.Unlocks.IsUnlocked("unlock.core"));
     }
+
+    [Fact]
+    public void EnrichmentSpawn_IsOnlySelectedAfterUnlock()
+    {
+        var runtime = GameplayRuntime.CreateDefault();
+        Assert.Equal("spawn.base", runtime.Resolver.Resolve("spawn.policy")?.Id);
+        Assert.True(runtime.Unlocks.TryUnlock("unlock.spawn.enrichment"));
+        Assert.Equal("spawn.enrichment", runtime.Resolver.Resolve("spawn.policy")?.Id);
+        Assert.Equal("food_enrichment_spawn", runtime.Resolver.Resolve("spawn.policy")?.HandlerId);
+    }
 }
