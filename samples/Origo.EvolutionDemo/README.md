@@ -147,8 +147,11 @@ snapshot, progression state, unlock service, and mechanic resolver. The fixed ti
 - `FoodSourceSimulationSystem` (Environment) ticks food sources;
 - `ProgressionSimulationSystem` (Progress) advances lifetime and milestones.
 
-`CoreEvolutionModule` implements `IGameplayModule` and registers the default
-content plus all six phase systems through the same `GameplayModuleServices`
+`DemoUi` is split into partial view files (`DemoUi.views.cs`,
+`DemoUi.panels.cs`, `DemoUi.settings.cs`, `DemoUi.saveload.cs`,
+`DemoUi.slots.cs`) around gameplay state, panels, settings, save/load, and slot
+lists. `CoreEvolutionModule` implements `IGameplayModule` and registers the default
+content plus all phase systems through the same `GameplayModuleServices`
 contract. The demo no longer has a second hand-written system registration path;
 additional modules can add content, handlers, and systems together. Death and spawn
 policy behavior is dispatched through typed handler registries
