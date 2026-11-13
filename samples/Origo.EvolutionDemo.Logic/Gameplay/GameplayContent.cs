@@ -116,6 +116,13 @@ public sealed class GameplayContentRegistry
 
     private void Validate()
     {
+        foreach (var entry in _content.Values)
+        {
+            if (string.IsNullOrWhiteSpace(entry.UnlockId) || !_unlocks.ContainsKey(entry.UnlockId))
+                throw new InvalidOperationException(
+                    $"Content '{entry.Id}' references missing unlock '{entry.UnlockId}'.");
+        }
+
         foreach (var variant in _variants.Values)
         {
             if (string.IsNullOrWhiteSpace(variant.GroupId) || string.IsNullOrWhiteSpace(variant.HandlerId))
@@ -131,6 +138,10 @@ public sealed class GameplayContentRegistry
                 if (!_unlocks.ContainsKey(prerequisite))
                     throw new InvalidOperationException(
                         $"Unlock '{unlock.Id}' references missing prerequisite '{prerequisite}'.");
+            foreach (var milestone in unlock.RequiredMilestones)
+                if (!_milestones.ContainsKey(milestone))
+                    throw new InvalidOperationException(
+                        $"Unlock '{unlock.Id}' references missing milestone '{milestone}'.");
             foreach (var grant in unlock.Grants)
                 if (!_content.ContainsKey(grant))
                     throw new InvalidOperationException(

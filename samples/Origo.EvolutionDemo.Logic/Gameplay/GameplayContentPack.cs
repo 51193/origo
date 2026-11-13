@@ -51,12 +51,30 @@ public static class GameplayContentPackLoader
         foreach (var entry in pack.Content)
             registry.AddContent(entry);
         foreach (var unlock in pack.Unlocks)
-            registry.AddUnlock(unlock);
+            registry.AddUnlock(Normalize(unlock));
         foreach (var variant in pack.Variants)
-            registry.AddVariant(variant);
+            registry.AddVariant(Normalize(variant));
         foreach (var milestone in pack.Milestones)
-            registry.AddMilestone(milestone);
+            registry.AddMilestone(Normalize(milestone));
     }
+
+    private static UnlockDefinition Normalize(UnlockDefinition unlock) => unlock with
+    {
+        Prerequisites = unlock.Prerequisites ?? [],
+        Grants = unlock.Grants ?? [],
+        RequiredMilestones = unlock.RequiredMilestones ?? [],
+    };
+
+    private static MechanicVariant Normalize(MechanicVariant variant) => variant with
+    {
+        BiomeTags = variant.BiomeTags ?? [],
+        Data = variant.Data ?? new Dictionary<string, string>(StringComparer.Ordinal),
+    };
+
+    private static MilestoneDefinition Normalize(MilestoneDefinition milestone) => milestone with
+    {
+        Grants = milestone.Grants ?? [],
+    };
 
     private static void Validate(GameplayContentPack pack)
     {

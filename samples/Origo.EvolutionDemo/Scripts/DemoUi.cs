@@ -104,6 +104,7 @@ public partial class DemoUi : CanvasLayer
     private double _feedCooldown;
     private double _hudRefreshTimer;
     private double _realTimeWriteTimer;
+    private double _gameplayProfileTimer;
     private bool _fastForwarding;
     private int _previousMaxFps = 60;
     private DisplayServer.VSyncMode _previousVsync = DisplayServer.VSyncMode.Enabled;
@@ -164,6 +165,12 @@ public partial class DemoUi : CanvasLayer
             }
 
             TickGame(delta);
+            _gameplayProfileTimer += delta;
+            if (_gameplayProfileTimer >= 15d)
+            {
+                _gameplayProfileTimer = 0d;
+                GameplayProfileStore.Save(GameplayRuntime.EnsureCurrent().Progression);
+            }
         }
 
         _hudRefreshTimer -= delta;

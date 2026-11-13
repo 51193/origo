@@ -156,7 +156,11 @@ public partial class UnlockOverlay : CanvasLayer
             CultureInfo.InvariantCulture,
             $"Evolution points: {runtime.Progression.Points:N0}");
         var fingerprint = string.Join('|',
-            runtime.Content.Unlocks.Values.Select(unlock => unlock.Id).OrderBy(static id => id, StringComparer.Ordinal));
+            runtime.Content.Unlocks.Values
+                .OrderBy(static unlock => unlock.Id, StringComparer.Ordinal)
+                .Select(static unlock =>
+                    $"{unlock.Id}:{unlock.Cost}:{unlock.Title}:{unlock.Category}:" +
+                    $"{string.Join(',', unlock.Prerequisites)}:{string.Join(',', unlock.Grants)}"));
         if (string.Equals(fingerprint, _contentFingerprint, StringComparison.Ordinal)
             && _rows.GetChildCount() > 0)
         {
@@ -202,7 +206,10 @@ public partial class UnlockOverlay : CanvasLayer
         button.Pressed += () =>
         {
             if (!runtime.Unlocks.TryUnlock(unlock.Id))
+            {
+                _entry.Ui.ShowToast("Unlock requirements are no longer met.", true);
                 return;
+            }
             _entry.Ui.PersistGameplayProgression();
             _contentFingerprint = string.Empty;
             Refresh();

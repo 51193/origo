@@ -51,7 +51,6 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
     {
         ArgumentNullException.ThrowIfNull(entity);
         EnsureDefaults(entity);
-        GameplayStateSync.Load(entity, GameplayRuntime.EnsureCurrent());
     }
 
     /// <inheritdoc/>
@@ -741,9 +740,9 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             if (energy <= 0f || age >= creature.MaxAge)
             {
                 var deathVariant = GameplayRuntime.EnsureCurrent()
-                    .Resolver.Resolve("death.handler");
-                if (deathVariant is null
-                    || string.Equals(deathVariant.Id, "death.instant_food", StringComparison.Ordinal))
+                    .Resolver.Resolve("death.handler")
+                    ?? throw new InvalidOperationException("No enabled death.handler variant.");
+                if (string.Equals(deathVariant.HandlerId, "instant_food", StringComparison.Ordinal))
                 {
                     var foodCount = Math.Min(
                         Tuning.DeathFoodCount,
@@ -758,19 +757,28 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                         pendingFood++;
                     }
                 }
-                else if (Tuning.DeathFoodCount > 0)
+                else if (string.Equals(deathVariant.HandlerId, "corpse_pulse", StringComparison.Ordinal))
                 {
-                    var interval = Tuning.CarcassFoodIntervalSeconds;
-                    if (deathVariant.Data.TryGetValue("interval", out var rawInterval)
-                        && float.TryParse(rawInterval, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed))
-                        interval = parsed;
-                    mutations.Add(CreateCorpseMeta(
-                        CorpseName(nextCorpseId++),
-                        position.X,
-                        position.Y,
-                        Tuning.DeathFoodCount,
-                        interval));
-                    corpsesCreated++;
+                    if (Tuning.DeathFoodCount > 0)
+                    {
+                        if (!deathVariant.Data.TryGetValue("interval", out var rawInterval)
+                            || !float.TryParse(rawInterval, NumberStyles.Float,
+                                CultureInfo.InvariantCulture, out var interval))
+                            throw new InvalidOperationException(
+                                $"Death variant '{deathVariant.Id}' needs a numeric interval.");
+                        mutations.Add(CreateCorpseMeta(
+                            CorpseName(nextCorpseId++),
+                            position.X,
+                            position.Y,
+                            Tuning.DeathFoodCount,
+                            interval));
+                        corpsesCreated++;
+                    }
+                }
+                else
+                {
+                    throw new InvalidOperationException(
+                        $"Unknown death handler '{deathVariant.HandlerId}'.");
                 }
 
                 session.RequestKillEntity(entity.Name);
@@ -880,6 +888,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         // whole session; the sources' scan/spawn clocks are phase-staggered so
         // no two sources scan or spawn on the same tick.
         FoodSourceStrategy.TickAll(controller, ctx, sensorGrid, foods.Count);
+
+        GameplayRuntime.EnsureCurrent().Progression.LifetimeSeconds += tickDt;
 
         if (alive == 0 && pendingChildren == 0 && ReadBool(controller, DemoKeys.Initialized, false))
             controller.SetData(DemoKeys.Phase, DemoKeys.PhaseExtinct);

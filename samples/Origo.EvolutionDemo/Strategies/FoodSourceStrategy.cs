@@ -162,6 +162,7 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
         if (metas.Count == 0)
             return;
 
+        var foodSpawned = metas.Count;
         var spawnVariant = GameplayRuntime.EnsureCurrent().Resolver.Resolve("spawn.policy");
         if (spawnVariant is not null
             && string.Equals(spawnVariant.HandlerId, "food_enrichment_spawn", StringComparison.Ordinal))
@@ -196,7 +197,7 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
 
         entity.SetData(DemoKeys.SourceSpawnCount, spawnCount + 1);
         entity.SetData(DemoKeys.SourceNextFoodId, nextFoodId);
-        entity.SetData(DemoKeys.LocalFood, localFood + metas.Count);
+        entity.SetData(DemoKeys.LocalFood, localFood + foodSpawned);
         var spawn = metas.ToArray();
         ctx.Deferred.EnqueueBusinessDeferred(() => session.SpawnMany(spawn));
     }

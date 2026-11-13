@@ -133,13 +133,15 @@ not tint the entire view or draw a screen-filling arc.
 
 Gameplay content is registered through `GameplayContentRegistry` and applied
 through `GameplayRuntime`. The runtime owns the current immutable content
-snapshot, progression state, unlock service, mechanic resolver, and system
-pipeline. Content is always registered before it is gated, so locked and
+snapshot, progression state, unlock service, and mechanic resolver; the phase
+pipeline is the extension surface for module systems. Content is always registered before it is gated, so locked and
 unlocked content share the same validation path.
 
 The controller persists progression as `game.points`, `game.unlocked`,
-`game.milestones`, and `game.lifetimeSeconds`. Save version 6 rejects older
-saves. Evolution Points currently start at a very large placeholder value; the
+`game.milestones`, and `game.lifetimeSeconds`. A separate
+`user://gameplay_profile.json` is the authoritative meta-progression store: it
+survives New Game and application restarts by design, because idle unlocks are
+account-wide. Save version 6 rejects older saves. Evolution Points currently start at a very large placeholder value; the
 unlock shop is functional, but economy balancing is intentionally deferred.
 
 Press `U` while a pond is running to open the generic unlock shop. Rows are
@@ -151,7 +153,7 @@ JSON content packs live under `Content/` and are polled by
 frame boundary; invalid packs leave the running snapshot untouched. Content
 reload only; C# handlers, systems, and SND strategies remain startup-loaded.
 
-Mutually exclusive mechanics use `MechanicGroup` variants. The death handler
+Mutually exclusive mechanics use mechanic-group variants. The death handler
 selects exactly one variant for a death event; the default corpse-pulse variant
 preserves the existing behavior. `unlock.spawn.enrichment` enables the
 enrichment spawn variant, which can create a new founder at a food source. Gene,

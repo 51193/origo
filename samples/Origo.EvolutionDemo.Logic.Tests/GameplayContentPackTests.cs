@@ -31,6 +31,31 @@ public sealed class GameplayContentPackTests
     }
 
     [Fact]
+    public void Pack_MissingOptionalCollections_DefaultsToEmpty()
+    {
+        const string json = """
+        {
+          "schemaVersion": 1,
+          "content": [],
+          "unlocks": [],
+          "variants": [
+            { "id": "spawn.pack", "groupId": "spawn.policy", "handlerId": "base_spawn",
+              "unlockId": "unlock.core", "priority": 1 }
+          ],
+          "milestones": []
+        }
+        """;
+        var registry = new GameplayContentRegistry();
+        registry.AddUnlock(new UnlockDefinition("unlock.core", "core", "core", 0, [], [], []));
+        GameplayContentPackLoader.AddTo(registry, json);
+        var snapshot = registry.BuildSnapshot();
+        var variant = snapshot.Variants["spawn.pack"];
+        Assert.NotNull(variant.Data);
+        Assert.NotNull(variant.BiomeTags);
+        Assert.Empty(variant.Data);
+    }
+
+    [Fact]
     public void Pack_RejectsUnknownSchema()
     {
         const string json = """{ "schemaVersion": 9, "content": [], "unlocks": [], "variants": [], "milestones": [] }""";
