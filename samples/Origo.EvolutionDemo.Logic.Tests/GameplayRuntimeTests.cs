@@ -19,7 +19,7 @@ public sealed class GameplayRuntimeTests
           ],
           "unlocks": [],
           "variants": [
-            { "id": "spawn.rich", "groupId": "spawn.policy", "handlerId": "rich_spawn",
+            { "id": "spawn.rich", "groupId": "spawn.policy", "handlerId": "base_spawn",
               "strategyIndex": null, "unlockId": "unlock.core", "biomeTags": [],
               "priority": 10, "data": {} }
           ],

@@ -45,6 +45,8 @@ public sealed class GameplayContentTests
     private static GameplayContentSnapshot BuildContent()
     {
         var registry = new GameplayContentRegistry();
+        registry.AddHandler(new GameplayHandlerDefinition("base", []));
+        registry.AddHandler(new GameplayHandlerDefinition("snow", []));
         registry.AddContent(new GameplayContentEntry("gene.organ.spike", "gene", "unlock.spike"));
         registry.AddContent(new GameplayContentEntry("base.death", "mechanic", "unlock.root"));
         registry.AddUnlock(new UnlockDefinition("unlock.root", "Root", "core", 0, [], ["base.death"], []));

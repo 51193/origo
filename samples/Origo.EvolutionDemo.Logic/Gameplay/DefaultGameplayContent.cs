@@ -16,6 +16,11 @@ public sealed class DefaultGameplayContentModule : IGameplayModule
         ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(services);
 
+        content.AddHandler(new GameplayHandlerDefinition("instant_food", []));
+        content.AddHandler(new GameplayHandlerDefinition("corpse_pulse", ["interval"]));
+        content.AddHandler(new GameplayHandlerDefinition("base_spawn", []));
+        content.AddHandler(new GameplayHandlerDefinition("food_enrichment_spawn", []));
+
         AddContent(content, "gene.organ.spike", "organ", "unlock.core");
         AddContent(content, "gene.organ.vision", "organ", "unlock.core");
         AddContent(content, "gene.organ.rhythm", "organ", "unlock.core");

@@ -1,9 +1,9 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
 using Godot;
 using Origo.EvolutionDemo.Logic.Gameplay;
+using System.Globalization;
 
 namespace Origo.EvolutionDemo;
 
@@ -16,11 +16,6 @@ internal static class GameplayProfileStore
 {
     private const string FileName = "gameplay_profile.json";
 
-    private static readonly JsonSerializerOptions Options = new()
-    {
-        WriteIndented = true,
-    };
-
     private static string Path => System.IO.Path.Combine(OS.GetUserDataDir(), FileName);
 
     public static bool TryLoad(GameplayRuntime runtime)
@@ -28,36 +23,55 @@ internal static class GameplayProfileStore
         ArgumentNullException.ThrowIfNull(runtime);
         if (!File.Exists(Path))
             return false;
-        var profile = JsonSerializer.Deserialize<ProfileDto>(File.ReadAllText(Path), Options);
-        if (profile is null || profile.SchemaVersion != 1)
+        string json;
+        try
+        {
+            json = File.ReadAllText(Path);
+        }
+        catch (IOException)
+        {
+            GD.PushWarning("Gameplay profile could not be read; using placeholder defaults.");
             return false;
-        runtime.Progression.Points = profile.Points;
-        runtime.Progression.LifetimeSeconds = profile.LifetimeSeconds;
-        runtime.Progression.UnlockedIds.Clear();
-        foreach (var id in profile.UnlockedIds)
-            runtime.Progression.UnlockedIds.Add(id);
-        runtime.Progression.CompletedMilestones.Clear();
-        foreach (var id in profile.CompletedMilestones)
-            runtime.Progression.CompletedMilestones.Add(id);
+        }
+
+        if (!GameplayProfileCodec.TryDeserialize(json, out var profile))
+        {
+            QuarantineCorrupt();
+            return false;
+        }
+
+        GameplayProfileCodec.Apply(profile!, runtime.Progression);
         return true;
     }
 
     public static void Save(GameplayProgression progression)
     {
         ArgumentNullException.ThrowIfNull(progression);
-        var profile = new ProfileDto(
-            1,
-            progression.Points,
-            progression.LifetimeSeconds,
-            progression.UnlockedIds.OrderBy(static id => id, StringComparer.Ordinal).ToArray(),
-            progression.CompletedMilestones.OrderBy(static id => id, StringComparer.Ordinal).ToArray());
-        File.WriteAllText(Path, JsonSerializer.Serialize(profile, Options));
+        var temp = Path + ".tmp";
+        var json = GameplayProfileCodec.Serialize(progression);
+        try
+        {
+            File.WriteAllText(temp, json);
+            File.Move(temp, Path, overwrite: true);
+        }
+        catch (IOException ex)
+        {
+            GD.PushWarning($"Gameplay profile save failed: {ex.Message}");
+        }
     }
 
-    private sealed record ProfileDto(
-        int SchemaVersion,
-        long Points,
-        double LifetimeSeconds,
-        string[] UnlockedIds,
-        string[] CompletedMilestones);
+    private static void QuarantineCorrupt()
+    {
+        var quarantine = Path + "." +
+            DateTime.UtcNow.ToString("yyyyMMddHHmmss", System.Globalization.CultureInfo.InvariantCulture) +
+            ".corrupt";
+        try
+        {
+            File.Move(Path, quarantine, overwrite: true);
+        }
+        catch (IOException)
+        {
+            // A quarantined profile is a warning, not a second launch blocker.
+        }
+    }
 }

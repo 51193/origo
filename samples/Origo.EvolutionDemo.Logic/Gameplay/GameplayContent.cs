@@ -1,11 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace Origo.EvolutionDemo.Logic.Gameplay;
 
 /// <summary>Stable content entry (gene kind, organ, interface, or mechanic).</summary>
 public sealed record GameplayContentEntry(string Id, string Kind, string UnlockId);
+
+/// <summary>Code handler contract registered by a startup module.</summary>
+public sealed record GameplayHandlerDefinition(string Id, IReadOnlyList<string> RequiredNumericData);
 
 /// <summary>One mutually exclusive implementation inside a mechanic group.</summary>
 public sealed record MechanicVariant(
@@ -41,18 +45,21 @@ public sealed class GameplayContentSnapshot(
     IReadOnlyDictionary<string, GameplayContentEntry> content,
     IReadOnlyDictionary<string, UnlockDefinition> unlocks,
     IReadOnlyDictionary<string, MechanicVariant> variants,
-    IReadOnlyDictionary<string, MilestoneDefinition> milestones)
+    IReadOnlyDictionary<string, MilestoneDefinition> milestones,
+    IReadOnlyDictionary<string, GameplayHandlerDefinition> handlers)
 {
     public IReadOnlyDictionary<string, GameplayContentEntry> Content { get; } = content;
     public IReadOnlyDictionary<string, UnlockDefinition> Unlocks { get; } = unlocks;
     public IReadOnlyDictionary<string, MechanicVariant> Variants { get; } = variants;
     public IReadOnlyDictionary<string, MilestoneDefinition> Milestones { get; } = milestones;
+    public IReadOnlyDictionary<string, GameplayHandlerDefinition> Handlers { get; } = handlers;
 
     public static GameplayContentSnapshot Empty { get; } = new(
         new Dictionary<string, GameplayContentEntry>(),
         new Dictionary<string, UnlockDefinition>(),
         new Dictionary<string, MechanicVariant>(),
-        new Dictionary<string, MilestoneDefinition>());
+        new Dictionary<string, MilestoneDefinition>(),
+        new Dictionary<string, GameplayHandlerDefinition>());
 }
 
 /// <summary>Mutable builder used by startup modules and content-pack loading.</summary>
@@ -62,6 +69,7 @@ public sealed class GameplayContentRegistry
     private readonly Dictionary<string, UnlockDefinition> _unlocks = [];
     private readonly Dictionary<string, MechanicVariant> _variants = [];
     private readonly Dictionary<string, MilestoneDefinition> _milestones = [];
+    private readonly Dictionary<string, GameplayHandlerDefinition> _handlers = [];
 
     public void AddContent(GameplayContentEntry entry)
     {
@@ -84,6 +92,13 @@ public sealed class GameplayContentRegistry
             throw new InvalidOperationException($"Duplicate mechanic variant id '{variant.Id}'.");
     }
 
+    public void AddHandler(GameplayHandlerDefinition handler)
+    {
+        ArgumentNullException.ThrowIfNull(handler);
+        if (!_handlers.TryAdd(handler.Id, handler))
+            throw new InvalidOperationException($"Duplicate gameplay handler '{handler.Id}'.");
+    }
+
     public void AddMilestone(MilestoneDefinition milestone)
     {
         ArgumentNullException.ThrowIfNull(milestone);
@@ -102,6 +117,8 @@ public sealed class GameplayContentRegistry
             AddVariant(variant);
         foreach (var milestone in snapshot.Milestones.Values)
             AddMilestone(milestone);
+        foreach (var handler in snapshot.Handlers.Values)
+            AddHandler(handler);
     }
 
     public GameplayContentSnapshot BuildSnapshot()
@@ -111,7 +128,8 @@ public sealed class GameplayContentRegistry
             new Dictionary<string, GameplayContentEntry>(_content, StringComparer.Ordinal),
             new Dictionary<string, UnlockDefinition>(_unlocks, StringComparer.Ordinal),
             new Dictionary<string, MechanicVariant>(_variants, StringComparer.Ordinal),
-            new Dictionary<string, MilestoneDefinition>(_milestones, StringComparer.Ordinal));
+            new Dictionary<string, MilestoneDefinition>(_milestones, StringComparer.Ordinal),
+            new Dictionary<string, GameplayHandlerDefinition>(_handlers, StringComparer.Ordinal));
     }
 
     private void Validate()
@@ -130,6 +148,16 @@ public sealed class GameplayContentRegistry
             if (!_unlocks.ContainsKey(variant.UnlockId))
                 throw new InvalidOperationException(
                     $"Variant '{variant.Id}' references missing unlock '{variant.UnlockId}'.");
+            if (!_handlers.TryGetValue(variant.HandlerId, out var handler))
+                throw new InvalidOperationException(
+                    $"Variant '{variant.Id}' references unknown handler '{variant.HandlerId}'.");
+            foreach (var key in handler.RequiredNumericData)
+            {
+                if (!variant.Data.TryGetValue(key, out var raw)
+                    || !double.TryParse(raw, NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out _))
+                    throw new InvalidOperationException(
+                        $"Variant '{variant.Id}' handler '{handler.Id}' needs numeric data '{key}'.");
+            }
         }
 
         foreach (var unlock in _unlocks.Values)

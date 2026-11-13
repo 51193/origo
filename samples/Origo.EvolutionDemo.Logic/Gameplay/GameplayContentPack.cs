@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 
 namespace Origo.EvolutionDemo.Logic.Gameplay;
@@ -31,7 +32,25 @@ public static class GameplayContentPackLoader
         if (pack.SchemaVersion != 1)
             throw new InvalidDataException($"Unsupported content pack schema {pack.SchemaVersion}.");
         Validate(pack);
-        return pack;
+        return pack with
+        {
+            Content = pack.Content ?? [],
+            Unlocks = pack.Unlocks?.Select(static unlock => unlock with
+            {
+                Prerequisites = unlock.Prerequisites ?? [],
+                Grants = unlock.Grants ?? [],
+                RequiredMilestones = unlock.RequiredMilestones ?? [],
+            }).ToArray() ?? [],
+            Variants = pack.Variants?.Select(static variant => variant with
+            {
+                BiomeTags = variant.BiomeTags ?? [],
+                Data = variant.Data ?? new Dictionary<string, string>(StringComparer.Ordinal),
+            }).ToArray() ?? [],
+            Milestones = pack.Milestones?.Select(static milestone => milestone with
+            {
+                Grants = milestone.Grants ?? [],
+            }).ToArray() ?? [],
+        };
     }
 
     public static GameplayContentSnapshot LoadSnapshot(IEnumerable<string> packJson)
