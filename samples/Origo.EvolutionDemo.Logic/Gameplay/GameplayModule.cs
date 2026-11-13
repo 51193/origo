@@ -21,6 +21,7 @@ public enum GameplayPhase
     ResolveAction,
     Reproduce,
     Death,
+    Commit,
     Environment,
     Progress,
 }

@@ -25,18 +25,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
 {
     private const double TwoPi = Math.PI * 2d;
     private static readonly Dictionary<string, (PhenotypeV4 Phenotype, CompiledBrainV4 Brain)> BrainCache = new(StringComparer.Ordinal);
-    private static readonly List<CreatureSnapshot> CreatureScratch = [];
-    private static readonly List<FoodSnapshot> FoodScratch = [];
-    private static readonly List<SensorPoint> NearFoodScratch = [];
-    private static readonly List<SensorPoint> NearCreatureScratch = [];
-    private static readonly List<SndMetaData> MutationScratch = [];
     private static readonly List<CollisionBody> CollisionBodyScratch = [];
     private static readonly List<ISndEntity> CollisionEntityScratch = [];
-    private static readonly List<CorpseSnapshot> CorpseScratch = [];
-    private static SensorPoint[] FoodPointScratch = [];
-    private static SensorPoint[] CreaturePointScratch = [];
-    private static SensorPoint[] CorpsePointScratch = [];
-    private static bool[] FoodConsumedScratch = [];
     private static readonly DemoActionEffectState ActionStateScratch = new();
 
     /// <inheritdoc/>
@@ -289,108 +279,21 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
     internal static void RunCoreSimulation(EvolutionTickContext world)
     {
         var controller = world.Controller;
-        var ctx = world.SndContext;
         var session = controller.OwningSession;
-        var entities = session.GetEntities();
-        var creatures = CreatureScratch;
-        creatures.Clear();
-        var foods = FoodScratch;
-        foods.Clear();
-        var corpses = CorpseScratch;
-        corpses.Clear();
-        foreach (var entity in entities)
-        {
-            if (entity.IsPendingKill)
-                continue;
-            var kindResult = entity.TryGetData<string>(DemoKeys.Kind);
-            if (!kindResult.found)
-                continue;
-            var kind = kindResult.value;
-            if (string.Equals(kind, DemoKeys.CreatureKind, StringComparison.Ordinal))
-            {
-                creatures.Add(new CreatureSnapshot(
-                    entity,
-                    ReadFloat(entity, DemoKeys.X, 0f),
-                    ReadFloat(entity, DemoKeys.Y, 0f),
-                    ReadFloat(entity, DemoKeys.Heading, 0f),
-                    ReadFloat(entity, DemoKeys.Energy, Tuning.InitialEnergy),
-                    ReadFloat(entity, DemoKeys.Age, 0f),
-                    ReadFloat(entity, DemoKeys.ReproCooldown, 0f),
-                    ReadFloat(entity, DemoKeys.SpikeCooldown, 0f),
-                    ReadFloat(entity, DemoKeys.BodyRadius, Tuning.BodyRadius),
-                    ReadFloat(entity, DemoKeys.FoodPickupRadius, Tuning.FoodPickupRadius),
-                    ReadFloat(entity, DemoKeys.MaxEnergy, 200f),
-                    ReadFloat(entity, DemoKeys.MoveSpeed, Tuning.CreatureSpeed),
-                    ReadFloat(entity, DemoKeys.TurnSpeed, Tuning.TurnSpeed),
-                    ReadFloat(entity, DemoKeys.SenseRange, Tuning.SenseRange),
-                    ReadFloat(entity, DemoKeys.SpikeRadius, Tuning.SpikeRadius),
-                    ReadFloat(entity, DemoKeys.BasalMetabolism, 1f),
-                    ReadFloat(entity, DemoKeys.MaxAge, Tuning.MaxAgeSeconds),
-                    ReadInt(entity, DemoKeys.OrganMask, 0),
-                    ReadInt(entity, DemoKeys.SpikeCount, 1),
-                    ReadFloat(entity, DemoKeys.SpikeSpread, 0f),
-                    ReadFloat(entity, DemoKeys.SpikeJitter, 0f)));
-            }
-            else if (string.Equals(kind, DemoKeys.FoodKind, StringComparison.Ordinal))
-            {
-                foods.Add(new FoodSnapshot(
-                    entity,
-                    ReadFloat(entity, DemoKeys.X, 0f),
-                    ReadFloat(entity, DemoKeys.Y, 0f),
-                    ReadBool(entity, DemoKeys.FoodFromCorpse, false),
-                    (FoodType)Math.Clamp(ReadInt(entity, DemoKeys.FoodType, 0), 0, 2)));
-            }
-            else if (string.Equals(kind, DemoKeys.CorpseKind, StringComparison.Ordinal))
-            {
-                corpses.Add(new CorpseSnapshot(
-                    entity,
-                    ReadFloat(entity, DemoKeys.X, 0f),
-                    ReadFloat(entity, DemoKeys.Y, 0f),
-                    ReadInt(entity, DemoKeys.CorpseFoodRemaining, 0),
-                    ReadFloat(entity, DemoKeys.CorpseTimer, 0f),
-                    ReadFloat(entity, DemoKeys.CorpseInterval,
-                        Tuning.CarcassFoodIntervalSeconds)));
-            }
-        }
-
-        var sensableFoodCount = foods.Count + corpses.Count;
-        if (FoodPointScratch.Length < sensableFoodCount)
-            FoodPointScratch = new SensorPoint[sensableFoodCount];
-        if (CreaturePointScratch.Length < creatures.Count)
-            CreaturePointScratch = new SensorPoint[creatures.Count];
-        if (FoodConsumedScratch.Length < foods.Count)
-            FoodConsumedScratch = new bool[foods.Count];
-        var foodPoints = FoodPointScratch;
-        for (var i = 0; i < foods.Count; i++)
-            foodPoints[i] = new SensorPoint(i, new NumericsVector2(foods[i].X, foods[i].Y));
-        for (var i = 0; i < corpses.Count; i++)
-        {
-            foodPoints[foods.Count + i] = new SensorPoint(
-                foods.Count + i,
-                new NumericsVector2(corpses[i].X, corpses[i].Y));
-        }
-        var creaturePoints = CreaturePointScratch;
-        for (var i = 0; i < creatures.Count; i++)
-            creaturePoints[i] = new SensorPoint(i, new NumericsVector2(creatures[i].X, creatures[i].Y));
-
-        if (CorpsePointScratch.Length < corpses.Count)
-            CorpsePointScratch = new SensorPoint[corpses.Count];
-        var corpsePoints = CorpsePointScratch;
-        for (var i = 0; i < corpses.Count; i++)
-            corpsePoints[i] = new SensorPoint(i, new NumericsVector2(corpses[i].X, corpses[i].Y));
-
-        var sensorGrid = SensorGrid.Build(foodPoints, sensableFoodCount, creaturePoints, creatures.Count);
-        var nearFood = NearFoodScratch;
-        nearFood.Clear();
-        var nearCreatures = NearCreatureScratch;
-        nearCreatures.Clear();
-        var foodConsumed = FoodConsumedScratch;
-        Array.Clear(foodConsumed, 0, foods.Count);
-        var foodAlive = foods.Count;
+        var snapshot = world.Snapshot
+            ?? throw new InvalidOperationException("SnapshotSystem must run before core simulation.");
+        var creatures = snapshot.Creatures;
+        var foods = snapshot.Foods;
+        var corpses = snapshot.Corpses;
+        var sensorGrid = snapshot.Grid;
+        var corpsePoints = snapshot.CorpsePoints;
+        var nearFood = snapshot.NearFood;
+        var nearCreatures = snapshot.NearCreatures;
+        var foodConsumed = snapshot.FoodConsumed;
+        var foodAlive = world.FoodAlive;
         var pendingChildren = 0;
-        var pendingFood = 0;
-        var mutations = MutationScratch;
-        mutations.Clear();
+        var pendingFood = world.PendingFood;
+        var mutations = world.Mutations;
         var collisionBodies = CollisionBodyScratch;
         collisionBodies.Clear();
         var collisionEntities = CollisionEntityScratch;
@@ -403,16 +306,15 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         var seed = ReadInt(controller, DemoKeys.Seed, 1);
         var nextCreatureId = ReadInt(controller, DemoKeys.NextCreatureId, 1);
         var nextLineageId = ReadInt(controller, DemoKeys.NextLineageId, 1);
-        var nextFoodId = ReadInt(controller, DemoKeys.NextFoodId, 1);
+        var nextFoodId = world.NextFoodId;
         var nextCorpseId = ReadInt(controller, DemoKeys.NextCorpseId, 1);
         var corpsesCreated = 0;
-        var carrionFoodReleased = 0;
         var corpseMeals = 0;
         var softMeals = 0;
         var toughMeals = 0;
         var toxicMeals = 0;
         var maxGeneration = ReadInt(controller, DemoKeys.MaxGeneration, 0);
-        var rng = new Random(unchecked((ReadInt(controller, DemoKeys.Seed, 1) * 397) ^ ReadInt(controller, DemoKeys.Tick, 0)));
+        var rng = world.Rng;
         var alive = 0;
         var spikeAttacks = 0;
         var spikeKills = 0;
@@ -426,38 +328,6 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         var sensorBuffer = new float[64];
         var aiStride = Math.Max(1, (creatures.Count + Tuning.AiUpdateBatch - 1) / Tuning.AiUpdateBatch);
         var tickNumber = ReadInt(controller, DemoKeys.Tick, 0);
-
-        foreach (var corpse in corpses)
-        {
-            if (corpse.Entity.IsPendingKill)
-                continue;
-            var freeSlots = Math.Max(0, Tuning.FoodCap - (foodAlive + pendingFood));
-            var release = CarcassMath.Advance(
-                corpse.Timer,
-                corpse.Remaining,
-                corpse.Interval,
-                tickDt,
-                freeSlots);
-            for (var pulse = 0; pulse < release.Pulses; pulse++)
-            {
-                var foodPosition = ClampToPond(
-                    new NumericsVector2(corpse.X, corpse.Y) + RandomOffset(rng),
-                    Tuning.FoodPickupRadius);
-                mutations.Add(CreateFoodMeta(
-                    FoodName(nextFoodId++),
-                    foodPosition.X,
-                    foodPosition.Y,
-                    fromCorpse: true));
-                foodAlive++;
-                pendingFood++;
-                carrionFoodReleased++;
-            }
-
-            corpse.Entity.SetData(DemoKeys.CorpseFoodRemaining, release.Remaining);
-            corpse.Entity.SetData(DemoKeys.CorpseTimer, release.Timer);
-            if (release.Remaining <= 0)
-                session.RequestKillEntity(corpse.Entity.Name);
-        }
 
         for (var i = 0; i < creatures.Count; i++)
         {
@@ -856,50 +726,29 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             foodAccumulator = Math.Min(foodAccumulator, 1f);
         }
 
-        controller.SetData(DemoKeys.Time, ReadFloat(controller, DemoKeys.Time, 0f) + tickDt);
-        controller.SetData(DemoKeys.Tick, ReadInt(controller, DemoKeys.Tick, 0) + 1);
-        controller.SetData(DemoKeys.NextCreatureId, nextCreatureId);
-        controller.SetData(DemoKeys.NextLineageId, nextLineageId);
-        controller.SetData(DemoKeys.NextFoodId, nextFoodId);
-        controller.SetData(DemoKeys.NextCorpseId, nextCorpseId);
-        controller.SetData(DemoKeys.CorpsesCreated,
-            ReadInt(controller, DemoKeys.CorpsesCreated, 0) + corpsesCreated);
-        controller.SetData(DemoKeys.CarrionFoodReleased,
-            ReadInt(controller, DemoKeys.CarrionFoodReleased, 0) + carrionFoodReleased);
-        controller.SetData(DemoKeys.CorpseMeals,
-            ReadInt(controller, DemoKeys.CorpseMeals, 0) + corpseMeals);
-        controller.SetData(DemoKeys.CarrionDetections,
-            ReadInt(controller, DemoKeys.CarrionDetections, 0) + carrionDetections);
-        controller.SetData(DemoKeys.SprintActions,
-            ReadInt(controller, DemoKeys.SprintActions, 0) + sprintActions);
-        controller.SetData(DemoKeys.FoodSoftMeals,
-            ReadInt(controller, DemoKeys.FoodSoftMeals, 0) + softMeals);
-        controller.SetData(DemoKeys.FoodToughMeals,
-            ReadInt(controller, DemoKeys.FoodToughMeals, 0) + toughMeals);
-        controller.SetData(DemoKeys.FoodToxicMeals,
-            ReadInt(controller, DemoKeys.FoodToxicMeals, 0) + toxicMeals);
-        controller.SetData(DemoKeys.MaxGeneration, maxGeneration);
-        controller.SetData(DemoKeys.FoodAccumulator, foodAccumulator);
-        controller.SetData(DemoKeys.FeedRequest, feedRequest);
-
-        if (mutations.Count > 0)
-        {
-            var spawn = mutations.ToArray();
-            ctx.Deferred.EnqueueBusinessDeferred(() => session.SpawnMany(spawn));
-        }
-
-        controller.SetData(DemoKeys.SpikeAttacks, ReadInt(controller, DemoKeys.SpikeAttacks, 0) + spikeAttacks);
-        controller.SetData(DemoKeys.SpikeKills, ReadInt(controller, DemoKeys.SpikeKills, 0) + spikeKills);
-        controller.SetData(DemoKeys.SpikeHits, ReadInt(controller, DemoKeys.SpikeHits, 0) + spikeHits);
-        controller.SetData(DemoKeys.SpikeDrained, ReadFloat(controller, DemoKeys.SpikeDrained, 0f) + spikeDrained);
-
+        world.NextCreatureId = nextCreatureId;
+        world.NextLineageId = nextLineageId;
+        world.NextFoodId = nextFoodId;
+        world.NextCorpseId = nextCorpseId;
+        world.CorpseCreated = corpsesCreated;
+        world.CorpseMeals = corpseMeals;
+        world.CarrionDetections = carrionDetections;
+        world.SprintActions = sprintActions;
+        world.SoftMeals = softMeals;
+        world.ToughMeals = toughMeals;
+        world.ToxicMeals = toxicMeals;
+        world.MaxGeneration = maxGeneration;
+        world.PendingChildren = pendingChildren;
+        world.FoodAccumulator = foodAccumulator;
+        world.FeedRequest = feedRequest;
+        world.SpikeAttacks = spikeAttacks;
+        world.SpikeHits = spikeHits;
+        world.SpikeKills = spikeKills;
+        world.SpikeDrained = spikeDrained;
         world.SensorGrid = sensorGrid;
         world.FoodCount = foods.Count;
         world.Alive = alive;
-        world.SpikeKillsTotal = ReadInt(controller, DemoKeys.SpikeKills, 0);
-
-        if (alive == 0 && pendingChildren == 0 && ReadBool(controller, DemoKeys.Initialized, false))
-            controller.SetData(DemoKeys.Phase, DemoKeys.PhaseExtinct);
+        world.SpikeKillsTotal = ReadInt(controller, DemoKeys.SpikeKills, 0) + spikeKills;
     }
 
     private static SndMetaData CreateFoodSourceMeta(string name, int patchIndex, int patchCount, int seed) =>
@@ -951,7 +800,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         float intervalSeconds) =>
         EvolutionEntityFactory.Corpse(name, x, y, foodRemaining, intervalSeconds);
 
-    private static NumericsVector2 ClampToPond(NumericsVector2 position, float margin)
+    internal static NumericsVector2 ClampToPond(NumericsVector2 position, float margin)
     {
         var limit = Tuning.PondRadius - margin;
         if (position.LengthSquared() <= limit * limit)
@@ -985,7 +834,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             (float)(Math.Sin(angle) * radius));
     }
 
-    private static NumericsVector2 RandomOffset(Random rng)
+    internal static NumericsVector2 RandomOffset(Random rng)
     {
         var angle = rng.NextDouble() * TwoPi;
         var distance = 8d + (rng.NextDouble() * 10d);
@@ -1076,41 +925,5 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         return found ? value : fallback;
     }
 
-    private readonly record struct CreatureSnapshot(
-        ISndEntity Entity,
-        float X,
-        float Y,
-        float Heading,
-        float Energy,
-        float Age,
-        float ReproCooldown,
-        float SpikeCooldown,
-        float BodyRadius,
-        float FoodPickupRadius,
-        float MaxEnergy,
-        float MoveSpeed,
-        float TurnSpeed,
-        float SenseRange,
-        float SpikeRadius,
-        float BasalMetabolism,
-        float MaxAge,
-        int OrganMask,
-        int SpikeCount,
-        float SpikeSpread,
-        float SpikeJitter)
-    {
-        public bool SpikeBattery => (OrganMask & (int)DemoOrganMaskV4.SpikeBattery) != 0;
-        public bool HardDigest => (OrganMask & (int)DemoOrganMaskV4.HardDigest) != 0;
-        public bool ToxinResistance => (OrganMask & (int)DemoOrganMaskV4.ToxinResistance) != 0;
-    }
 
-    private readonly record struct FoodSnapshot(ISndEntity Entity, float X, float Y, bool FromCorpse, FoodType Type);
-
-    private readonly record struct CorpseSnapshot(
-        ISndEntity Entity,
-        float X,
-        float Y,
-        int Remaining,
-        float Timer,
-        float Interval);
 }

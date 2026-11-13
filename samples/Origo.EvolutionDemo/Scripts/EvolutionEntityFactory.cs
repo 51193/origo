@@ -79,6 +79,9 @@ internal static class EvolutionEntityFactory
             .SetString(DemoKeys.Outputs, "M 0.00 / T 0.00 / S 0.00 / A 0.00")
             .Build();
 
+    public static SndMetaData CorpseFood(string name, float x, float y) =>
+        Food(name, x, y, fromCorpse: true);
+
     public static SndMetaData Food(
         string name,
         float x,
