@@ -164,35 +164,25 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
 
         var foodSpawned = metas.Count;
         var spawnVariant = GameplayRuntime.EnsureCurrent().Resolver.Resolve("spawn.policy");
-        if (spawnVariant is not null
-            && string.Equals(spawnVariant.HandlerId, "food_enrichment_spawn", StringComparison.Ordinal))
+        if (spawnVariant is not null)
         {
-            var chance = 0.08f;
-            if (spawnVariant.Data.TryGetValue("chance", out var rawChance)
-                && float.TryParse(rawChance, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedChance))
-                chance = Math.Clamp(parsedChance, 0f, 1f);
-            if (CountCreatures(session) < Tuning.PopulationCap && rng.NextDouble() < chance)
+            var nextCreature = Math.Max(1, ReadInt(controller, DemoKeys.NextCreatureId, 1));
+            var nextLineage = Math.Max(1, ReadInt(controller, DemoKeys.NextLineageId, 1));
+            var spawnContext = new SpawnPolicyContext
             {
-                var nextCreature = Math.Max(1, ReadInt(controller, DemoKeys.NextCreatureId, 1));
-                var nextLineage = Math.Max(1, ReadInt(controller, DemoKeys.NextLineageId, 1));
-                var founder = CreatureGenome.RandomFounder(rng);
-                var position = new System.Numerics.Vector2(
-                    ReadFloat(entity, DemoKeys.X, 0f),
-                    ReadFloat(entity, DemoKeys.Y, 0f));
-                metas.Add(EvolutionEntityFactory.Creature(
-                    EvolutionEntityFactory.CreatureName(nextCreature),
-                    founder,
-                    founder.Phenotype,
-                    position.X,
-                    position.Y,
-                    (float)(rng.NextDouble() * MathF.Tau),
-                    MathF.Min(Tuning.InitialEnergy, founder.Phenotype.MaxEnergy),
-                    0,
-                    nextLineage,
-                    0f));
-                controller.SetData(DemoKeys.NextCreatureId, nextCreature + 1);
-                controller.SetData(DemoKeys.NextLineageId, nextLineage + 1);
-            }
+                Controller = controller,
+                Source = entity,
+                Rng = rng,
+                Metas = metas,
+                HandlerId = spawnVariant.HandlerId,
+                NextCreatureId = nextCreature,
+                NextLineageId = nextLineage,
+            };
+            DemoMechanicHandlers.Spawn.Require(spawnVariant.HandlerId).Execute(spawnContext);
+            if (spawnContext.NextCreatureId != nextCreature)
+                controller.SetData(DemoKeys.NextCreatureId, spawnContext.NextCreatureId);
+            if (spawnContext.NextLineageId != nextLineage)
+                controller.SetData(DemoKeys.NextLineageId, spawnContext.NextLineageId);
         }
 
         entity.SetData(DemoKeys.SourceSpawnCount, spawnCount + 1);
@@ -200,21 +190,6 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
         entity.SetData(DemoKeys.LocalFood, localFood + foodSpawned);
         var spawn = metas.ToArray();
         ctx.Deferred.EnqueueBusinessDeferred(() => session.SpawnMany(spawn));
-    }
-
-    private static int CountCreatures(ISessionRun session)
-    {
-        var count = 0;
-        foreach (var candidate in session.GetEntities())
-        {
-            if (candidate.IsPendingKill)
-                continue;
-            var (found, kind) = candidate.TryGetData<string>(DemoKeys.Kind);
-            if (found && string.Equals(kind, DemoKeys.CreatureKind, StringComparison.Ordinal))
-                count++;
-        }
-
-        return count;
     }
 
     private static void UpdateWalk(ISndEntity entity, int seed, int patchIndex, float time)

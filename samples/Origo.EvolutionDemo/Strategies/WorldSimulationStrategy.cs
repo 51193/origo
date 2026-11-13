@@ -622,46 +622,25 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 var deathVariant = GameplayRuntime.EnsureCurrent()
                     .Resolver.Resolve("death.handler")
                     ?? throw new InvalidOperationException("No enabled death.handler variant.");
-                if (string.Equals(deathVariant.HandlerId, "instant_food", StringComparison.Ordinal))
+                var deathContext = new DeathHandlerContext
                 {
-                    var foodCount = Math.Min(
-                        Tuning.DeathFoodCount,
-                        Math.Max(0, Tuning.FoodCap - (foodAlive + pendingFood)));
-                    for (var bite = 0; bite < foodCount; bite++)
-                    {
-                        var foodPosition = ClampToPond(
-                            position + RandomOffset(rng),
-                            creature.FoodPickupRadius);
-                        mutations.Add(CreateFoodMeta(FoodName(nextFoodId++), foodPosition.X, foodPosition.Y));
-                        foodAlive++;
-                        pendingFood++;
-                    }
-                }
-                else if (string.Equals(deathVariant.HandlerId, "corpse_pulse", StringComparison.Ordinal))
-                {
-                    if (Tuning.DeathFoodCount > 0)
-                    {
-                        if (!deathVariant.Data.TryGetValue("interval", out var rawInterval)
-                            || !float.TryParse(rawInterval, NumberStyles.Float,
-                                CultureInfo.InvariantCulture, out var interval)
-                            || !float.IsFinite(interval)
-                            || interval <= 0f)
-                            throw new InvalidOperationException(
-                                $"Death variant '{deathVariant.Id}' needs a positive finite interval.");
-                        mutations.Add(CreateCorpseMeta(
-                            CorpseName(nextCorpseId++),
-                            position.X,
-                            position.Y,
-                            Tuning.DeathFoodCount,
-                            interval));
-                        corpsesCreated++;
-                    }
-                }
-                else
-                {
-                    throw new InvalidOperationException(
-                        $"Unknown death handler '{deathVariant.HandlerId}'.");
-                }
+                    Controller = controller,
+                    Creature = creature,
+                    Position = position,
+                    Rng = rng,
+                    Mutations = mutations,
+                    FoodAlive = foodAlive,
+                    PendingFood = pendingFood,
+                    NextFoodId = nextFoodId,
+                    NextCorpseId = nextCorpseId,
+                    CorpsesCreated = corpsesCreated,
+                };
+                DemoMechanicHandlers.Death.Require(deathVariant.HandlerId).Execute(deathContext);
+                foodAlive = deathContext.FoodAlive;
+                pendingFood = deathContext.PendingFood;
+                nextFoodId = deathContext.NextFoodId;
+                nextCorpseId = deathContext.NextCorpseId;
+                corpsesCreated = deathContext.CorpsesCreated;
 
                 session.RequestKillEntity(entity.Name);
                 continue;

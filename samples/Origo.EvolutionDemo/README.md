@@ -144,7 +144,9 @@ snapshot, progression state, unlock service, and mechanic resolver. The fixed ti
 - `FoodSourceSimulationSystem` (Environment) ticks food sources;
 - `ProgressionSimulationSystem` (Progress) advances lifetime and milestones.
 
-Modules can append systems through `GameplayModuleServices`. Milestone definitions are evaluated
+Modules can append systems through `GameplayModuleServices`. Death and spawn
+policy behavior is dispatched through typed handler registries
+(`GameplayHandlerRegistry<TContext>`) instead of handler-id switches in simulation. Milestone definitions are evaluated
 against lifetime, population, and kill metrics each simulation tick and may
 award points and unlock ids. Content is always registered before it is gated, so locked and
 unlocked content share the same validation path.
