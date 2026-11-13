@@ -33,6 +33,17 @@ public sealed class GameplayContentTests
     }
 
     [Fact]
+    public void ModuleHost_RegistersSystemsThroughServices()
+    {
+        var host = new GameplayModuleHost();
+        host.AddModule(new SystemModule());
+        var (_, services) = host.Load();
+        var pipeline = new GameplayPipeline().FromServices(services);
+        Assert.Single(pipeline.Systems);
+        Assert.Equal("sensor", pipeline.Systems[0].Id);
+    }
+
+    [Fact]
     public void ModuleHost_LoadsDependenciesAndPipeline()
     {
         var host = new GameplayModuleHost();
@@ -90,6 +101,23 @@ public sealed class GameplayContentTests
         registry.AddVariant(new MechanicVariant("death.snow", "death.handler", "snow", null,
             "unlock.root", ["snow"], 10, new Dictionary<string, string>()));
         return registry.BuildSnapshot();
+    }
+
+    private sealed class SystemModule : IGameplayModule
+    {
+        public string Id => "systems";
+        public string Version => "1";
+        public IReadOnlyList<string> Dependencies => [];
+        public void Register(GameplayContentRegistry content, GameplayModuleServices services) =>
+            services.AddSystem(new FakeSystem());
+    }
+
+    private sealed class FakeSystem : IGameplaySystem
+    {
+        public string Id => "sensor";
+        public GameplayPhase Phase => GameplayPhase.Sense;
+        public int Order => 0;
+        public void Tick(IGameplayWorldContext context) { }
     }
 
     private sealed class TestModule(string id, IReadOnlyList<string> dependencies) : IGameplayModule

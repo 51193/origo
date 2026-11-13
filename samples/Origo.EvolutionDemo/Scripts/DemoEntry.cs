@@ -31,10 +31,9 @@ public partial class DemoEntry : OrigoDefaultEntry
     /// <inheritdoc/>
     public override void _Ready()
     {
-        GameplayRuntime.Current = GameplayRuntime.CreateDefault();
+        GameplayRuntime.Current = GameplayRuntime.CreateDefault([new CoreEvolutionModule()]);
         GameplayProfileStore.TryLoad(GameplayRuntime.Current);
         DemoMechanicHandlers.Validate(GameplayRuntime.Current);
-        DemoGameplaySystems.Register(GameplayRuntime.Current);
         ConfigPath = "res://Origo/entry/entry.json";
         SceneAliasMapPath = "res://Origo/maps/scene_aliases.map";
         SndTemplateMapPath = "res://Origo/maps/snd_templates.map";

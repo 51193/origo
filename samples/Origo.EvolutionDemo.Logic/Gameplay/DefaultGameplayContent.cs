@@ -150,14 +150,23 @@ public sealed class GameplayRuntime
         ConfigureGenomeGate();
     }
 
-    public static GameplayRuntime CreateDefault()
+    public static GameplayRuntime CreateDefault(IReadOnlyList<IGameplayModule>? modules = null)
     {
-        var modules = new GameplayModuleHost();
-        modules.AddModule(new DefaultGameplayContentModule());
-        var (content, services) = modules.Load();
+        var host = new GameplayModuleHost();
+        if (modules is null || modules.Count == 0)
+        {
+            host.AddModule(new DefaultGameplayContentModule());
+        }
+        else
+        {
+            foreach (var module in modules)
+                host.AddModule(module);
+        }
+
+        var (content, services) = host.Load();
         var progression = new GameplayProgression();
         var pipeline = new GameplayPipeline().FromServices(services);
-        return new GameplayRuntime(content, progression, modules, pipeline);
+        return new GameplayRuntime(content, progression, host, pipeline);
     }
 
     /// <summary>Demo-scoped runtime; replaced by a scoped host during later migration.</summary>

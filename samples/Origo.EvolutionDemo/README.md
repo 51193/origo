@@ -144,7 +144,10 @@ snapshot, progression state, unlock service, and mechanic resolver. The fixed ti
 - `FoodSourceSimulationSystem` (Environment) ticks food sources;
 - `ProgressionSimulationSystem` (Progress) advances lifetime and milestones.
 
-Modules can append systems through `GameplayModuleServices`. Death and spawn
+`CoreEvolutionModule` implements `IGameplayModule` and registers the default
+content plus all six phase systems through the same `GameplayModuleServices`
+contract. The demo no longer has a second hand-written system registration path;
+additional modules can add content, handlers, and systems together. Death and spawn
 policy behavior is dispatched through typed handler registries
 (`GameplayHandlerRegistry<TContext>`) instead of handler-id switches in simulation. Milestone definitions are evaluated
 against lifetime, population, and kill metrics each simulation tick and may

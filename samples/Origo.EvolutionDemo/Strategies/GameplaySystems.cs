@@ -247,22 +247,4 @@ internal sealed class ProgressionSimulationSystem : IGameplaySystem
     }
 }
 
-/// <summary>Registers the demo's core systems into the gameplay pipeline.</summary>
-internal static class DemoGameplaySystems
-{
-    private static bool _registered;
 
-    public static void Register(GameplayRuntime runtime)
-    {
-        ArgumentNullException.ThrowIfNull(runtime);
-        if (_registered)
-            return;
-        runtime.Pipeline.Add(new SnapshotSimulationSystem());
-        runtime.Pipeline.Add(new CorpseSimulationSystem());
-        runtime.Pipeline.Add(new CoreSimulationSystem());
-        runtime.Pipeline.Add(new CommitSimulationSystem());
-        runtime.Pipeline.Add(new FoodSourceSimulationSystem());
-        runtime.Pipeline.Add(new ProgressionSimulationSystem());
-        _registered = true;
-    }
-}
