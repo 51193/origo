@@ -57,18 +57,29 @@ public sealed class GameplayContentTests
     public void Registry_RejectsMissingRequiredNumericData()
     {
         var registry = new GameplayContentRegistry();
-        registry.AddHandler(new GameplayHandlerDefinition("corpse", ["interval"]));
+        registry.AddHandler(new GameplayHandlerDefinition("corpse", ["interval"], ["interval"]));
         registry.AddUnlock(new UnlockDefinition("unlock.core", "core", "core", 0, [], [], []));
         registry.AddVariant(new MechanicVariant("bad", "death.handler", "corpse", null,
             "unlock.core", [], 0, new Dictionary<string, string>()));
         Assert.Throws<InvalidOperationException>(() => registry.BuildSnapshot());
     }
 
+    [Fact]
+    public void Registry_RejectsNonPositiveRequiredNumericData()
+    {
+        var registry = new GameplayContentRegistry();
+        registry.AddHandler(new GameplayHandlerDefinition("corpse", ["interval"], ["interval"]));
+        registry.AddUnlock(new UnlockDefinition("unlock.core", "core", "core", 0, [], [], []));
+        registry.AddVariant(new MechanicVariant("bad", "death.handler", "corpse", null,
+            "unlock.core", [], 0, new Dictionary<string, string> { ["interval"] = "0" }));
+        Assert.Throws<InvalidOperationException>(() => registry.BuildSnapshot());
+    }
+
     private static GameplayContentSnapshot BuildContent()
     {
         var registry = new GameplayContentRegistry();
-        registry.AddHandler(new GameplayHandlerDefinition("base", []));
-        registry.AddHandler(new GameplayHandlerDefinition("snow", []));
+        registry.AddHandler(new GameplayHandlerDefinition("base", [], []));
+        registry.AddHandler(new GameplayHandlerDefinition("snow", [], []));
         registry.AddContent(new GameplayContentEntry("gene.organ.spike", "gene", "unlock.spike"));
         registry.AddContent(new GameplayContentEntry("base.death", "mechanic", "unlock.root"));
         registry.AddUnlock(new UnlockDefinition("unlock.root", "Root", "core", 0, [], ["base.death"], []));

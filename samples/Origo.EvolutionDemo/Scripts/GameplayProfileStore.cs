@@ -36,6 +36,7 @@ internal static class GameplayProfileStore
 
         if (!GameplayProfileCodec.TryDeserialize(json, out var profile))
         {
+            GD.PushWarning("Gameplay profile is corrupt; quarantining it and using placeholder defaults.");
             QuarantineCorrupt();
             return false;
         }

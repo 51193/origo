@@ -9,7 +9,10 @@ namespace Origo.EvolutionDemo.Logic.Gameplay;
 public sealed record GameplayContentEntry(string Id, string Kind, string UnlockId);
 
 /// <summary>Code handler contract registered by a startup module.</summary>
-public sealed record GameplayHandlerDefinition(string Id, IReadOnlyList<string> RequiredNumericData);
+public sealed record GameplayHandlerDefinition(
+    string Id,
+    IReadOnlyList<string> RequiredNumericData,
+    IReadOnlyList<string> RequiredPositiveData);
 
 /// <summary>One mutually exclusive implementation inside a mechanic group.</summary>
 public sealed record MechanicVariant(
@@ -155,10 +158,21 @@ public sealed class GameplayContentRegistry
             {
                 if (!variant.Data.TryGetValue(key, out var raw)
                     || !float.TryParse(raw, NumberStyles.Float,
-                        System.Globalization.CultureInfo.InvariantCulture, out var numeric)
+                        CultureInfo.InvariantCulture, out var numeric)
                     || !float.IsFinite(numeric))
                     throw new InvalidOperationException(
                         $"Variant '{variant.Id}' handler '{handler.Id}' needs finite numeric data '{key}'.");
+            }
+
+            foreach (var key in handler.RequiredPositiveData)
+            {
+                if (!variant.Data.TryGetValue(key, out var raw)
+                    || !float.TryParse(raw, NumberStyles.Float,
+                        CultureInfo.InvariantCulture, out var numeric)
+                    || !float.IsFinite(numeric)
+                    || numeric <= 0f)
+                    throw new InvalidOperationException(
+                        $"Variant '{variant.Id}' handler '{handler.Id}' needs positive numeric data '{key}'.");
             }
         }
 

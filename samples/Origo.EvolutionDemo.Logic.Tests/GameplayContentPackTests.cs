@@ -46,7 +46,7 @@ public sealed class GameplayContentPackTests
         }
         """;
         var registry = new GameplayContentRegistry();
-        registry.AddHandler(new GameplayHandlerDefinition("base_spawn", []));
+        registry.AddHandler(new GameplayHandlerDefinition("base_spawn", [], []));
         registry.AddUnlock(new UnlockDefinition("unlock.core", "core", "core", 0, [], [], []));
         GameplayContentPackLoader.AddTo(registry, json);
         var snapshot = registry.BuildSnapshot();

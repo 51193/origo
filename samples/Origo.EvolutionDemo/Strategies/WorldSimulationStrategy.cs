@@ -896,7 +896,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         gameplayRuntime.EvaluateMilestones(
             gameplayRuntime.Progression.LifetimeSeconds,
             alive,
-            ReadInt(controller, DemoKeys.SpikeKills, 0) + spikeKills);
+            ReadInt(controller, DemoKeys.SpikeKills, 0));
 
         if (alive == 0 && pendingChildren == 0 && ReadBool(controller, DemoKeys.Initialized, false))
             controller.SetData(DemoKeys.Phase, DemoKeys.PhaseExtinct);

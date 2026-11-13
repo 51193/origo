@@ -138,8 +138,8 @@ pipeline is the extension surface for module systems. Milestone definitions are
 evaluated against lifetime, population, and kill metrics each simulation tick. Content is always registered before it is gated, so locked and
 unlocked content share the same validation path.
 
-The controller persists progression as `game.points`, `game.unlocked`,
-`game.milestones`, and `game.lifetimeSeconds`. A separate
+The controller mirrors progression as `game.points`, `game.unlocked`,
+`game.milestones`, and `game.lifetimeSeconds` for save snapshots. A separate
 `user://gameplay_profile.json` is the authoritative meta-progression store: it
 survives New Game and application restarts by design, because idle unlocks are
 account-wide. Profile writes use a temp file plus atomic move; unreadable or

@@ -18,6 +18,7 @@ public partial class DemoContentWatcher : Node
     private readonly string _directory;
     private double _elapsed;
     private string _lastHash = string.Empty;
+    private string _failedHash = string.Empty;
     private bool _loaded;
 
     public DemoContentWatcher()
@@ -58,10 +59,21 @@ public partial class DemoContentWatcher : Node
         }
 
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(hashBuilder.ToString())));
-        if (_loaded && string.Equals(hash, _lastHash, StringComparison.Ordinal))
+        if ((_loaded && string.Equals(hash, _lastHash, StringComparison.Ordinal))
+            || string.Equals(hash, _failedHash, StringComparison.Ordinal))
             return;
-        GameplayRuntime.EnsureCurrent().ApplyExternalPacks(texts);
+        try
+        {
+            GameplayRuntime.EnsureCurrent().ApplyExternalPacks(texts);
+        }
+        catch
+        {
+            _failedHash = hash;
+            throw;
+        }
+
         _lastHash = hash;
+        _failedHash = string.Empty;
         _loaded = true;
         GD.Print($"CONTENT_RELOAD_OK files={files.Length} hash={hash[..12]}");
     }
