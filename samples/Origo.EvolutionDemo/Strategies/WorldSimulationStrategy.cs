@@ -675,6 +675,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         world.SpikeHits = spikeHits;
         world.SpikeKills = spikeKills;
         world.SpikeDrained = spikeDrained;
+        world.FoodAlive = foodAlive;
+        world.PendingFood = pendingFood;
         world.SensorGrid = sensorGrid;
         world.FoodCount = foods.Count;
         world.Alive = alive;

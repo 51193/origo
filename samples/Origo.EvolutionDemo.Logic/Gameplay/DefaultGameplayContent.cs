@@ -214,7 +214,4 @@ public sealed class GameplayRuntime
         }
     }
 
-    public static GameplayRuntime? Current { get; set; }
-
-    public static GameplayRuntime EnsureCurrent() => Current ??= CreateDefault();
 }
