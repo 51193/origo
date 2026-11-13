@@ -140,6 +140,8 @@ snapshot, progression state, unlock service, and mechanic resolver. The fixed ti
 - `SnapshotSimulationSystem` (Sense) builds the entity/sensor snapshot;
 - `CorpseSimulationSystem` (Sense) releases carcass nutrients;
 - `CoreSimulationSystem` (Act) runs creature ecology;
+- `CollisionSimulationSystem` (Move) resolves soft creature collisions;
+- `FoodBloomSimulationSystem` (ResolveAction) adds feed and uniform food;
 - `CommitSimulationSystem` (Commit) writes counters, deferred spawns, and
   extinction state;
 - `FoodSourceSimulationSystem` (Environment) ticks food sources;

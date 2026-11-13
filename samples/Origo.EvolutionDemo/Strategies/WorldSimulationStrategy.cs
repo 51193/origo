@@ -25,8 +25,6 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
 {
     private const double TwoPi = Math.PI * 2d;
     private static readonly Dictionary<string, (PhenotypeV4 Phenotype, CompiledBrainV4 Brain)> BrainCache = new(StringComparer.Ordinal);
-    private static readonly List<CollisionBody> CollisionBodyScratch = [];
-    private static readonly List<ISndEntity> CollisionEntityScratch = [];
     private static readonly DemoActionEffectState ActionStateScratch = new();
 
     /// <inheritdoc/>
@@ -295,9 +293,9 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         var pendingChildren = 0;
         var pendingFood = world.PendingFood;
         var mutations = world.Mutations;
-        var collisionBodies = CollisionBodyScratch;
+        var collisionBodies = world.CollisionBodies;
         collisionBodies.Clear();
-        var collisionEntities = CollisionEntityScratch;
+        var collisionEntities = world.CollisionEntities;
         collisionEntities.Clear();
         var bodyMutationRate = (float)Tuning.BodyMutationRate;
         var inspectTarget = ReadString(controller, DemoKeys.InspectTarget, string.Empty);
@@ -652,60 +650,14 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             collisionEntities.Add(entity);
         }
 
-        if (collisionEnabled && collisionBodies.Count > 1)
-        {
-            var bodyArray = collisionBodies.ToArray();
-            if (bodyArray.Length >= 128)
-                CreatureCollision.ResolveSweep(bodyArray, Tuning.PondRadius);
-            else
-                CreatureCollision.Resolve(
-                    bodyArray,
-                    Tuning.PondRadius,
-                    Tuning.CollisionIterations);
-            for (var i = 0; i < bodyArray.Length; i++)
-            {
-                collisionEntities[i].SetData(DemoKeys.X, bodyArray[i].X);
-                collisionEntities[i].SetData(DemoKeys.Y, bodyArray[i].Y);
-            }
-        }
-
-        var foodTarget = FoodTargetForPreset(ReadInt(controller, DemoKeys.FoodPreset, 1), pondTime, bloomEnabled);
-        var bloomRate = bloomEnabled && pondTime < Tuning.EarlyFoodRampSeconds
-            ? Tuning.EarlyFoodSpawnBonus * (1f - (pondTime / Tuning.EarlyFoodRampSeconds))
-            : 0f;
-        var foodAccumulator = ReadFloat(controller, DemoKeys.FoodAccumulator, 0f)
-            + ((Tuning.FoodPerSecond + bloomRate) * tickDt);
-        var feedRequest = ReadInt(controller, DemoKeys.FeedRequest, 0);
-        while (feedRequest > 0 && foodAlive < Tuning.FoodCap)
-        {
-            var position = RandomFoodPosition(rng, seed, patchCount);
-            mutations.Add(CreateFoodMeta(FoodName(nextFoodId++), position.X, position.Y));
-            foodAlive++;
-            pendingFood++;
-            feedRequest--;
-        }
-
-        if (patchCount <= 0)
-        {
-            while (foodAccumulator >= 1f
-                && foodAlive + pendingFood < foodTarget
-                && foodAlive < Tuning.FoodCap)
-            {
-                var position = RandomFoodPosition(rng, seed, patchCount);
-                mutations.Add(CreateFoodMeta(FoodName(nextFoodId++), position.X, position.Y));
-                foodAccumulator -= 1f;
-                foodAlive++;
-                pendingFood++;
-            }
-        }
-        else
-        {
-            // Patch sources are the only natural food producer when patches
-            // are active; keep the accumulator bounded so a later uniform
-            // configuration does not inherit a stale burst.
-            foodAccumulator = Math.Min(foodAccumulator, 1f);
-        }
-
+        world.PondTime = pondTime;
+        world.BloomEnabled = bloomEnabled;
+        world.CollisionEnabled = collisionEnabled;
+        world.PatchCount = patchCount;
+        world.Seed = seed;
+        world.FoodPreset = ReadInt(controller, DemoKeys.FoodPreset, 1);
+        world.FoodAccumulator = ReadFloat(controller, DemoKeys.FoodAccumulator, 0f);
+        world.FeedRequest = ReadInt(controller, DemoKeys.FeedRequest, 0);
         world.NextCreatureId = nextCreatureId;
         world.NextLineageId = nextLineageId;
         world.NextFoodId = nextFoodId;
@@ -719,8 +671,6 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         world.ToxicMeals = toxicMeals;
         world.MaxGeneration = maxGeneration;
         world.PendingChildren = pendingChildren;
-        world.FoodAccumulator = foodAccumulator;
-        world.FeedRequest = feedRequest;
         world.SpikeAttacks = spikeAttacks;
         world.SpikeHits = spikeHits;
         world.SpikeKills = spikeKills;
@@ -788,7 +738,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         return NumericsVector2.Normalize(position) * limit;
     }
 
-    private static NumericsVector2 RandomFoodPosition(Random rng, int seed, int patchCount)
+    internal static NumericsVector2 RandomFoodPosition(Random rng, int seed, int patchCount)
     {
         if (patchCount <= 0)
             return RandomPosition(rng);
@@ -832,7 +782,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
     private static string CorpseName(int id) => $"corpse_{id:000000}";
     private static string SourceName(int patch) => $"food_source_{patch:000}";
 
-    private static int FoodTargetForPreset(int preset, float time, bool bloomEnabled)
+    internal static int FoodTargetForPreset(int preset, float time, bool bloomEnabled)
     {
         var baseTarget = preset switch
         {

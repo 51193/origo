@@ -16,8 +16,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Idle gameplay migration for the evolution demo** — gameplay content now
   flows through an immutable content registry with a module host, generic unlock
   service, and mutually exclusive mechanic variants. The fixed tick is driven by
-  a phase pipeline whose snapshot, corpse, core-ecology, commit, food-source,
-  and progression systems execute in order; modules can append systems. Death
+  a phase pipeline whose snapshot, corpse, core-ecology, collision, food-bloom,
+  commit, food-source, and progression systems execute in order; modules can
+  append systems. Death
   and spawn policies dispatch through typed handler registries, and content
   startup validates handler coverage. Core content and all tick systems are
   registered through one `IGameplayModule` contract, and runtime access is

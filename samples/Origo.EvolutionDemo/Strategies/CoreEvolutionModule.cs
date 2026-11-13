@@ -16,6 +16,8 @@ internal sealed class CoreEvolutionModule : IGameplayModule
         services.AddSystem(new SnapshotSimulationSystem());
         services.AddSystem(new CorpseSimulationSystem());
         services.AddSystem(new CoreSimulationSystem());
+        services.AddSystem(new CollisionSimulationSystem());
+        services.AddSystem(new FoodBloomSimulationSystem());
         services.AddSystem(new CommitSimulationSystem());
         services.AddSystem(new FoodSourceSimulationSystem());
         services.AddSystem(new ProgressionSimulationSystem());

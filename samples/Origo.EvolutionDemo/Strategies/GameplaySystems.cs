@@ -57,6 +57,14 @@ internal sealed class EvolutionTickContext : IGameplayWorldContext
     public int PendingChildren { get; set; }
     public float FoodAccumulator { get; set; }
     public int FeedRequest { get; set; }
+    public float PondTime { get; set; }
+    public bool BloomEnabled { get; set; }
+    public bool CollisionEnabled { get; set; }
+    public int PatchCount { get; set; }
+    public int Seed { get; set; }
+    public int FoodPreset { get; set; }
+    public List<CollisionBody> CollisionBodies { get; } = [];
+    public List<ISndEntity> CollisionEntities { get; } = [];
 }
 
 /// <summary>Builds the immutable entity/sensor snapshot for one tick.</summary>
@@ -142,6 +150,88 @@ internal sealed class CoreSimulationSystem : IGameplaySystem
         if (context is not EvolutionTickContext world)
             throw new InvalidOperationException("CoreSimulationSystem requires EvolutionTickContext.");
         WorldSimulationStrategy.RunCoreSimulation(world);
+    }
+}
+
+/// <summary>Resolves soft creature collisions after the creature act phase.</summary>
+internal sealed class CollisionSimulationSystem : IGameplaySystem
+{
+    public string Id => "evolution.collision";
+    public GameplayPhase Phase => GameplayPhase.Move;
+    public int Order => 0;
+
+    public void Tick(IGameplayWorldContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        if (context is not EvolutionTickContext world)
+            throw new InvalidOperationException("CollisionSimulationSystem requires EvolutionTickContext.");
+        if (!world.CollisionEnabled || world.CollisionBodies.Count <= 1)
+            return;
+        var bodyArray = world.CollisionBodies.ToArray();
+        if (bodyArray.Length >= 128)
+            CreatureCollision.ResolveSweep(bodyArray, Tuning.PondRadius);
+        else
+            CreatureCollision.Resolve(bodyArray, Tuning.PondRadius, Tuning.CollisionIterations);
+        for (var i = 0; i < bodyArray.Length; i++)
+        {
+            world.CollisionEntities[i].SetData(DemoKeys.X, bodyArray[i].X);
+            world.CollisionEntities[i].SetData(DemoKeys.Y, bodyArray[i].Y);
+        }
+    }
+}
+
+/// <summary>Adds feed spawns and uniform/early-bloom food after core ecology.</summary>
+internal sealed class FoodBloomSimulationSystem : IGameplaySystem
+{
+    public string Id => "evolution.foodbloom";
+    public GameplayPhase Phase => GameplayPhase.ResolveAction;
+    public int Order => 0;
+
+    public void Tick(IGameplayWorldContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        if (context is not EvolutionTickContext world)
+            throw new InvalidOperationException("FoodBloomSimulationSystem requires EvolutionTickContext.");
+        var tickDt = Tuning.SimulationTickSeconds;
+        var foodTarget = WorldSimulationStrategy.FoodTargetForPreset(world.FoodPreset, world.PondTime, world.BloomEnabled);
+        var bloomRate = world.BloomEnabled && world.PondTime < Tuning.EarlyFoodRampSeconds
+            ? Tuning.EarlyFoodSpawnBonus * (1f - (world.PondTime / Tuning.EarlyFoodRampSeconds))
+            : 0f;
+        var foodAccumulator = world.FoodAccumulator + ((Tuning.FoodPerSecond + bloomRate) * tickDt);
+        var feedRequest = world.FeedRequest;
+        while (feedRequest > 0 && world.FoodAlive < Tuning.FoodCap)
+        {
+            var position = WorldSimulationStrategy.RandomFoodPosition(
+                world.Rng, world.Seed, world.PatchCount);
+            world.Mutations.Add(EvolutionEntityFactory.Food(
+                EvolutionEntityFactory.FoodName(world.NextFoodId++), position.X, position.Y));
+            world.FoodAlive++;
+            world.PendingFood++;
+            feedRequest--;
+        }
+
+        if (world.PatchCount <= 0)
+        {
+            while (foodAccumulator >= 1f
+                && world.FoodAlive + world.PendingFood < foodTarget
+                && world.FoodAlive < Tuning.FoodCap)
+            {
+                var position = WorldSimulationStrategy.RandomFoodPosition(
+                    world.Rng, world.Seed, world.PatchCount);
+                world.Mutations.Add(EvolutionEntityFactory.Food(
+                    EvolutionEntityFactory.FoodName(world.NextFoodId++), position.X, position.Y));
+                foodAccumulator -= 1f;
+                world.FoodAlive++;
+                world.PendingFood++;
+            }
+        }
+        else
+        {
+            foodAccumulator = Math.Min(foodAccumulator, 1f);
+        }
+
+        world.FoodAccumulator = foodAccumulator;
+        world.FeedRequest = feedRequest;
     }
 }
 
