@@ -8,6 +8,7 @@ using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Strategy;
 using Origo.EvolutionDemo.Logic;
+using Origo.EvolutionDemo.Logic.Gameplay;
 using Origo.EvolutionDemo.Logic.V4;
 using NumericsVector2 = System.Numerics.Vector2;
 
@@ -736,17 +737,36 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
 
             if (energy <= 0f || age >= creature.MaxAge)
             {
-                // Dead matter becomes a decaying carcass. The carcass persists
-                // briefly and releases its nutrient pulses over time instead of
-                // dropping all food in the same tick.
-                if (Tuning.DeathFoodCount > 0)
+                var deathVariant = GameplayRuntime.EnsureCurrent()
+                    .Resolver.Resolve("death.handler");
+                if (deathVariant is null
+                    || string.Equals(deathVariant.Id, "death.instant_food", StringComparison.Ordinal))
                 {
+                    var foodCount = Math.Min(
+                        Tuning.DeathFoodCount,
+                        Math.Max(0, Tuning.FoodCap - (foodAlive + pendingFood)));
+                    for (var bite = 0; bite < foodCount; bite++)
+                    {
+                        var foodPosition = ClampToPond(
+                            position + RandomOffset(rng),
+                            creature.FoodPickupRadius);
+                        mutations.Add(CreateFoodMeta(FoodName(nextFoodId++), foodPosition.X, foodPosition.Y));
+                        foodAlive++;
+                        pendingFood++;
+                    }
+                }
+                else if (Tuning.DeathFoodCount > 0)
+                {
+                    var interval = Tuning.CarcassFoodIntervalSeconds;
+                    if (deathVariant.Data.TryGetValue("interval", out var rawInterval)
+                        && float.TryParse(rawInterval, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed))
+                        interval = parsed;
                     mutations.Add(CreateCorpseMeta(
                         CorpseName(nextCorpseId++),
                         position.X,
                         position.Y,
                         Tuning.DeathFoodCount,
-                        Tuning.CarcassFoodIntervalSeconds));
+                        interval));
                     corpsesCreated++;
                 }
 

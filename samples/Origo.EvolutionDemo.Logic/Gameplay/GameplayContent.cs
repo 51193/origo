@@ -91,6 +91,19 @@ public sealed class GameplayContentRegistry
             throw new InvalidOperationException($"Duplicate milestone id '{milestone.Id}'.");
     }
 
+    public void AddSnapshot(GameplayContentSnapshot snapshot)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+        foreach (var entry in snapshot.Content.Values)
+            AddContent(entry);
+        foreach (var unlock in snapshot.Unlocks.Values)
+            AddUnlock(unlock);
+        foreach (var variant in snapshot.Variants.Values)
+            AddVariant(variant);
+        foreach (var milestone in snapshot.Milestones.Values)
+            AddMilestone(milestone);
+    }
+
     public GameplayContentSnapshot BuildSnapshot()
     {
         Validate();

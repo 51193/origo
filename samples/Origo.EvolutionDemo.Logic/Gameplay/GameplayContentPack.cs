@@ -39,19 +39,23 @@ public static class GameplayContentPackLoader
         ArgumentNullException.ThrowIfNull(packJson);
         var registry = new GameplayContentRegistry();
         foreach (var json in packJson)
-        {
-            var pack = Parse(json);
-            foreach (var entry in pack.Content)
-                registry.AddContent(entry);
-            foreach (var unlock in pack.Unlocks)
-                registry.AddUnlock(unlock);
-            foreach (var variant in pack.Variants)
-                registry.AddVariant(variant);
-            foreach (var milestone in pack.Milestones)
-                registry.AddMilestone(milestone);
-        }
-
+            AddTo(registry, json);
         return registry.BuildSnapshot();
+    }
+
+    /// <summary>Adds one pack to an existing registry; validation happens when the snapshot is built.</summary>
+    public static void AddTo(GameplayContentRegistry registry, string json)
+    {
+        ArgumentNullException.ThrowIfNull(registry);
+        var pack = Parse(json);
+        foreach (var entry in pack.Content)
+            registry.AddContent(entry);
+        foreach (var unlock in pack.Unlocks)
+            registry.AddUnlock(unlock);
+        foreach (var variant in pack.Variants)
+            registry.AddVariant(variant);
+        foreach (var milestone in pack.Milestones)
+            registry.AddMilestone(milestone);
     }
 
     private static void Validate(GameplayContentPack pack)

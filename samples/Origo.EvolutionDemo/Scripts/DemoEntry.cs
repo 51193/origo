@@ -7,6 +7,7 @@ using Origo.Core.Abstractions.Scene;
 using Origo.Core.Save.Meta;
 using Origo.Core.Snd;
 using Origo.GodotAdapter.Bootstrap;
+using Origo.EvolutionDemo.Logic.Gameplay;
 
 namespace Origo.EvolutionDemo;
 
@@ -30,6 +31,7 @@ public partial class DemoEntry : OrigoDefaultEntry
     /// <inheritdoc/>
     public override void _Ready()
     {
+        GameplayRuntime.Current = GameplayRuntime.CreateDefault();
         ConfigPath = "res://Origo/entry/entry.json";
         SceneAliasMapPath = "res://Origo/maps/scene_aliases.map";
         SndTemplateMapPath = "res://Origo/maps/snd_templates.map";
@@ -43,6 +45,7 @@ public partial class DemoEntry : OrigoDefaultEntry
         AddChild(WorldView);
         Ui = new DemoUi(this);
         AddChild(Ui);
+        AddChild(new DemoContentWatcher());
         if (string.Equals(OS.GetEnvironment("ORIGO_DEMO_SMOKE"), "1", StringComparison.Ordinal))
             AddChild(new DemoSmokeRunner(this));
     }
