@@ -42,7 +42,8 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
         ISndEntity controller,
         ISndContext ctx,
         SensorGrid grid,
-        int foodCount)
+        int foodCount,
+        EvolutionGameSession gameplaySession)
     {
         ArgumentNullException.ThrowIfNull(controller);
         ArgumentNullException.ThrowIfNull(ctx);
@@ -55,7 +56,7 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
             var (found, kind) = source.TryGetData<string>(DemoKeys.Kind);
             if (!found || !string.Equals(kind, SourceKind, StringComparison.Ordinal))
                 continue;
-            TickSource(source, controller, ctx, grid, foodCount);
+            TickSource(source, controller, ctx, grid, foodCount, gameplaySession);
         }
     }
 
@@ -64,7 +65,8 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
         ISndEntity controller,
         ISndContext ctx,
         SensorGrid grid,
-        int foodCount)
+        int foodCount,
+        EvolutionGameSession gameplaySession)
     {
         var session = entity.OwningSession;
         var time = ReadFloat(controller, DemoKeys.Time, 0f);
@@ -163,7 +165,7 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
             return;
 
         var foodSpawned = metas.Count;
-        var spawnVariant = GameplayRuntime.EnsureCurrent().Resolver.Resolve("spawn.policy");
+        var spawnVariant = gameplaySession.Runtime.Resolver.Resolve("spawn.policy");
         if (spawnVariant is not null)
         {
             var nextCreature = Math.Max(1, ReadInt(controller, DemoKeys.NextCreatureId, 1));

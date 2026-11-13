@@ -169,7 +169,7 @@ public partial class DemoUi : CanvasLayer
             if (_gameplayProfileTimer >= 15d)
             {
                 _gameplayProfileTimer = 0d;
-                GameplayProfileStore.Save(GameplayRuntime.EnsureCurrent().Progression);
+                GameplayProfileStore.Save(_entry.Session.Runtime.Progression);
             }
         }
 
@@ -279,7 +279,7 @@ public partial class DemoUi : CanvasLayer
     {
         var controller = FindController();
         if (controller is not null)
-            GameplayStateSync.Save(controller, GameplayRuntime.EnsureCurrent());
+            GameplayStateSync.Save(controller, _entry.Session.Runtime);
     }
 
     /// <summary>

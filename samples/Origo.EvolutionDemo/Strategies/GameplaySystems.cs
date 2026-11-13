@@ -11,15 +11,21 @@ namespace Origo.EvolutionDemo;
 /// <summary>Mutable state shared by systems for one fixed simulation tick.</summary>
 internal sealed class EvolutionTickContext : IGameplayWorldContext
 {
-    public EvolutionTickContext(ISndEntity controller, ISndContext sndContext, double tickSeconds)
+    public EvolutionTickContext(
+        ISndEntity controller,
+        ISndContext sndContext,
+        double tickSeconds,
+        EvolutionGameSession session)
     {
         Controller = controller;
         SndContext = sndContext;
         TickSeconds = tickSeconds;
+        Session = session;
     }
 
     public ISndEntity Controller { get; }
     public ISndContext SndContext { get; }
+    public EvolutionGameSession Session { get; }
     public double TickSeconds { get; }
     public double TimeSeconds => TickSeconds;
     public SensorGrid? SensorGrid { get; set; }
@@ -222,7 +228,8 @@ internal sealed class FoodSourceSimulationSystem : IGameplaySystem
         if (context is not EvolutionTickContext world
             || world.SensorGrid is null)
             throw new InvalidOperationException("FoodSourceSimulationSystem requires core tick state.");
-        FoodSourceStrategy.TickAll(world.Controller, world.SndContext, world.SensorGrid, world.FoodCount);
+        FoodSourceStrategy.TickAll(
+            world.Controller, world.SndContext, world.SensorGrid, world.FoodCount, world.Session);
     }
 }
 
@@ -238,7 +245,7 @@ internal sealed class ProgressionSimulationSystem : IGameplaySystem
         ArgumentNullException.ThrowIfNull(context);
         if (context is not EvolutionTickContext world)
             throw new InvalidOperationException("ProgressionSimulationSystem requires EvolutionTickContext.");
-        var runtime = GameplayRuntime.EnsureCurrent();
+        var runtime = world.Session.Runtime;
         runtime.Progression.LifetimeSeconds += Tuning.SimulationTickSeconds;
         runtime.EvaluateMilestones(
             runtime.Progression.LifetimeSeconds,

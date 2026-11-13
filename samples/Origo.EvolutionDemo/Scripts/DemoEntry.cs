@@ -22,6 +22,9 @@ public partial class DemoEntry : OrigoDefaultEntry
     public const string AutoSaveId = "auto";
     public const string ControllerName = "world_controller";
 
+    /// <summary>Per-context gameplay services.</summary>
+    public EvolutionGameSession Session { get; private set; } = null!;
+
     /// <summary>UI and world view are created after the Origo context is ready.</summary>
     public DemoUi Ui { get; private set; } = null!;
 
@@ -31,9 +34,9 @@ public partial class DemoEntry : OrigoDefaultEntry
     /// <inheritdoc/>
     public override void _Ready()
     {
-        GameplayRuntime.Current = GameplayRuntime.CreateDefault([new CoreEvolutionModule()]);
-        GameplayProfileStore.TryLoad(GameplayRuntime.Current);
-        DemoMechanicHandlers.Validate(GameplayRuntime.Current);
+        var gameplayRuntime = GameplayRuntime.CreateDefault([new CoreEvolutionModule()]);
+        GameplayProfileStore.TryLoad(gameplayRuntime);
+        DemoMechanicHandlers.Validate(gameplayRuntime);
         ConfigPath = "res://Origo/entry/entry.json";
         SceneAliasMapPath = "res://Origo/maps/scene_aliases.map";
         SndTemplateMapPath = "res://Origo/maps/snd_templates.map";
@@ -42,13 +45,15 @@ public partial class DemoEntry : OrigoDefaultEntry
         SystemBlackboardSaveRoot = "user://evolution_demo_system";
 
         base._Ready();
+        Session = new EvolutionGameSession(Context, gameplayRuntime);
+        EvolutionGameSession.Register(Session);
 
         WorldView = new EvolutionWorldView(this);
         AddChild(WorldView);
         Ui = new DemoUi(this);
         AddChild(Ui);
         AddChild(new UnlockOverlay(this));
-        AddChild(new DemoContentWatcher());
+        AddChild(new DemoContentWatcher(Session));
         if (string.Equals(OS.GetEnvironment("ORIGO_DEMO_SMOKE"), "1", StringComparison.Ordinal))
             AddChild(new DemoSmokeRunner(this));
     }

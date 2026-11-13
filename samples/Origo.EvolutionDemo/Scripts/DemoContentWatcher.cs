@@ -15,14 +15,16 @@ namespace Origo.EvolutionDemo;
 /// </summary>
 public partial class DemoContentWatcher : Node
 {
+    private readonly EvolutionGameSession _session;
     private readonly string _directory;
     private double _elapsed;
     private string _lastHash = string.Empty;
     private string _failedHash = string.Empty;
     private bool _loaded;
 
-    public DemoContentWatcher()
+    public DemoContentWatcher(EvolutionGameSession session)
     {
+        _session = session;
         _directory = ResolveDirectory();
     }
 
@@ -64,7 +66,7 @@ public partial class DemoContentWatcher : Node
             return;
         try
         {
-            var runtime = GameplayRuntime.EnsureCurrent();
+            var runtime = _session.Runtime;
             runtime.ApplyExternalPacks(texts);
             DemoMechanicHandlers.Validate(runtime);
         }

@@ -157,7 +157,7 @@ public partial class UnlockOverlay : CanvasLayer
 
     private void Refresh()
     {
-        var runtime = GameplayRuntime.EnsureCurrent();
+        var runtime = _entry.Session.Runtime;
         _pointsLabel.Text = string.Create(
             CultureInfo.InvariantCulture,
             $"Evolution points: {runtime.Progression.Points:N0}");

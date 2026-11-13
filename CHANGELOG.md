@@ -20,7 +20,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   and progression systems execute in order; modules can append systems. Death
   and spawn policies dispatch through typed handler registries, and content
   startup validates handler coverage. Core content and all tick systems are
-  registered through one `IGameplayModule` contract. JSON content packs under `samples/Origo.EvolutionDemo/Content` are
+  registered through one `IGameplayModule` contract, and runtime access is
+  context-scoped through `EvolutionGameSession` rather than a global singleton. JSON content packs under `samples/Origo.EvolutionDemo/Content` are
   hot-reloaded at a frame boundary; invalid packs leave the active snapshot
   untouched. The demo persists progression (placeholder Evolution Points,
   unlocked ids, milestones, lifetime) on the world controller and rejects saves

@@ -257,7 +257,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         controller.SetData(DemoKeys.FoodToxicMeals, 0);
         controller.SetData(DemoKeys.Phase, DemoKeys.PhaseStarting);
         controller.SetData(DemoKeys.GenomeVersion, 6);
-        var gameplay = GameplayRuntime.EnsureCurrent();
+        var gameplay = EvolutionGameSession.For(ctx).Runtime;
         GameplayStateSync.Save(controller, gameplay);
 
         var session = controller.OwningSession;
@@ -270,8 +270,9 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
 
     private static void SimulateTick(ISndEntity controller, ISndContext ctx)
     {
-        GameplayRuntime.EnsureCurrent().Pipeline.Tick(
-            new EvolutionTickContext(controller, ctx, Tuning.SimulationTickSeconds),
+        var session = EvolutionGameSession.For(ctx);
+        session.Runtime.Pipeline.Tick(
+            new EvolutionTickContext(controller, ctx, Tuning.SimulationTickSeconds, session),
             static _ => true);
     }
 
@@ -619,8 +620,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
 
             if (energy <= 0f || age >= creature.MaxAge)
             {
-                var deathVariant = GameplayRuntime.EnsureCurrent()
-                    .Resolver.Resolve("death.handler")
+                var deathVariant = world.Session.Runtime.Resolver.Resolve("death.handler")
                     ?? throw new InvalidOperationException("No enabled death.handler variant.");
                 var deathContext = new DeathHandlerContext
                 {
