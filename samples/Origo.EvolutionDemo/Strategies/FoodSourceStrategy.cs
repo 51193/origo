@@ -175,6 +175,7 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
                 Rng = rng,
                 Metas = metas,
                 HandlerId = spawnVariant.HandlerId,
+                Variant = spawnVariant,
                 NextCreatureId = nextCreature,
                 NextLineageId = nextLineage,
             };

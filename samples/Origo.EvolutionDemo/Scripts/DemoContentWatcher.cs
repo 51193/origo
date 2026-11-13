@@ -64,7 +64,9 @@ public partial class DemoContentWatcher : Node
             return;
         try
         {
-            GameplayRuntime.EnsureCurrent().ApplyExternalPacks(texts);
+            var runtime = GameplayRuntime.EnsureCurrent();
+            runtime.ApplyExternalPacks(texts);
+            DemoMechanicHandlers.Validate(runtime);
         }
         catch
         {

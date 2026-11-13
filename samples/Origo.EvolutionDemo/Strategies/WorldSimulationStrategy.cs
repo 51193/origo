@@ -629,6 +629,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     Position = position,
                     Rng = rng,
                     Mutations = mutations,
+                    Variant = deathVariant,
                     FoodAlive = foodAlive,
                     PendingFood = pendingFood,
                     NextFoodId = nextFoodId,

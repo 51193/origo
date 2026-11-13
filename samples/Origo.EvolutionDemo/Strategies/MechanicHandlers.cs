@@ -19,6 +19,7 @@ internal sealed class DeathHandlerContext
     public required NumericsVector2 Position { get; init; }
     public required Random Rng { get; init; }
     public required List<SndMetaData> Mutations { get; init; }
+    public required MechanicVariant Variant { get; init; }
     public int FoodAlive { get; set; }
     public int PendingFood { get; set; }
     public int NextFoodId { get; set; }
@@ -60,12 +61,19 @@ internal sealed class CorpsePulseDeathHandler : IGameplayHandler<DeathHandlerCon
         ArgumentNullException.ThrowIfNull(context);
         if (Tuning.DeathFoodCount <= 0)
             return;
+        if (!context.Variant.Data.TryGetValue("interval", out var rawInterval)
+            || !float.TryParse(rawInterval, NumberStyles.Float,
+                CultureInfo.InvariantCulture, out var interval)
+            || !float.IsFinite(interval)
+            || interval <= 0f)
+            throw new InvalidOperationException(
+                $"Corpse handler variant '{context.Variant.Id}' needs a positive interval.");
         context.Mutations.Add(EvolutionEntityFactory.Corpse(
             EvolutionEntityFactory.CorpseName(context.NextCorpseId++),
             context.Position.X,
             context.Position.Y,
             Tuning.DeathFoodCount,
-            Tuning.CarcassFoodIntervalSeconds));
+            interval));
         context.CorpsesCreated++;
     }
 }
@@ -78,6 +86,7 @@ internal sealed class SpawnPolicyContext
     public required Random Rng { get; init; }
     public required List<SndMetaData> Metas { get; init; }
     public required string HandlerId { get; init; }
+    public required MechanicVariant Variant { get; init; }
     public int NextCreatureId { get; set; }
     public int NextLineageId { get; set; }
 }
@@ -99,7 +108,13 @@ internal sealed class FoodEnrichmentSpawnHandler : IGameplayHandler<SpawnPolicyC
     {
         ArgumentNullException.ThrowIfNull(context);
         var session = context.Source.OwningSession;
-        if (CountCreatures(session) >= Tuning.PopulationCap || context.Rng.NextDouble() >= 0.08d)
+        var chance = 0.08d;
+        if (context.Variant.Data.TryGetValue("chance", out var rawChance)
+            && float.TryParse(rawChance, NumberStyles.Float,
+                CultureInfo.InvariantCulture, out var parsedChance)
+            && float.IsFinite(parsedChance))
+            chance = Math.Clamp(parsedChance, 0f, 1f);
+        if (CountCreatures(session) >= Tuning.PopulationCap || context.Rng.NextDouble() >= chance)
             return;
         var founder = CreatureGenome.RandomFounder(context.Rng);
         var position = new NumericsVector2(
