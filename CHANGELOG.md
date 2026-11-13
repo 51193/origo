@@ -23,7 +23,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   startup validates handler coverage. Core content and all tick systems are
   registered through one `IGameplayModule` contract, runtime access is
   context-scoped through `EvolutionGameSession` rather than a global singleton,
-  and the demo UI is split into focused partial view files. JSON content packs under `samples/Origo.EvolutionDemo/Content` are
+  the demo UI is split into focused partial view files, and persistence is
+  unified behind `GameplayPersistence`. JSON content packs under `samples/Origo.EvolutionDemo/Content` are
   hot-reloaded at a frame boundary; invalid packs leave the active snapshot
   untouched. The demo persists progression (placeholder Evolution Points,
   unlocked ids, milestones, lifetime) on the world controller and rejects saves

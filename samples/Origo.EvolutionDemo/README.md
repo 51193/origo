@@ -162,7 +162,9 @@ unlocked content share the same validation path.
 
 The controller mirrors progression as `game.points`, `game.unlocked`,
 `game.milestones`, and `game.lifetimeSeconds` for save snapshots. A separate
-`user://gameplay_profile.json` is the authoritative meta-progression store: it
+`GameplayPersistence` is the single boundary for the account profile and the
+per-world controller mirror; UI/entry code no longer calls the two stores
+directly. `user://gameplay_profile.json` is the authoritative meta-progression store: it
 survives New Game and application restarts by design, because idle unlocks are
 account-wide. Profile writes use a temp file plus atomic move; unreadable
 profiles are warned and skipped, corrupt JSON is quarantined with a warning, and

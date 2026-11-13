@@ -25,6 +25,9 @@ public partial class DemoEntry : OrigoDefaultEntry
     /// <summary>Per-context gameplay services.</summary>
     public EvolutionGameSession Session { get; private set; } = null!;
 
+    /// <summary>Account/world progression persistence boundary.</summary>
+    public GameplayPersistence Persistence { get; private set; } = null!;
+
     /// <summary>UI and world view are created after the Origo context is ready.</summary>
     public DemoUi Ui { get; private set; } = null!;
 
@@ -35,7 +38,6 @@ public partial class DemoEntry : OrigoDefaultEntry
     public override void _Ready()
     {
         var gameplayRuntime = GameplayRuntime.CreateDefault([new CoreEvolutionModule()]);
-        GameplayProfileStore.TryLoad(gameplayRuntime);
         DemoMechanicHandlers.Validate(gameplayRuntime);
         ConfigPath = "res://Origo/entry/entry.json";
         SceneAliasMapPath = "res://Origo/maps/scene_aliases.map";
@@ -47,6 +49,8 @@ public partial class DemoEntry : OrigoDefaultEntry
         base._Ready();
         Session = new EvolutionGameSession(Context, gameplayRuntime);
         EvolutionGameSession.Register(Session);
+        Persistence = new GameplayPersistence(Session);
+        Persistence.TryLoadProfile();
 
         WorldView = new EvolutionWorldView(this);
         AddChild(WorldView);
