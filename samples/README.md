@@ -58,6 +58,20 @@ The clean Genome v4 architecture, tests, and mock benchmark live in
 The benchmark is intentionally independent of the playable runtime until the
 migration is complete.
 
+### Release packages
+
+Each framework release publishes self-contained playable demo archives for
+Linux x86_64, Windows x86_64, and macOS universal:
+
+```text
+origo-evolution-demo-<version>-linux-x86_64.tar.gz
+origo-evolution-demo-<version>-windows-x86_64.zip
+origo-evolution-demo-<version>-macos-universal.zip
+```
+
+The release job exports them from the pinned Godot mono version; packages
+include the Godot runtime and demo assemblies.
+
 ### Analysis tools
 
 The game includes local, Godot-free analysis tools for current v6 saves and
