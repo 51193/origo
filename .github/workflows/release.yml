@@ -267,6 +267,16 @@ jobs:
           path: .godot_binary
           key: godot-${{ runner.os }}-${{ hashFiles('Origo.GodotAdapter/Origo.GodotAdapter.csproj') }}
 
+      - name: Cache Godot export templates
+        uses: actions/cache@v6
+        with:
+          path: ~/.local/share/godot/export_templates
+          key: godot-export-templates-${{ runner.os }}-${{ hashFiles('Origo.GodotAdapter/Origo.GodotAdapter.csproj') }}
+          restore-keys: godot-export-templates-${{ runner.os }}-
+
+      - name: Install Godot mono export templates
+        run: bash samples/Origo.EvolutionDemo/install-export-templates.sh
+
       - name: Format check
         run: bash scripts/bash/format.sh
 
@@ -345,6 +355,11 @@ jobs:
           bash .release-validators/validate-release-source.sh \
             "artifacts/origo-source-${VERSION}.tar.gz" "$VERSION" \
             "$PWD/.release-validators/scripts/verify-release.sh"
+
+      - name: Package playable demo artifacts
+        env:
+          TAG: ${{ steps.resolve-tag.outputs.tag }}
+        run: bash samples/Origo.EvolutionDemo/package-release.sh "${TAG#v}" ./artifacts
 
       - name: Validate release artifact set
         env:

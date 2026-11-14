@@ -1548,13 +1548,13 @@ def _weekly_snapshot_errors(workflow: dict) -> list[str]:
                 "the weekly check must require a pre-release"
             ),
             'expected_snapshot_assets': (
-                "the weekly check must compare the exact nine expected snapshot asset names"
+                "the weekly check must compare the exact twelve expected snapshot asset names"
             ),
             'LC_ALL=C sort': (
                 "the weekly check must sort asset names in a locale-independent order"
             ),
             '"$assets" == "$expected"': (
-                "the weekly check must require all nine expected snapshot assets by name"
+                "the weekly check must require all twelve expected snapshot assets by name"
             ),
             'Origo.ConsoleBridge.${version}.nupkg': (
                 "the weekly check must expect Origo.ConsoleBridge.${version}.nupkg"
@@ -1579,6 +1579,15 @@ def _weekly_snapshot_errors(workflow: dict) -> list[str]:
             ),
             'origo-source-${version}.tar.gz': (
                 "the weekly check must expect origo-source-${version}.tar.gz"
+            ),
+            'origo-evolution-demo-${version}-linux-x86_64.tar.gz': (
+                "the weekly check must expect the Linux playable demo archive"
+            ),
+            'origo-evolution-demo-${version}-windows-x86_64.zip': (
+                "the weekly check must expect the Windows playable demo archive"
+            ),
+            'origo-evolution-demo-${version}-macos-universal.zip': (
+                "the weekly check must expect the macOS playable demo archive"
             ),
             'nuget.config': (
                 "the weekly check must expect nuget.config"
@@ -2139,7 +2148,7 @@ def main() -> int:
                 "release job must run the staged artifact-set validator "
                 f"(bash {ARTIFACTS_VALIDATOR}) after source-archive validation and "
                 "before moving the tag so the attached artifact set is exactly the "
-                "documented nine names."
+                "documented twelve names."
             )
         else:
             artifacts_env = release_steps[artifacts_index].get("env")

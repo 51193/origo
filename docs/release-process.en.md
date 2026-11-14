@@ -108,7 +108,7 @@ same `BREAKING:` prefix.
   snapshot as the repository's Latest release. Only a formal `vx.y.z` tag pushed
   by hand keeps the release state chosen on GitHub.
 - An already-pushed snapshot tag is complete only when its GitHub Release is
-  published (not a draft), marked pre-release, and carries exactly the nine
+  published (not a draft), marked pre-release, and carries exactly the twelve
   expected asset names (five packages, the source archive, two documentation
   archives, and `nuget.config`); an extra or misnamed asset is incomplete. A run scans all nightly tags for the current
   base; every missing/draft/partial release is dispatched, and the current
@@ -191,9 +191,9 @@ first; every step below then applies to that tag:
   automatically generated source links resolve the same tag;
 - Run the staged `validate-release-artifacts.sh` (fetched from `main` with the
   other validators) on the packed artifact directory after the source-archive
-  validation to assert the exact nine
+  validation to assert the exact twelve
   attachment names (five packages, the source archive, the two documentation
-  archives, and `nuget.config`) with no extras; this check runs before the tag
+  archives, three playable demo archives, and `nuget.config`) with no extras; this check runs before the tag
   moves;
 - Build a documentation snapshot archive containing `docs/`, `AGENTS.md`,
   `CHANGELOG.md`, and `Directory.Build.props` (the version authority referenced
@@ -206,7 +206,7 @@ first; every step below then applies to that tag:
   workflow run -- including a GitHub re-run, whose checkout now uses an
   explicit ref -- resolves the tag's current target first, so a tag already
   moved by this pipeline does not produce a duplicate release commit;
-- Attach the nine release artifacts (five packages, the source archive, the two documentation archives, and `nuget.config`) to
+- Attach the twelve release artifacts (five packages, the source archive, the two documentation archives, three playable demo archives, and `nuget.config`) to
   the GitHub Release; pass `prerelease` when the run was started as a snapshot
   (the `snapshot` input, which the weekly job sets) or when the tag contains `-`.
   Only a formal `x.y.z` tag pushed by hand keeps the release state chosen on
