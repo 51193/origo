@@ -54,6 +54,8 @@ th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.card{display:inline-bl
         html.Append(DifferentiatingTable(rows, clustering, columns, palette));
         html.Append("<h2>Clusters by save</h2>");
         html.Append(SaveClusterTable(rows, clustering, palette));
+        html.Append("<h2>Gene-signature enrichment</h2>");
+        html.Append(GeneEnrichmentTable(rows, clustering, palette));
         html.Append("<h2>Saves</h2><table><tr><th>save</th><th>time</th><th>creatures</th><th>food</th><th>corpses</th><th>sources</th></tr>");
         foreach (var save in saves)
             html.Append(CultureInfo.InvariantCulture, $"<tr><td><code>{Escape(save.Path)}</code></td><td>{save.Time:0.0}</td><td>{save.Creatures.Count}</td><td>{save.Food}</td><td>{save.Corpses}</td><td>{save.FoodSources}</td></tr>");
@@ -141,6 +143,33 @@ th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.card{display:inline-bl
                 string.Create(CultureInfo.InvariantCulture,
                     $"{Escape(item.Name)} {item.Mean:0.###} (z={item.Z:+0.0;-0.0})"))));
             html.Append("</td></tr>");
+        }
+
+        return html.Append("</table>").ToString();
+    }
+
+    private static string GeneEnrichmentTable(IReadOnlyList<FeatureRow> rows, KMeans.Result clustering,
+        string[] palette)
+    {
+        ArgumentNullException.ThrowIfNull(rows);
+        ArgumentNullException.ThrowIfNull(clustering);
+        var html = new StringBuilder("<table><tr><th>cluster</th><th>signature</th><th>cluster with</th><th>rest with</th><th>odds</th><th>p</th><th>FDR q</th></tr>");
+        for (var cluster = 0; cluster < clustering.K; cluster++)
+        {
+            var enrichment = GeneEnrichment.Analyze(rows, clustering.Labels, cluster)
+                .Where(static result => result.QValue < 0.10)
+                .Take(10)
+                .ToArray();
+            if (enrichment.Length == 0)
+            {
+                html.Append(CultureInfo.InvariantCulture,
+                    $"<tr><td style=\"color:{palette[cluster % palette.Length]}\">{cluster}</td><td colspan=6 class=\"muted\">no gene signature with FDR &lt; 0.10</td></tr>");
+                continue;
+            }
+
+            foreach (var result in enrichment)
+                html.Append(CultureInfo.InvariantCulture,
+                    $"<tr><td style=\"color:{palette[cluster % palette.Length]}\">{cluster}</td><td><code>{Escape(result.Signature)}</code></td><td>{result.ClusterWith}/{result.ClusterTotal}</td><td>{result.RestWith}/{result.RestTotal}</td><td>{result.OddsRatio:0.00}</td><td>{result.PValue:0.0000}</td><td>{result.QValue:0.0000}</td></tr>");
         }
 
         return html.Append("</table>").ToString();
