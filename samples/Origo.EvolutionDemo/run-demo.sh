@@ -2,10 +2,10 @@
 # Build and launch the playable Evolution Demo.
 #
 # Usage:
-#   bash scripts/bash/run-evolution-demo.sh
-#   bash scripts/bash/run-evolution-demo.sh --headless
-#   bash scripts/bash/run-evolution-demo.sh --headless --seconds 120
-#   bash scripts/bash/run-evolution-demo.sh --no-build
+#   bash samples/Origo.EvolutionDemo/run-demo.sh
+#   bash samples/Origo.EvolutionDemo/run-demo.sh --headless
+#   bash samples/Origo.EvolutionDemo/run-demo.sh --headless --seconds 120
+#   bash samples/Origo.EvolutionDemo/run-demo.sh --no-build
 #
 # --headless runs the demo acceptance smoke instead of opening a window. It
 # uses the same ORIGO_DEMO_SMOKE paths as CI and exits after its own checks.
@@ -24,11 +24,11 @@ BENCHMARK_SAVE_SLOT=""
 usage() {
     cat <<'USAGE'
 Usage:
-  bash scripts/bash/run-evolution-demo.sh
-  bash scripts/bash/run-evolution-demo.sh --headless
-  bash scripts/bash/run-evolution-demo.sh --headless --seconds 120
-  bash scripts/bash/run-evolution-demo.sh --no-build
-  bash scripts/bash/run-evolution-demo.sh --headless --fast-forward 3600 --save-slot bench_1h
+  bash samples/Origo.EvolutionDemo/run-demo.sh
+  bash samples/Origo.EvolutionDemo/run-demo.sh --headless
+  bash samples/Origo.EvolutionDemo/run-demo.sh --headless --seconds 120
+  bash samples/Origo.EvolutionDemo/run-demo.sh --no-build
+  bash samples/Origo.EvolutionDemo/run-demo.sh --headless --fast-forward 3600 --save-slot bench_1h
 
 --headless runs the demo acceptance smoke instead of opening a window.
 --seconds sets the initial normal-speed smoke target.
@@ -105,9 +105,9 @@ GODOT_BIN="$(bash scripts/bash/download-godot.sh)"
 # Windowed play and headless smoke use separate user-data roots so a smoke run
 # can never overwrite or clear the player's real save slots.
 if ((HEADLESS == 1)); then
-    GODOT_HOME="${EVOLUTION_DEMO_SMOKE_HOME:-$ROOT/.godot-home-smoke}"
+    GODOT_HOME="${EVOLUTION_DEMO_SMOKE_HOME:-$ROOT/samples/.godot-home-smoke}"
 else
-    GODOT_HOME="${EVOLUTION_DEMO_HOME:-$ROOT/.godot-home}"
+    GODOT_HOME="${EVOLUTION_DEMO_HOME:-$ROOT/samples/.godot-home}"
 fi
 mkdir -p "$GODOT_HOME/.local/share" "$GODOT_HOME/.config" "$GODOT_HOME/.cache"
 echo "Godot user data: $GODOT_HOME"

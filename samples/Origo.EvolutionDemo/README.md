@@ -39,16 +39,16 @@ acceptance smoke:
 
 ```bash
 # Build and launch the windowed demo.
-bash scripts/bash/run-evolution-demo.sh
+bash samples/Origo.EvolutionDemo/run-demo.sh
 
 # Skip the build and launch the already-built demo.
-bash scripts/bash/run-evolution-demo.sh --no-build
+bash samples/Origo.EvolutionDemo/run-demo.sh --no-build
 
 # Headless smoke with a chosen simulated target.
-bash scripts/bash/run-evolution-demo.sh --headless --seconds 120
+bash samples/Origo.EvolutionDemo/run-demo.sh --headless --seconds 120
 
 # 1h genome screening benchmark in the isolated smoke save home.
-bash scripts/bash/run-evolution-demo.sh --headless --seconds 5 \
+bash samples/Origo.EvolutionDemo/run-demo.sh --headless --seconds 5 \
   --fast-forward 3600 --save-slot bench_1h
 ```
 

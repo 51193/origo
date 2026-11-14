@@ -67,7 +67,7 @@ Enable the in-game profiler with environment variables:
 ```bash
 ORIGO_DEMO_PROFILE_PATH="$PWD/.scratch/profile.jsonl" \
 ORIGO_DEMO_PROFILE_INTERVAL=10 \
-bash scripts/bash/run-evolution-demo.sh --headless --seconds 5 --fast-forward 600
+bash samples/Origo.EvolutionDemo/run-demo.sh --headless --seconds 5 --fast-forward 600
 ```
 
 `ORIGO_DEMO_PROFILE_INTERVAL` is measured in simulation ticks (default `1`).

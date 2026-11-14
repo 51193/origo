@@ -76,7 +76,6 @@ Rules:
 | `install-dotnet.sh` | Install the `global.json` SDK |
 | `dotnet-env.sh` | Source-only SDK selection and `global.json` validation |
 | `download-godot.sh` | Resolve/cache the Godot mono binary |
-| `run-evolution-demo.sh` | Build and launch the Evolution Demo, or run its headless smoke |
 | `find-previous-api-baseline.sh` | Select the previous formal release API baseline |
 | `check-weekly-base.sh` | Validate weekly snapshot base/version |
 | `release-check.sh` | Local release preflight in a temporary worktree |

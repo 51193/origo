@@ -15,13 +15,11 @@ persistence.
 | Maintaining the framework | [Contributing](../CONTRIBUTING.md), [META](META.en.md), [Release Process](release-process.en.md), and [Review Process](review-process.en.md) |
 | Looking for a specific module | [Project Module Index](#project-module-index) |
 
-A playable in-repo sample now exists at
-[Origo Evolution Demo](../samples/Origo.EvolutionDemo/README.md): a small
-artificial-life idle game that exercises SND entities, strategies, TypedData,
-and save/load. It is a development sample, not a published release artifact;
-the capability map, architecture documents, and the
-[package-consumer fixture](usage/shell-package-consumer.en.md) remain the
-authoritative framework guidance.
+A runnable game demo and a getting-started walkthrough are intentionally not
+published yet; the demo is still being built. Until then, use the capability
+map, architecture documents, and the tested
+[package-consumer fixture](usage/shell-package-consumer.en.md) rather than an
+unverified walkthrough.
 
 ## What Origo owns
 

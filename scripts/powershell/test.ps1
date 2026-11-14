@@ -15,7 +15,6 @@ if ($Direct) {
     Invoke-OrigoDotnetStreaming -Arguments @('build', 'Origo.sln', '--no-restore', '--configuration', $Configuration, '-p:UseSharedCompilation=false')
     $directProjects = @(
         'Origo.Core.Tests\Origo.Core.Tests.csproj',
-        'samples\Origo.EvolutionDemo.Logic.Tests\Origo.EvolutionDemo.Logic.Tests.csproj',
         'Origo.ConsoleBridge.Tests\Origo.ConsoleBridge.Tests.csproj',
         'Origo.GodotAdapter.Tests\Origo.GodotAdapter.Tests.csproj',
         'Origo.SourceGeneration.Tests\Origo.SourceGeneration.Tests.csproj',
@@ -41,7 +40,6 @@ Write-Host ''
 Write-Host 'Running tests (benchmarks are excluded; run benchmark.ps1 separately).'
 $testProjects = @(
     'Origo.Core.Tests\Origo.Core.Tests.csproj',
-    'samples\Origo.EvolutionDemo.Logic.Tests\Origo.EvolutionDemo.Logic.Tests.csproj',
     'Origo.ConsoleBridge.Tests\Origo.ConsoleBridge.Tests.csproj',
     'Origo.GodotAdapter.Tests\Origo.GodotAdapter.Tests.csproj',
     'Origo.SourceGeneration.Tests\Origo.SourceGeneration.Tests.csproj',

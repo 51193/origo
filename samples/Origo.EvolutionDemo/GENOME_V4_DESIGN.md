@@ -26,6 +26,6 @@ codec results are recorded in the V4 README. The 1h V4 ecosystem benchmark is
 run with:
 
 ```bash
-bash scripts/bash/run-evolution-demo.sh --headless --seconds 5 \
+bash samples/Origo.EvolutionDemo/run-demo.sh --headless --seconds 5 \
   --fast-forward 3600 --save-slot v4_1h
 ```
