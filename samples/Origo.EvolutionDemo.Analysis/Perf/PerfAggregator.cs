@@ -16,8 +16,10 @@ public sealed class PerfAggregator
             .OrderBy(static key => key, StringComparer.Ordinal)
             .ToArray();
         Summaries = [.. systems
-            .Select(system => new PhaseSummary(system,
-                Percentiles([.. ticks.Select(tick => tick.Phases.GetValueOrDefault(system))])))
+            .Select(system => new PhaseSummary(
+                system,
+                Percentiles([.. ticks.Select(tick => tick.Phases.TryGetValue(system, out var phase) ? phase.Ms : 0)]),
+                Percentiles([.. ticks.Select(tick => (double)(tick.Phases.TryGetValue(system, out var phase) ? phase.AllocBytes : 0))])))
             .OrderByDescending(static summary => summary.Stats.Mean)];
         Wall = Percentiles([.. ticks.Select(static tick => tick.WallMs)]);
         Alloc = Percentiles([.. ticks.Select(static tick => (double)tick.AllocBytes)]);
@@ -30,6 +32,8 @@ public sealed class PerfAggregator
 
     public IReadOnlyList<TickProfile> Ticks { get; }
     public IReadOnlyList<PhaseSummary> Summaries { get; }
+    public IReadOnlyList<PhaseSummary> SystemSummaries => [.. Summaries.Where(static summary => !IsSubphase(summary.System))];
+    public IReadOnlyList<PhaseSummary> SubphaseSummaries => [.. Summaries.Where(static summary => IsSubphase(summary.System))];
     public Stats Wall { get; }
     public Stats Alloc { get; }
     public Stats Population { get; }
@@ -37,6 +41,8 @@ public sealed class PerfAggregator
     public int Gc0 { get; }
     public int Gc1 { get; }
     public int Gc2 { get; }
+
+    private static bool IsSubphase(string name) => name.Count(static ch => ch == '.') > 2;
 
     public static Stats Percentiles(double[] values)
     {
@@ -48,7 +54,7 @@ public sealed class PerfAggregator
         return new Stats(sorted.Average(), P(0.50), P(0.95), P(0.99), sorted[^1]);
     }
 
-    public sealed record PhaseSummary(string System, Stats Stats);
+    public sealed record PhaseSummary(string System, Stats Stats, Stats Alloc);
 
     public sealed record Stats(double Mean, double P50, double P95, double P99, double Max);
 }

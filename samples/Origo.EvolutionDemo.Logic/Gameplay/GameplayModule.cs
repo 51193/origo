@@ -132,7 +132,7 @@ public sealed class GameplayPipeline
     public void Tick(
         IGameplayWorldContext context,
         Func<GameplayPhase, bool> isPhaseEnabled,
-        Action<IGameplaySystem, double>? systemObserver = null)
+        Action<IGameplaySystem, double, long>? systemObserver = null)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(isPhaseEnabled);
@@ -146,10 +146,12 @@ public sealed class GameplayPipeline
                 continue;
             }
 
+            var allocatedBefore = GC.GetAllocatedBytesForCurrentThread();
             var started = System.Diagnostics.Stopwatch.GetTimestamp();
             system.Tick(context);
             var elapsed = System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds;
-            systemObserver(system, elapsed);
+            var allocated = GC.GetAllocatedBytesForCurrentThread() - allocatedBefore;
+            systemObserver(system, elapsed, allocated);
         }
     }
 }

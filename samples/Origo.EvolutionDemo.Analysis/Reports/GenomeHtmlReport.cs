@@ -18,7 +18,9 @@ public static class GenomeHtmlReport
         IReadOnlyList<FeatureRow> rows,
         IReadOnlyList<string> columns,
         double[][] projection,
-        KMeans.Result clustering)
+        KMeans.Result clustering,
+        double stability,
+        string method)
     {
         ArgumentNullException.ThrowIfNull(saves);
         ArgumentNullException.ThrowIfNull(rows);
@@ -37,7 +39,7 @@ table{border-collapse:collapse;margin:8px 0 20px}th,td{padding:4px 8px;border-bo
 th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.card{display:inline-block;background:#111c33;border:1px solid #1e3a5f;border-radius:8px;padding:10px 16px;margin:4px 8px 4px 0}
 </style></head><body><h1>Evolution Genome Analysis</h1>
 """);
-        html.Append(CultureInfo.InvariantCulture, $"<p class=\"muted\">Generated {DateTime.UtcNow:u}; saves={saves.Count}; creatures={rows.Count}; features={columns.Count}; k={clustering.K}; silhouette={clustering.Silhouette:0.000}</p>");
+        html.Append(CultureInfo.InvariantCulture, $"<p class=\"muted\">Generated {DateTime.UtcNow:u}; saves={saves.Count}; creatures={rows.Count}; features={columns.Count}; method={method}; k={clustering.K}; silhouette={clustering.Silhouette:0.000}; bootstrap ARI={stability:0.000}</p>");
         html.Append("<div>");
         html.Append(CultureInfo.InvariantCulture, $"<span class=card>population <b>{rows.Count}</b></span>");
         html.Append(CultureInfo.InvariantCulture, $"<span class=card>clusters <b>{clustering.K}</b></span>");
@@ -50,6 +52,8 @@ th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.card{display:inline-bl
         html.Append(ClusterTable(rows, clustering, columns, palette));
         html.Append("<h2>Top differentiating features</h2>");
         html.Append(DifferentiatingTable(rows, clustering, columns, palette));
+        html.Append("<h2>Clusters by save</h2>");
+        html.Append(SaveClusterTable(rows, clustering, palette));
         html.Append("<h2>Saves</h2><table><tr><th>save</th><th>time</th><th>creatures</th><th>food</th><th>corpses</th><th>sources</th></tr>");
         foreach (var save in saves)
             html.Append(CultureInfo.InvariantCulture, $"<tr><td><code>{Escape(save.Path)}</code></td><td>{save.Time:0.0}</td><td>{save.Creatures.Count}</td><td>{save.Food}</td><td>{save.Corpses}</td><td>{save.FoodSources}</td></tr>");
@@ -137,6 +141,28 @@ th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.card{display:inline-bl
                 string.Create(CultureInfo.InvariantCulture,
                     $"{Escape(item.Name)} {item.Mean:0.###} (z={item.Z:+0.0;-0.0})"))));
             html.Append("</td></tr>");
+        }
+
+        return html.Append("</table>").ToString();
+    }
+
+    private static string SaveClusterTable(IReadOnlyList<FeatureRow> rows, KMeans.Result clustering,
+        string[] palette)
+    {
+        ArgumentNullException.ThrowIfNull(rows);
+        ArgumentNullException.ThrowIfNull(clustering);
+        var saves = rows.Select(static row => row.SavePath).Distinct(StringComparer.Ordinal).OrderBy(static s => s, StringComparer.Ordinal).ToArray();
+        var html = new StringBuilder("<table><tr><th>save</th><th>n</th>");
+        for (var cluster = 0; cluster < clustering.K; cluster++)
+            html.Append(CultureInfo.InvariantCulture, $"<th style=\"color:{palette[cluster % palette.Length]}\">c{cluster}</th>");
+        html.Append("</tr>");
+        foreach (var save in saves)
+        {
+            var indexes = Enumerable.Range(0, rows.Count).Where(index => string.Equals(rows[index].SavePath, save, StringComparison.Ordinal)).ToArray();
+            html.Append(CultureInfo.InvariantCulture, $"<tr><td><code>{Escape(save)}</code></td><td>{indexes.Length}</td>");
+            for (var cluster = 0; cluster < clustering.K; cluster++)
+                html.Append(CultureInfo.InvariantCulture, $"<td>{indexes.Count(index => clustering.Labels[index] == cluster)}</td>");
+            html.Append("</tr>");
         }
 
         return html.Append("</table>").ToString();

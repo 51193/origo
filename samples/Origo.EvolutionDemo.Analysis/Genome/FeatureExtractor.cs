@@ -15,7 +15,8 @@ public sealed record FeatureRow(
     string Name,
     int Lineage,
     int Generation,
-    IReadOnlyDictionary<string, double> Values);
+    IReadOnlyDictionary<string, double> Values,
+    IReadOnlySet<string> GeneSignatures);
 
 /// <summary>Extracts structural, phenotypic, and behavioral features from v6 save creatures.</summary>
 public static class FeatureExtractor
@@ -116,8 +117,11 @@ public static class FeatureExtractor
                 values[$"organ.{organ.Key}"] = organ.Count();
             foreach (var trait in phenotype.Body.LifeTraits)
                 values[$"trait.{trait.Key}"] = trait.Value;
+            var signatures = genome.Genes
+                .Select(static gene => $"{(ushort)gene.Kind:X}:{Convert.ToHexString(gene.Payload)}")
+                .ToHashSet(StringComparer.Ordinal);
             return new FeatureRow(save.Path, save.Time, creature.Name, creature.Lineage,
-                creature.Generation, values);
+                creature.Generation, values, signatures);
         }
         catch (Exception ex) when (ex is InvalidDataException or InvalidOperationException
             or ArgumentException or FormatException)

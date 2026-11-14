@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 
 namespace Origo.EvolutionDemo;
@@ -15,7 +16,7 @@ internal sealed class SimulationProfiler
 {
     private readonly string? _path;
     private readonly int _interval;
-    private readonly Dictionary<string, double> _phases = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, (double Ms, long Alloc)> _phases = new(StringComparer.Ordinal);
     private readonly Stopwatch _wall = new();
     private int _tickCount;
     private long _allocStart;
@@ -52,11 +53,21 @@ internal sealed class SimulationProfiler
         _gc2Start = GC.CollectionCount(2);
     }
 
-    public void RecordSystem(string id, double milliseconds)
+    public void RecordSystem(string id, double milliseconds, long allocatedBytes)
     {
         if (!Enabled)
             return;
-        _phases[id] = _phases.GetValueOrDefault(id) + milliseconds;
+        var current = _phases.GetValueOrDefault(id);
+        _phases[id] = (current.Ms + milliseconds, current.Alloc + allocatedBytes);
+    }
+
+    /// <summary>Adds a subphase marker measured by the caller.</summary>
+    public void RecordMarker(string id, double milliseconds, long allocatedBytes)
+    {
+        if (!Enabled)
+            return;
+        var current = _phases.GetValueOrDefault(id);
+        _phases[id] = (current.Ms + milliseconds, current.Alloc + allocatedBytes);
     }
 
     public void End(EvolutionTickContext context)
@@ -80,7 +91,10 @@ internal sealed class SimulationProfiler
             population = context.Alive,
             food = context.FoodCount,
             corpses = context.Snapshot?.Corpses.Count ?? 0,
-            phases = _phases,
+            schema = 2,
+            phases = _phases.ToDictionary(
+                static phase => phase.Key,
+                static phase => new { ms = phase.Value.Ms, allocBytes = phase.Value.Alloc }),
         };
         _writer.WriteLine(JsonSerializer.Serialize(record));
         _writer.Flush();

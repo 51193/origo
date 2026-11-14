@@ -17,7 +17,10 @@ public sealed record TickProfile(
     int Population,
     int Food,
     int Corpses,
-    IReadOnlyDictionary<string, double> Phases);
+    IReadOnlyDictionary<string, PhaseSample> Phases);
+
+/// <summary>Timing and allocation attribution for one phase.</summary>
+public readonly record struct PhaseSample(double Ms, long AllocBytes);
 
 /// <summary>Reads the JSONL profile emitted by SimulationProfiler.</summary>
 public static class ProfileReader
@@ -34,10 +37,14 @@ public static class ProfileReader
                 continue;
             using var document = JsonDocument.Parse(line);
             var root = document.RootElement;
-            var phases = new Dictionary<string, double>(StringComparer.Ordinal);
+            if (root.GetProperty("schema").GetInt32() != 2)
+                throw new InvalidDataException("Only profile schema 2 is supported.");
+            var phases = new Dictionary<string, PhaseSample>(StringComparer.Ordinal);
             if (root.TryGetProperty("phases", out var phaseObject))
                 foreach (var phase in phaseObject.EnumerateObject())
-                    phases[phase.Name] = phase.Value.GetDouble();
+                    phases[phase.Name] = new PhaseSample(
+                        phase.Value.GetProperty("ms").GetDouble(),
+                        phase.Value.GetProperty("allocBytes").GetInt64());
             ticks.Add(new TickProfile(
                 root.GetProperty("tick").GetInt32(),
                 root.GetProperty("simTime").GetDouble(),

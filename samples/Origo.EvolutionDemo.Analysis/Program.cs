@@ -44,6 +44,9 @@ internal static class Program
         var maxCreatures = 5000;
         var seed = 1;
         var requestedK = 0;
+        var mode = "all";
+        var method = "kmeans";
+        var stabilityRounds = 5;
         for (var i = 0; i < args.Length; i++)
         {
             switch (args[i])
@@ -63,6 +66,15 @@ internal static class Program
                 case "--k" when i + 1 < args.Length:
                     requestedK = int.Parse(args[++i], CultureInfo.InvariantCulture);
                     break;
+                case "--mode" when i + 1 < args.Length:
+                    mode = args[++i];
+                    break;
+                case "--method" when i + 1 < args.Length:
+                    method = args[++i];
+                    break;
+                case "--stability" when i + 1 < args.Length:
+                    stabilityRounds = int.Parse(args[++i], CultureInfo.InvariantCulture);
+                    break;
                 default:
                     throw new InvalidOperationException($"Unknown genome argument '{args[i]}'.");
             }
@@ -75,13 +87,23 @@ internal static class Program
         if (rows.Count < 3)
             throw new InvalidOperationException("Fewer than three analyzable creatures.");
         var columns = rows.SelectMany(static row => row.Values.Keys)
-            .Distinct(StringComparer.Ordinal).OrderBy(static name => name, StringComparer.Ordinal).ToArray();
+            .Distinct(StringComparer.Ordinal)
+            .Where(column => MatchesMode(column, mode))
+            .OrderBy(static name => name, StringComparer.Ordinal).ToArray();
+        if (columns.Length == 0)
+            throw new InvalidOperationException($"No features match mode '{mode}'.");
         var raw = new FeatureMatrix(columns, [.. rows.Select(row =>
             columns.Select(column => row.Values.GetValueOrDefault(column, double.NaN)).ToArray())]);
         var (standardized, _, _, _) = Standardizer.Fit(raw);
         var projection = Pca.Project(standardized, 3, seed);
-        var clustering = KMeans.Fit(standardized, requestedK, seed);
-        var report = GenomeHtmlReport.Build(snapshots, rows, columns, projection, clustering);
+        var clustering = string.Equals(method, "jaccard", StringComparison.Ordinal)
+            ? JaccardClustering.Fit(rows.Select(static row => row.GeneSignatures).ToArray(), requestedK, seed)
+            : KMeans.Fit(standardized, requestedK, seed);
+        var stability = string.Equals(method, "kmeans", StringComparison.Ordinal)
+            ? ClusterStability.Bootstrap(standardized, clustering.K, stabilityRounds, seed)
+            : 0d;
+        var report = GenomeHtmlReport.Build(snapshots, rows, columns, projection, clustering,
+            stability, method);
         File.WriteAllText(output, report);
         WriteCsv(Path.ChangeExtension(output, ".clusters.csv"), rows, clustering);
         Console.WriteLine($"wrote {output} ({rows.Count} creatures, k={clustering.K}, silhouette={clustering.Silhouette:0.000})");
@@ -124,6 +146,24 @@ internal static class Program
                 Csv(rows[i].Name), Csv(rows[i].SavePath), rows[i].Lineage,
                 rows[i].Generation, clustering.Labels[i]));
     }
+
+    private static bool MatchesMode(string column, string mode) => mode switch
+    {
+        "all" => true,
+        "genotype" => column.StartsWith("gene.", StringComparison.Ordinal)
+            || column.StartsWith("organ.", StringComparison.Ordinal)
+            || column.StartsWith("neural.", StringComparison.Ordinal)
+            || column.StartsWith("ports.", StringComparison.Ordinal)
+            || column.StartsWith("energy.", StringComparison.Ordinal),
+        "phenotype" => column.StartsWith("body.", StringComparison.Ordinal)
+            || column.StartsWith("trait.", StringComparison.Ordinal)
+            || column.StartsWith("ports.", StringComparison.Ordinal)
+            || column.StartsWith("organ.", StringComparison.Ordinal),
+        "behavior" => column.StartsWith("behavior.", StringComparison.Ordinal)
+            || column.StartsWith("neutral.", StringComparison.Ordinal),
+        _ => throw new InvalidOperationException(
+            $"Unknown mode '{mode}'; expected all, genotype, phenotype, or behavior."),
+    };
 
     private static string Csv(string text) =>
         text.Contains(',', StringComparison.Ordinal) ? $"\"{text.Replace("\"", "\"\"", StringComparison.Ordinal)}\"" : text;

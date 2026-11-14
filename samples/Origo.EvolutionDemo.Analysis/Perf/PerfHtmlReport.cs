@@ -36,15 +36,21 @@ th:first-child,td:first-child{text-align:left}th{color:#93c5fd}code{color:#fbbf2
         Card(html, "GC 0/1/2", $"{aggregate.Gc0}/{aggregate.Gc1}/{aggregate.Gc2}");
         Card(html, "population", $"{aggregate.Population.P50:0}");
         Card(html, "food", $"{aggregate.Food.P50:0}");
+        Card(html, "alloc P50", FormatBytes(aggregate.Alloc.P50));
         html.Append("</div><h2>System breakdown</h2>");
-        html.Append("<table><tr><th>system</th><th>mean ms</th><th>p50</th><th>p95</th><th>p99</th><th>max</th><th>share</th></tr>");
-        var total = System.Math.Max(1e-9, aggregate.Summaries.Sum(static summary => summary.Stats.Mean));
-        foreach (var summary in aggregate.Summaries)
+        html.Append("<table><tr><th>system</th><th>mean ms</th><th>p50</th><th>p95</th><th>p99</th><th>max</th><th>share</th><th>alloc mean</th><th>alloc p95</th></tr>");
+        var total = System.Math.Max(1e-9, aggregate.SystemSummaries.Sum(static summary => summary.Stats.Mean));
+        foreach (var summary in aggregate.SystemSummaries)
         {
             html.Append(CultureInfo.InvariantCulture,
-                $"<tr><td><code>{Escape(summary.System)}</code></td><td>{summary.Stats.Mean:0.0000}</td><td>{summary.Stats.P50:0.0000}</td><td>{summary.Stats.P95:0.0000}</td><td>{summary.Stats.P99:0.0000}</td><td>{summary.Stats.Max:0.0000}</td><td>{100 * summary.Stats.Mean / total:0.0}%</td></tr>");
+                $"<tr><td><code>{Escape(summary.System)}</code></td><td>{summary.Stats.Mean:0.0000}</td><td>{summary.Stats.P50:0.0000}</td><td>{summary.Stats.P95:0.0000}</td><td>{summary.Stats.P99:0.0000}</td><td>{summary.Stats.Max:0.0000}</td><td>{100 * summary.Stats.Mean / total:0.0}%</td><td>{summary.Alloc.Mean / 1024d / 1024d:0.00} MiB</td><td>{summary.Alloc.P95 / 1024d / 1024d:0.00} MiB</td></tr>");
         }
 
+        html.Append("</table><h2>Subphases</h2>");
+        html.Append("<table><tr><th>subphase</th><th>mean ms</th><th>p95</th><th>alloc mean</th></tr>");
+        foreach (var summary in aggregate.SubphaseSummaries)
+            html.Append(CultureInfo.InvariantCulture,
+                $"<tr><td><code>{Escape(summary.System)}</code></td><td>{summary.Stats.Mean:0.000}</td><td>{summary.Stats.P95:0.000}</td><td>{summary.Alloc.Mean / 1024d / 1024d:0.00} MiB</td></tr>");
         html.Append("</table><h2>Phase p95 bars</h2>");
         html.Append(Bars(aggregate));
         html.Append("<h2>Wall time per sample</h2>");
@@ -62,11 +68,12 @@ th:first-child,td:first-child{text-align:left}th{color:#93c5fd}code{color:#fbbf2
     {
         const int width = 760;
         const int row = 24;
-        var max = System.Math.Max(1e-9, aggregate.Summaries.Max(static summary => summary.Stats.P95));
-        var html = new StringBuilder($"<svg width={width} height={aggregate.Summaries.Count * row + 20}>");
-        for (var i = 0; i < aggregate.Summaries.Count; i++)
+        var systems = aggregate.SystemSummaries;
+        var max = System.Math.Max(1e-9, systems.Max(static summary => summary.Stats.P95));
+        var html = new StringBuilder($"<svg width={width} height={systems.Count * row + 20}>");
+        for (var i = 0; i < systems.Count; i++)
         {
-            var summary = aggregate.Summaries[i];
+            var summary = systems[i];
             var bar = (summary.Stats.P95 / max) * (width - 300);
             html.Append(CultureInfo.InvariantCulture,
                 $"<text x=0 y={18 + i * row} fill=#93c5fd font-size=12>{Escape(summary.System)}</text><rect x=190 y={6 + i * row} width={bar:0.0} height=12 fill=#2563eb/><text x={198 + bar:0.0} y={18 + i * row} fill=#dbeafe font-size=12>{summary.Stats.P95:0.000} ms</text>");

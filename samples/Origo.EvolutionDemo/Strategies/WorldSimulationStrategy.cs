@@ -273,7 +273,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         session.Profiler.Begin();
         session.Runtime.Pipeline.Tick(world, static _ => true,
             session.Profiler.Enabled
-                ? (system, milliseconds) => session.Profiler.RecordSystem(system.Id, milliseconds)
+                ? (system, milliseconds, allocated) =>
+                    session.Profiler.RecordSystem(system.Id, milliseconds, allocated)
                 : null);
         session.Profiler.End(world);
     }
@@ -331,6 +332,11 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         var sensorBuffer = new float[64];
         var aiStride = Math.Max(1, (creatures.Count + Tuning.AiUpdateBatch - 1) / Tuning.AiUpdateBatch);
         var tickNumber = ReadInt(controller, DemoKeys.Tick, 0);
+        var profiler = world.Session.Profiler;
+        var aiTicks = 0d;
+        var aiAlloc = 0L;
+        var markerTicks = new double[4];
+        var markerAlloc = new long[4];
 
         for (var i = 0; i < creatures.Count; i++)
         {
@@ -346,10 +352,21 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             var aimDrive = Math.Clamp(ReadFloat(entity, DemoKeys.Aim, 0f), -1f, 1f);
             var sprintDrive = Math.Clamp(ReadFloat(entity, DemoKeys.SprintDrive, 0f), -1f, 1f);
             PhenotypeV4? brainPhenotype = null;
+            var aiStart = profiler.Enabled ? System.Diagnostics.Stopwatch.GetTimestamp() : 0L;
+            var aiAllocStart = profiler.Enabled ? GC.GetAllocatedBytesForCurrentThread() : 0L;
             if (updateAi)
             {
                 bodyGenome = ReadString(entity, DemoKeys.BodyGenome, string.Empty);
-                if (!CreatureGenome.TryDecode(bodyGenome, out _))
+                var decodeStart = profiler.Enabled ? GC.GetAllocatedBytesForCurrentThread() : 0L;
+                var decodeTick = profiler.Enabled ? System.Diagnostics.Stopwatch.GetTimestamp() : 0L;
+                var decoded = CreatureGenome.TryDecode(bodyGenome, out _);
+                if (profiler.Enabled)
+                {
+                    markerTicks[0] += System.Diagnostics.Stopwatch.GetElapsedTime(decodeTick).TotalMilliseconds;
+                    markerAlloc[0] += GC.GetAllocatedBytesForCurrentThread() - decodeStart;
+                }
+
+                if (!decoded)
                 {
                     var fallback = CreatureGenome.RandomFounder(rng);
                     bodyGenome = fallback.Body;
@@ -359,6 +376,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 var body = ReadPhenotype(entity);
                 var (phenotype, compiledBrain) = GetBrainPhenotype(bodyGenome);
                 brainPhenotype = phenotype;
+                var sensorStart = profiler.Enabled ? GC.GetAllocatedBytesForCurrentThread() : 0L;
+                var sensorTick = profiler.Enabled ? System.Diagnostics.Stopwatch.GetTimestamp() : 0L;
                 sensorGrid.Query(creature.X, creature.Y, sensorGrid.Food, nearFood);
                 sensorGrid.Query(creature.X, creature.Y, sensorGrid.Creatures, nearCreatures);
                 DemoSensorRuntime.ComputeInto(
@@ -378,9 +397,22 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                         ArenaRadius = Tuning.PondRadius,
                     },
                     sensorBuffer);
+                if (profiler.Enabled)
+                {
+                    markerTicks[1] += System.Diagnostics.Stopwatch.GetElapsedTime(sensorTick).TotalMilliseconds;
+                    markerAlloc[1] += GC.GetAllocatedBytesForCurrentThread() - sensorStart;
+                }
+
                 if (sensorBuffer[(int)SensorKindV4.CorpseAhead] > 0f)
                     carrionDetections++;
+                var brainStart = profiler.Enabled ? GC.GetAllocatedBytesForCurrentThread() : 0L;
+                var brainTick = profiler.Enabled ? System.Diagnostics.Stopwatch.GetTimestamp() : 0L;
                 DemoActionRuntime.Evaluate(phenotype, compiledBrain, sensorBuffer, actionBuffer);
+                if (profiler.Enabled)
+                {
+                    markerTicks[2] += System.Diagnostics.Stopwatch.GetElapsedTime(brainTick).TotalMilliseconds;
+                    markerAlloc[2] += GC.GetAllocatedBytesForCurrentThread() - brainStart;
+                }
                 drive = Math.Clamp(actionBuffer[(int)ActionKindV4.Move], 0f, 1f);
                 turn = Math.Clamp(actionBuffer[(int)ActionKindV4.Turn], -1f, 1f);
                 spikeDrive = Math.Clamp(actionBuffer[(int)ActionKindV4.Spike], -1f, 1f);
@@ -391,6 +423,11 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 entity.SetData(DemoKeys.SpikeDrive, spikeDrive);
                 entity.SetData(DemoKeys.Aim, aimDrive);
                 entity.SetData(DemoKeys.SprintDrive, sprintDrive);
+            }
+            if (profiler.Enabled)
+            {
+                aiTicks += System.Diagnostics.Stopwatch.GetElapsedTime(aiStart).TotalMilliseconds;
+                aiAlloc += GC.GetAllocatedBytesForCurrentThread() - aiAllocStart;
             }
             brainPhenotype ??= GetBrainPhenotype(
                 ReadString(entity, DemoKeys.BodyGenome, string.Empty)).Phenotype;
@@ -415,6 +452,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             ActionStateScratch.SpikeJitter = creature.SpikeJitter;
             ActionStateScratch.Random = rng;
             ActionStateScratch.SpikePlan = null;
+            var targetStart = profiler.Enabled ? GC.GetAllocatedBytesForCurrentThread() : 0L;
+            var targetTick = profiler.Enabled ? System.Diagnostics.Stopwatch.GetTimestamp() : 0L;
             var spikeTargets = new List<SpikeTargetV4>();
             var hasSpikePort = false;
             foreach (var port in brainPhenotype.ActionPorts)
@@ -444,6 +483,11 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 }
             }
 
+            if (profiler.Enabled)
+            {
+                markerTicks[3] += System.Diagnostics.Stopwatch.GetElapsedTime(targetTick).TotalMilliseconds;
+                markerAlloc[3] += GC.GetAllocatedBytesForCurrentThread() - targetStart;
+            }
             ActionStateScratch.SpikeTargets = spikeTargets;
             DemoActionEffectRegistry.Apply(brainPhenotype, actionBuffer, ActionStateScratch);
             var heading = ActionStateScratch.Heading;
@@ -654,6 +698,14 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             collisionEntities.Add(entity);
         }
 
+        if (profiler.Enabled)
+        {
+            profiler.RecordMarker("evolution.core.ai", aiTicks, aiAlloc);
+            profiler.RecordMarker("evolution.core.genome_decode", markerTicks[0], markerAlloc[0]);
+            profiler.RecordMarker("evolution.core.sensors", markerTicks[1], markerAlloc[1]);
+            profiler.RecordMarker("evolution.core.brain", markerTicks[2], markerAlloc[2]);
+            profiler.RecordMarker("evolution.core.spike_targets", markerTicks[3], markerAlloc[3]);
+        }
         world.PondTime = pondTime;
         world.BloomEnabled = bloomEnabled;
         world.CollisionEnabled = collisionEnabled;

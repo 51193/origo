@@ -155,6 +155,12 @@ public static class KMeans
         for (var k = 2; k <= maxK; k++)
         {
             var candidate = Run(matrix, k, seed + (k * 7919), restarts: requestedK > 0 ? 10 : 6);
+            var minCluster = System.Math.Max(2, n / 100);
+            var sizes = Enumerable.Range(0, candidate.K)
+                .Select(cluster => candidate.Labels.Count(label => label == cluster))
+                .ToArray();
+            if (sizes.Any(size => size < minCluster))
+                continue;
             if (best is null || candidate.Silhouette > best.Silhouette)
                 best = candidate;
             if (requestedK > 0)
