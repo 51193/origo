@@ -52,6 +52,14 @@ tar -C "${WORK}/linux" -czf \
 ( cd "${WORK}/windows" && zip -rq "${ARTIFACTS}/origo-evolution-demo-${VERSION}-windows-x86_64.zip" . )
 ( cd "${WORK}/macos" && zip -rq "${ARTIFACTS}/origo-evolution-demo-${VERSION}-macos-universal.zip" OrigoEvolutionDemo.app README.txt )
 
+# Platform-specific archive structure checks.
+tar -tzf "${ARTIFACTS}/origo-evolution-demo-${VERSION}-linux-x86_64.tar.gz" \
+    | grep -qE '(^|/)OrigoEvolutionDemo\.x86_64$'
+unzip -Z1 "${ARTIFACTS}/origo-evolution-demo-${VERSION}-windows-x86_64.zip" \
+    | grep -qE '(^|/)OrigoEvolutionDemo\.exe$'
+unzip -Z1 "${ARTIFACTS}/origo-evolution-demo-${VERSION}-macos-universal.zip" \
+    | grep -q 'OrigoEvolutionDemo\.app/Contents/MacOS/'
+
 echo "Playable demo packages:"
 ls -lh \
     "${ARTIFACTS}/origo-evolution-demo-${VERSION}-linux-x86_64.tar.gz" \
