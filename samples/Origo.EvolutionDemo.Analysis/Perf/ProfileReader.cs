@@ -1,0 +1,66 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
+
+namespace Origo.EvolutionDemo.Analysis.Perf;
+
+/// <summary>One profiled simulation tick.</summary>
+public sealed record TickProfile(
+    int Tick,
+    double SimTime,
+    double WallMs,
+    long AllocBytes,
+    int Gc0,
+    int Gc1,
+    int Gc2,
+    int Population,
+    int Food,
+    int Corpses,
+    IReadOnlyDictionary<string, PhaseSample> Phases);
+
+/// <summary>Timing and allocation attribution for one phase.</summary>
+public readonly record struct PhaseSample(double Ms, long AllocBytes);
+
+/// <summary>Reads the JSONL profile emitted by SimulationProfiler.</summary>
+public static class ProfileReader
+{
+    public static IReadOnlyList<TickProfile> Read(string path)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        if (!File.Exists(path))
+            throw new FileNotFoundException("Profile not found.", path);
+        var ticks = new List<TickProfile>();
+        foreach (var line in File.ReadLines(path))
+        {
+            if (string.IsNullOrWhiteSpace(line))
+                continue;
+            using var document = JsonDocument.Parse(line);
+            var root = document.RootElement;
+            if (root.GetProperty("schema").GetInt32() != 2)
+                throw new InvalidDataException("Only profile schema 2 is supported.");
+            var phases = new Dictionary<string, PhaseSample>(StringComparer.Ordinal);
+            if (root.TryGetProperty("phases", out var phaseObject))
+                foreach (var phase in phaseObject.EnumerateObject())
+                    phases[phase.Name] = new PhaseSample(
+                        phase.Value.GetProperty("ms").GetDouble(),
+                        phase.Value.GetProperty("allocBytes").GetInt64());
+            ticks.Add(new TickProfile(
+                root.GetProperty("tick").GetInt32(),
+                root.GetProperty("simTime").GetDouble(),
+                root.GetProperty("wallMs").GetDouble(),
+                root.GetProperty("allocBytes").GetInt64(),
+                root.GetProperty("gc0").GetInt32(),
+                root.GetProperty("gc1").GetInt32(),
+                root.GetProperty("gc2").GetInt32(),
+                root.GetProperty("population").GetInt32(),
+                root.GetProperty("food").GetInt32(),
+                root.GetProperty("corpses").GetInt32(),
+                phases));
+        }
+
+        if (ticks.Count == 0)
+            throw new InvalidDataException("Profile contains no samples.");
+        return ticks;
+    }
+}

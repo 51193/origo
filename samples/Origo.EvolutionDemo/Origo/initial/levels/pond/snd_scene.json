@@ -1,0 +1,24 @@
+[
+  {
+    "name": "world_controller",
+    "node": {
+      "pairs": {
+        "main": "res://Origo/demo/WorldController.tscn"
+      }
+    },
+    "strategy": {
+      "lifecycle_indices": [
+        "evolution.world",
+        "evolution.overgrowth"
+      ]
+    },
+    "data": {
+      "pairs": {
+        "evo.kind": {
+          "type": "String",
+          "data": "controller"
+        }
+      }
+    }
+  }
+]

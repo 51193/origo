@@ -1,0 +1,130 @@
+using System;
+using System.Collections.Generic;
+using Origo.EvolutionDemo.Logic.Gameplay;
+using Xunit;
+
+namespace Origo.EvolutionDemo.Logic.Tests;
+
+public sealed class GameplayContentTests
+{
+    [Fact]
+    public void UnlockService_RequiresPrerequisitesAndMilestones()
+    {
+        var content = BuildContent();
+        var progression = new GameplayProgression();
+        var service = new UnlockService(content, progression);
+        Assert.False(service.CanUnlock("unlock.spike"));
+        Assert.True(service.TryUnlock("unlock.root"));
+        Assert.True(service.CanUnlock("unlock.spike"));
+        Assert.True(service.TryUnlock("unlock.spike"));
+        Assert.True(service.IsContentAvailable("gene.organ.spike"));
+    }
+
+    [Fact]
+    public void Resolver_SelectsOneVariantByPriorityAndBiome()
+    {
+        var content = BuildContent();
+        var progression = new GameplayProgression();
+        var unlocks = new UnlockService(content, progression);
+        Assert.True(unlocks.TryUnlock("unlock.root"));
+        var resolver = new MechanicResolver(content, unlocks);
+        Assert.Equal("death.snow", resolver.Resolve("death.handler", "snow")?.Id);
+        Assert.Equal("death.base", resolver.Resolve("death.handler", "normal")?.Id);
+    }
+
+    [Fact]
+    public void ModuleHost_RegistersSystemsThroughServices()
+    {
+        var host = new GameplayModuleHost();
+        host.AddModule(new SystemModule());
+        var (_, services) = host.Load();
+        var pipeline = new GameplayPipeline().FromServices(services);
+        Assert.Single(pipeline.Systems);
+        Assert.Equal("sensor", pipeline.Systems[0].Id);
+    }
+
+    [Fact]
+    public void ModuleHost_LoadsDependenciesAndPipeline()
+    {
+        var host = new GameplayModuleHost();
+        host.AddModule(new TestModule("base", []));
+        host.AddModule(new TestModule("child", ["base"]));
+        var (content, services) = host.Load();
+        Assert.NotNull(content);
+        Assert.Empty(services.Systems);
+    }
+
+    [Fact]
+    public void Registry_RejectsUnknownHandler()
+    {
+        var registry = new GameplayContentRegistry();
+        registry.AddUnlock(new UnlockDefinition("unlock.core", "core", "core", 0, [], [], []));
+        registry.AddVariant(new MechanicVariant("bad", "death.handler", "missing", null,
+            "unlock.core", [], 0, new Dictionary<string, string>()));
+        Assert.Throws<InvalidOperationException>(() => registry.BuildSnapshot());
+    }
+
+    [Fact]
+    public void Registry_RejectsMissingRequiredNumericData()
+    {
+        var registry = new GameplayContentRegistry();
+        registry.AddHandler(new GameplayHandlerDefinition("corpse", ["interval"], ["interval"]));
+        registry.AddUnlock(new UnlockDefinition("unlock.core", "core", "core", 0, [], [], []));
+        registry.AddVariant(new MechanicVariant("bad", "death.handler", "corpse", null,
+            "unlock.core", [], 0, new Dictionary<string, string>()));
+        Assert.Throws<InvalidOperationException>(() => registry.BuildSnapshot());
+    }
+
+    [Fact]
+    public void Registry_RejectsNonPositiveRequiredNumericData()
+    {
+        var registry = new GameplayContentRegistry();
+        registry.AddHandler(new GameplayHandlerDefinition("corpse", ["interval"], ["interval"]));
+        registry.AddUnlock(new UnlockDefinition("unlock.core", "core", "core", 0, [], [], []));
+        registry.AddVariant(new MechanicVariant("bad", "death.handler", "corpse", null,
+            "unlock.core", [], 0, new Dictionary<string, string> { ["interval"] = "0" }));
+        Assert.Throws<InvalidOperationException>(() => registry.BuildSnapshot());
+    }
+
+    private static GameplayContentSnapshot BuildContent()
+    {
+        var registry = new GameplayContentRegistry();
+        registry.AddHandler(new GameplayHandlerDefinition("base", [], []));
+        registry.AddHandler(new GameplayHandlerDefinition("snow", [], []));
+        registry.AddContent(new GameplayContentEntry("gene.organ.spike", "gene", "unlock.spike"));
+        registry.AddContent(new GameplayContentEntry("base.death", "mechanic", "unlock.root"));
+        registry.AddUnlock(new UnlockDefinition("unlock.root", "Root", "core", 0, [], ["base.death"], []));
+        registry.AddUnlock(new UnlockDefinition("unlock.spike", "Spike", "organs", 10,
+            ["unlock.root"], ["gene.organ.spike"], []));
+        registry.AddVariant(new MechanicVariant("death.base", "death.handler", "base", null,
+            "unlock.root", [], 0, new Dictionary<string, string>()));
+        registry.AddVariant(new MechanicVariant("death.snow", "death.handler", "snow", null,
+            "unlock.root", ["snow"], 10, new Dictionary<string, string>()));
+        return registry.BuildSnapshot();
+    }
+
+    private sealed class SystemModule : IGameplayModule
+    {
+        public string Id => "systems";
+        public string Version => "1";
+        public IReadOnlyList<string> Dependencies => [];
+        public void Register(GameplayContentRegistry content, GameplayModuleServices services) =>
+            services.AddSystem(new FakeSystem());
+    }
+
+    private sealed class FakeSystem : IGameplaySystem
+    {
+        public string Id => "sensor";
+        public GameplayPhase Phase => GameplayPhase.Sense;
+        public int Order => 0;
+        public void Tick(IGameplayWorldContext context) { }
+    }
+
+    private sealed class TestModule(string id, IReadOnlyList<string> dependencies) : IGameplayModule
+    {
+        public string Id => id;
+        public string Version => "1";
+        public IReadOnlyList<string> Dependencies => dependencies;
+        public void Register(GameplayContentRegistry content, GameplayModuleServices services) { }
+    }
+}

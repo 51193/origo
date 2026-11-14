@@ -1,0 +1,107 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
+
+namespace Origo.EvolutionDemo.Logic.Gameplay;
+
+/// <summary>Serializable content pack. Packs are append-only and versioned.</summary>
+public sealed record GameplayContentPack(
+    int SchemaVersion,
+    IReadOnlyList<GameplayContentEntry> Content,
+    IReadOnlyList<UnlockDefinition> Unlocks,
+    IReadOnlyList<MechanicVariant> Variants,
+    IReadOnlyList<MilestoneDefinition> Milestones);
+
+/// <summary>Loads/validates JSON content packs and builds immutable snapshots.</summary>
+public static class GameplayContentPackLoader
+{
+    private static readonly JsonSerializerOptions Options = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        ReadCommentHandling = JsonCommentHandling.Skip,
+        AllowTrailingCommas = true,
+    };
+
+    public static GameplayContentPack Parse(string json)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(json);
+        var pack = JsonSerializer.Deserialize<GameplayContentPack>(json, Options)
+            ?? throw new InvalidDataException("Content pack JSON produced null.");
+        if (pack.SchemaVersion != 1)
+            throw new InvalidDataException($"Unsupported content pack schema {pack.SchemaVersion}.");
+        Validate(pack);
+        return pack with
+        {
+            Content = pack.Content ?? [],
+            Unlocks = pack.Unlocks?.Select(static unlock => unlock with
+            {
+                Prerequisites = unlock.Prerequisites ?? [],
+                Grants = unlock.Grants ?? [],
+                RequiredMilestones = unlock.RequiredMilestones ?? [],
+            }).ToArray() ?? [],
+            Variants = pack.Variants?.Select(static variant => variant with
+            {
+                BiomeTags = variant.BiomeTags ?? [],
+                Data = variant.Data ?? new Dictionary<string, string>(StringComparer.Ordinal),
+            }).ToArray() ?? [],
+            Milestones = pack.Milestones?.Select(static milestone => milestone with
+            {
+                Grants = milestone.Grants ?? [],
+                UnlockGrants = milestone.UnlockGrants ?? [],
+            }).ToArray() ?? [],
+        };
+    }
+
+    public static GameplayContentSnapshot LoadSnapshot(IEnumerable<string> packJson)
+    {
+        ArgumentNullException.ThrowIfNull(packJson);
+        var registry = new GameplayContentRegistry();
+        foreach (var json in packJson)
+            AddTo(registry, json);
+        return registry.BuildSnapshot();
+    }
+
+    /// <summary>Adds one pack to an existing registry; validation happens when the snapshot is built.</summary>
+    public static void AddTo(GameplayContentRegistry registry, string json)
+    {
+        ArgumentNullException.ThrowIfNull(registry);
+        var pack = Parse(json);
+        foreach (var entry in pack.Content)
+            registry.AddContent(entry);
+        foreach (var unlock in pack.Unlocks)
+            registry.AddUnlock(Normalize(unlock));
+        foreach (var variant in pack.Variants)
+            registry.AddVariant(Normalize(variant));
+        foreach (var milestone in pack.Milestones)
+            registry.AddMilestone(Normalize(milestone));
+    }
+
+    private static UnlockDefinition Normalize(UnlockDefinition unlock) => unlock with
+    {
+        Prerequisites = unlock.Prerequisites ?? [],
+        Grants = unlock.Grants ?? [],
+        RequiredMilestones = unlock.RequiredMilestones ?? [],
+    };
+
+    private static MechanicVariant Normalize(MechanicVariant variant) => variant with
+    {
+        BiomeTags = variant.BiomeTags ?? [],
+        Data = variant.Data ?? new Dictionary<string, string>(StringComparer.Ordinal),
+    };
+
+    private static MilestoneDefinition Normalize(MilestoneDefinition milestone) => milestone with
+    {
+        Grants = milestone.Grants ?? [],
+        UnlockGrants = milestone.UnlockGrants ?? [],
+    };
+
+    private static void Validate(GameplayContentPack pack)
+    {
+        ArgumentNullException.ThrowIfNull(pack.Content);
+        ArgumentNullException.ThrowIfNull(pack.Unlocks);
+        ArgumentNullException.ThrowIfNull(pack.Variants);
+        ArgumentNullException.ThrowIfNull(pack.Milestones);
+    }
+}

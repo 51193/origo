@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "content": [
+    { "id": "mechanic.spawn.demo", "kind": "mechanic", "unlockId": "unlock.demo" }
+  ],
+  "unlocks": [
+    {
+      "id": "unlock.demo",
+      "title": "Demo spawn variant",
+      "category": "mechanics",
+      "cost": 100,
+      "prerequisites": ["unlock.core"],
+      "grants": ["mechanic.spawn.demo"],
+      "requiredMilestones": []
+    }
+  ],
+  "variants": [],
+  "milestones": []
+}
