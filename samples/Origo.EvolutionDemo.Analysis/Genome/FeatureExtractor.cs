@@ -118,7 +118,7 @@ public static class FeatureExtractor
             foreach (var trait in phenotype.Body.LifeTraits)
                 values[$"trait.{trait.Key}"] = trait.Value;
             var signatures = genome.Genes
-                .Select(static gene => $"{(ushort)gene.Kind:X}:{Convert.ToHexString(gene.Payload)}")
+                .Select(DescribeGene)
                 .ToHashSet(StringComparer.Ordinal);
             return new FeatureRow(save.Path, save.Time, creature.Name, creature.Lineage,
                 creature.Generation, values, signatures);
@@ -128,6 +128,61 @@ public static class FeatureExtractor
         {
             return null;
         }
+    }
+
+    /// <summary>Human-readable stable gene signature for enrichment reports.</summary>
+    public static string DescribeGene(GeneV4 gene)
+    {
+        ArgumentNullException.ThrowIfNull(gene);
+        return gene.Kind switch
+        {
+            GeneKind.BodySegment => DescribeBody(gene),
+            GeneKind.Organ => DescribeOrgan(gene),
+            GeneKind.Neuron => DescribeNeuron(gene),
+            GeneKind.Synapse => DescribeSynapse(gene),
+            GeneKind.Reflex => DescribeReflex(gene),
+            GeneKind.LifeHistory => DescribeLife(gene),
+            _ => $"{gene.Kind}:{Convert.ToHexString(gene.Payload)}",
+        };
+    }
+
+    private static string DescribeBody(GeneV4 gene)
+    {
+        var (length, width) = GenePayloadV4.ReadBodySegment(gene.Payload);
+        return $"BodySegment(length={length:0.00},width={width:0.00})";
+    }
+
+    private static string DescribeOrgan(GeneV4 gene)
+    {
+        var (kind, size) = GenePayloadV4.ReadOrgan(gene.Payload);
+        return $"Organ({kind},size={size:0.00})";
+    }
+
+    private static string DescribeNeuron(GeneV4 gene)
+    {
+        var (kind, interfaceId, activation, bias) = GenePayloadV4.ReadNeuron(gene.Payload);
+        var interfaceName = kind == NeuronKindV4.Sensor
+            ? ((SensorKindV4)interfaceId).ToString()
+            : ((ActionKindV4)interfaceId).ToString();
+        return $"Neuron({kind},{interfaceName},{activation},bias={bias:0.00})";
+    }
+
+    private static string DescribeSynapse(GeneV4 gene)
+    {
+        var (from, to, weight) = GenePayloadV4.ReadSynapse(gene.Payload);
+        return $"Synapse({from}->{to},weight={weight:0.00})";
+    }
+
+    private static string DescribeReflex(GeneV4 gene)
+    {
+        var (sensor, action, gain) = GenePayloadV4.ReadReflex(gene.Payload);
+        return $"Reflex({sensor}->{action},gain={gain:0.00})";
+    }
+
+    private static string DescribeLife(GeneV4 gene)
+    {
+        var (trait, value) = GenePayloadV4.ReadLifeHistory(gene.Payload);
+        return $"Life({trait}={value:0.00})";
     }
 
     private static double StandardDeviation(IEnumerable<double> values)

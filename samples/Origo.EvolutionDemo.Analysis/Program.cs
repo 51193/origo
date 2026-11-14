@@ -47,6 +47,8 @@ internal static class Program
         var mode = "all";
         var method = "kmeans";
         var stabilityRounds = 5;
+        var dbscanEps = 0d;
+        var dbscanMinPoints = 5;
         for (var i = 0; i < args.Length; i++)
         {
             switch (args[i])
@@ -75,6 +77,12 @@ internal static class Program
                 case "--stability" when i + 1 < args.Length:
                     stabilityRounds = int.Parse(args[++i], CultureInfo.InvariantCulture);
                     break;
+                case "--eps" when i + 1 < args.Length:
+                    dbscanEps = double.Parse(args[++i], CultureInfo.InvariantCulture);
+                    break;
+                case "--min-points" when i + 1 < args.Length:
+                    dbscanMinPoints = int.Parse(args[++i], CultureInfo.InvariantCulture);
+                    break;
                 default:
                     throw new InvalidOperationException($"Unknown genome argument '{args[i]}'.");
             }
@@ -96,9 +104,13 @@ internal static class Program
             columns.Select(column => row.Values.GetValueOrDefault(column, double.NaN)).ToArray())]);
         var (standardized, _, _, _) = Standardizer.Fit(raw);
         var projection = Pca.Project(standardized, 3, seed);
-        var clustering = string.Equals(method, "jaccard", StringComparison.Ordinal)
-            ? JaccardClustering.Fit(rows.Select(static row => row.GeneSignatures).ToArray(), requestedK, seed)
-            : KMeans.Fit(standardized, requestedK, seed);
+        var clustering = method switch
+        {
+            "jaccard" => JaccardClustering.Fit(
+                rows.Select(static row => row.GeneSignatures).ToArray(), requestedK, seed),
+            "dbscan" => Dbscan.Fit(standardized, dbscanEps, dbscanMinPoints, seed),
+            _ => KMeans.Fit(standardized, requestedK, seed),
+        };
         var stability = string.Equals(method, "kmeans", StringComparison.Ordinal)
             ? ClusterStability.Bootstrap(standardized, clustering.K, stabilityRounds, seed)
             : 0d;
