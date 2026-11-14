@@ -58,6 +58,12 @@ The clean Genome v4 architecture, tests, and mock benchmark live in
 The benchmark is intentionally independent of the playable runtime until the
 migration is complete.
 
+### Analysis tools
+
+The game includes local, Godot-free analysis tools for current v6 saves and
+pipeline profiles: see the
+[analysis README](Origo.EvolutionDemo.Analysis/README.md).
+
 ### Logic tests
 
 ```bash

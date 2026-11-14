@@ -129,12 +129,27 @@ public sealed class GameplayPipeline
         return this;
     }
 
-    public void Tick(IGameplayWorldContext context, Func<GameplayPhase, bool> isPhaseEnabled)
+    public void Tick(
+        IGameplayWorldContext context,
+        Func<GameplayPhase, bool> isPhaseEnabled,
+        Action<IGameplaySystem, double>? systemObserver = null)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(isPhaseEnabled);
         foreach (var system in _systems)
-            if (isPhaseEnabled(system.Phase))
+        {
+            if (!isPhaseEnabled(system.Phase))
+                continue;
+            if (systemObserver is null)
+            {
                 system.Tick(context);
+                continue;
+            }
+
+            var started = System.Diagnostics.Stopwatch.GetTimestamp();
+            system.Tick(context);
+            var elapsed = System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds;
+            systemObserver(system, elapsed);
+        }
     }
 }

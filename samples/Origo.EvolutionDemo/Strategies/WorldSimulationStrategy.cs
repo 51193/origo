@@ -269,9 +269,13 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
     private static void SimulateTick(ISndEntity controller, ISndContext ctx)
     {
         var session = EvolutionGameSession.For(ctx);
-        session.Runtime.Pipeline.Tick(
-            new EvolutionTickContext(controller, ctx, Tuning.SimulationTickSeconds, session),
-            static _ => true);
+        var world = new EvolutionTickContext(controller, ctx, Tuning.SimulationTickSeconds, session);
+        session.Profiler.Begin();
+        session.Runtime.Pipeline.Tick(world, static _ => true,
+            session.Profiler.Enabled
+                ? (system, milliseconds) => session.Profiler.RecordSystem(system.Id, milliseconds)
+                : null);
+        session.Profiler.End(world);
     }
 
     /// <summary>Runs the core simulation system for one fixed tick.</summary>

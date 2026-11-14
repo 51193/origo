@@ -18,6 +18,7 @@ public sealed class EvolutionGameSession
 
     public ISndContext Context { get; }
     public GameplayRuntime Runtime { get; }
+    internal SimulationProfiler Profiler { get; } = SimulationProfiler.CreateFromEnvironment();
 
     /// <summary>
     ///     Registers after the SND context is constructed. Frame-time strategies

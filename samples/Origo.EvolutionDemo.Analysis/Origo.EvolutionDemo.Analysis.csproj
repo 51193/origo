@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <IsPackable>false</IsPackable>
+        <RootNamespace>Origo.EvolutionDemo.Analysis</RootNamespace>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="../Origo.EvolutionDemo.Logic/Origo.EvolutionDemo.Logic.csproj" />
+    </ItemGroup>
+</Project>
