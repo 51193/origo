@@ -27,6 +27,7 @@ internal static class Program
             {
                 "genome" => GenomeCommand([.. args.Skip(1)]),
                 "perf" => PerfCommand([.. args.Skip(1)]),
+                "compare" => CompareCommand([.. args.Skip(1)]),
                 _ => Unknown(args[0]),
             };
         }
@@ -122,6 +123,39 @@ internal static class Program
         return 0;
     }
 
+    private static int CompareCommand(string[] args)
+    {
+        string? baseline = null;
+        string? current = null;
+        var output = "perf-compare.html";
+        for (var i = 0; i < args.Length; i++)
+        {
+            switch (args[i])
+            {
+                case "--baseline" when i + 1 < args.Length:
+                    baseline = args[++i];
+                    break;
+                case "--current" when i + 1 < args.Length:
+                    current = args[++i];
+                    break;
+                case "--out" when i + 1 < args.Length:
+                    output = args[++i];
+                    break;
+                default:
+                    throw new InvalidOperationException($"Unknown compare argument '{args[i]}'.");
+            }
+        }
+
+        if (baseline is null || current is null)
+            throw new InvalidOperationException("compare requires --baseline and --current.");
+        var previous = new PerfAggregator(ProfileReader.Read(baseline));
+        var aggregate = new PerfAggregator(ProfileReader.Read(current));
+        var deltas = PerfComparison.Compare(previous, aggregate);
+        File.WriteAllText(output, PerfCompareHtmlReport.Build(baseline, current, deltas));
+        Console.WriteLine($"wrote {output} ({deltas.Count} metrics)");
+        return 0;
+    }
+
     private static int PerfCommand(string[] args)
     {
         string? profile = null;
@@ -193,5 +227,6 @@ internal static class Program
         Console.WriteLine("  genome --save <save-dir-or-json> [--save ...] [--out report.html]");
         Console.WriteLine("         [--max 5000] [--seed 1] [--k 0(auto)]");
         Console.WriteLine("  perf --profile <profile.jsonl> [--out perf.html]");
+        Console.WriteLine("  compare --baseline <baseline.jsonl> --current <current.jsonl> [--out compare.html]");
     }
 }

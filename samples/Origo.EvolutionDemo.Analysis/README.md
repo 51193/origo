@@ -27,9 +27,14 @@ dotnet run --project samples/Origo.EvolutionDemo.Analysis -c Release -- \
 Optional:
 
 ```text
---k 0       automatic k via silhouette (default)
---k 4       fixed cluster count
---save ...  repeat for multiple saves/time points
+--k 0          automatic k via silhouette (default)
+--k 4          fixed cluster count
+--mode all|genotype|phenotype|behavior
+--method kmeans|jaccard|dbscan
+--stability 5  bootstrap ARI rounds (kmeans only)
+--eps 0        DBSCAN epsilon (0 = median k-distance)
+--min-points 5 DBSCAN minimum points
+--save ...     repeat for multiple saves/time points
 ```
 
 Outputs:
@@ -45,7 +50,11 @@ The report contains:
 - PCA scatter coloured by cluster;
 - cluster feature profile;
 - top differentiating structural/body/neural/behavioral features;
-- raw feature distribution.
+- raw feature distribution;
+- cluster-by-save composition;
+- Fisher exact gene-signature enrichment with BH FDR;
+- bootstrap ARI and (for genotype) readability labels such as
+  `Organ(SpikeOrgan,size=...)`, `Reflex(FoodAhead->Move,gain=...)`.
 
 Feature groups include genome structure, organs, neural topology/weights,
 energy budget, body traits, and save behavior fields (`drive`, displacement,
@@ -73,14 +82,28 @@ dotnet run --project samples/Origo.EvolutionDemo.Analysis -c Release -- \
   --out .scratch/perf-report.html
 ```
 
-The score report includes wall time, allocations, GC counts, population/food,
-and per-system mean/P50/P95/P99/max from the pipeline phases:
+The report includes wall time, allocations, GC counts, population/food, and
+per-system mean/P50/P95/P99/max, plus per-system allocation attribution and
+subphases:
 
 ```text
 evolution.snapshot, evolution.corpse, evolution.core,
 evolution.collision, evolution.foodbloom, evolution.commit,
 evolution.foodsource, evolution.progression
+
+subphases:
+evolution.core.ai, evolution.core.genome_decode,
+evolution.core.sensors, evolution.core.brain,
+evolution.core.spike_targets
 ```
+
+Compare two profiles measured with the same scenario/seed:
+
+```bash
+dotnet run --project samples/Origo.EvolutionDemo.Analysis -c Release --   compare --baseline .scratch/profile-before.jsonl           --current .scratch/profile-after.jsonl           --out .scratch/perf-compare.html
+```
+
+Profile schema 2 is required; older profile JSONL is rejected explicitly.
 
 ## Limits
 
