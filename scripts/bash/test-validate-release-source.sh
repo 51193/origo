@@ -94,6 +94,19 @@ $output"
 write_tree "0.1.1" "0.1.1.0" "true"
 expect_pass "formal archive" "0.1.1"
 
+write_tree "0.1.1" "0.1.1.0" "true"
+zip -rq "$FIXTURE/source.zip" -j "$FIXTURE/tree/origo-0.1.1" >/dev/null
+# -j would flatten the prefix, so create a prefixed zip instead.
+rm -f "$FIXTURE/source.zip"
+( cd "$FIXTURE/tree" && zip -rq "$FIXTURE/source.zip" "origo-0.1.1" )
+expect_zip_pass() {
+    local output
+    output="$(bash "$ROOT/scripts/bash/validate-release-source.sh" "$FIXTURE/source.zip" "0.1.1")" \
+        || FAIL "zip archive: expected pass:
+$output"
+}
+expect_zip_pass
+
 write_tree "0.1.0" "0.1.0.0" "true" "0.1.1"
 expect_failure "stale Version" "0.1.1" "source archive <Version> is '0.1.0', expected '0.1.1'"
 

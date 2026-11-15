@@ -56,6 +56,10 @@ SHA256SUMS lists the archive contents.
 README
 ( cd "$WORK" && sha256sum "${packages[@]}" nuget.config > SHA256SUMS )
 ( cd "$WORK" && zip -q -r "${ARTIFACTS_DIR}/origo-framework-${VERSION}.zip" README.txt SHA256SUMS "${packages[@]}" nuget.config )
+tar -C "$WORK" -czf "${ARTIFACTS_DIR}/origo-framework-${VERSION}.tar.gz" \
+    README.txt SHA256SUMS "${packages[@]}" nuget.config
 
-echo "Framework bundle: ${ARTIFACTS_DIR}/origo-framework-${VERSION}.zip"
+echo "Framework bundles:"
+echo "  ${ARTIFACTS_DIR}/origo-framework-${VERSION}.zip"
+echo "  ${ARTIFACTS_DIR}/origo-framework-${VERSION}.tar.gz"
 unzip -Z1 "${ARTIFACTS_DIR}/origo-framework-${VERSION}.zip" | sort

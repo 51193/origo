@@ -26,7 +26,11 @@ cleanup() {
 }
 trap cleanup EXIT
 
-tar -xzf "$ARCHIVE" -C "$TMP"
+case "$ARCHIVE" in
+    *.tar.gz) tar -xzf "$ARCHIVE" -C "$TMP" ;;
+    *.zip) unzip -q "$ARCHIVE" -d "$TMP" ;;
+    *) echo "ERROR: source archive must be .tar.gz or .zip." >&2; exit 2 ;;
+esac
 
 props_files=()
 while IFS= read -r path; do

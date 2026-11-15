@@ -347,6 +347,11 @@ jobs:
           VERSION="${TAG#v}"
           mkdir -p ./artifacts
           git archive \
+            --format=zip \
+            --prefix="origo-${VERSION}/" \
+            --output="artifacts/origo-source-${VERSION}.zip" \
+            HEAD
+          git archive \
             --format=tar.gz \
             --prefix="origo-${VERSION}/" \
             --output="artifacts/origo-source-${VERSION}.tar.gz" \
