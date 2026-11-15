@@ -108,9 +108,11 @@ same `BREAKING:` prefix.
   snapshot as the repository's Latest release. Only a formal `vx.y.z` tag pushed
   by hand keeps the release state chosen on GitHub.
 - An already-pushed snapshot tag is complete only when its GitHub Release is
-  published (not a draft), marked pre-release, and carries exactly the thirteen
-  expected asset names (five packages, the source archive, two documentation
-  archives, and `nuget.config`); an extra or misnamed asset is incomplete. A run scans all nightly tags for the current
+  published (not a draft), marked pre-release, and carries exactly the fifteen
+  expected asset names (five packages, source tar/zip archives, two
+  documentation archives, three playable demo archives, the framework
+  zip/tar.gz bundles, and `nuget.config`); an extra or misnamed asset is
+  incomplete. A run scans all nightly tags for the current
   base; every missing/draft/partial release is dispatched, and the current
   week's tag is still created when the window has commits. GitHub API errors
   other than 404 fail the job instead of being mistaken for an orphan. This
@@ -183,18 +185,20 @@ first; every step below then applies to that tag:
   (including the adapter's `GodotSharp` dependency matching the repository's
   Godot.NET.Sdk pin), analyzer assets, and kernel isolation; any missing,
   unexpected, or mismatched package aborts the release;
-- Build `origo-source-<version>.tar.gz` with `git archive` from the release
-  commit and validate it with `scripts/bash/validate-release-source.sh`. The archive
-  must carry the exact `<Version>` / `AssemblyVersion` / `FileVersion`, the
-  expected `origo-<version>/` root, and, for a formal release, the same metadata
-  verifier as the checkout. This is the authoritative source snapshot; GitHub's
-  automatically generated source links resolve the same tag;
+- Build `origo-source-<version>.tar.gz` and `origo-source-<version>.zip` with
+  `git archive` from the release commit and validate the tar archive with
+  `scripts/bash/validate-release-source.sh`. Both archives must carry the
+  exact `<Version>` / `AssemblyVersion` / `<FileVersion>`, the expected
+  `origo-<version>/` root, and, for a formal release, the same metadata verifier
+  as the checkout. The custom archives are retained even though GitHub's
+  auto-generated source has the same file contents: its root is
+  `51193-origo-<commit>/`, and it cannot be validated before the tag moves.
 - Run the staged `validate-release-artifacts.sh` (fetched from `main` with the
   other validators) on the packed artifact directory after the source-archive
-  validation to assert the exact thirteen
-  attachment names (five packages, the source archive, the two documentation
-  archives, three playable demo archives, the framework bundle, and
-  `nuget.config`) with no extras; this check runs before the tag
+  validation to assert the exact fifteen
+  attachment names (five packages, the source tar/zip archives, the two
+  documentation archives, three playable demo archives, the framework bundle
+  zip/tar.gz, and `nuget.config`) with no extras; this check runs before the tag
   moves;
 - Build a documentation snapshot archive containing `docs/`, `AGENTS.md`,
   `CHANGELOG.md`, and `Directory.Build.props` (the version authority referenced
@@ -207,7 +211,9 @@ first; every step below then applies to that tag:
   workflow run -- including a GitHub re-run, whose checkout now uses an
   explicit ref -- resolves the tag's current target first, so a tag already
   moved by this pipeline does not produce a duplicate release commit;
-- Attach the thirteen release artifacts (five packages, the source archive, the two documentation archives, three playable demo archives, the framework bundle, and `nuget.config`) to
+- Attach the fifteen release artifacts (five packages, the source tar/zip
+  archives, the two documentation archives, three playable demo archives, the
+  framework bundle zip/tar.gz, and `nuget.config`) to
   the GitHub Release; pass `prerelease` when the run was started as a snapshot
   (the `snapshot` input, which the weekly job sets) or when the tag contains `-`.
   Only a formal `x.y.z` tag pushed by hand keeps the release state chosen on

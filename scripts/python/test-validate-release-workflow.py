@@ -931,13 +931,19 @@ class ReleaseWorkflowGuardTests(unittest.TestCase):
             "        env:\n"
             "          TAG: ${{ steps.resolve-tag.outputs.tag }}\n"
             "        run: |\n"
-            '          VERSION="${TAG#v}"\n'
+            "          VERSION=\"${TAG#v}\"\n"
             "          mkdir -p ./artifacts\n"
             "          git archive \\\n"
+            "            --format=zip \\\n"
+            "            --prefix=\"origo-${VERSION}/\" \\\n"
+            "            --output=\"artifacts/origo-source-${VERSION}.zip\" \\\n"
+            "            HEAD\n"
+            "          git archive \\\n"
             "            --format=tar.gz \\\n"
-            '            --prefix="origo-${VERSION}/" \\\n'
-            '            --output="artifacts/origo-source-${VERSION}.tar.gz" \\\n'
-            "            HEAD\n\n"
+            "            --prefix=\"origo-${VERSION}/\" \\\n"
+            "            --output=\"artifacts/origo-source-${VERSION}.tar.gz\" \\\n"
+            "            HEAD\n"
+            "\n"
         )
         text = self.mutated(step, "")
         code, _, stderr = self.run_guard(text)

@@ -13,6 +13,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 ### Added
 
+- **Release bundles for the framework and playable demo** — each release
+  publishes one-download `origo-framework-<version>.zip` and `.tar.gz` bundles
+  with the five framework packages and `nuget.config`, plus platform playable
+  demo archives.
+  Source trees are published as both `.tar.gz` and `.zip` with an
+  `origo-<version>/` root; GitHub's auto-generated source archive is not used
+  for this slot because its root is commit-derived and it cannot be validated
+  before the tag moves.
 - **`OrigoHost` implements `IDisposable`** — hosts can be owned with
   `using var host = OrigoHost.Create(options);`; the existing idempotent
   `Dispose` remains the public shutdown path.
