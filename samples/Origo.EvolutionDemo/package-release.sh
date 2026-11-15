@@ -8,6 +8,10 @@ VERSION="${1:?version required (x.y.z or x.y.z-suffix)}"
 ARTIFACTS="${2:?artifacts directory required}"
 GODOT="$(bash "$ROOT/scripts/bash/download-godot.sh")"
 mkdir -p "$ARTIFACTS"
+# Resolve the caller's path before the platform archives are created: the zip
+# steps change the working directory to a temporary export directory, so a
+# relative artifacts path would resolve there instead.
+ARTIFACTS="$(cd "$ARTIFACTS" && pwd)"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 mkdir -p "${WORK}/linux" "${WORK}/windows" "${WORK}/macos"
