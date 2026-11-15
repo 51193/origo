@@ -236,6 +236,12 @@ Documentation generation, version-link maintenance, and local link/anchor valida
   Markdown** — `docs.sh check` also validates links in `scripts/README.md` and
   `.github/**/*.md`.
 
+- **Release artifact counts match the fifteen-asset contract** — `AGENTS.md`,
+  the shell-kernel boundary page, and the `[Unreleased]` Changelog entry still
+  described the older nine-asset set after the playable-demo and framework
+  bundle additions; all three now state the current contract enforced by
+  `validate-release-artifacts.sh`.
+
 ### Contributor Workflow and Repository Layout
 
 Contributor-facing workflow, pull-request policy, and script/repository layout changes.

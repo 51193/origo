@@ -154,7 +154,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Cyclic `DataSourceNode` graphs fail instead of looping/overflowing** — canonical hashing and JSON encoding detect cycles; shared acyclic children remain supported.
 - **`press_button` stays inside the entity subtree and `camera_view` reports visible entities correctly** — absolute/`..` NodePaths cannot press unrelated buttons, and the no-visible-node branch is reachable and counts entities independently.
 - **Console input is bounded and drained fairly** — input lines have a configurable limit, the pending queue drops the oldest command at its bound, and the console executes a bounded number of commands per frame.
-- **Weekly snapshots require the exact nine release asset names** — completeness no longer accepts an arbitrary count of unrelated assets.
+- **Weekly snapshots require the exact fifteen release asset names** — completeness no longer accepts an arbitrary count of unrelated assets.
 - **Snapshot paths are normalized across host separator styles** — `SaveFileHandle.GetRelativePath` now normalizes `\`/`/` and scheme roots, and fails explicitly when a path is outside the save root instead of embedding an absolute path. Staged snapshots must contain the progress pair before the swap, so a broken copy cannot replace a valid slot.
 - **Case-variant legacy slots cannot be overwritten or deleted** — write/delete/load/snapshot paths and level payload writes reject a directory that differs only by case, with a migration instruction.
 - **A\* heuristic no longer overflows for large valid coordinates** — the heuristic is computed in `double`; a 46341-cell straight-line path no longer degenerates into a NaN-priority search.
