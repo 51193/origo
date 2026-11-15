@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Bundle the five framework NuGet packages and nuget.config into one zip.
-# Individual packages remain attached to the release; this is the one-download
-# convenience artifact for consumers that use the whole shell package set.
+# Bundle the five framework NuGet packages and nuget.config into a zip and a
+# tar.gz. Individual packages remain attached to the release; this is the
+# one-download convenience artifact for consumers that use the whole shell
+# package set.
 set -euo pipefail
 
 ARTIFACTS_DIR="${1:-}"
@@ -19,6 +20,10 @@ if [[ ! -d "$ARTIFACTS_DIR" ]]; then
     echo "ERROR: artifacts directory not found: $ARTIFACTS_DIR" >&2
     exit 2
 fi
+# Resolve the caller's path before the archive commands run: they change the
+# working directory to the temporary bundle directory, so a relative artifacts
+# path would resolve there and no archive could be created.
+ARTIFACTS_DIR="$(cd "$ARTIFACTS_DIR" && pwd)"
 
 packages=(
     "Origo.ConsoleBridge.${VERSION}.nupkg"
@@ -38,6 +43,17 @@ if [[ ! -f "${ARTIFACTS_DIR}/nuget.config" ]]; then
     exit 1
 fi
 
+# GNU coreutils ships sha256sum; macOS ships shasum. Both write the standard
+# "<hash>  <name>" manifest, so consumers can verify it with either tool.
+if command -v sha256sum >/dev/null 2>&1; then
+    SHA256=(sha256sum)
+elif command -v shasum >/dev/null 2>&1; then
+    SHA256=(shasum -a 256)
+else
+    echo "ERROR: sha256sum or shasum is required to build SHA256SUMS." >&2
+    exit 1
+fi
+
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/origo-framework-bundle.XXXXXX")"
 trap 'rm -rf "$WORK"' EXIT
 for package in "${packages[@]}"; do
@@ -54,7 +70,7 @@ $(printf '  %s\n' "${packages[@]}")
 Use nuget.config when restoring packages from a local or private feed.
 SHA256SUMS lists the archive contents.
 README
-( cd "$WORK" && sha256sum "${packages[@]}" nuget.config > SHA256SUMS )
+( cd "$WORK" && "${SHA256[@]}" "${packages[@]}" nuget.config > SHA256SUMS )
 ( cd "$WORK" && zip -q -r "${ARTIFACTS_DIR}/origo-framework-${VERSION}.zip" README.txt SHA256SUMS "${packages[@]}" nuget.config )
 tar -C "$WORK" -czf "${ARTIFACTS_DIR}/origo-framework-${VERSION}.tar.gz" \
     README.txt SHA256SUMS "${packages[@]}" nuget.config

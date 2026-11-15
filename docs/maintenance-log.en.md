@@ -186,6 +186,20 @@ Release/snapshot workflow mechanics, provenance, validators, version stamping, a
   release-workflow guard rejects any weekly step that pushes a branch ref or
   adds a second push.
 
+- **Release artifact packagers resolve the caller's artifacts directory** —
+  `package-framework-artifacts.sh` and the playable-demo `package-release.sh`
+  passed their `artifacts` argument to archive commands that run from a
+  temporary work directory, so the Release workflow's relative `./artifacts`
+  path pointed inside that directory: the framework bundle step failed with
+  `zip` exit 15 after packing, and the demo packaging step that runs later
+  carried the same defect. Both scripts now resolve the path once before
+  archiving, and the bundle manifest uses `sha256sum` or macOS `shasum` so the
+  documented macOS local gate keeps working. New self-tests pin the relative
+  workflow invocation, both bundle formats and their checksum manifests, the
+  demo archive layout, a snapshot version, an absolute path, and the error
+  paths, and the script map names the tar.gz bundle and the fifteen-asset
+  validator.
+
 ### Documentation Tooling
 
 Documentation generation, version-link maintenance, and local link/anchor validation.

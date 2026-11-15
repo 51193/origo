@@ -82,20 +82,22 @@ Rules:
 | `verify-release.sh` | Release metadata verification |
 | `verify-release-provenance.sh` | Tag ancestry and release-commit provenance |
 | `validate-release-packages.sh` | Validate the five-package release artifact set |
-| `package-framework-artifacts.sh` | Bundle the five framework NuGet packages, `nuget.config`, and checksums into one zip |
-| `validate-release-artifacts.sh` | Validate the exact thirteen release asset names before publishing |
+| `package-framework-artifacts.sh` | Bundle the five framework NuGet packages, `nuget.config`, and checksums into one zip and tar.gz |
+| `validate-release-artifacts.sh` | Validate the exact fifteen release asset names before publishing |
 | `validate-release-source.sh` | Validate the release source archive |
 | `work-identity.sh` | Branch/worktree identity validation |
 | `package-consumer-smoke-lib.sh` | Source-only helpers for the package smoke |
 | `test-api-inventory-parent.sh` | Bash API-inventory parent/metadata-commit regression tests |
 | `test-docs.sh` | Generated-document, local-link, and local-anchor validation |
 | `test-check-weekly-base.sh` | Weekly snapshot base/version validation |
+| `test-demo-package-release.sh` | Playable-demo release archive and path regression tests |
 | `test-dev-suite.sh` | Bash/PowerShell gate parity, test-project parity, self-test wiring, and script-map guard |
 | `test-dotnet-env.sh` | SDK bootstrap, selection, and installer regression tests |
 | `test-download-godot-deps.sh` | Godot downloader dependency/cache tests |
 | `test-find-previous-api-baseline.sh` | Previous release baseline selection tests |
 | `test-lint-pr-body.sh` | PR title/body linter regression tests |
 | `test-package-consumer-smoke-lib.sh` | Package-smoke helper and fixture contract tests |
+| `test-package-framework-artifacts.sh` | Framework bundle archive, checksum, and path regression tests |
 | `test-pre-push-hook.sh` | Pre-push commit-lint hook tests |
 | `test-release-check.sh` | Release preflight regression tests |
 | `test-validate-release-source.sh` | Release source archive validator tests |
