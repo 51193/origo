@@ -90,7 +90,7 @@ Rules:
 | `test-api-inventory-parent.sh` | Bash API-inventory parent/metadata-commit regression tests |
 | `test-docs.sh` | Generated-document, local-link, and local-anchor validation |
 | `test-check-weekly-base.sh` | Weekly snapshot base/version validation |
-| `test-demo-package-release.sh` | Playable-demo release archive and path regression tests |
+| `test-demo-package-release.sh` | Playable-demo release archive, layout, and .NET payload regression tests |
 | `test-dev-suite.sh` | Bash/PowerShell gate parity, test-project parity, self-test wiring, and script-map guard |
 | `test-dotnet-env.sh` | SDK bootstrap, selection, and installer regression tests |
 | `test-download-godot-deps.sh` | Godot downloader dependency/cache tests |

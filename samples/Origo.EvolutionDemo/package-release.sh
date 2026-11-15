@@ -34,7 +34,22 @@ export_platform "macOS" "${WORK}/macos/OrigoEvolutionDemo.app"
 
 test -x "${WORK}/linux/OrigoEvolutionDemo.x86_64"
 test -f "${WORK}/windows/OrigoEvolutionDemo.exe"
-test -d "${WORK}/macos/OrigoEvolutionDemo.app/Contents/MacOS"
+macos_executable="$(find "${WORK}/macos/OrigoEvolutionDemo.app/Contents/MacOS" \
+    -maxdepth 1 -type f -perm -111 -print -quit)"
+if [[ -z "$macos_executable" ]]; then
+    echo "ERROR: macOS demo export does not contain the app executable." >&2
+    exit 1
+fi
+
+# Godot exports the .NET assemblies only when the project solution is present
+# and the publish succeeds; a package without them cannot start.
+for demo_platform in linux windows macos; do
+    if [[ -z "$(find "${WORK}/${demo_platform}" -type f \
+        -name "Origo.EvolutionDemo.dll" -print -quit)" ]]; then
+        echo "ERROR: ${demo_platform} demo package is missing Origo.EvolutionDemo.dll." >&2
+        exit 1
+    fi
+done
 
 cat > "${WORK}/README.txt" <<'README'
 Origo Evolution Demo
@@ -62,7 +77,7 @@ tar -tzf "${ARTIFACTS}/origo-evolution-demo-${VERSION}-linux-x86_64.tar.gz" \
 unzip -Z1 "${ARTIFACTS}/origo-evolution-demo-${VERSION}-windows-x86_64.zip" \
     | grep -qE '(^|/)OrigoEvolutionDemo\.exe$'
 unzip -Z1 "${ARTIFACTS}/origo-evolution-demo-${VERSION}-macos-universal.zip" \
-    | grep -q 'OrigoEvolutionDemo\.app/Contents/MacOS/'
+    | grep -qE 'OrigoEvolutionDemo\.app/Contents/MacOS/[^/]+$'
 
 echo "Playable demo packages:"
 ls -lh \
