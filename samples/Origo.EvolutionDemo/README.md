@@ -431,6 +431,7 @@ timestamp to each save's display metadata. `DemoUi` uses the public
 ```
 samples/Origo.EvolutionDemo/
   Main.tscn                     # one root Node: DemoEntry
+  Origo.EvolutionDemo.sln       # Godot C# solution used by editor builds and export
   Origo/entry/entry.json        # custom level id "pond"
   Origo/initial/levels/pond/    # controller entity scene
   Origo/demo/*.tscn             # controller/creature/food/food-source placeholder nodes

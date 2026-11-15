@@ -200,6 +200,15 @@ Release/snapshot workflow mechanics, provenance, validators, version stamping, a
   paths, and the script map names the tar.gz bundle and the fifteen-asset
   validator.
 
+- **Playable demo exports produce runnable packages** — the demo project had no
+  solution file, so Godot's .NET export skipped publishing and every C# resource
+  raised a missing-solution error, and the macOS universal preset failed because
+  ETC2/ASTC import was disabled. The project now carries the solution file and
+  the ETC2/ASTC import flag, and `package-release.sh` fails when a platform
+  export does not contain the published demo assemblies or the macOS app
+  executable instead of archiving a package that cannot start. The self-test
+  pins the payload assertion for every platform and the macOS executable check.
+
 ### Documentation Tooling
 
 Documentation generation, version-link maintenance, and local link/anchor validation.

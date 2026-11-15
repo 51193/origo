@@ -2,11 +2,12 @@
 # Regression tests for samples/Origo.EvolutionDemo/package-release.sh.
 #
 # The Release workflow invokes the demo packager from the repository root with a
-# relative "./artifacts" path, while the platform archives are zipped from
-# temporary export directories. The real packaging, archive layout, and path
-# handling run here; the .NET build and the Godot engine, which the release job
-# supplies through the pinned SDK and the cached engine, are replaced with
-# stubs so the regression stays inside the Bash lint gate.
+# relative "./artifacts" path, while the platform archives are exported and
+# zipped from temporary directories. The real packaging, archive layout, path
+# handling, and .NET payload assertions run here; the .NET build and the Godot
+# engine, which the release job supplies through the pinned SDK and the cached
+# engine, are replaced with stubs so the regression stays inside the Bash lint
+# gate.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 FIXTURE="$(mktemp -d "${TMPDIR:-/tmp}/origo-demo-release.XXXXXX")"
@@ -23,18 +24,24 @@ FAIL() {
     exit 1
 }
 
-# Copy the packager into a throwaway repository root so its own root and demo
-# project resolution stay real.
-FAKE_ROOT="$FIXTURE/repo"
-PACKAGER="$FAKE_ROOT/samples/Origo.EvolutionDemo/$PACKAGER_NAME"
-mkdir -p "$FAKE_ROOT/samples/Origo.EvolutionDemo" "$FAKE_ROOT/scripts/bash"
-cp "$ROOT/samples/Origo.EvolutionDemo/$PACKAGER_NAME" "$PACKAGER"
+# Export prerequisites: Godot publishes C# assemblies only for a solution that
+# contains the project, and its macOS universal preset requires the ETC2/ASTC
+# import flag. Both are plain project files, so pin them here instead of
+# waiting for the Release job to fail.
+DEMO_PROJECT="$ROOT/samples/Origo.EvolutionDemo"
+[[ -f "$DEMO_PROJECT/Origo.EvolutionDemo.sln" ]] \
+    || FAIL "demo project is missing the solution file Godot exports from"
+grep -qF '"Origo.EvolutionDemo.csproj"' "$DEMO_PROJECT/Origo.EvolutionDemo.sln" \
+    || FAIL "demo solution does not reference the demo project"
+grep -qxF 'textures/vram_compression/import_etc2_astc=true' \
+    "$DEMO_PROJECT/project.godot" \
+    || FAIL "demo project does not enable the ETC2/ASTC import flag required by the macOS universal export"
 
 # A curated PATH: the tools the packager needs, without a real .NET SDK or Godot
 # engine, so this test controls both external boundaries.
 BIN="$FIXTURE/bin"
 mkdir -p "$BIN"
-for tool in bash cat chmod cp dirname grep gzip head ls mktemp mkdir rm sed tar unzip zip; do
+for tool in bash cat chmod cp dirname find grep gzip head ls mktemp mkdir rm sed tar unzip zip; do
     tool_path="$(command -v "$tool" || true)"
     [[ -n "$tool_path" ]] || FAIL "required tool is missing: $tool"
     ln -s "$tool_path" "$BIN/$tool"
@@ -42,24 +49,36 @@ done
 printf '#!/bin/sh\nexit 0\n' > "$BIN/dotnet"
 chmod +x "$BIN/dotnet"
 
-# The Godot resolver prints the export stub the packager must call.
-GODOT_STUB="$FIXTURE/godot"
-cat > "$FAKE_ROOT/scripts/bash/download-godot.sh" <<EOF
+# Build a throwaway repository root carrying the packager, the Godot resolver,
+# and an export stub. `omit_payload_platform` names one preset whose export
+# omits the .NET publish payload; `omit_macos_executable` leaves the macOS app
+# without its executable. Together they mirror the release failures this
+# self-test pins.
+write_fake_root() {
+    local fake_root="$1"
+    local omit_payload_platform="$2"
+    local omit_macos_executable="$3"
+    mkdir -p "$fake_root/samples/Origo.EvolutionDemo" "$fake_root/scripts/bash"
+    cp "$ROOT/samples/Origo.EvolutionDemo/$PACKAGER_NAME" \
+        "$fake_root/samples/Origo.EvolutionDemo/$PACKAGER_NAME"
+    cat > "$fake_root/scripts/bash/download-godot.sh" <<EOF
 #!/usr/bin/env bash
-printf '%s\\n' "$GODOT_STUB"
+printf '%s\\n' "$fake_root/godot"
 EOF
-chmod +x "$FAKE_ROOT/scripts/bash/download-godot.sh"
-cat > "$GODOT_STUB" <<'GODOT_EOF'
+    chmod +x "$fake_root/scripts/bash/download-godot.sh"
+    cat > "$fake_root/godot" <<EOF
 #!/usr/bin/env bash
 # Export stub: create the tree the packager asserts after each export.
 set -euo pipefail
+omit_payload_platform='$omit_payload_platform'
+omit_macos_executable=$omit_macos_executable
 preset=""
 output=""
-while (($# > 0)); do
-    case "$1" in
+while ((\$# > 0)); do
+    case "\$1" in
         --export-release)
-            preset="$2"
-            output="$3"
+            preset="\$2"
+            output="\$3"
             shift 3
             ;;
         *)
@@ -67,31 +86,82 @@ while (($# > 0)); do
             ;;
     esac
 done
-[[ -n "$output" ]] || exit 0
-mkdir -p "$(dirname "$output")"
-if [[ "$preset" == "macOS" ]]; then
-    mkdir -p "$output/Contents/MacOS"
-    printf 'fixture macOS\n' > "$output/Contents/MacOS/OrigoEvolutionDemo"
+[[ -n "\$output" ]] || exit 0
+add_payload() {
+    local directory="\$1"
+    mkdir -p "\$directory"
+    printf 'fixture assembly %s\n' "\$preset" > "\$directory/Origo.EvolutionDemo.dll"
+    printf 'fixture logic assembly\n' > "\$directory/Origo.EvolutionDemo.Logic.dll"
+}
+if [[ "\$preset" == "macOS" ]]; then
+    mkdir -p "\$output/Contents/MacOS"
+    if [[ "\$omit_macos_executable" != true ]]; then
+        printf 'fixture macOS\n' > "\$output/Contents/MacOS/Origo Evolution Demo"
+        chmod +x "\$output/Contents/MacOS/Origo Evolution Demo"
+    fi
+    if [[ "\$omit_payload_platform" != macOS ]]; then
+        add_payload "\$output/Contents/Resources/data_Origo.EvolutionDemo_macos_arm64"
+        add_payload "\$output/Contents/Resources/data_Origo.EvolutionDemo_macos_x86_64"
+    fi
 else
-    printf 'fixture %s\n' "$preset" > "$output"
-    chmod +x "$output"
+    mkdir -p "\$(dirname "\$output")"
+    printf 'fixture %s\n' "\$preset" > "\$output"
+    chmod +x "\$output"
+    case "\$preset" in
+        Linux) data_dir="\$(dirname "\$output")/data_Origo.EvolutionDemo_linuxbsd_x86_64" ;;
+        Windows) data_dir="\$(dirname "\$output")/data_Origo.EvolutionDemo_windows_x86_64" ;;
+        *) echo "unexpected preset: \$preset" >&2; exit 1 ;;
+    esac
+    if [[ "\$omit_payload_platform" != "\$preset" ]]; then
+        add_payload "\$data_dir"
+    fi
 fi
-GODOT_EOF
-chmod +x "$GODOT_STUB"
+EOF
+    chmod +x "$fake_root/godot"
+}
 
 run_packager() {
     local label="$1"
-    local directory="$2"
-    shift 2
+    local fake_root="$2"
+    local directory="$3"
+    shift 3
     local output code
     set +e
-    output="$( cd "$directory" && PATH="$BIN" bash "$PACKAGER" "$@" 2>&1 )"
+    output="$( cd "$directory" \
+        && PATH="$BIN" bash "$fake_root/samples/Origo.EvolutionDemo/$PACKAGER_NAME" "$@" 2>&1 )"
     code=$?
     set -e
     if [[ $code -ne 0 ]]; then
         FAIL "$label: demo packager failed (exit ${code}):
 $output"
     fi
+}
+
+assert_no_archives() {
+    local label="$1"
+    local artifacts="$2"
+    [[ -z "$(find "$artifacts" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null)" ]] \
+        || FAIL "$label: broken demo package was archived:
+$(find "$artifacts" -mindepth 1 -maxdepth 1 -print | sort)"
+}
+
+expect_export_failure() {
+    local label="$1"
+    local fake_root="$2"
+    local diagnostic="$3"
+    local output code
+    set +e
+    output="$( cd "$fake_root" \
+        && PATH="$BIN" bash "$fake_root/samples/Origo.EvolutionDemo/$PACKAGER_NAME" \
+            "$VERSION" ./artifacts 2>&1 )"
+    code=$?
+    set -e
+    [[ $code -ne 0 ]] || FAIL "$label: expected the packager to fail:
+$output"
+    grep -qF "$diagnostic" <<<"$output" \
+        || FAIL "$label: missing diagnostic '${diagnostic}':
+$output"
+    assert_no_archives "$label" "$fake_root/artifacts"
 }
 
 assert_demo_archives() {
@@ -114,30 +184,61 @@ $(find "$artifacts" -mindepth 1 -maxdepth 1 -type f | sort)"
     unzip -Z1 "$windows_archive" | grep -qE '(^|/)OrigoEvolutionDemo\.exe$' \
         || FAIL "$label: Windows archive does not carry the exported executable"
     unzip -Z1 "$macos_archive" \
-        | grep -q 'OrigoEvolutionDemo\.app/Contents/MacOS/OrigoEvolutionDemo$' \
-        || FAIL "$label: macOS archive does not carry the app bundle layout"
+        | grep -qE 'OrigoEvolutionDemo\.app/Contents/MacOS/[^/]+$' \
+        || FAIL "$label: macOS archive does not carry the app executable"
     tar -tzf "$linux_archive" | grep -qE '(^|/)README\.txt$' \
         || FAIL "$label: Linux archive is missing README.txt"
     unzip -Z1 "$windows_archive" | grep -qE '(^|/)README\.txt$' \
         || FAIL "$label: Windows archive is missing README.txt"
     unzip -Z1 "$macos_archive" | grep -qE '(^|/)README\.txt$' \
         || FAIL "$label: macOS archive is missing README.txt"
+
+    tar -tzf "$linux_archive" \
+        | grep -qE '(^|/)data_Origo\.EvolutionDemo_.*/Origo\.EvolutionDemo\.dll$' \
+        || FAIL "$label: Linux archive is missing the .NET publish payload"
+    unzip -Z1 "$windows_archive" \
+        | grep -qE '(^|/)data_Origo\.EvolutionDemo_.*/Origo\.EvolutionDemo\.dll$' \
+        || FAIL "$label: Windows archive is missing the .NET publish payload"
+    unzip -Z1 "$macos_archive" \
+        | grep -qE 'data_Origo\.EvolutionDemo_.*/Origo\.EvolutionDemo\.dll$' \
+        || FAIL "$label: macOS archive is missing the .NET publish payload"
 }
 
 # The Release workflow invocation shape: relative directory, caller cwd is the
 # artifacts directory's parent (the repository root in CI).
-run_packager "relative artifacts path" "$FAKE_ROOT" "$VERSION" ./artifacts
+FAKE_ROOT="$FIXTURE/repo"
+write_fake_root "$FAKE_ROOT" "" false
+run_packager "relative artifacts path" "$FAKE_ROOT" "$FAKE_ROOT" "$VERSION" ./artifacts
 assert_demo_archives "relative artifacts path" "$FAKE_ROOT/artifacts"
 
 # The documented usage accepts an absolute directory from any cwd.
 mkdir -p "$FIXTURE/elsewhere"
-run_packager "absolute artifacts path" "$FIXTURE/elsewhere" \
+run_packager "absolute artifacts path" "$FAKE_ROOT" "$FIXTURE/elsewhere" \
     "$VERSION" "$FIXTURE/absolute-artifacts"
 assert_demo_archives "absolute artifacts path" "$FIXTURE/absolute-artifacts"
 
+# A platform export without the published .NET payload is not a playable
+# package; the packager must fail for every platform instead of archiving it.
+while read -r platform preset; do
+    broken_root="$FIXTURE/broken-${platform}"
+    write_fake_root "$broken_root" "$preset" false
+    expect_export_failure "missing ${platform} .NET payload" "$broken_root" \
+        "ERROR: ${platform} demo package is missing Origo.EvolutionDemo.dll."
+done <<'PLATFORMS'
+linux Linux
+windows Windows
+macos macOS
+PLATFORMS
+
+# A macOS app without its executable is not playable either.
+NO_EXEC_ROOT="$FIXTURE/broken-macos-executable"
+write_fake_root "$NO_EXEC_ROOT" "" true
+expect_export_failure "missing macOS app executable" "$NO_EXEC_ROOT" \
+    "ERROR: macOS demo export does not contain the app executable."
+
 # Both arguments are required.
 set +e
-output="$( cd "$FAKE_ROOT" && PATH="$BIN" bash "$PACKAGER" 2>&1 )"
+output="$( cd "$FAKE_ROOT" && PATH="$BIN" bash "$FAKE_ROOT/samples/Origo.EvolutionDemo/$PACKAGER_NAME" 2>&1 )"
 code=$?
 set -e
 [[ $code -ne 0 ]] || FAIL "missing arguments must fail"
@@ -145,7 +246,9 @@ grep -qF "version required" <<<"$output" \
     || FAIL "missing arguments: missing version diagnostic:
 $output"
 set +e
-output="$( cd "$FAKE_ROOT" && PATH="$BIN" bash "$PACKAGER" "$VERSION" 2>&1 )"
+output="$( cd "$FAKE_ROOT" \
+    && PATH="$BIN" bash "$FAKE_ROOT/samples/Origo.EvolutionDemo/$PACKAGER_NAME" \
+        "$VERSION" 2>&1 )"
 code=$?
 set -e
 [[ $code -ne 0 ]] || FAIL "missing artifacts directory must fail"
