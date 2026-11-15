@@ -102,6 +102,13 @@ for self_test in scripts/bash/test-*.sh; do
         || FAIL "Bash self-test is not wired into lint-scripts.sh: $name"
 done
 
+# The Godot leak gate must not pipe command output into `grep -q`: the early
+# reader exit can fail the producer with SIGPIPE under `set -o pipefail` (see
+# package-consumer-smoke-lib.sh) and the `if` would then silently pass.
+if grep -nE '\|[[:space:]]*grep[[:space:]]+-q' scripts/bash/godot-test.sh >/dev/null; then
+    FAIL "scripts/bash/godot-test.sh pipes output into grep -q"
+fi
+
 # Bash-free shared Python gates that the PowerShell lint gate relies on.
 powershell_lint_active="$(grep -v '^[[:space:]]*#' scripts/powershell/lint-scripts.ps1)"
 for marker in \

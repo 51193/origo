@@ -69,6 +69,13 @@ CI workflow shape, local test/coverage gates, package-consumer fixture smoke cov
 
 - **Coverage runs no longer emit a false test-host crash report in read-only-runtime sandboxes** — `scripts/bash/test.sh` gives the test host a private writable `XDG_RUNTIME_DIR`; Coverlet's named-mutex unload path otherwise reports an unhandled `System.IO.IOException` after a fully passing run when `/run/user/<id>` is EROFS.
 
+- **Godot integration leak gate detects leaked instances without a pipe** —
+  `scripts/bash/godot-test.sh` matched the leak warning by piping its output
+  into `grep -q`; an early match could close the pipe and fail the `echo` with
+  SIGPIPE under `set -o pipefail`, silently passing the gate. The check now
+  uses a Bash string comparison, and the development-suite parity gate rejects
+  `command | grep -q` pipelines in the runner.
+
 ### Release and Distribution Tooling
 
 Release/snapshot workflow mechanics, provenance, validators, version stamping, and preflight checks that do not change published artifact sets or release status.

@@ -100,7 +100,7 @@ fi
 # Node-leak gate: Godot still exits 0 when ObjectDB instances leak, so the
 # script must treat the leak warning as a failure. Test fixtures are expected
 # to free every node they create.
-if echo "$GODOT_OUTPUT" | grep -q "ObjectDB instances were leaked"; then
+if [[ "$GODOT_OUTPUT" == *"ObjectDB instances were leaked"* ]]; then
     echo ""
     echo "Integration tests FAILED: Godot reported leaked ObjectDB instances."
     echo "$GODOT_OUTPUT" | grep -A40 "Leaked instance" || true
