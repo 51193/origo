@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Regression tests for scripts/bash/validate-release-artifacts.sh.
 #
-# The validator guards the exact twelve-name release asset set; these fixtures
+# The validator guards the exact thirteen-name release asset set; these fixtures
 # pin the complete set, every missing name, unexpected extras, nested entries,
 # wrong-version names, and the usage error paths.
 set -euo pipefail
@@ -35,6 +35,7 @@ expected_assets() {
         "origo-evolution-demo-${version}-linux-x86_64.tar.gz" \
         "origo-evolution-demo-${version}-windows-x86_64.zip" \
         "origo-evolution-demo-${version}-macos-universal.zip" \
+        "origo-framework-${version}.zip" \
         "nuget.config"
 }
 

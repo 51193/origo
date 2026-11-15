@@ -1548,13 +1548,13 @@ def _weekly_snapshot_errors(workflow: dict) -> list[str]:
                 "the weekly check must require a pre-release"
             ),
             'expected_snapshot_assets': (
-                "the weekly check must compare the exact twelve expected snapshot asset names"
+                "the weekly check must compare the exact thirteen expected snapshot asset names"
             ),
             'LC_ALL=C sort': (
                 "the weekly check must sort asset names in a locale-independent order"
             ),
             '"$assets" == "$expected"': (
-                "the weekly check must require all twelve expected snapshot assets by name"
+                "the weekly check must require all thirteen expected snapshot assets by name"
             ),
             'Origo.ConsoleBridge.${version}.nupkg': (
                 "the weekly check must expect Origo.ConsoleBridge.${version}.nupkg"
@@ -1588,6 +1588,9 @@ def _weekly_snapshot_errors(workflow: dict) -> list[str]:
             ),
             'origo-evolution-demo-${version}-macos-universal.zip': (
                 "the weekly check must expect the macOS playable demo archive"
+            ),
+            'origo-framework-${version}.zip': (
+                "the weekly check must expect the framework package bundle"
             ),
             'nuget.config': (
                 "the weekly check must expect nuget.config"
@@ -2148,7 +2151,7 @@ def main() -> int:
                 "release job must run the staged artifact-set validator "
                 f"(bash {ARTIFACTS_VALIDATOR}) after source-archive validation and "
                 "before moving the tag so the attached artifact set is exactly the "
-                "documented twelve names."
+                "documented thirteen names."
             )
         else:
             artifacts_env = release_steps[artifacts_index].get("env")
