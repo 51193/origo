@@ -71,13 +71,26 @@ tar -C "${WORK}/linux" -czf \
 ( cd "${WORK}/windows" && zip -rq "${ARTIFACTS}/origo-evolution-demo-${VERSION}-windows-x86_64.zip" . )
 ( cd "${WORK}/macos" && zip -rq "${ARTIFACTS}/origo-evolution-demo-${VERSION}-macos-universal.zip" OrigoEvolutionDemo.app README.txt )
 
-# Platform-specific archive structure checks.
-tar -tzf "${ARTIFACTS}/origo-evolution-demo-${VERSION}-linux-x86_64.tar.gz" \
-    | grep -qE '(^|/)OrigoEvolutionDemo\.x86_64$'
-unzip -Z1 "${ARTIFACTS}/origo-evolution-demo-${VERSION}-windows-x86_64.zip" \
-    | grep -qE '(^|/)OrigoEvolutionDemo\.exe$'
-unzip -Z1 "${ARTIFACTS}/origo-evolution-demo-${VERSION}-macos-universal.zip" \
-    | grep -qE 'OrigoEvolutionDemo\.app/Contents/MacOS/[^/]+$'
+# Platform-specific archive structure checks. `grep -q` would exit on the
+# first match and close the listing pipe while tar/unzip is still writing,
+# which `set -o pipefail` turns into a spurious "tar: stdout: write error";
+# consume the full listing instead.
+archive_contains() {
+    local label="$1"
+    local pattern="$2"
+    shift 2
+    if ! "$@" | grep -E "$pattern" >/dev/null; then
+        echo "ERROR: ${label} demo archive failed its structure check: ${pattern}" >&2
+        exit 1
+    fi
+}
+
+archive_contains "Linux" '(^|/)OrigoEvolutionDemo\.x86_64$' \
+    tar -tzf "${ARTIFACTS}/origo-evolution-demo-${VERSION}-linux-x86_64.tar.gz"
+archive_contains "Windows" '(^|/)OrigoEvolutionDemo\.exe$' \
+    unzip -Z1 "${ARTIFACTS}/origo-evolution-demo-${VERSION}-windows-x86_64.zip"
+archive_contains "macOS" 'OrigoEvolutionDemo\.app/Contents/MacOS/[^/]+$' \
+    unzip -Z1 "${ARTIFACTS}/origo-evolution-demo-${VERSION}-macos-universal.zip"
 
 echo "Playable demo packages:"
 ls -lh \

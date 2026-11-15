@@ -209,6 +209,14 @@ Release/snapshot workflow mechanics, provenance, validators, version stamping, a
   executable instead of archiving a package that cannot start. The self-test
   pins the payload assertion for every platform and the macOS executable check.
 
+- **Demo archive structure checks are pipefail-safe** —
+  `samples/Origo.EvolutionDemo/package-release.sh` piped `tar`/`unzip`
+  listings into `grep -q`; on a populated demo bundle grep exits at the first
+  match and closes the pipe while tar is still writing, and `set -o pipefail`
+  failed the packaging step with `tar: stdout: write error` even though the
+  entry existed. The checks now consume the full listing, and the self-test
+  rejects new `| grep -q` archive-listing pipelines.
+
 ### Documentation Tooling
 
 Documentation generation, version-link maintenance, and local link/anchor validation.

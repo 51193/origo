@@ -37,6 +37,14 @@ grep -qxF 'textures/vram_compression/import_etc2_astc=true' \
     "$DEMO_PROJECT/project.godot" \
     || FAIL "demo project does not enable the ETC2/ASTC import flag required by the macOS universal export"
 
+# Under `set -o pipefail`, piping an archive listing into `grep -q` closes the
+# pipe on the first match while tar/unzip is still writing and can fail a
+# passing check with a spurious write error.
+if grep -nE '\|[[:space:]]*grep[[:space:]]+-q' \
+    "$DEMO_PROJECT/package-release.sh" >/dev/null; then
+    FAIL "package-release.sh pipes an archive listing into grep -q"
+fi
+
 # A curated PATH: the tools the packager needs, without a real .NET SDK or Godot
 # engine, so this test controls both external boundaries.
 BIN="$FIXTURE/bin"
@@ -179,28 +187,28 @@ assert_demo_archives() {
         || FAIL "$label: expected exactly three demo archives in ${artifacts}:
 $(find "$artifacts" -mindepth 1 -maxdepth 1 -type f | sort)"
 
-    tar -tzf "$linux_archive" | grep -qE '(^|/)OrigoEvolutionDemo\.x86_64$' \
+    tar -tzf "$linux_archive" | grep -E '(^|/)OrigoEvolutionDemo\.x86_64$' >/dev/null \
         || FAIL "$label: Linux archive does not carry the exported executable"
-    unzip -Z1 "$windows_archive" | grep -qE '(^|/)OrigoEvolutionDemo\.exe$' \
+    unzip -Z1 "$windows_archive" | grep -E '(^|/)OrigoEvolutionDemo\.exe$' >/dev/null \
         || FAIL "$label: Windows archive does not carry the exported executable"
     unzip -Z1 "$macos_archive" \
-        | grep -qE 'OrigoEvolutionDemo\.app/Contents/MacOS/[^/]+$' \
+        | grep -E 'OrigoEvolutionDemo\.app/Contents/MacOS/[^/]+$' >/dev/null \
         || FAIL "$label: macOS archive does not carry the app executable"
-    tar -tzf "$linux_archive" | grep -qE '(^|/)README\.txt$' \
+    tar -tzf "$linux_archive" | grep -E '(^|/)README\.txt$' >/dev/null \
         || FAIL "$label: Linux archive is missing README.txt"
-    unzip -Z1 "$windows_archive" | grep -qE '(^|/)README\.txt$' \
+    unzip -Z1 "$windows_archive" | grep -E '(^|/)README\.txt$' >/dev/null \
         || FAIL "$label: Windows archive is missing README.txt"
-    unzip -Z1 "$macos_archive" | grep -qE '(^|/)README\.txt$' \
+    unzip -Z1 "$macos_archive" | grep -E '(^|/)README\.txt$' >/dev/null \
         || FAIL "$label: macOS archive is missing README.txt"
 
     tar -tzf "$linux_archive" \
-        | grep -qE '(^|/)data_Origo\.EvolutionDemo_.*/Origo\.EvolutionDemo\.dll$' \
+        | grep -E '(^|/)data_Origo\.EvolutionDemo_.*/Origo\.EvolutionDemo\.dll$' >/dev/null \
         || FAIL "$label: Linux archive is missing the .NET publish payload"
     unzip -Z1 "$windows_archive" \
-        | grep -qE '(^|/)data_Origo\.EvolutionDemo_.*/Origo\.EvolutionDemo\.dll$' \
+        | grep -E '(^|/)data_Origo\.EvolutionDemo_.*/Origo\.EvolutionDemo\.dll$' >/dev/null \
         || FAIL "$label: Windows archive is missing the .NET publish payload"
     unzip -Z1 "$macos_archive" \
-        | grep -qE 'data_Origo\.EvolutionDemo_.*/Origo\.EvolutionDemo\.dll$' \
+        | grep -E 'data_Origo\.EvolutionDemo_.*/Origo\.EvolutionDemo\.dll$' >/dev/null \
         || FAIL "$label: macOS archive is missing the .NET publish payload"
 }
 
