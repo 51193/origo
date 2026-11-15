@@ -304,7 +304,7 @@ without Godot, and starts `OrigoDefaultEntry` headlessly; the
 five-package set, analyzer asset, and Godot SDK pin of the packed feed are
 asserted by `scripts/bash/validate-release-packages.sh`, which the smoke runs
 against the same feed. It runs in the normal CI Godot job and local `scripts/bash/ci.sh`.
-The release pipeline (#43) is implemented in `.github/workflows/release.yml`: the workflow packs the five shell/kernel packages, validates the set with `scripts/bash/validate-release-packages.sh`, builds and validates the source archive with `scripts/bash/validate-release-source.sh`, and attaches the nine release artifacts (five packages, the source archive, the documentation tar.gz/zip, and `nuget.config`) to the GitHub Release. The version-stamp commit exists only as the tag target; `main` stays on its development baseline.
+The release pipeline (#43) is implemented in `.github/workflows/release.yml`: the workflow packs the five shell/kernel packages, validates the set with `scripts/bash/validate-release-packages.sh`, builds and validates the source archive with `scripts/bash/validate-release-source.sh`, and attaches the fifteen release artifacts (five packages, the source and documentation `.tar.gz`/`.zip` archive pairs, the three playable-demo archives, the framework bundle `.zip`/`.tar.gz`, and `nuget.config`) to the GitHub Release. The version-stamp commit exists only as the tag target; `main` stays on its development baseline.
 
 ## Verification and gates
 
