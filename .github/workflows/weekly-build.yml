@@ -130,6 +130,7 @@ jobs:
               "origo-evolution-demo-${version}-linux-x86_64.tar.gz" \
               "origo-evolution-demo-${version}-windows-x86_64.zip" \
               "origo-evolution-demo-${version}-macos-universal.zip" \
+              "origo-framework-${version}.zip" \
               "nuget.config" \
               | LC_ALL=C sort | paste -sd, -
           }
@@ -142,7 +143,7 @@ jobs:
               IFS=$'\t' read -r draft prerelease assets <<< "$state"
               # softprops creates the prerelease before uploading; a failed
               # upload can leave a published prerelease with only some assets.
-              # Check the exact identities, not just the count: twelve unrelated
+              # Check the exact identities, not just the count: thirteen unrelated
               # assets would otherwise mark a release complete.
               [[ "$draft" == "false" && "$prerelease" == "true" && "$assets" == "$expected" ]]
               return

@@ -82,7 +82,8 @@ Rules:
 | `verify-release.sh` | Release metadata verification |
 | `verify-release-provenance.sh` | Tag ancestry and release-commit provenance |
 | `validate-release-packages.sh` | Validate the five-package release artifact set |
-| `validate-release-artifacts.sh` | Validate the exact nine release asset names before publishing |
+| `package-framework-artifacts.sh` | Bundle the five framework NuGet packages, `nuget.config`, and checksums into one zip |
+| `validate-release-artifacts.sh` | Validate the exact thirteen release asset names before publishing |
 | `validate-release-source.sh` | Validate the release source archive |
 | `work-identity.sh` | Branch/worktree identity validation |
 | `package-consumer-smoke-lib.sh` | Source-only helpers for the package smoke |

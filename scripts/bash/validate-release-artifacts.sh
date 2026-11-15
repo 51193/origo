@@ -2,7 +2,7 @@
 # Validate the exact asset set attached to a release.
 #
 # The Release workflow publishes `./artifacts/*`; this validator proves the
-# directory contains exactly the documented twelve assets for the version before
+# directory contains exactly the documented thirteen assets for the version before
 # the tag moves or the GitHub Release is created. It is the formal-release
 # counterpart of the weekly snapshot completeness check.
 set -euo pipefail
@@ -35,6 +35,7 @@ expected=(
     "origo-evolution-demo-${VERSION}-linux-x86_64.tar.gz"
     "origo-evolution-demo-${VERSION}-windows-x86_64.zip"
     "origo-evolution-demo-${VERSION}-macos-universal.zip"
+    "origo-framework-${VERSION}.zip"
     "nuget.config"
 )
 

@@ -320,6 +320,11 @@ jobs:
       - name: Copy NuGet config to artifacts
         run: cp nuget.config.example ./artifacts/nuget.config
 
+      - name: Package framework artifacts
+        env:
+          TAG: ${{ steps.resolve-tag.outputs.tag }}
+        run: bash scripts/bash/package-framework-artifacts.sh ./artifacts "${TAG#v}"
+
       - name: Package documentation snapshot
         env:
           TAG: ${{ steps.resolve-tag.outputs.tag }}
