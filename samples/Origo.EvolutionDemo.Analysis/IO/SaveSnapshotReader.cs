@@ -6,7 +6,7 @@ using System.Text.Json;
 
 namespace Origo.EvolutionDemo.Analysis.IO;
 
-/// <summary>Reads a v6 SND save scene and exposes creature records for analysis.</summary>
+/// <summary>Reads a v7 SND save scene and exposes creature and controller records for analysis.</summary>
 public static class SaveSnapshotReader
 {
     public static IReadOnlyList<SaveSnapshot> Read(params string[] paths)
@@ -50,7 +50,8 @@ public static class SaveSnapshotReader
             controller.GetValueOrDefault("evo.tick"), creatures,
             entities.Count(static entity => entity.Kind == "food"),
             entities.Count(static entity => entity.Kind == "corpse"),
-            entities.Count(static entity => entity.Kind == "food_source"));
+            entities.Count(static entity => entity.Kind == "food_source"),
+            controller, controllerStrings);
     }
 
     private static void ReadEntity(
@@ -108,9 +109,11 @@ public sealed record SaveSnapshot(
     IReadOnlyList<CreatureRecord> Creatures,
     int Food,
     int Corpses,
-    int FoodSources);
+    int FoodSources,
+    IReadOnlyDictionary<string, double> ControllerNumbers,
+    IReadOnlyDictionary<string, string> ControllerStrings);
 
-/// <summary>Flattened creature record from a v6 save.</summary>
+/// <summary>Flattened creature record from a v7 save.</summary>
 public sealed record CreatureRecord(
     string Name,
     string Genome,

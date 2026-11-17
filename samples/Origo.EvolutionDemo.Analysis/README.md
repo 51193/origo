@@ -109,13 +109,20 @@ evolution.core.sensors, evolution.core.brain,
 evolution.core.spike_targets
 ```
 
+`save` records also expose the full controller key/value set through
+`SaveSnapshot.ControllerNumbers` / `ControllerStrings`, so callers can read
+counters such as `evo.spikeKills`, meal totals, seed, and ticks without
+re-parsing the save JSON.
+
 Compare two profiles measured with the same scenario/seed:
 
 ```bash
 dotnet run --project samples/Origo.EvolutionDemo.Analysis -c Release --   compare --baseline .scratch/profile-before.jsonl           --current .scratch/profile-after.jsonl           --out .scratch/perf-compare.html
 ```
 
-Profile schema 2 is required; older profile JSONL is rejected explicitly.
+Profile schema 2 is required; older profile JSONL is rejected explicitly. The
+compare report covers wall/alloc/GC totals, every system (mean, p95, and mean
+allocation), and every subphase (mean, p95, and mean allocation).
 
 ## Limits
 

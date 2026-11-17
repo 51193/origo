@@ -10,6 +10,12 @@ Repository-facing maintenance changes that do not change user-visible runtime, p
 
 CI workflow shape, local test/coverage gates, package-consumer fixture smoke coverage, shell-API baseline tooling, PowerShell/Bash parity, and developer-suite commands.
 
+- **Evolution Demo analysis reader exposes controller counters and richer
+  perf diffs** — `SaveSnapshot` now carries the save's numeric/string controller
+  dictionaries (counters, seed, tick) for downstream tooling, and `perf compare`
+  reports allocation and GC deltas plus every subphase's mean/p95/allocation
+  instead of stopping at the system layer.
+
 - **Evolution Demo analysis tool supports pinned clustering and timeline
   output** — `genome --k N` now pins exactly N clusters instead of searching up
   to N, `--timeline-csv` writes per-save feature means for time-series
