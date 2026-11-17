@@ -180,7 +180,13 @@ th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.card{display:inline-bl
     {
         ArgumentNullException.ThrowIfNull(rows);
         ArgumentNullException.ThrowIfNull(clustering);
-        var saves = rows.Select(static row => row.SavePath).Distinct(StringComparer.Ordinal).OrderBy(static s => s, StringComparer.Ordinal).ToArray();
+        var saves = rows
+            .GroupBy(static row => row.SavePath, StringComparer.Ordinal)
+            .Select(static group => (Path: group.Key, Time: group.Min(static row => row.SaveTime)))
+            .OrderBy(static entry => entry.Time)
+            .ThenBy(static entry => entry.Path, StringComparer.Ordinal)
+            .Select(static entry => entry.Path)
+            .ToArray();
         var html = new StringBuilder("<table><tr><th>save</th><th>n</th>");
         for (var cluster = 0; cluster < clustering.K; cluster++)
             html.Append(CultureInfo.InvariantCulture, $"<th style=\"color:{palette[cluster % palette.Length]}\">c{cluster}</th>");

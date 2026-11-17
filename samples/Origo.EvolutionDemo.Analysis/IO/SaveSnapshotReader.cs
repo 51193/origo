@@ -36,9 +36,9 @@ public static class SaveSnapshotReader
             ReadEntity(entity, entities, controller, controllerStrings);
 
         if (!controller.TryGetValue("evo.genomeVersion", out var version)
-            || System.Math.Abs(version - 6d) > 1e-9)
+            || System.Math.Abs(version - 7d) > 1e-9)
             throw new InvalidDataException(
-                $"Save '{path}' is not a v6 save (evo.genomeVersion='{version}'). " +
+                $"Save '{path}' is not a v7 save (evo.genomeVersion='{version}'). " +
                 "The analysis tool supports only the current save schema.");
         var creatures = entities
             .Where(static entity => entity.Kind == "creature")

@@ -22,6 +22,7 @@ public partial class DemoSmokeRunner : Node
     private readonly int _smokeSeed;
     private readonly float _fastForwardTarget;
     private readonly string _benchmarkSaveSlot;
+    private readonly float _checkpointInterval;
     private int _state;
     private int _frame;
     private int _savedPopulation;
@@ -39,6 +40,8 @@ public partial class DemoSmokeRunner : Node
     private bool _startInputClicked;
     private bool _diversityShotTaken;
     private bool _cameraTested;
+    private int _verifiedCheckpoints;
+    private readonly string? _configurationError;
 
     public DemoSmokeRunner(DemoEntry entry)
     {
@@ -65,12 +68,29 @@ public partial class DemoSmokeRunner : Node
             ? Math.Max(1f, fastForward)
             : 3f;
         _benchmarkSaveSlot = OS.GetEnvironment("ORIGO_DEMO_SMOKE_SAVE_SLOT");
+        _checkpointInterval = float.TryParse(
+            OS.GetEnvironment("ORIGO_DEMO_SMOKE_CHECKPOINT_INTERVAL"),
+            System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture,
+            out var checkpointInterval)
+            ? checkpointInterval
+            : 0f;
+        if (_checkpointInterval < 0f
+            || (_checkpointInterval > 0f
+                && _checkpointInterval < IterateCheckpointSchedule.MinimumIntervalSeconds))
+        {
+            _configurationError =
+                "ORIGO_DEMO_SMOKE_CHECKPOINT_INTERVAL must be 0 or at least " +
+                $"{IterateCheckpointSchedule.MinimumIntervalSeconds:0} simulation seconds.";
+        }
     }
 
     public override void _Process(double delta)
     {
         try
         {
+            if (_configurationError is not null)
+                throw new InvalidOperationException(_configurationError);
             Tick();
         }
         catch (Exception ex)
@@ -364,6 +384,7 @@ public partial class DemoSmokeRunner : Node
                 _restoredGeneration = restored.generation;
                 _restoredTime = restored.time;
                 _restoredFood = restored.food;
+                ui.SetSmokeCheckpointInterval(_checkpointInterval);
                 ui.StartSmokeGame(_smokeSeed);
                 _state = 5;
                 _frame = 0;
@@ -389,9 +410,12 @@ public partial class DemoSmokeRunner : Node
 
             case 6:
                 _frame++;
+                var checkpointCount = IterateCheckpointSchedule.Marks(
+                    0f, _fastForwardTarget, _checkpointInterval).Count;
                 var fastForwardFrameLimit = Math.Max(
                     StartupFrameLimit * 4,
-                    (int)(_fastForwardTarget / Tuning.SimulationTickSeconds) + (StartupFrameLimit * 4));
+                    (int)(_fastForwardTarget / Tuning.SimulationTickSeconds)
+                    + (StartupFrameLimit * 4) + (checkpointCount * 120));
                 if (_frame > fastForwardFrameLimit)
                     throw new InvalidOperationException("Timed iteration did not complete.");
                 if (ui.IsFastForwardingForSmoke)
@@ -399,6 +423,7 @@ public partial class DemoSmokeRunner : Node
                 var fastForwarded = ui.SmokeStats();
                 if (fastForwarded.time < _fastForwardStartTime + 2f)
                     throw new InvalidOperationException("Timed iteration did not advance simulation time.");
+                var expectedCheckpoints = VerifyIterateCheckpoints();
                 if (!string.IsNullOrWhiteSpace(_benchmarkSaveSlot))
                 {
                     ui.SaveSmokeGame(_benchmarkSaveSlot);
@@ -411,7 +436,8 @@ public partial class DemoSmokeRunner : Node
 
                 GD.Print($"DEMO_SMOKE_OK population={_restoredCreatures} saved_population={_savedPopulation} " +
                     $"generation={_restoredGeneration} time={_restoredTime:0.0} food={_restoredFood} " +
-                    $"reset_population={_resetPopulation} fast_forward_time={fastForwarded.time:0.0}");
+                    $"reset_population={_resetPopulation} fast_forward_time={fastForwarded.time:0.0} " +
+                    $"checkpoints={expectedCheckpoints}");
                 GetTree().Quit(0);
                 break;
 
@@ -424,9 +450,33 @@ public partial class DemoSmokeRunner : Node
                 if (!_entry.Context.Save.ListSaves().Contains(_benchmarkSaveSlot, StringComparer.Ordinal))
                     throw new InvalidOperationException("Benchmark save is missing.");
                 GD.Print($"DEMO_BENCHMARK_OK population={_savedPopulation} time={_savedTime:0.0} " +
-                    $"slot={_benchmarkSaveSlot}");
+                    $"slot={_benchmarkSaveSlot} checkpoints={_verifiedCheckpoints}");
                 GetTree().Quit(0);
                 break;
         }
+    }
+
+    private int VerifyIterateCheckpoints()
+    {
+        var marks = IterateCheckpointSchedule.Marks(
+            _fastForwardStartTime, _fastForwardTarget, _checkpointInterval);
+        if (marks.Count == 0)
+        {
+            _verifiedCheckpoints = 0;
+            return 0;
+        }
+
+        var saves = _entry.Context.Save.ListSaves();
+        foreach (var mark in marks)
+        {
+            var slot = DemoUi.IterateCheckpointSlot(mark);
+            if (!saves.Contains(slot, StringComparer.Ordinal))
+                throw new InvalidOperationException($"Iterate checkpoint save '{slot}' is missing.");
+        }
+
+        _verifiedCheckpoints = marks.Count;
+        GD.Print($"DEMO_ITERATE_CHECKPOINTS count={marks.Count} " +
+            $"first={DemoUi.IterateCheckpointSlot(marks[0])} last={DemoUi.IterateCheckpointSlot(marks[^1])}");
+        return marks.Count;
     }
 }

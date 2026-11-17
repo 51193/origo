@@ -64,7 +64,8 @@ internal sealed class SndStrategyManager
             throw;
         }
 
-        _logger.Log(LogLevel.Info, _logTag,
+        // Per-entity recovery detail: keep it out of the Info stream.
+        _logger.Log(LogLevel.Debug, _logTag,
             new LogMessageBuilder().Build($"Strategies recovered: {_strategies.Count}."));
     }
 

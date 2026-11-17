@@ -10,6 +10,13 @@ Repository-facing maintenance changes that do not change user-visible runtime, p
 
 CI workflow shape, local test/coverage gates, package-consumer fixture smoke coverage, shell-API baseline tooling, PowerShell/Bash parity, and developer-suite commands.
 
+- **Evolution Demo analysis tool supports pinned clustering and timeline
+  output** — `genome --k N` now pins exactly N clusters instead of searching up
+  to N, `--timeline-csv` writes per-save feature means for time-series
+  analysis, the cluster-by-save report table is ordered by simulation time, and
+  `perf` accepts `--from`/`--to` simulation-time windows. Previously `--k`
+  behaved as a maximum despite the documented fixed-count meaning.
+
 - **Dedicated Bash development-suite CI job** — the paired `bash-checks`/
   `powershell-checks` and `bash-lint`/`powershell-lint` CI jobs run the Bash
   and PowerShell suites side by side. The parity gate fails if any of the four

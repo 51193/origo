@@ -20,6 +20,7 @@ public sealed class DemoSettingsTests
         settings.OvergrowthEnabled = false;
         settings.OvergrowthMutationRate = 0.37d;
         settings.SpikeRadius = 99f;
+        settings.IterateCheckpointIntervalSeconds = 300f;
 
         var restored = DemoSettings.FromJson(settings.ToJson());
 
@@ -33,6 +34,7 @@ public sealed class DemoSettingsTests
         Assert.False(restored.OvergrowthEnabled);
         Assert.Equal(settings.OvergrowthMutationRate, restored.OvergrowthMutationRate);
         Assert.Equal(settings.SpikeRadius, restored.SpikeRadius);
+        Assert.Equal(settings.IterateCheckpointIntervalSeconds, restored.IterateCheckpointIntervalSeconds);
     }
 
     [Fact]
@@ -56,6 +58,27 @@ public sealed class DemoSettingsTests
         Assert.True(settings.OvergrowthEnabled);
     }
 
+    [Theory]
+    [InlineData(-5f, 0f)]
+    [InlineData(0f, 0f)]
+    [InlineData(300f, 300f)]
+    [InlineData(90_000f, 86_400f)]
+    public void Normalize_ClampsIterateCheckpointInterval(float input, float expected)
+    {
+        var settings = DemoSettings.Defaults();
+        settings.IterateCheckpointIntervalSeconds = input;
+
+        settings.Normalize();
+
+        Assert.Equal(expected, settings.IterateCheckpointIntervalSeconds);
+    }
+
+    [Fact]
+    public void Defaults_DisableIterateCheckpoints()
+    {
+        Assert.Equal(0f, DemoSettings.Defaults().IterateCheckpointIntervalSeconds);
+    }
+
     [Fact]
     public void TuningFacade_ReadsActiveSettings()
     {
@@ -65,10 +88,12 @@ public sealed class DemoSettingsTests
             var settings = DemoSettings.Defaults();
             settings.PondRadius = 7_777f;
             settings.FoodPatchRadius = 123f;
+            settings.IterateCheckpointIntervalSeconds = 42f;
             DemoSettings.Current = settings;
 
             Assert.Equal(7_777f, Tuning.PondRadius);
             Assert.Equal(123f, Tuning.FoodPatchRadius);
+            Assert.Equal(42f, Tuning.IterateCheckpointIntervalSeconds);
         }
         finally
         {

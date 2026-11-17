@@ -38,7 +38,7 @@ internal static class EvolutionEntityFactory
         new SndMetaFluentBuilder(name)
             .SetNode("main", CreatureScene)
             .SetString(DemoKeys.Kind, DemoKeys.CreatureKind)
-            .SetString(DemoKeys.BodyGenome, genome.Body)
+            .SetString(DemoKeys.BodyGenome, genome.SerializedBody)
             .SetFloat(DemoKeys.BodyRadius, phenotype.BodyRadius)
             .SetFloat(DemoKeys.FoodPickupRadius, phenotype.FoodPickupRadius)
             .SetFloat(DemoKeys.MaxEnergy, phenotype.MaxEnergy)

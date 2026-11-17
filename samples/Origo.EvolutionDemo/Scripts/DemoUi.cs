@@ -112,6 +112,9 @@ public partial class DemoUi : CanvasLayer
     private ulong _fastForwardLastWallMs;
     private float _fastForwardLastSimTime;
     private double _fastForwardInstantRate;
+    private IReadOnlyList<float> _iterateCheckpointMarks = Array.Empty<float>();
+    private int _iterateCheckpointIndex;
+    private bool _resumeAfterCheckpointSave;
     private double _diversityTimer;
     private string? _selectedName;
     private string _pendingSaveSlot = string.Empty;
@@ -473,7 +476,16 @@ public partial class DemoUi : CanvasLayer
                 break;
             case PendingWork.SaveAfterRequest:
                 context.Save.SetContinueTarget(_pendingSaveSlot);
-                ShowToast($"Saved {_pendingSaveSlot}");
+                if (_resumeAfterCheckpointSave)
+                {
+                    _resumeAfterCheckpointSave = false;
+                    SetGamePaused(false);
+                }
+                else
+                {
+                    ShowToast($"Saved {_pendingSaveSlot}");
+                }
+
                 _pending = PendingWork.None;
                 _busy = false;
                 RebuildSlots(false);
@@ -513,7 +525,7 @@ public partial class DemoUi : CanvasLayer
         controller.SetData(DemoKeys.Speed, 1);
         controller.SetData(DemoKeys.Paused, false);
         controller.SetData(DemoKeys.Phase, DemoKeys.PhaseStarting);
-        controller.SetData(DemoKeys.GenomeVersion, 6);
+        controller.SetData(DemoKeys.GenomeVersion, DemoEntry.GenomeVersion);
         controller.SetData(DemoKeys.Initialized, false);
         controller.SetData(DemoKeys.Time, 0f);
         controller.SetData(DemoKeys.Tick, 0);
@@ -547,7 +559,7 @@ public partial class DemoUi : CanvasLayer
             return;
         }
 
-        if (ReadInt(controller, DemoKeys.GenomeVersion, 0) < 6)
+        if (ReadInt(controller, DemoKeys.GenomeVersion, 0) < DemoEntry.GenomeVersion)
         {
             controller.SetData(DemoKeys.Paused, true);
             ShowToast("This save predates genome v6 and is not compatible.", true);
@@ -665,6 +677,13 @@ public partial class DemoUi : CanvasLayer
         center = Vector2.Zero;
         return false;
     }
+
+    internal void SetSmokeCheckpointInterval(float seconds) =>
+        _settingsDraft.IterateCheckpointIntervalSeconds =
+            float.IsFinite(seconds) ? MathF.Max(0f, seconds) : 0f;
+
+    internal static string IterateCheckpointSlot(float mark) =>
+        string.Create(CultureInfo.InvariantCulture, $"{DemoEntry.IterateCheckpointSlotPrefix}{mark:0}");
 
     internal void StartSmokeGame(int seed) =>
         StartNewGame(seed, 0.015d, 1, Tuning.CollisionEnabled, Tuning.EarlyFoodBloomEnabled);
@@ -1148,6 +1167,15 @@ public partial class DemoUi : CanvasLayer
             return;
         }
 
+        var checkpointInterval = Tuning.IterateCheckpointIntervalSeconds;
+        if (checkpointInterval > 0f && checkpointInterval < IterateCheckpointSchedule.MinimumIntervalSeconds)
+        {
+            ShowToast(
+                $"Iterate checkpoint interval must be 0 or at least {IterateCheckpointSchedule.MinimumIntervalSeconds:0} s.",
+                true);
+            return;
+        }
+
         target = Mathf.Clamp(target, now + 0.1f, 86_400f);
         controller.SetData(DemoKeys.FastForwardStart, now);
         controller.SetData(DemoKeys.FastForwardTarget, target);
@@ -1169,6 +1197,9 @@ public partial class DemoUi : CanvasLayer
         _fastForwardLastWallMs = _fastForwardStartWallMs;
         _fastForwardLastSimTime = now;
         _fastForwardInstantRate = 0d;
+        _iterateCheckpointMarks = IterateCheckpointSchedule.Marks(
+            now, target, Tuning.IterateCheckpointIntervalSeconds);
+        _iterateCheckpointIndex = 0;
         _fastForwarding = true;
         _previousMaxFps = Engine.MaxFps;
         _previousVsync = DisplayServer.WindowGetVsyncMode();
@@ -1198,6 +1229,13 @@ public partial class DemoUi : CanvasLayer
         var now = ReadFloat(controller, DemoKeys.Time, 0f);
         var target = ReadFloat(controller, DemoKeys.FastForwardTarget, now);
         var start = ReadFloat(controller, DemoKeys.FastForwardStart, now);
+        if (_iterateCheckpointIndex < _iterateCheckpointMarks.Count
+            && now >= _iterateCheckpointMarks[_iterateCheckpointIndex])
+        {
+            RequestIterateCheckpoint();
+            return;
+        }
+
         var wallNow = Time.GetTicksMsec();
         var globalWindow = Math.Max(1d, wallNow - _fastForwardStartWallMs) / 1000d;
         var instantWindow = (wallNow - _fastForwardLastWallMs) / 1000d;
@@ -1239,8 +1277,44 @@ public partial class DemoUi : CanvasLayer
         }
 
         _hudRefreshTimer = 0;
+        _iterateCheckpointMarks = Array.Empty<float>();
+        _iterateCheckpointIndex = 0;
         PersistGameplayProgression();
         UpdateHud();
+    }
+
+    private void RequestIterateCheckpoint()
+    {
+        var mark = _iterateCheckpointMarks[_iterateCheckpointIndex];
+        _iterateCheckpointIndex++;
+        var controller = FindController();
+        if (controller is null)
+            return;
+        var target = ReadFloat(controller, DemoKeys.FastForwardTarget, mark);
+        if (mark >= target - 0.05f)
+            return;
+        var saveId = IterateCheckpointSlot(mark);
+        if (_entry.Context.Save.ListSaves().Contains(saveId, StringComparer.Ordinal))
+            return;
+        PersistRealSeconds();
+        PersistGameplayProgression();
+        SetGamePaused(true);
+        _pendingSaveSlot = saveId;
+        _pending = PendingWork.SaveAfterRequest;
+        _busy = true;
+        _resumeAfterCheckpointSave = true;
+        try
+        {
+            _entry.Context.Save.RequestSaveGame(saveId);
+        }
+        catch (Exception ex)
+        {
+            _busy = false;
+            _pending = PendingWork.None;
+            _resumeAfterCheckpointSave = false;
+            SetGamePaused(false);
+            GD.PushWarning($"ITERATE_CHECKPOINT_FAILED {saveId}: {ex.GetType().Name}: {ex.Message}");
+        }
     }
 
     private PanelContainer CenterPanel(float width, float height)

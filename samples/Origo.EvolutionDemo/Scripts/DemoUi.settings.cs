@@ -71,7 +71,7 @@ public partial class DemoUi
             s => s.InitialFood, (s, v) => s.InitialFood = Mathf.RoundToInt(v));
         AddNumberSetting(rows, "Food cap", 500f, 20_000f, 100f,
             s => s.FoodCap, (s, v) => s.FoodCap = Mathf.RoundToInt(v));
-        AddNumberSetting(rows, "Food per second", 0f, 1_500f, 5f,
+        AddNumberSetting(rows, "Food per second (no patches)", 0f, 1_500f, 5f,
             s => s.FoodPerSecond, (s, v) => s.FoodPerSecond = v);
         AddNumberSetting(rows, "Fallback body radius", 1f, 20f, 0.5f,
             s => s.BodyRadius, (s, v) => s.BodyRadius = v);
@@ -109,16 +109,16 @@ public partial class DemoUi
             s => s.ReproductionChildEnergy, (s, v) => s.ReproductionChildEnergy = v);
         AddNumberSetting(rows, "Reproduction cooldown", 0.5f, 30f, 0.5f,
             s => s.ReproductionCooldownSeconds, (s, v) => s.ReproductionCooldownSeconds = v);
-        AddNumberSetting(rows, "Founder mutation %", 0f, 50f, 1f,
-            s => (float)(s.FounderMutationRate * 100d), (s, v) => s.FounderMutationRate = v / 100d);
         AddNumberSetting(rows, "Brain mutation %", 0f, 5f, 0.1f,
             s => (float)(s.BrainMutationRate * 100d), (s, v) => s.BrainMutationRate = v / 100d);
         AddNumberSetting(rows, "Body length mutation %", 0f, 10f, 0.1f,
             s => (float)(s.BodyLengthMutationRate * 100d), (s, v) => s.BodyLengthMutationRate = v / 100d);
-        AddNumberSetting(rows, "Frameshift mutation %", 0f, 5f, 0.1f,
-            s => (float)(s.FrameshiftMutationRate * 100d), (s, v) => s.FrameshiftMutationRate = v / 100d);
         AddNumberSetting(rows, "Lineage mutation threshold", 1f, 30f, 1f,
             s => s.LineageMutationThreshold, (s, v) => s.LineageMutationThreshold = Mathf.RoundToInt(v));
+
+        AddAdvancedSection(rows, "TIMED ITERATION");
+        AddNumberSetting(rows, "Iterate checkpoint (s, 0=off)", 0f, 3_600f, 30f,
+            s => s.IterateCheckpointIntervalSeconds, (s, v) => s.IterateCheckpointIntervalSeconds = Mathf.Round(v));
 
         AddAdvancedSection(rows, "BODY GENE RANGES");
         AddNumberSetting(rows, "Body radius base", 0.5f, 30f, 0.5f,

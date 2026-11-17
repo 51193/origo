@@ -46,7 +46,7 @@ public static class FeatureExtractor
     {
         try
         {
-            var genome = GenomeV4Codec.FromHex(creature.Genome);
+            var genome = GenomeV4Codec.FromSerialized(creature.Genome);
             var phenotype = GenomeV4Compiler.Compile(genome, ExpressionContextV4.Neutral);
             var brain = GenomeV4Compiler.CompileBrain(phenotype);
             var sensors = new float[64];

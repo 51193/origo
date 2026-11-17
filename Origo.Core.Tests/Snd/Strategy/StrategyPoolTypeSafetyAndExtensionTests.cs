@@ -74,6 +74,20 @@ public class StrategyPoolTypeSafetyAndExtensionTests
     }
 
     [Fact]
+    public void RecoverStrategiesOnly_LogsSummaryAtDebugLevel()
+    {
+        var pool = new SndStrategyPool(NullLogger.Instance);
+        pool.Register(() => new PoolEntityStrategy());
+        var logger = new TestLogger();
+        var mgr = new SndStrategyManager(pool, logger);
+
+        mgr.RecoverStrategiesOnly(["pool.entity"]);
+
+        Assert.Empty(logger.Infos);
+        Assert.Contains(logger.Debugs, entry => entry.Contains("Strategies recovered: 1.", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void RecoverStrategiesOnly_WithOnlyValidStrategies_Succeeds()
     {
         var pool = new SndStrategyPool(NullLogger.Instance);

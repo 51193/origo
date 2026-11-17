@@ -36,6 +36,10 @@ public sealed class DemoSettings
     public int AiUpdateBatch { get; set; } = 600;
     public float MaxCatchUpStepsPerFrame { get; set; } = 40f;
 
+    // Timed iteration. Zero disables checkpoint saves; a positive value is the
+    // simulation-time spacing of automatic iterate_<seconds> snapshots.
+    public float IterateCheckpointIntervalSeconds { get; set; }
+
     // Energy / reproduction.
     public float InitialEnergy { get; set; } = 78f;
     public float FoodEnergy { get; set; } = 18f;
@@ -52,11 +56,9 @@ public sealed class DemoSettings
     public float ReproductionCooldownSeconds { get; set; } = 10f;
     public float MaxAgeSeconds { get; set; } = 300f;
     public double DefaultMutationRate { get; set; } = 0.015d;
-    public double FounderMutationRate { get; set; } = 0.10d;
     public double BodyMutationRate { get; set; } = 0.015d;
     public double BrainMutationRate { get; set; } = 0.003d;
     public double BodyLengthMutationRate { get; set; } = 0.005d;
-    public double FrameshiftMutationRate { get; set; }
     public int LineageMutationThreshold { get; set; } = 2;
 
     // Spike.
@@ -155,6 +157,7 @@ public sealed class DemoSettings
         SimulationTickSeconds = Math.Clamp(SimulationTickSeconds, 0.02f, 1f);
         AiUpdateBatch = Math.Clamp(AiUpdateBatch, 1, 20_000);
         MaxCatchUpStepsPerFrame = Math.Clamp(MaxCatchUpStepsPerFrame, 1f, 1_000f);
+        IterateCheckpointIntervalSeconds = Math.Clamp(IterateCheckpointIntervalSeconds, 0f, 86_400f);
         FoodPickupRadius = Math.Clamp(FoodPickupRadius, 1f, 500f);
         InitialEnergy = Math.Clamp(InitialEnergy, 1f, 10_000f);
         FoodEnergy = Math.Clamp(FoodEnergy, 0f, 10_000f);
@@ -171,11 +174,9 @@ public sealed class DemoSettings
         ReproductionCooldownSeconds = Math.Clamp(ReproductionCooldownSeconds, 0.05f, 3_600f);
         MaxAgeSeconds = Math.Clamp(MaxAgeSeconds, 1f, 100_000f);
         DefaultMutationRate = Math.Clamp(DefaultMutationRate, 0d, 1d);
-        FounderMutationRate = Math.Clamp(FounderMutationRate, 0d, 1d);
         BodyMutationRate = Math.Clamp(BodyMutationRate, 0d, 1d);
         BrainMutationRate = Math.Clamp(BrainMutationRate, 0d, 1d);
         BodyLengthMutationRate = Math.Clamp(BodyLengthMutationRate, 0d, 1d);
-        FrameshiftMutationRate = Math.Clamp(FrameshiftMutationRate, 0d, 1d);
         LineageMutationThreshold = Math.Clamp(LineageMutationThreshold, 1, 1_000);
         SpikeThreshold = Math.Clamp(SpikeThreshold, 0f, 1f);
         SpikeEnergyCost = Math.Clamp(SpikeEnergyCost, 0f, 10_000f);
