@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using Origo.Core.Abstractions.Entity;
 using Origo.EvolutionDemo.Logic;
 using Origo.EvolutionDemo.Logic.V4;
@@ -10,6 +12,7 @@ namespace Origo.EvolutionDemo;
 /// <summary>Immutable per-tick creature view consumed by simulation systems.</summary>
 internal readonly record struct CreatureSnapshot(
     ISndEntity Entity,
+    int StableId,
     float X,
     float Y,
     float Heading,
@@ -149,8 +152,18 @@ internal sealed class WorldSnapshot
             _foodConsumed, _corpsePoints);
     }
 
+    private static int ParseCreatureId(string name)
+    {
+        const string prefix = "creature_";
+        if (!name.StartsWith(prefix, StringComparison.Ordinal)
+            || !int.TryParse(name.AsSpan(prefix.Length), NumberStyles.None, CultureInfo.InvariantCulture, out var id))
+            throw new InvalidDataException($"Creature entity name '{name}' has no stable numeric id.");
+        return id;
+    }
+
     private static CreatureSnapshot ReadCreature(ISndEntity entity) => new(
         entity,
+        ParseCreatureId(entity.Name),
         ReadFloat(entity, DemoKeys.X, 0f),
         ReadFloat(entity, DemoKeys.Y, 0f),
         ReadFloat(entity, DemoKeys.Heading, 0f),

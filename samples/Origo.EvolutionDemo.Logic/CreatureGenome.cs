@@ -69,9 +69,10 @@ public sealed class CreatureGenome
 
     /// <summary>
     ///     Mutates the V4 genome with the operator mix and step count of
-    ///     <paramref name="profile" />. A step that leaves the serialized genome
-    ///     unchanged is not counted, so <paramref name="changes" /> stays the
-    ///     number of applied mutations.
+    ///     <paramref name="profile" />.
+    ///     <paramref name="changes" /> is the number of genes that actually
+    ///     differ between the parent and child, so a no-op mutation step and a
+    ///     mutation attempt measure the same genome divergence.
     /// </summary>
     /// <exception cref="ArgumentNullException">Thrown when a parameter is null.</exception>
     public static CreatureGenome Mutate(
@@ -84,7 +85,6 @@ public sealed class CreatureGenome
         ArgumentNullException.ThrowIfNull(profile);
         ArgumentNullException.ThrowIfNull(random);
         var working = parent.Genome;
-        var applied = 0;
         for (var step = 0; step < profile.Steps; step++)
         {
             var next = GenomeV4Mutator.Mutate(working, random, profile.Settings);
@@ -92,10 +92,9 @@ public sealed class CreatureGenome
                     new CreatureGenome(working).Body, StringComparison.Ordinal))
                 continue;
             working = next;
-            applied++;
         }
 
-        changes = applied;
+        changes = GenomeDivergence.CountChangedGenes(parent.Genome, working);
         return new CreatureGenome(working);
     }
 }

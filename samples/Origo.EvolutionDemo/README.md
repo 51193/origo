@@ -99,7 +99,10 @@ The page covers:
   radius, pickup padding, and max-energy scaling;
 - spike salvo base/per-pellet/distance cost and cooldown per extra pellet;
 - body, brain, and body-length mutation rates (they scale the typed V4
-  mutation operator mix), metabolism, reproduction, ageing, lineage threshold;
+  mutation operator mix), metabolism (including the configurable genome-upkeep
+  share of the V4 energy budget), reproduction, ageing, and the lineage
+  divergence threshold (lineage splits when a child differs in at least N
+  genes);
 - spike threshold, base cost, cost per world-unit, aim half-angle, beam radius,
   drain fraction, range, and cooldown;
 - carcass food interval, feeding amount/cooldown, and related world settings;
@@ -362,7 +365,10 @@ halo instead of a hard uniform-disk
 edge. Patch centers are derived from the pond seed, so save/load preserves the
 layout. The food target is about 3,000 over the 10,000-radius pond; movement and
 metabolism are expensive enough that an orbiting creature that never finds a
-patch will starve, and the 2,500-creature cap remains a safety valve.
+patch will starve, and the 2,500-creature cap remains a safety valve. The
+compiled V4 energy budget (body tissue, neural tissue, and genome complexity) is
+charged as a per-second upkeep; the Advanced Settings "Genome upkeep / budget"
+scale controls it (0 disables the charge).
 
 ### Adaptive SND food sources
 
@@ -429,7 +435,8 @@ The large-population simulation uses three scale-oriented optimizations:
   previous all-pairs sensor scan;
 - adaptive AI batching: movement and energy still update every 10 Hz tick, while
   a bounded batch of about 600 creatures recomputes sensors/brains per tick at
-  high populations (each creature rotates through the batch);
+  high populations; the batch phase comes from each creature's stable id, so a
+  death or spawn elsewhere cannot shift another creature's update cadence;
 - X-sweep collision for large crowds and a render LOD that drops per-creature
   patterns/direction/energy details above ~900 visible creatures.
 
