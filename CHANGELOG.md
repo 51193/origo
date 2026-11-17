@@ -43,6 +43,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **Evolution Demo charges the compiled energy budget** — body tissue, neural
+  tissue, and genome complexity now cost a per-second upkeep derived from the
+  compiled V4 `EnergyBudgetV4`, scaled by a new Advanced Settings "Genome
+  upkeep / budget" value (0 disables it). On the 1200 s scenario this lowers
+  population from 1,567 to 1,251, shortens generation time (max generation 97
+  to 115), and reduces genome inflation (mean genes 61.0 to 57.5) while the
+  pond stays viable.
+- **Evolution Demo lineage splits measure genome divergence** — a child starts
+  a new lineage when at least the configured number of genes actually differ
+  from the parent; the previous criterion counted mutation attempts, which
+  included no-ops and inflated the lineage-id churn.
+- **Evolution Demo AI batching uses stable creature ids** — the batched
+  sensor/brain update phase is derived from each creature's stable id instead of
+  its snapshot list index, so deaths and spawns elsewhere in the list no longer
+  shift another creature's update cadence; the ~600-creature batch bound is
+  unchanged.
+- **Evolution Demo skips collision scratch lists when collision is disabled** —
+  the default collision-off path no longer allocates collision body/entity list
+  entries every tick; enabled behaviour is unchanged.
 - **Evolution Demo mutation controls now change mutations** — the body, brain,
   and body-length rates scale the typed V4 operator groups (normalized so every
   roll selects a real operator) and overgrowth descendants get an amplified

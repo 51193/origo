@@ -99,6 +99,8 @@ public partial class DemoUi
             s => s.BaseMetabolismPerSecond, (s, v) => s.BaseMetabolismPerSecond = v);
         AddNumberSetting(rows, "Move energy", 0f, 5f, 0.05f,
             s => s.MoveEnergyPerSecond, (s, v) => s.MoveEnergyPerSecond = v);
+        AddNumberSetting(rows, "Genome upkeep / budget", 0f, 0.2f, 0.005f,
+            s => s.GenomeMaintenanceScale, (s, v) => s.GenomeMaintenanceScale = v);
         AddNumberSetting(rows, "Turn energy", 0f, 2f, 0.05f,
             s => s.TurnEnergyPerSecond, (s, v) => s.TurnEnergyPerSecond = v);
         AddNumberSetting(rows, "Reproduction energy", 20f, 400f, 5f,

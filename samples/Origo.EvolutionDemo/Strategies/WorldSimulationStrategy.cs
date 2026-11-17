@@ -351,7 +351,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 continue;
             var entity = creature.Entity;
             var bodyGenome = string.Empty;
-            var updateAi = tickNumber == 0 || ((i + tickNumber) % aiStride == 0);
+            var updateAi = AiBatchPhase.ShouldUpdate(creature.StableId, tickNumber, aiStride);
             var drive = Math.Clamp(ReadFloat(entity, DemoKeys.Drive, 0f), 0f, 1f);
             var turn = Math.Clamp(ReadFloat(entity, DemoKeys.Turn, 0f), -1f, 1f);
             var spikeDrive = Math.Clamp(ReadFloat(entity, DemoKeys.SpikeDrive, 0f), -1f, 1f);
@@ -533,10 +533,18 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             var sprintSurcharge = sprintDrive > 0.4f
                 ? Tuning.MoveEnergyPerSecond * 0.6f * drive
                 : 0f;
+
+            // The compiled V4 budget (body tissue, neural tissue, genome
+            // complexity) is charged as a per-second upkeep so a larger
+            // genome/brain is no longer free.
+            var genomeUpkeep = EnergyBudgetMath.UpkeepPerSecond(
+                brainPhenotype.Energy.MaintenancePerSecond,
+                Tuning.GenomeMaintenanceScale);
             energy -= (float)(((Tuning.BaseMetabolismPerSecond * creature.BasalMetabolism)
                 + (Tuning.MoveEnergyPerSecond * drive)
                 + (Tuning.TurnEnergyPerSecond * Math.Abs(turn))
-                + sprintSurcharge) * tickDt);
+                + sprintSurcharge
+                + genomeUpkeep) * tickDt);
             energy = MathF.Min(energy, creature.MaxEnergy);
 
             var ate = false;
@@ -727,8 +735,11 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             }
 
             alive++;
-            collisionBodies.Add(new CollisionBody { X = position.X, Y = position.Y, Radius = creature.BodyRadius });
-            collisionEntities.Add(entity);
+            if (collisionEnabled)
+            {
+                collisionBodies.Add(new CollisionBody { X = position.X, Y = position.Y, Radius = creature.BodyRadius });
+                collisionEntities.Add(entity);
+            }
         }
 
         if (profiler.Enabled)

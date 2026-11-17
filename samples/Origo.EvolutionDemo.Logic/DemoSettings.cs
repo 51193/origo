@@ -49,6 +49,7 @@ public sealed class DemoSettings
     public float ToxicFoodShare { get; set; } = 0.08f;
     public float BaseMetabolismPerSecond { get; set; } = 0.55f;
     public float MoveEnergyPerSecond { get; set; } = 1.1f;
+    public float GenomeMaintenanceScale { get; set; } = 0.01f;
     public float TurnEnergyPerSecond { get; set; } = 0.2f;
     public float ReproductionEnergy { get; set; } = 140f;
     public float ReproductionParentCost { get; set; } = 70f;
@@ -167,6 +168,7 @@ public sealed class DemoSettings
         ToxicFoodShare = Math.Clamp(ToxicFoodShare, 0f, 0.95f - ToughFoodShare);
         BaseMetabolismPerSecond = Math.Clamp(BaseMetabolismPerSecond, 0f, 100f);
         MoveEnergyPerSecond = Math.Clamp(MoveEnergyPerSecond, 0f, 100f);
+        GenomeMaintenanceScale = Math.Clamp(GenomeMaintenanceScale, 0f, 1f);
         TurnEnergyPerSecond = Math.Clamp(TurnEnergyPerSecond, 0f, 100f);
         ReproductionEnergy = Math.Clamp(ReproductionEnergy, 1f, 10_000f);
         ReproductionParentCost = Math.Clamp(ReproductionParentCost, 0f, 10_000f);
