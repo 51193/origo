@@ -20,6 +20,10 @@ public partial class DemoEntry : OrigoDefaultEntry
 {
     public const string SaveRoot = "user://evolution_demo_saves";
     public const string AutoSaveId = "auto";
+    public const string IterateCheckpointSlotPrefix = "iterate_";
+
+    /// <summary>Current genome/save schema version produced by the demo.</summary>
+    public const int GenomeVersion = 7;
     public const string ControllerName = "world_controller";
 
     /// <summary>Per-context gameplay services.</summary>

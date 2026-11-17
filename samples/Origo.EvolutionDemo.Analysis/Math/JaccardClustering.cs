@@ -13,7 +13,13 @@ public static class JaccardClustering
         var n = signatures.Count;
         if (n < 3)
             return new KMeans.Result(new int[n], [], 0, 1, 0);
-        var maxK = System.Math.Min(requestedK > 0 ? requestedK : 6, n - 1);
+        if (requestedK > 0)
+        {
+            var fixedK = System.Math.Min(requestedK, n - 1);
+            return Run(signatures, fixedK, seed + (fixedK * 104729));
+        }
+
+        var maxK = System.Math.Min(6, n - 1);
         KMeans.Result? best = null;
         for (var k = 2; k <= maxK; k++)
         {

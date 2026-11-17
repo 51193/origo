@@ -5,6 +5,7 @@ using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Strategy;
 using Origo.EvolutionDemo.Logic;
+using Origo.EvolutionDemo.Logic.V4;
 
 namespace Origo.EvolutionDemo;
 
@@ -130,24 +131,14 @@ public sealed class OvergrowthStrategy : LifecycleStrategyBase
             || parentGenome is null)
             return;
 
-        var mutationRate = Math.Clamp(Tuning.OvergrowthMutationRate, 0.01d, 1d);
+        var mutationProfile = MutationProfile.ForOvergrowth(DemoSettings.Current, rng);
         var childGenome = CreatureGenome.Mutate(
             parentGenome,
-            mutationRate,
-            mutationRate,
-            0d,
-            mutationRate,
+            mutationProfile,
             rng,
             out var changes);
         if (changes == 0)
-            childGenome = CreatureGenome.Mutate(
-                childGenome,
-                mutationRate,
-                mutationRate,
-                0d,
-                mutationRate,
-                rng,
-                out changes);
+            childGenome = CreatureGenome.Mutate(childGenome, mutationProfile, rng, out changes);
         var childPhenotype = childGenome.Phenotype;
 
         var generation = Math.Max(0, ReadInt(parent, DemoKeys.Generation, 0)) + 1;

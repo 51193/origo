@@ -70,6 +70,18 @@ public class SndDataManagerFailureTests
         Assert.Throws<ArgumentException>(() => manager.GetRequiredData<int>(""));
     }
 
+    [Fact]
+    public void Recover_LogsSummaryAtDebugLevel()
+    {
+        var logger = new TestLogger();
+        var manager = new SndDataManager(new DummyEntity("E"), logger);
+
+        manager.Recover(new DataMetaData { Pairs = [] });
+
+        Assert.Empty(logger.Infos);
+        Assert.Contains(logger.Debugs, entry => entry.Contains("Loaded 0 data entries.", StringComparison.Ordinal));
+    }
+
     private sealed class DummyEntity(string name) : ISndEntity
     {
         public string Name { get; } = name;

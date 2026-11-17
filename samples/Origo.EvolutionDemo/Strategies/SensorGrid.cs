@@ -91,6 +91,7 @@ internal sealed class SensorGrid
         var cellX = CellCoordinate(x);
         var cellY = CellCoordinate(y);
         var cells = Math.Max(1, (int)MathF.Ceiling(radius / _cellSize));
+        var radiusSquared = radius * radius;
         for (var dy = -cells; dy <= cells; dy++)
         {
             var row = cellY + dy;
@@ -101,7 +102,17 @@ internal sealed class SensorGrid
                 var column = cellX + dx;
                 if (column < 0 || column >= _dimension)
                     continue;
-                target.AddRange(buckets[(row * _dimension) + column]);
+                // Cells over-cover a radius query (a 1,000-unit default cell
+                // covers a 120-unit sense range with 3x3 cells). Keep the
+                // original cell-row-major order while dropping points the
+                // caller's radius filter would discard anyway.
+                foreach (var point in buckets[(row * _dimension) + column])
+                {
+                    var deltaX = point.Position.X - x;
+                    var deltaY = point.Position.Y - y;
+                    if ((deltaX * deltaX) + (deltaY * deltaY) <= radiusSquared)
+                        target.Add(point);
+                }
             }
         }
     }

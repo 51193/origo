@@ -24,7 +24,14 @@ namespace Origo.EvolutionDemo;
 public sealed class WorldSimulationStrategy : LifecycleStrategyBase
 {
     private const double TwoPi = Math.PI * 2d;
-    private static readonly Dictionary<string, (PhenotypeV4 Phenotype, CompiledBrainV4 Brain)> BrainCache = new(StringComparer.Ordinal);
+    private static readonly Dictionary<string, (PhenotypeV4 Phenotype, CompiledBrainV4 Brain, bool HasSpikePort)> BrainCache = new(StringComparer.Ordinal);
+
+    /// <summary>
+    ///     Reused per-creature spike-target buffer. The plan consumes it
+    ///     synchronously, so one buffer per tick is safe and avoids a fresh list
+    ///     allocation for every creature.
+    /// </summary>
+    private static readonly List<SpikeTargetV4> SpikeTargetScratch = [];
     private static readonly DemoActionEffectState ActionStateScratch = new();
 
     /// <inheritdoc/>
@@ -254,7 +261,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         controller.SetData(DemoKeys.FoodToughMeals, 0);
         controller.SetData(DemoKeys.FoodToxicMeals, 0);
         controller.SetData(DemoKeys.Phase, DemoKeys.PhaseStarting);
-        controller.SetData(DemoKeys.GenomeVersion, 6);
+        controller.SetData(DemoKeys.GenomeVersion, DemoEntry.GenomeVersion);
         var gameplay = EvolutionGameSession.For(ctx).Runtime;
         GameplayStateSync.Save(controller, gameplay);
 
@@ -302,7 +309,6 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         collisionBodies.Clear();
         var collisionEntities = world.CollisionEntities;
         collisionEntities.Clear();
-        var bodyMutationRate = (float)Tuning.BodyMutationRate;
         var inspectTarget = ReadString(controller, DemoKeys.InspectTarget, string.Empty);
         var bloomEnabled = ReadBool(controller, DemoKeys.BloomEnabled, Tuning.EarlyFoodBloomEnabled);
         var collisionEnabled = ReadBool(controller, DemoKeys.CollisionEnabled, Tuning.CollisionEnabled);
@@ -352,34 +358,37 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             var aimDrive = Math.Clamp(ReadFloat(entity, DemoKeys.Aim, 0f), -1f, 1f);
             var sprintDrive = Math.Clamp(ReadFloat(entity, DemoKeys.SprintDrive, 0f), -1f, 1f);
             PhenotypeV4? brainPhenotype = null;
+            var hasSpikePort = false;
             var aiStart = profiler.Enabled ? System.Diagnostics.Stopwatch.GetTimestamp() : 0L;
             var aiAllocStart = profiler.Enabled ? GC.GetAllocatedBytesForCurrentThread() : 0L;
             if (updateAi)
             {
                 bodyGenome = ReadString(entity, DemoKeys.BodyGenome, string.Empty);
+
+                // One decode/compile per genome string: GetBrainPhenotype caches
+                // the compiled graph and re-uses the entity's serialized genome.
+                // A corrupt genome now fails fast here instead of being silently
+                // replaced by a random founder, so invalid saves cannot hide.
                 var decodeStart = profiler.Enabled ? GC.GetAllocatedBytesForCurrentThread() : 0L;
                 var decodeTick = profiler.Enabled ? System.Diagnostics.Stopwatch.GetTimestamp() : 0L;
-                var decoded = CreatureGenome.TryDecode(bodyGenome, out _);
+                var (phenotype, compiledBrain, phenotypeHasSpikePort) = GetBrainPhenotype(bodyGenome);
                 if (profiler.Enabled)
                 {
                     markerTicks[0] += System.Diagnostics.Stopwatch.GetElapsedTime(decodeTick).TotalMilliseconds;
                     markerAlloc[0] += GC.GetAllocatedBytesForCurrentThread() - decodeStart;
                 }
 
-                if (!decoded)
-                {
-                    var fallback = CreatureGenome.RandomFounder(rng);
-                    bodyGenome = fallback.Body;
-                    entity.SetData(DemoKeys.BodyGenome, bodyGenome);
-                }
-
-                var body = ReadPhenotype(entity);
-                var (phenotype, compiledBrain) = GetBrainPhenotype(bodyGenome);
                 brainPhenotype = phenotype;
+                hasSpikePort = phenotypeHasSpikePort;
+                var senseRange = ReadFloat(entity, DemoKeys.SenseRange, Tuning.SenseRange);
                 var sensorStart = profiler.Enabled ? GC.GetAllocatedBytesForCurrentThread() : 0L;
                 var sensorTick = profiler.Enabled ? System.Diagnostics.Stopwatch.GetTimestamp() : 0L;
-                sensorGrid.Query(creature.X, creature.Y, sensorGrid.Food, nearFood);
-                sensorGrid.Query(creature.X, creature.Y, sensorGrid.Creatures, nearCreatures);
+                // Sensor cones use this creature's expressed sense range, which
+                // can exceed the default Tuning.SenseRange; query the actual
+                // range so the distance-filtered grid keeps every candidate the
+                // cones can see.
+                sensorGrid.Query(creature.X, creature.Y, senseRange, sensorGrid.Food, nearFood);
+                sensorGrid.Query(creature.X, creature.Y, senseRange, sensorGrid.Creatures, nearCreatures);
                 DemoSensorRuntime.ComputeInto(
                     phenotype,
                     new DemoSensorContext
@@ -388,7 +397,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                         Heading = creature.Heading,
                         Energy = creature.Energy,
                         MaxEnergy = creature.MaxEnergy,
-                        SenseRange = body.SenseRange,
+                        SenseRange = senseRange,
                         Food = nearFood,
                         Creatures = nearCreatures,
                         Corpses = new ArraySegment<SensorPoint>(corpsePoints, 0, corpses.Count),
@@ -429,8 +438,14 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 aiTicks += System.Diagnostics.Stopwatch.GetElapsedTime(aiStart).TotalMilliseconds;
                 aiAlloc += GC.GetAllocatedBytesForCurrentThread() - aiAllocStart;
             }
-            brainPhenotype ??= GetBrainPhenotype(
-                ReadString(entity, DemoKeys.BodyGenome, string.Empty)).Phenotype;
+            if (brainPhenotype is null)
+            {
+                var (cachedPhenotype, _, cachedHasSpikePort) = GetBrainPhenotype(
+                    ReadString(entity, DemoKeys.BodyGenome, string.Empty));
+                brainPhenotype = cachedPhenotype;
+                hasSpikePort = cachedHasSpikePort;
+            }
+
             actionBuffer[(int)ActionKindV4.Move] = drive;
             actionBuffer[(int)ActionKindV4.Turn] = turn;
             actionBuffer[(int)ActionKindV4.Spike] = spikeDrive;
@@ -454,25 +469,37 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             ActionStateScratch.SpikePlan = null;
             var targetStart = profiler.Enabled ? GC.GetAllocatedBytesForCurrentThread() : 0L;
             var targetTick = profiler.Enabled ? System.Diagnostics.Stopwatch.GetTimestamp() : 0L;
-            var spikeTargets = new List<SpikeTargetV4>();
-            var hasSpikePort = false;
-            foreach (var port in brainPhenotype.ActionPorts)
-            {
-                if (port != (ushort)ActionKindV4.Spike)
-                    continue;
-                hasSpikePort = true;
-                break;
-            }
+            var spikeTargets = SpikeTargetScratch;
+            spikeTargets.Clear();
 
-            if (hasSpikePort)
+            // The plan itself rejects out-of-range or out-of-cone candidates, but
+            // the grid query returns every creature in the covering cells. Skip
+            // the walk while the spike is cooling down and pre-filter candidates
+            // the beam can never reach.
+            if (hasSpikePort && creature.SpikeCooldown <= tickDt)
             {
-                sensorGrid.Query(creature.X, creature.Y, creature.SpikeRadius, sensorGrid.Creatures, nearCreatures);
+                // A target can sit slightly beyond SpikeRange but still be hit
+                // near the beam edge: query the outer hit radius so the
+                // distance-filtered grid query cannot drop a valid target.
+                var maxTargetRadius = Tuning.BodyRadiusBase * Tuning.BodySizeMax;
+                var beamReach = Tuning.SpikeBeamRadius + maxTargetRadius;
+                var spikeQueryRadius = MathF.Sqrt(
+                    (creature.SpikeRadius * creature.SpikeRadius) + (beamReach * beamReach)) + maxTargetRadius;
+                sensorGrid.Query(creature.X, creature.Y, spikeQueryRadius, sensorGrid.Creatures, nearCreatures);
+                var aimReach = MathF.Sqrt(
+                    (creature.SpikeRadius * creature.SpikeRadius)
+                    + ((Tuning.SpikeBeamRadius + creature.BodyRadius) * (Tuning.SpikeBeamRadius + creature.BodyRadius)));
                 foreach (var point in nearCreatures)
                 {
                     if (point.Id == i)
                         continue;
                     var candidate = creatures[point.Id];
                     if (candidate.Entity.IsPendingKill)
+                        continue;
+                    var dx = candidate.X - creature.X;
+                    var dy = candidate.Y - creature.Y;
+                    var reach = aimReach + candidate.BodyRadius;
+                    if ((dx * dx) + (dy * dy) > reach * reach)
                         continue;
                     spikeTargets.Add(new SpikeTargetV4(
                         point.Id,
@@ -500,9 +527,16 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             var energy = creature.Energy;
             var age = creature.Age + tickDt;
             var cooldown = Math.Max(0f, creature.ReproCooldown - tickDt);
+            // Sprint multiplies distance by 1.6x while enabled; charge the extra
+            // movement (0.6x the driven move cost) so speed costs energy per
+            // distance instead of being a free win.
+            var sprintSurcharge = sprintDrive > 0.4f
+                ? Tuning.MoveEnergyPerSecond * 0.6f * drive
+                : 0f;
             energy -= (float)(((Tuning.BaseMetabolismPerSecond * creature.BasalMetabolism)
                 + (Tuning.MoveEnergyPerSecond * drive)
-                + (Tuning.TurnEnergyPerSecond * Math.Abs(turn))) * tickDt);
+                + (Tuning.TurnEnergyPerSecond * Math.Abs(turn))
+                + sprintSurcharge) * tickDt);
             energy = MathF.Min(energy, creature.MaxEnergy);
 
             var ate = false;
@@ -608,12 +642,11 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 var generation = Math.Max(0, ReadInt(entity, DemoKeys.Generation, 0));
                 var lineage = Math.Max(0, ReadInt(entity, DemoKeys.Lineage, 1));
                 var children = Math.Max(0, ReadInt(entity, DemoKeys.Children, 0));
+                var mutationProfile = MutationProfile.FromSettings(DemoSettings.Current)
+                    .WithSteps(1 + rng.Next(3));
                 var childGenome = CreatureGenome.Mutate(
                     parentGenome,
-                    bodyMutationRate,
-                    Tuning.BodyLengthMutationRate,
-                    Tuning.FrameshiftMutationRate,
-                    Tuning.BrainMutationRate,
+                    mutationProfile,
                     rng,
                     out var changes);
                 if (changes >= Tuning.LineageMutationThreshold)
@@ -855,7 +888,17 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         return Math.Min(Tuning.FoodCap, baseTarget + (int)MathF.Round(Tuning.EarlyFoodBonus * ramp));
     }
 
-    private static (PhenotypeV4 Phenotype, CompiledBrainV4 Brain) GetBrainPhenotype(string bodyGenome)
+    /// <summary>
+    ///     Returns the compiled phenotype/brain for one serialized genome,
+    ///     decoding and compiling only on a cache miss. Genomes are immutable for
+    ///     a creature's lifetime, so the cache key is the canonical hex string.
+    /// </summary>
+    /// <remarks>
+    ///     A genome that cannot be decoded or compiled throws; the simulation
+    ///     fails fast rather than substituting another creature.
+    /// </remarks>
+    private static (PhenotypeV4 Phenotype, CompiledBrainV4 Brain, bool HasSpikePort) GetBrainPhenotype(
+        string bodyGenome)
     {
         if (BrainCache.TryGetValue(bodyGenome, out var cached))
             return cached;
@@ -863,26 +906,21 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             CacheEviction.TrimOldestHalf(BrainCache);
         var genome = CreatureGenome.FromSerialized(bodyGenome);
         var phenotype = GenomeV4Compiler.Compile(genome.Genome, ExpressionContextV4.Neutral);
-        var entry = (phenotype, GenomeV4Compiler.CompileBrain(phenotype));
+        var entry = (phenotype, GenomeV4Compiler.CompileBrain(phenotype), HasActionPort(phenotype, ActionKindV4.Spike));
         BrainCache[bodyGenome] = entry;
         return entry;
     }
 
-    private static BodyPhenotype ReadPhenotype(ISndEntity entity) => new(
-        ReadFloat(entity, DemoKeys.BodyRadius, Tuning.BodyRadius) / MathF.Max(0.5f, Tuning.BodyRadiusBase),
-        ReadFloat(entity, DemoKeys.BodyRadius, Tuning.BodyRadius),
-        ReadFloat(entity, DemoKeys.FoodPickupRadius, Tuning.FoodPickupRadius),
-        ReadFloat(entity, DemoKeys.MaxEnergy, 200f),
-        ReadFloat(entity, DemoKeys.MoveSpeed, Tuning.CreatureSpeed),
-        ReadFloat(entity, DemoKeys.TurnSpeed, Tuning.TurnSpeed),
-        ReadFloat(entity, DemoKeys.SenseRange, Tuning.SenseRange),
-        ReadFloat(entity, DemoKeys.SpikeRadius, Tuning.SpikeRadius),
-        ReadFloat(entity, DemoKeys.BasalMetabolism, 1f),
-        ReadFloat(entity, DemoKeys.MaxAge, Tuning.MaxAgeSeconds),
-        ReadInt(entity, DemoKeys.OrganMask, 0),
-        ReadInt(entity, DemoKeys.SpikeCount, 1),
-        ReadFloat(entity, DemoKeys.SpikeSpread, 0f),
-        ReadFloat(entity, DemoKeys.SpikeJitter, 0f));
+    private static bool HasActionPort(PhenotypeV4 phenotype, ActionKindV4 action)
+    {
+        foreach (var port in phenotype.ActionPorts)
+        {
+            if (port == (ushort)action)
+                return true;
+        }
+
+        return false;
+    }
 
     private static string FormatSensors(float[] sensors) => string.Create(
         CultureInfo.InvariantCulture,

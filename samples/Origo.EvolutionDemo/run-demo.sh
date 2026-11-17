@@ -20,6 +20,7 @@ RUN_BUILD=1
 SMOKE_SECONDS=60
 FAST_FORWARD_TARGET=""
 BENCHMARK_SAVE_SLOT=""
+CHECKPOINT_INTERVAL=""
 
 usage() {
     cat <<'USAGE'
@@ -28,11 +29,14 @@ Usage:
   bash samples/Origo.EvolutionDemo/run-demo.sh --headless
   bash samples/Origo.EvolutionDemo/run-demo.sh --headless --seconds 120
   bash samples/Origo.EvolutionDemo/run-demo.sh --no-build
-  bash samples/Origo.EvolutionDemo/run-demo.sh --headless --fast-forward 3600 --save-slot bench_1h
+  bash samples/Origo.EvolutionDemo/run-demo.sh --headless --fast-forward 3600 \
+  --checkpoint-interval 300 --save-slot bench_1h
 
 --headless runs the demo acceptance smoke instead of opening a window.
 --seconds sets the initial normal-speed smoke target.
 --fast-forward runs headless fast-forward to an absolute simulation time.
+--checkpoint-interval saves iterate_<seconds> snapshots every N simulated
+  seconds during --fast-forward (0 or omitted disables checkpoint saves).
 --save-slot saves the benchmark result under the isolated smoke user home.
 --no-build launches an already-built demo without rebuilding.
 USAGE
@@ -54,6 +58,14 @@ while (($# > 0)); do
                 exit 1
             fi
             FAST_FORWARD_TARGET="$2"
+            shift 2
+            ;;
+        --checkpoint-interval)
+            if (($# < 2)) || ! [[ "$2" =~ ^[0-9]+([.][0-9]+)?$ ]] || [[ "$2" =~ ^0+([.]0+)?$ ]]; then
+                echo "ERROR: --checkpoint-interval requires a positive number of simulation seconds." >&2
+                exit 1
+            fi
+            CHECKPOINT_INTERVAL="$2"
             shift 2
             ;;
         --save-slot)
@@ -86,8 +98,9 @@ done
 
 if ((HEADLESS == 0)); then
     # A window runner should not pretend to support a target duration.
-    if ((SMOKE_SECONDS != 60)) || [[ -n "$FAST_FORWARD_TARGET" ]] || [[ -n "$BENCHMARK_SAVE_SLOT" ]]; then
-        echo "ERROR: --seconds/--fast-forward/--save-slot require --headless." >&2
+    if ((SMOKE_SECONDS != 60)) || [[ -n "$FAST_FORWARD_TARGET" ]] || [[ -n "$BENCHMARK_SAVE_SLOT" ]] \
+        || [[ -n "$CHECKPOINT_INTERVAL" ]]; then
+        echo "ERROR: --seconds/--fast-forward/--checkpoint-interval/--save-slot require --headless." >&2
         exit 1
     fi
 fi
@@ -130,7 +143,10 @@ if ((HEADLESS == 1)); then
     if [[ -n "$BENCHMARK_SAVE_SLOT" ]]; then
         export ORIGO_DEMO_SMOKE_SAVE_SLOT="$BENCHMARK_SAVE_SLOT"
     fi
-    run_godot --headless --path samples/Origo.EvolutionDemo --quit-after 40000
+    if [[ -n "$CHECKPOINT_INTERVAL" ]]; then
+        export ORIGO_DEMO_SMOKE_CHECKPOINT_INTERVAL="$CHECKPOINT_INTERVAL"
+    fi
+    run_godot --headless --path samples/Origo.EvolutionDemo --quit-after 60000
     exit 0
 fi
 

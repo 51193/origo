@@ -144,7 +144,10 @@ internal sealed class SndDataManager
     public void Recover(DataMetaData meta)
     {
         _data = new Dictionary<string, TypedData>(meta.Pairs);
-        _logger.Log(LogLevel.Info, nameof(SndDataManager),
+
+        // Recovery runs once per spawned entity, so its summary stays at Debug:
+        // at Info a large pond wrote tens of thousands of lines per minute.
+        _logger.Log(LogLevel.Debug, nameof(SndDataManager),
             new LogMessageBuilder().Build($"Loaded {_data.Count} data entries."));
     }
 

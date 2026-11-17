@@ -18,8 +18,11 @@ public sealed class CreatureGenome
     /// <summary>The canonical V4 genome.</summary>
     public GenomeV4 Genome { get; }
 
-    /// <summary>Canonical hex representation stored in SND entities.</summary>
+    /// <summary>Canonical hex representation used for display and appearance derivation.</summary>
     public string Body => GenomeV4Codec.ToHex(Genome);
+
+    /// <summary>Compact base64 representation stored in SND entities and saves.</summary>
+    public string SerializedBody => GenomeV4Codec.ToBase64(Genome);
 
     /// <summary>Brain is part of the same V4 genome; retained as an empty display field.</summary>
     public string Brain => Genome.Genes.Count > 0 ? string.Empty : string.Empty;
@@ -41,7 +44,7 @@ public sealed class CreatureGenome
     public static CreatureGenome FromSerialized(string serialized)
     {
         ArgumentNullException.ThrowIfNull(serialized);
-        return new CreatureGenome(GenomeV4Codec.FromHex(serialized));
+        return new CreatureGenome(GenomeV4Codec.FromSerialized(serialized));
     }
 
     /// <summary>Attempts to decode a serialized V4 genome.</summary>
@@ -65,26 +68,26 @@ public sealed class CreatureGenome
     }
 
     /// <summary>
-    ///     Mutates the V4 genome. Rates are kept in the signature for the demo's
-    ///     existing tuning surface; V4 mutation uses its typed operator distribution.
+    ///     Mutates the V4 genome with the operator mix and step count of
+    ///     <paramref name="profile" />. A step that leaves the serialized genome
+    ///     unchanged is not counted, so <paramref name="changes" /> stays the
+    ///     number of applied mutations.
     /// </summary>
+    /// <exception cref="ArgumentNullException">Thrown when a parameter is null.</exception>
     public static CreatureGenome Mutate(
         CreatureGenome parent,
-        double bodyStepRate,
-        double bodyLengthRate,
-        double frameshiftRate,
-        double brainStepRate,
+        MutationProfile profile,
         Random random,
         out int changes)
     {
         ArgumentNullException.ThrowIfNull(parent);
+        ArgumentNullException.ThrowIfNull(profile);
         ArgumentNullException.ThrowIfNull(random);
         var working = parent.Genome;
-        var steps = 1 + random.Next(3);
         var applied = 0;
-        for (var step = 0; step < steps; step++)
+        for (var step = 0; step < profile.Steps; step++)
         {
-            var next = GenomeV4Mutator.Mutate(working, random);
+            var next = GenomeV4Mutator.Mutate(working, random, profile.Settings);
             if (string.Equals(new CreatureGenome(next).Body,
                     new CreatureGenome(working).Body, StringComparison.Ordinal))
                 continue;
@@ -93,10 +96,6 @@ public sealed class CreatureGenome
         }
 
         changes = applied;
-        _ = bodyStepRate;
-        _ = bodyLengthRate;
-        _ = frameshiftRate;
-        _ = brainStepRate;
         return new CreatureGenome(working);
     }
 }

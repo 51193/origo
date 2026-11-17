@@ -50,6 +50,7 @@ internal static class Program
         var stabilityRounds = 5;
         var dbscanEps = 0d;
         var dbscanMinPoints = 5;
+        string? timelineCsv = null;
         for (var i = 0; i < args.Length; i++)
         {
             switch (args[i])
@@ -83,6 +84,9 @@ internal static class Program
                     break;
                 case "--min-points" when i + 1 < args.Length:
                     dbscanMinPoints = int.Parse(args[++i], CultureInfo.InvariantCulture);
+                    break;
+                case "--timeline-csv" when i + 1 < args.Length:
+                    timelineCsv = args[++i];
                     break;
                 default:
                     throw new InvalidOperationException($"Unknown genome argument '{args[i]}'.");
@@ -118,6 +122,8 @@ internal static class Program
         var report = GenomeHtmlReport.Build(snapshots, rows, columns, projection, clustering,
             stability, method);
         File.WriteAllText(output, report);
+        if (!string.IsNullOrWhiteSpace(timelineCsv))
+            WriteTimelineCsv(timelineCsv, snapshots, rows, columns);
         WriteCsv(Path.ChangeExtension(output, ".clusters.csv"), rows, clustering);
         Console.WriteLine($"wrote {output} ({rows.Count} creatures, k={clustering.K}, silhouette={clustering.Silhouette:0.000})");
         return 0;
@@ -160,6 +166,8 @@ internal static class Program
     {
         string? profile = null;
         var output = "perf-report.html";
+        double? fromTime = null;
+        double? toTime = null;
         for (var i = 0; i < args.Length; i++)
         {
             switch (args[i])
@@ -170,6 +178,12 @@ internal static class Program
                 case "--out" when i + 1 < args.Length:
                     output = args[++i];
                     break;
+                case "--from" when i + 1 < args.Length:
+                    fromTime = double.Parse(args[++i], CultureInfo.InvariantCulture);
+                    break;
+                case "--to" when i + 1 < args.Length:
+                    toTime = double.Parse(args[++i], CultureInfo.InvariantCulture);
+                    break;
                 default:
                     throw new InvalidOperationException($"Unknown perf argument '{args[i]}'.");
             }
@@ -177,10 +191,67 @@ internal static class Program
 
         if (profile is null)
             throw new InvalidOperationException("perf requires --profile <profile.jsonl>.");
-        var aggregate = new PerfAggregator(ProfileReader.Read(profile));
+        if (fromTime.HasValue && toTime.HasValue && fromTime > toTime)
+            throw new InvalidOperationException("perf --from must not be greater than --to.");
+        var ticks = ProfileReader.Read(profile);
+        if (fromTime.HasValue || toTime.HasValue)
+        {
+            ticks = [.. ticks.Where(tick =>
+                (!fromTime.HasValue || tick.SimTime >= fromTime.Value)
+                && (!toTime.HasValue || tick.SimTime <= toTime.Value))];
+            if (ticks.Count == 0)
+                throw new InvalidOperationException("perf window contains no samples.");
+        }
+
+        var aggregate = new PerfAggregator(ticks);
         File.WriteAllText(output, PerfHtmlReport.Build(aggregate));
         Console.WriteLine($"wrote {output} ({aggregate.Ticks.Count} samples)");
         return 0;
+    }
+
+    private static void WriteTimelineCsv(
+        string path,
+        IReadOnlyList<SaveSnapshot> snapshots,
+        IReadOnlyList<FeatureRow> rows,
+        string[] columns)
+    {
+        var bySave = rows.GroupBy(static row => row.SavePath, StringComparer.Ordinal)
+            .ToDictionary(static group => group.Key, static group => group.ToArray(), StringComparer.Ordinal);
+        using var writer = new StreamWriter(path);
+        writer.Write("save,time,population,food,corpses,food_sources");
+        foreach (var column in columns)
+            writer.Write(",{0}", Csv(column + ".mean"));
+        writer.WriteLine();
+        foreach (var snapshot in snapshots.OrderBy(static save => save.Time))
+        {
+            if (!bySave.TryGetValue(snapshot.Path, out var saveRows))
+                continue;
+            writer.Write(Csv(snapshot.Path));
+            writer.Write(',');
+            writer.Write(snapshot.Time.ToString("0.###", CultureInfo.InvariantCulture));
+            writer.Write(',');
+            writer.Write(snapshot.Creatures.Count.ToString(CultureInfo.InvariantCulture));
+            writer.Write(',');
+            writer.Write(snapshot.Food.ToString(CultureInfo.InvariantCulture));
+            writer.Write(',');
+            writer.Write(snapshot.Corpses.ToString(CultureInfo.InvariantCulture));
+            writer.Write(',');
+            writer.Write(snapshot.FoodSources.ToString(CultureInfo.InvariantCulture));
+            foreach (var column in columns)
+            {
+                var values = saveRows
+                    .Select(row => row.Values.GetValueOrDefault(column, double.NaN))
+                    .Where(double.IsFinite)
+                    .ToArray();
+                writer.Write(',');
+                if (values.Length > 0)
+                    writer.Write(values.Average().ToString("0.####", CultureInfo.InvariantCulture));
+            }
+
+            writer.WriteLine();
+        }
+
+        Console.WriteLine($"wrote {path} ({snapshots.Count} saves, {columns.Length} feature means)");
     }
 
     private static void WriteCsv(string path, IReadOnlyList<FeatureRow> rows, KMeans.Result clustering)
@@ -225,8 +296,9 @@ internal static class Program
     {
         Console.WriteLine("Usage:");
         Console.WriteLine("  genome --save <save-dir-or-json> [--save ...] [--out report.html]");
-        Console.WriteLine("         [--max 5000] [--seed 1] [--k 0(auto)]");
-        Console.WriteLine("  perf --profile <profile.jsonl> [--out perf.html]");
+        Console.WriteLine("         [--max 5000] [--seed 1] [--k 0(auto) | N(fixed)]");
+        Console.WriteLine("         [--timeline-csv timeline.csv]");
+        Console.WriteLine("  perf --profile <profile.jsonl> [--out perf.html] [--from <simsec>] [--to <simsec>]");
         Console.WriteLine("  compare --baseline <baseline.jsonl> --current <current.jsonl> [--out compare.html]");
     }
 }

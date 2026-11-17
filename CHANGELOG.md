@@ -32,9 +32,70 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   special runtime types such as `TypedReference` now produce an explicit compile diagnostic instead of
   emitting uncompilable accessor code. The rule is tracked in
   `AnalyzerReleases.Unshipped.md` until the next formal release.
+- **Iterate checkpoint saves in the Evolution Demo** — timed iteration and the
+  headless benchmark runner can snapshot the pond every N simulation seconds as
+  `iterate_<seconds>` save slots (`--checkpoint-interval`,
+  `ORIGO_DEMO_SMOKE_CHECKPOINT_INTERVAL`, or the Advanced Settings interval).
+  The snapshots use the normal save pipeline and metadata, are paused for the
+  write so `evo.time` records the checkpoint mark, appear in Load Game, and let
+  a long analysis run collect its own time series without external tooling; the
+  headless smoke verifies every expected checkpoint.
 
 ### Changed
 
+- **Evolution Demo mutation controls now change mutations** — the body, brain,
+  and body-length rates scale the typed V4 operator groups (normalized so every
+  roll selects a real operator) and overgrowth descendants get an amplified
+  structural/payload mix with 3-6 mutation steps. The mutator no longer silently
+  adds a body segment when the roll lands beyond the configured weights. The
+  unused frameshift and founder mutation settings are removed from DemoSettings,
+  Advanced Settings, and the manual; their generated configs load with the
+  remaining values.
+- **Evolution Demo sprint costs energy** — sprint still multiplies distance by
+  1.6x but now adds 0.6x of the driven move cost, so speed is paid per distance
+  instead of being a free universal upgrade. Population stayed viable in the
+  measured runs (300 s 1,073 -> 948, 600 s 1,471 -> 1,473).
+- **Evolution Demo food-per-second control is labeled uniform-only** — the
+  Advanced Settings row and manual now state that per-second spawning applies
+  only when the patch count is zero; patch sources keep producing their own food.
+- **BREAKING: Evolution Demo saves use genome schema v7 with compact base64
+  genomes** — saves store the canonical genome bytes as prefixed base64 instead
+  of the hex debugging string, shrinking a 300 s save from 9.65 MB to 8.74 MB
+  and projecting 15.24 MB to 12.64 MB at 3600 s while the simulation state stays
+  byte-identical. The inspector and appearance derivation keep their hex view.
+  Version 7 rejects v6 saves, the analysis tool accepts only v7 and decodes
+  both storage forms, and the Load Game compatibility check now compares
+  against the current version constant instead of the legacy value `"2"`.
+- **Per-entity recovery logs move to the Debug stream** — `SndDataManager`,
+  `SndNodeManager`, and `SndStrategyManager` no longer write a recovery summary
+  to Info for every spawned entity, so hosts with the default Info threshold
+  stop emitting thousands of lines per minute during normal simulation. A
+  headless Evolution Demo run that produced ~110k log lines per 300 simulated
+  seconds now keeps them available only to Debug-level loggers.
+- **Evolution Demo sensor queries return only in-range points** — the spatial
+  grid used to copy every point from the covering cells (a 1,000-unit cell
+  around a 120-unit sense disc), so every sensor, pickup, and spike pass
+  re-filtered a large over-fetched list. Queries now keep the original
+  cell-row-major order while dropping points outside the requested radius, and
+  the spike query covers the beam's full hit geometry so no valid target is
+  lost. On the 300 s benchmark at ~1,100 creatures, tick time dropped from
+  15.5 ms to 12.3 ms and sensors from 4.4 ms to 1.2 ms, with the 300 s
+  checkpoint still byte-identical (4,332 entities) to the pre-change baseline.
+- **Evolution Demo reuses spike-target buffers and cached action ports** — the
+  per-creature spike-target list allocation is replaced by one reused buffer,
+  the spike-port flag is cached with the compiled brain, and candidates that
+  cannot be reached by the beam (or any spike while the cooldown runs) are
+  filtered before the action plan sees them. Together with the genome-cache
+  change, the 300 s benchmark at ~1,100 creatures went from 31.0 ms and 27.1 MB
+  per tick to 15.5 ms and 1.0 MB per tick, with GC0 down from 1.61 to 0.05 per
+  tick and the simulation byte-identical at the 300 s checkpoint.
+- **Evolution Demo reuses compiled genomes across AI updates** — the per-tick
+  `CreatureGenome.TryDecode` validation that decoded and compiled the same
+  genome for every AI update is removed; the compiled phenotype/brain cache now
+  owns decode and compile. On the 300 s benchmark at ~1,100 creatures, tick time
+  dropped from 31.0 ms to 17.8 ms and allocation from 27.1 MB to 5.5 MB per
+  tick. A corrupt genome now fails fast instead of being silently replaced by a
+  random founder.
 - **BREAKING: `IBlackboard.TryGet<T>` is nullable-correct** — it now returns
   `(bool found, T? value)`; a found value may be null (for a registered reference
   kind, which still reports `found = true` with a null value). Consumers must

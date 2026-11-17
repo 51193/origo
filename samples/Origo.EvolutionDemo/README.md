@@ -24,12 +24,14 @@ A playable idle artificial-life sandbox built on `Origo.Core` and
   the normal pond.
 - The HUD `Spikes` counter is the number of successful directional spike hits;
   directional hits are lethal, so the parenthesized `K` value tracks kills.
-- Speed 1x/2x/4x/8x; auto-save every 60 seconds while running.
+- Speed 1x/2x/4x/8x; auto-save every 60 seconds while running, and optional
+  checkpoint snapshots every N simulated seconds during timed iteration.
 
 There is no direct creature control and no hard fail state: the pond is an
 experiment. Metabolism, movement, and reproduction are deliberately costly, so
 creatures that only spin in place eventually starve; successful lineages must
-find food. If every creature dies, the Extinction panel offers a new pond or an
+find food. Sprinting multiplies distance by 1.6x but adds a movement-proportional
+energy surcharge, so it is a trade-off rather than a free speed boost. If every creature dies, the Extinction panel offers a new pond or an
 earlier save.
 
 ## Running
@@ -50,6 +52,11 @@ bash samples/Origo.EvolutionDemo/run-demo.sh --headless --seconds 120
 # 1h genome screening benchmark in the isolated smoke save home.
 bash samples/Origo.EvolutionDemo/run-demo.sh --headless --seconds 5 \
   --fast-forward 3600 --save-slot bench_1h
+
+# 1h benchmark with a snapshot every 5 simulated minutes (iterate_300 ...
+# iterate_3300 plus the final bench_1h slot).
+bash samples/Origo.EvolutionDemo/run-demo.sh --headless --seconds 5 \
+  --fast-forward 3600 --checkpoint-interval 300 --save-slot bench_1h
 ```
 
 The windowed runner stores Godot user data in `.godot-home/`; headless smoke
@@ -85,12 +92,14 @@ JSON is stored on the controller entity so save/load preserves them.
 The page covers:
 
 - world radius, initial population, hard cap, body/camera-scale physics;
-- food amounts, food caps, feeding, bloom parameters;
+- food amounts, food caps, feeding, bloom parameters; food-per-second
+  spawning applies only when the patch count is zero (patches produce their own
+  food);
 - body gene ranges for size, speed, turn, sense, spike, metabolism, age, body
   radius, pickup padding, and max-energy scaling;
 - spike salvo base/per-pellet/distance cost and cooldown per extra pellet;
-- brain mutation, body-length mutation, frameshift, founder mutation,
-  metabolism, reproduction, ageing, lineage threshold;
+- body, brain, and body-length mutation rates (they scale the typed V4
+  mutation operator mix), metabolism, reproduction, ageing, lineage threshold;
 - spike threshold, base cost, cost per world-unit, aim half-angle, beam radius,
   drain fraction, range, and cooldown;
 - carcass food interval, feeding amount/cooldown, and related world settings;
@@ -98,7 +107,8 @@ The page covers:
 - every food-patch/source parameter: count, radius, falloff, local capacity,
   scan/spawn/walk cadence, walk speed/turn, and all long-cycle bounds;
 - global overgrowth scan interval, cell size, food threshold, mutation rate,
-  consumed-food cost, and child energy.
+  consumed-food cost, and child energy;
+- timed-iteration checkpoint interval (0 disables automatic iterate snapshots).
 
 Seed, food preset, normal mutation preset, collision, and bloom remain on the
 main New Pond page. `Tuning` is now a compatibility facade over
@@ -120,6 +130,20 @@ the adapter flush the same deferred spawn/kill work as the playable loop.
 `Engine.MaxFps` is uncapped and VSync is disabled while iterating, then restored.
 Escape cancels. The normal simulation path and timed iteration share
 `SimulateTick`; there is no alternate headless model.
+
+**Iterate checkpoints.** When the advanced setting **Iterate checkpoint (s,
+0=off)** is positive, timed iteration pauses at every absolute multiple of that
+interval and writes a snapshot before continuing. A checkpoint uses the save ID
+`iterate_<seconds>` (for example `iterate_300`), the same Origo save pipeline
+and display metadata as a manual save, and its recorded `evo.time` is the
+checkpoint mark, so a long iteration produces a reproducible time series
+without the player saving by hand. Checkpoints are ordinary save slots and are
+shown in the Load Game panel; interval values below 30 simulated seconds are
+rejected instead of flooding the save root, and the final target time is never a
+checkpoint (the normal end-of-run save owns that state). The headless runner
+exposes the same interval as `--checkpoint-interval` /
+`ORIGO_DEMO_SMOKE_CHECKPOINT_INTERVAL` and verifies that every expected
+checkpoint exists after the iteration.
 
 The HUD **Real** clock is total wall-clock play time for the pond and is persisted
 on the controller (`evo.realSeconds`). Loading a save resumes that total instead
@@ -168,7 +192,7 @@ directly. `user://gameplay_profile.json` is the authoritative meta-progression s
 survives New Game and application restarts by design, because idle unlocks are
 account-wide. Profile writes use a temp file plus atomic move; unreadable
 profiles are warned and skipped, corrupt JSON is quarantined with a warning, and
-gameplay falls back to placeholder defaults. Save version 6 rejects older saves. Evolution Points currently start at a very large placeholder value; the
+gameplay falls back to placeholder defaults. Save version 7 rejects older saves. Evolution Points currently start at a very large placeholder value; the
 unlock shop is functional, but economy balancing is intentionally deferred.
 
 Press `U` while a pond is running to open the generic unlock shop. Rows are
@@ -212,10 +236,11 @@ stable-ID genes, not a fixed codon table:
   maintenance. Cheap reflex creatures and expensive large-brain creatures can
   coexist.
 
-The controller stores `evo.genomeVersion = 6`. Older saves are intentionally
+The controller stores `evo.genomeVersion = 7`. Older saves are intentionally
 not migrated; the Load panel rejects them with an explicit message. Genome
-serialization is a canonical binary codec with a hex representation for SND
-entities and debugging.
+serialization is a canonical binary codec stored as prefixed base64 in SND
+entities (about a third smaller than the legacy hex form), with a hex view for
+debugging and the inspector.
 
 Mutations operate on stable gene identities: expression, copy count,
 duplication/deletion, payload parameters, neurons, synapses, organs, and
@@ -425,6 +450,8 @@ Save/load is handled entirely by Origo. `DemoEntry.ConfigureSaveMetadataContribu
 adds population, generation, lineage count, mutation rate, seed, pond time, and
 timestamp to each save's display metadata. `DemoUi` uses the public
 `ISndSaveOperations` API; no save files are written by demo code directly.
+Timed-iteration checkpoints are ordinary slots written through the same pipeline
+and appear next to manual saves in the Load Game panel.
 
 ## Project layout
 

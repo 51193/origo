@@ -26,6 +26,20 @@ public class SndNodeManagerTests
     }
 
     [Fact]
+    public void Recover_LogsSummaryAtDebugLevel()
+    {
+        var logger = new TestLogger();
+        var manager = new SndNodeManager(new TestNodeFactory(), logger);
+        manager.SetSceneAliasResolver(id => id);
+
+        manager.Recover(new NodeMetaData { Pairs = [] });
+
+        Assert.Empty(logger.Infos);
+        Assert.Contains(logger.Debugs, entry => entry.Contains("Loaded 0 nodes.", StringComparison.Ordinal));
+        manager.Release();
+    }
+
+    [Fact]
     public void Release_WhenOneNodeFreeThrows_StillReleasesOthersAndRethrows()
     {
         var factory = new ThrowingOnFreeNodeFactory();

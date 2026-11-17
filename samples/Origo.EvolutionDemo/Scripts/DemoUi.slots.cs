@@ -67,12 +67,15 @@ public partial class DemoUi
         info.AddChild(title);
         var compatible = !hasSave || (entry is not null
             && entry.MetaData.TryGetValue("demo.genomeVersion", out var version)
-            && string.Equals(version, "2", StringComparison.Ordinal));
+            && string.Equals(
+                version,
+                DemoEntry.GenomeVersion.ToString(CultureInfo.InvariantCulture),
+                StringComparison.Ordinal));
         var details = new Label
         {
             Text = !hasSave
                 ? "Empty slot"
-                : DescribeSave(entry!) + (compatible ? string.Empty : "\nINCOMPATIBLE: pre-genome-v2 save"),
+                : DescribeSave(entry!) + (compatible ? string.Empty : "\nINCOMPATIBLE: older genome version"),
             Modulate = hasSave && compatible ? Colors.White : MutedColor,
         };
         details.AddThemeFontSizeOverride("font_size", 13);

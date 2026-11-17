@@ -149,12 +149,17 @@ public static class KMeans
             return new Result([], [], 0, 0, 0);
         if (requestedK == 1 || n < 3)
             return new Result(new int[n], [[.. Enumerable.Repeat(0d, matrix.Columns.Count)]], 0, 1, 0);
-        var maxK = System.Math.Min(requestedK > 0 ? requestedK : 8, n - 1);
-        var candidates = requestedK > 0 ? requestedK : 2;
+        if (requestedK > 0)
+        {
+            var fixedK = System.Math.Min(requestedK, n - 1);
+            return Run(matrix, fixedK, seed + (fixedK * 7919), restarts: 10);
+        }
+
+        var maxK = System.Math.Min(8, n - 1);
         var best = (Result?)null;
         for (var k = 2; k <= maxK; k++)
         {
-            var candidate = Run(matrix, k, seed + (k * 7919), restarts: requestedK > 0 ? 10 : 6);
+            var candidate = Run(matrix, k, seed + (k * 7919), restarts: 6);
             var minCluster = System.Math.Max(2, n / 100);
             var sizes = Enumerable.Range(0, candidate.K)
                 .Select(cluster => candidate.Labels.Count(label => label == cluster))
@@ -163,10 +168,6 @@ public static class KMeans
                 continue;
             if (best is null || candidate.Silhouette > best.Silhouette)
                 best = candidate;
-            if (requestedK > 0)
-                break;
-            if (candidates++ > 8)
-                break;
         }
 
         return best ?? new Result(new int[n], [], 0, 1, 0);

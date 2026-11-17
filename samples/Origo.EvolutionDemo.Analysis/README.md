@@ -12,7 +12,7 @@ dotnet build samples/Origo.EvolutionDemo.Analysis/Origo.EvolutionDemo.Analysis.c
 
 ## Genome analysis
 
-The tool reads the current v6 SND save produced by the demo. It accepts either
+The tool reads the current v7 SND save produced by the demo. It accepts either
 a save root, a directory containing `snd_scene.json`, or the JSON file itself.
 
 ```bash
@@ -28,13 +28,15 @@ Optional:
 
 ```text
 --k 0          automatic k via silhouette (default)
---k 4          fixed cluster count
+--k 4          pin exactly 4 clusters (no auto search)
 --mode all|genotype|phenotype|behavior
 --method kmeans|jaccard|dbscan
 --stability 5  bootstrap ARI rounds (kmeans only)
 --eps 0        DBSCAN epsilon (0 = median k-distance)
 --min-points 5 DBSCAN minimum points
 --save ...     repeat for multiple saves/time points
+--timeline-csv timeline.csv
+               per-save feature means written for time-series analysis
 ```
 
 Outputs:
@@ -42,7 +44,14 @@ Outputs:
 ```text
 genome-report.html
 genome-report.clusters.csv
+timeline.csv        (only with --timeline-csv)
 ```
+
+The optional timeline CSV has one row per save (sorted by simulation time) with
+the save time, population, food, corpses, source count, and the mean of every
+extracted feature column. Prefer it over cluster composition for time-series
+questions: a pooled clustering can separate snapshots by age/complexity
+gradient instead of lineage.
 
 The report contains:
 
@@ -51,7 +60,7 @@ The report contains:
 - cluster feature profile;
 - top differentiating structural/body/neural/behavioral features;
 - raw feature distribution;
-- cluster-by-save composition;
+- cluster-by-save composition, ordered by simulation time;
 - Fisher exact gene-signature enrichment with BH FDR;
 - bootstrap ARI and (for genotype) readability labels such as
   `Organ(SpikeOrgan,size=...)`, `Reflex(FoodAhead->Move,gain=...)`.
@@ -82,6 +91,9 @@ dotnet run --project samples/Origo.EvolutionDemo.Analysis -c Release -- \
   --out .scratch/perf-report.html
 ```
 
+Add `--from <simsec>` and/or `--to <simsec>` to aggregate only a simulation-time
+window of the profile (useful for comparing early and late phases).
+
 The report includes wall time, allocations, GC counts, population/food, and
 per-system mean/P50/P95/P99/max, plus per-system allocation attribution and
 subphases:
@@ -107,9 +119,12 @@ Profile schema 2 is required; older profile JSONL is rejected explicitly.
 
 ## Limits
 
-- Only current v6 saves are accepted; old saves are rejected explicitly.
-- Behavior features are a single save snapshot; use multiple `--save` values for
-  time-series comparisons.
+- Only current v7 saves are accepted; old saves are rejected explicitly.
+- Behavior features are a single save snapshot; use multiple `--save` values or
+  `--timeline-csv` for time-series comparisons.
+- A pooled clustering over multiple snapshots can encode time/age/complexity
+  as cluster structure; treat silhouette and bootstrap ARI as the stability
+  check and prefer per-save means when the question is temporal.
 - `neutral.*` features are brain outputs with zero sensor input, not full
   closed-loop behavior.
 - Profiling is sample-based; set interval > 1 to reduce JSONL size.

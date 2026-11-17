@@ -20,6 +20,38 @@ public sealed class V4GenomeTests
     }
 
     [Fact]
+    public void Codec_Base64RoundTripsAndIsSmallerThanHex()
+    {
+        var genome = GenomeV4Factory.CreateGraphBrain(6, 4);
+        var encoded = GenomeV4Codec.ToBase64(genome);
+
+        Assert.StartsWith(GenomeV4Codec.Base64Prefix, encoded, StringComparison.Ordinal);
+        var restored = GenomeV4Codec.FromBase64(encoded);
+        Assert.Equal(GenomeV4Codec.ToHex(genome), GenomeV4Codec.ToHex(restored));
+        Assert.True(encoded.Length < GenomeV4Codec.ToHex(genome).Length,
+            "Base64 storage must be smaller than the hex debugging form.");
+    }
+
+    [Fact]
+    public void Codec_FromSerialized_AcceptsBase64AndLegacyHex()
+    {
+        var genome = GenomeV4Factory.CreateSimpleReflex();
+        var fromBase64 = GenomeV4Codec.FromSerialized(GenomeV4Codec.ToBase64(genome));
+        var fromHex = GenomeV4Codec.FromSerialized(GenomeV4Codec.ToHex(genome));
+
+        Assert.Equal(GenomeV4Codec.ToHex(genome), GenomeV4Codec.ToHex(fromBase64));
+        Assert.Equal(GenomeV4Codec.ToHex(genome), GenomeV4Codec.ToHex(fromHex));
+    }
+
+    [Fact]
+    public void Codec_FromBase64_MissingPrefixThrows()
+    {
+        var encoded = Convert.ToBase64String(GenomeV4Codec.Serialize(GenomeV4Factory.CreateSimpleReflex()));
+
+        Assert.Throws<FormatException>(() => GenomeV4Codec.FromBase64(encoded));
+    }
+
+    [Fact]
     public void Codec_RejectsUnknownSchema()
     {
         var data = GenomeV4Codec.Serialize(GenomeV4Factory.CreateSimpleReflex());

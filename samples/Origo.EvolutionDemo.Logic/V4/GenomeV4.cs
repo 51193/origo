@@ -355,6 +355,37 @@ public static class GenomeV4Codec
     public static string ToHex(GenomeV4 genome) => Convert.ToHexString(Serialize(genome));
 
     public static GenomeV4 FromHex(string hex) => Deserialize(Convert.FromHexString(hex));
+
+    /// <summary>
+    ///     Prefix for the base64 SND storage representation. The prefix makes
+    ///     stored genomes distinguishable from the legacy hex debugging form.
+    /// </summary>
+    public const string Base64Prefix = "b64:";
+
+    /// <summary>Encodes a genome as prefixed base64 (1.33 bytes/byte of payload).</summary>
+    public static string ToBase64(GenomeV4 genome) =>
+        Base64Prefix + Convert.ToBase64String(Serialize(genome));
+
+    /// <summary>Decodes a prefixed base64 genome.</summary>
+    /// <exception cref="FormatException">Thrown when the prefix is missing or the payload is not base64.</exception>
+    public static GenomeV4 FromBase64(string encoded)
+    {
+        ArgumentNullException.ThrowIfNull(encoded);
+        if (!encoded.StartsWith(Base64Prefix, StringComparison.Ordinal))
+            throw new FormatException($"Serialized genome is missing the '{Base64Prefix}' prefix.");
+        return Deserialize(Convert.FromBase64String(encoded[Base64Prefix.Length..]));
+    }
+
+    /// <summary>
+    ///     Decodes either the base64 SND storage form or the legacy hex
+    ///     debugging form. New saves always use base64; hex is accepted so
+    ///     inspector/test tooling and analysis fixtures keep working.
+    /// </summary>
+    public static GenomeV4 FromSerialized(string encoded)
+    {
+        ArgumentNullException.ThrowIfNull(encoded);
+        return encoded.StartsWith(Base64Prefix, StringComparison.Ordinal) ? FromBase64(encoded) : FromHex(encoded);
+    }
 }
 
 /// <summary>Structural validation for V4 genomes.</summary>
@@ -451,6 +482,11 @@ public static class GenomeV4Mutator
         GenomeMutationSettingsV4? settings)
     {
         settings ??= new GenomeMutationSettingsV4();
+        var totalWeight = settings.Expression + settings.CopyCount + settings.Duplicate + settings.Delete
+            + settings.Payload + settings.AddNeuron + settings.AddSynapse + settings.AddReflex
+            + settings.AddOrgan + settings.AddRegulation + settings.AddSegment;
+        if (totalWeight <= 0d)
+            return parent.Clone();
         var child = parent.Clone();
         var roll = random.NextDouble();
         var cursor = 0d;

@@ -70,7 +70,8 @@ internal sealed class SndNodeManager : INodeHost
             }
         }
 
-        _logger.Log(LogLevel.Info, nameof(SndNodeManager),
+        // Per-entity recovery detail: keep it out of the Info stream.
+        _logger.Log(LogLevel.Debug, nameof(SndNodeManager),
             new LogMessageBuilder().Build($"Loaded {_nodes.Count} nodes."));
     }
 
