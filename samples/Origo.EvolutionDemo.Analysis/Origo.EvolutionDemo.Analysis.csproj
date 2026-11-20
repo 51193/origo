@@ -7,4 +7,9 @@
     <ItemGroup>
         <ProjectReference Include="../Origo.EvolutionDemo.Logic/Origo.EvolutionDemo.Logic.csproj" />
     </ItemGroup>
+    <ItemGroup>
+        <!-- The regression suite drives the internal CLI entry point and report
+             builders; it is not a consumer-facing API surface. -->
+        <InternalsVisibleTo Include="Origo.EvolutionDemo.Analysis.Tests" />
+    </ItemGroup>
 </Project>

@@ -1,0 +1,124 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Origo.EvolutionDemo.Analysis.Genome;
+using Origo.EvolutionDemo.Analysis.Math;
+
+namespace Origo.EvolutionDemo.Analysis.Tests;
+
+/// <summary>Builds a synthetic <see cref="GenomeReportInput" /> for report/JSON tests.</summary>
+internal static class ReportFixture
+{
+    internal static GenomeReportInput Create(
+        int clusterCount = 3,
+        int rowsPerCluster = 3,
+        bool withAutoK = true,
+        bool withNoise = false,
+        int testedSignatureCount = 0,
+        int stabilityRounds = 5,
+        string commandLine = "genome --save save_a --seed 1",
+        bool sampled = false)
+    {
+        var rows = new List<FeatureRow>();
+        var labels = new List<int>();
+        for (var cluster = 0; cluster < clusterCount; cluster++)
+            for (var point = 0; point < rowsPerCluster; point++)
+            {
+                var values = new Dictionary<string, double>(StringComparer.Ordinal)
+                {
+                    ["f.one"] = cluster + (point * 0.1d),
+                    ["f.two"] = (cluster * 10d) + point,
+                    ["constant"] = 7d,
+                };
+                var signatures = new HashSet<string>(["sig.all", $"sig.cluster{cluster}"], StringComparer.Ordinal);
+                for (var tested = 0; tested < testedSignatureCount; tested++)
+                    signatures.Add($"sig.tested{tested}");
+                rows.Add(new FeatureRow("save_a", 10d, $"c{cluster}_{point}", 0, 1, values, signatures));
+                labels.Add(cluster);
+            }
+
+        if (withNoise)
+        {
+            for (var noise = 0; noise < 2; noise++)
+            {
+                rows.Add(new FeatureRow("save_a", 10d, $"noise_{noise}", 0, 1,
+                    new Dictionary<string, double>(StringComparer.Ordinal)
+                    {
+                        ["f.one"] = 99d + noise,
+                        ["f.two"] = 99d,
+                        ["constant"] = 7d,
+                    },
+                    new HashSet<string>(["sig.all"], StringComparer.Ordinal)));
+                labels.Add(-1);
+            }
+        }
+
+        var noiselessClusterCount = clusterCount;
+        var candidates = withAutoK
+            ? Enumerable.Range(2, 4).Select(k => new ClusterCandidate(
+                k,
+                Inertia: 1000d / k,
+                Silhouette: k == clusterCount ? 0.6d : 0.2d,
+                Sizes: [.. Enumerable.Range(0, k).Select(cluster => cluster == k - 1 ? rows.Count - (k - 1) : 1)],
+                Flags: k == clusterCount
+                    ? ["accepted", "selected"]
+                    : ["rejected", "small-clusters"]))
+                .ToArray()
+            : [];
+
+        var saves = new List<SaveSummary>
+        {
+            new("save_c", "/saves/save_c/level_pond/snd_scene.json", 300d, 3000d, 50, 10, 1, 2,
+                new Dictionary<string, double>(StringComparer.Ordinal) { ["evo.tick"] = 3000d },
+                new Dictionary<string, string>(StringComparer.Ordinal),
+                new Dictionary<string, bool>(StringComparer.Ordinal)),
+            new("save_a", "/saves/save_a/level_pond/snd_scene.json", 10d, 100d, 20, 4, 2, 2,
+                new Dictionary<string, double>(StringComparer.Ordinal) { ["evo.tick"] = 100d },
+                new Dictionary<string, string>(StringComparer.Ordinal),
+                new Dictionary<string, bool>(StringComparer.Ordinal)),
+            new("save_b", "/saves/save_b/level_pond/snd_scene.json", 20d, 200d, 30, 5, 0, 2,
+                new Dictionary<string, double>(StringComparer.Ordinal) { ["evo.tick"] = 200d },
+                new Dictionary<string, string>(StringComparer.Ordinal),
+                new Dictionary<string, bool>(StringComparer.Ordinal)),
+        };
+        var finalLabels = labels.ToArray();
+        var clustering = new KMeans.Result(
+            finalLabels,
+            [.. Enumerable.Range(0, noiselessClusterCount).Select(_ => new double[2])],
+            Inertia: 321.5d,
+            noiselessClusterCount,
+            Silhouette: 0.4567d);
+        var stability = stabilityRounds > 0
+            ? new ClusterStability.BootstrapResult(0.9d, 0.05d, stabilityRounds)
+            : null;
+        var enrichment = Enumerable.Range(0, noiselessClusterCount)
+            .Select(cluster => GeneEnrichment.Analyze(rows, finalLabels, cluster))
+            .ToArray();
+        var pca = new PcaResult(
+            [.. rows.Select(row => new[] { row.Values["f.one"], row.Values["f.two"] })],
+            [[0.7071, 0.7071], [0.7071, -0.7071]],
+            [0.6d, 0.25d]);
+        return new GenomeReportInput(
+            commandLine,
+            new DateTime(2026, 11, 20, 12, 0, 0, DateTimeKind.Utc),
+            new GenomeReportOptions(1, 5000, "all", "kmeans", 0, stabilityRounds, 0d, 5, 10, false),
+            saves,
+            rows,
+            100,
+            100,
+            [],
+            [],
+            ["f.one", "f.two", "constant"],
+            2,
+            ["constant"],
+            pca,
+            clustering,
+            candidates,
+            withAutoK ? 5 : 0,
+            NoValidCandidate: false,
+            stability,
+            Silhouette.EuclideanSampleSize,
+            enrichment,
+            sampled);
+    }
+}

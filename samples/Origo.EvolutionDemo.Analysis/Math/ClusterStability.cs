@@ -4,50 +4,95 @@ using System.Linq;
 
 namespace Origo.EvolutionDemo.Analysis.Math;
 
-/// <summary>Bootstrap stability of k-means labels measured by adjusted Rand index.</summary>
+/// <summary>
+///     True bootstrap stability of a fitted k-means model measured by the adjusted
+///     Rand index (ARI). Each round draws <c>n</c> rows with replacement, fits
+///     k-means centers on the resample, assigns every original row to its nearest
+///     resampled center, and compares that bootstrap labeling with the reference
+///     labeling. The result is the mean and population standard deviation over the
+///     rounds. Other clustering methods have no k-means centers and report
+///     <see langword="null" /> (n/a), never a fabricated zero.
+/// </summary>
 public static class ClusterStability
 {
-    public static double Bootstrap(FeatureMatrix matrix, int k, int rounds, int seed)
+    /// <summary>Documented default bootstrap round count.</summary>
+    public const int DefaultRounds = 5;
+
+    /// <summary>Bootstrap ARI summary: mean, population standard deviation, and round count.</summary>
+    public sealed record BootstrapResult(double Mean, double StandardDeviation, int Rounds);
+
+    /// <summary>
+    ///     Computes the bootstrap ARI of <paramref name="reference" />, or
+    ///     <see langword="null" /> when the metric is not applicable (non-k-means
+    ///     reference, k &lt;= 1, or no rounds requested).
+    /// </summary>
+    public static BootstrapResult? Bootstrap(
+        FeatureMatrix matrix,
+        KMeans.Result reference,
+        int rounds,
+        int seed)
     {
         ArgumentNullException.ThrowIfNull(matrix);
-        if (k <= 1 || matrix.RowCount < 6 || rounds <= 0)
-            return 0;
+        ArgumentNullException.ThrowIfNull(reference);
+        if (reference.K <= 1 || rounds <= 0 || reference.K >= matrix.RowCount)
+            return null;
         var random = new Random(seed);
-        var scores = new List<double>();
+        var scores = new double[rounds];
         for (var round = 0; round < rounds; round++)
         {
-            var indexes = Enumerable.Range(0, matrix.RowCount)
-                .OrderBy(_ => random.Next()).Take((int)(matrix.RowCount * 0.8)).ToArray();
-            var left = Sample(matrix, indexes);
-            var right = Sample(matrix, indexes.Reverse().ToArray());
-            var leftLabels = KMeans.Fit(left, k, seed + round * 2).Labels;
-            var rightLabels = KMeans.Fit(right, k, seed + round * 2 + 1).Labels;
-            // Both samples contain the same rows in reversed order.
-            var rightByOriginal = indexes.Select((original, index) => (original, label: rightLabels[index]))
-                .ToDictionary(static pair => pair.original, static pair => pair.label);
-            scores.Add(AdjustedRand(indexes.Select((original, index) => (leftLabels[index], rightByOriginal[original])).ToArray()));
+            var indexes = new int[matrix.RowCount];
+            for (var index = 0; index < indexes.Length; index++)
+                indexes[index] = random.Next(matrix.RowCount);
+            var resample = new FeatureMatrix(
+                matrix.Columns,
+                [.. indexes.Select(index => matrix.RawRows[index])]);
+            var fitted = KMeans.Fit(resample, reference.K, seed + (round * 131));
+            var bootstrapLabels = KMeans.Assign(matrix, fitted.Centers);
+            scores[round] = AdjustedRand(bootstrapLabels, reference.Labels);
         }
 
-        return scores.Average();
+        var mean = scores.Average();
+        var deviation = System.Math.Sqrt(scores.Sum(score => (score - mean) * (score - mean)) / rounds);
+        return new BootstrapResult(mean, deviation, rounds);
     }
 
-    private static FeatureMatrix Sample(FeatureMatrix matrix, int[] indexes) =>
-        new(matrix.Columns, indexes.Select(index => matrix.RawRows[index]).ToArray());
-
-    private static double AdjustedRand((int Left, int Right)[] pairs)
+    /// <summary>
+    ///     Adjusted Rand index between two labelings of the same rows. The index is
+    ///     1 for identical partitions up to relabeling, 0 at chance level, and
+    ///     symmetric in its arguments.
+    /// </summary>
+    /// <exception cref="ArgumentException">The labelings have different lengths.</exception>
+    public static double AdjustedRand(IReadOnlyList<int> left, IReadOnlyList<int> right)
     {
-        var n = pairs.Length;
+        ArgumentNullException.ThrowIfNull(left);
+        ArgumentNullException.ThrowIfNull(right);
+        if (left.Count != right.Count)
+            throw new ArgumentException("Both labelings must cover the same rows.", nameof(right));
+        var n = left.Count;
         if (n < 2)
-            return 0;
-        var left = pairs.GroupBy(static pair => pair.Left).ToDictionary(static group => group.Key, static group => group.Count());
-        var right = pairs.GroupBy(static pair => pair.Right).ToDictionary(static group => group.Key, static group => group.Count());
-        var both = pairs.GroupBy(static pair => pair).ToDictionary(static group => group.Key, static group => group.Count());
-        double Choose2(double value) => value * (value - 1) / 2d;
-        var sumBoth = both.Values.Sum(count => Choose2(count));
-        var sumLeft = left.Values.Sum(count => Choose2(count));
-        var sumRight = right.Values.Sum(count => Choose2(count));
-        var expected = sumLeft * sumRight / Choose2(n);
-        var max = (sumLeft + sumRight) / 2d;
-        return System.Math.Abs(max - expected) < 1e-12 ? 1 : (sumBoth - expected) / (max - expected);
+            return 1;
+        var leftCounts = new Dictionary<int, int>();
+        var rightCounts = new Dictionary<int, int>();
+        var bothCounts = new Dictionary<(int Left, int Right), int>();
+        for (var row = 0; row < n; row++)
+        {
+            var leftLabel = left[row];
+            var rightLabel = right[row];
+            leftCounts[leftLabel] = leftCounts.GetValueOrDefault(leftLabel) + 1;
+            rightCounts[rightLabel] = rightCounts.GetValueOrDefault(rightLabel) + 1;
+            var pair = (leftLabel, rightLabel);
+            bothCounts[pair] = bothCounts.GetValueOrDefault(pair) + 1;
+        }
+
+        var sumBoth = bothCounts.Values.Sum(static count => ChooseTwo(count));
+        var sumLeft = leftCounts.Values.Sum(static count => ChooseTwo(count));
+        var sumRight = rightCounts.Values.Sum(static count => ChooseTwo(count));
+        var expected = sumLeft * sumRight / ChooseTwo(n);
+        var maximum = (sumLeft + sumRight) / 2d;
+        return System.Math.Abs(maximum - expected) < 1e-12
+            ? 1
+            : (sumBoth - expected) / (maximum - expected);
     }
+
+    private static double ChooseTwo(double value) => value * (value - 1) / 2d;
 }

@@ -4,14 +4,31 @@ using System.Linq;
 
 namespace Origo.EvolutionDemo.Analysis.Math;
 
-/// <summary>Density-based clustering for outlier detection on standardized features.</summary>
+/// <summary>
+///     Density-based clustering (DBSCAN) for outlier detection on standardized
+///     features. Noise rows keep label <c>-1</c> and are excluded from the
+///     reported cluster count and from the silhouette. The core-point test counts
+///     the point itself, so <c>minPts = 3</c> means three points including the
+///     query point within <c>eps</c>.
+/// </summary>
 public static class Dbscan
 {
-    public static KMeans.Result Fit(FeatureMatrix matrix, double eps, int minPoints, int seed = 1)
+    /// <summary>
+    ///     Fits DBSCAN. Labels are real cluster ids starting at zero; noise rows
+    ///     keep <c>-1</c>. <paramref name="eps" /> = 0 estimates epsilon from the
+    ///     median distance to the <c>minPts - 1</c>-th nearest other row (the
+    ///     k-distance heuristic with the point itself counted).
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">Epsilon is negative or minPts is below one.</exception>
+    public static KMeans.Result Fit(FeatureMatrix matrix, double eps, int minPoints)
     {
         ArgumentNullException.ThrowIfNull(matrix);
+        if (eps < 0)
+            throw new ArgumentOutOfRangeException(nameof(eps), "DBSCAN epsilon must not be negative.");
+        if (minPoints < 1)
+            throw new ArgumentOutOfRangeException(nameof(minPoints), "DBSCAN minimum points must be positive.");
         if (matrix.RowCount == 0)
-            return new KMeans.Result([], [], 0, 0, 0);
+            return new KMeans.Result([], [], null, 0, null);
         if (eps <= 0)
             eps = EstimateEps(matrix, minPoints);
         var n = matrix.RowCount;
@@ -24,24 +41,18 @@ public static class Dbscan
                 continue;
             visited[point] = true;
             var neighbors = Neighbors(matrix, point, eps);
-            if (neighbors.Count < minPoints)
+            // minPts includes the point itself.
+            if (neighbors.Count + 1 < minPoints)
                 continue;
             Expand(matrix, point, neighbors, labels, visited, cluster, eps, minPoints);
             cluster++;
         }
 
-        // Map noise (-1) to its own label after real clusters so report code sees it.
-        var noise = n > 0 ? cluster : 0;
-        var hasNoise = labels.Any(static label => label < 0);
-        if (hasNoise)
-            for (var i = 0; i < n; i++)
-                if (labels[i] < 0)
-                    labels[i] = noise;
-        var count = hasNoise ? cluster + 1 : cluster;
-        if (count == 0)
-            count = 1;
-        var silhouette = cluster <= 1 ? 0 : ApproxSilhouette(matrix, labels, cluster);
-        return new KMeans.Result(labels, [], 0, count, silhouette);
+        var silhouette = Silhouette.Compute(
+            n, labels, cluster,
+            (left, right) => System.Math.Sqrt(Squared(matrix.RawRows[left], matrix.RawRows[right])),
+            Silhouette.EuclideanSampleSize);
+        return new KMeans.Result(labels, [], null, cluster, silhouette);
     }
 
     private static void Expand(
@@ -64,7 +75,7 @@ public static class Dbscan
             {
                 visited[current] = true;
                 var currentNeighbors = Neighbors(matrix, current, eps);
-                if (currentNeighbors.Count >= minPoints)
+                if (currentNeighbors.Count + 1 >= minPoints)
                     foreach (var candidate in currentNeighbors)
                         if (queued.Add(candidate))
                             queue.Enqueue(candidate);
@@ -86,55 +97,24 @@ public static class Dbscan
 
     private static double EstimateEps(FeatureMatrix matrix, int minPoints)
     {
-        var distances = new List<double>();
+        // The point itself counts towards minPts, so the k-distance heuristic uses
+        // the (minPts - 1)-th nearest *other* row.
+        var rank = System.Math.Max(1, minPoints - 1);
+        var distances = new List<double>(matrix.RowCount);
         foreach (var row in matrix.RawRows)
         {
             var nearest = matrix.RawRows
                 .Where(candidate => !ReferenceEquals(candidate, row))
                 .Select(candidate => System.Math.Sqrt(Squared(row, candidate)))
                 .OrderBy(static value => value)
-                .Take(System.Math.Max(1, minPoints))
+                .Take(rank)
                 .DefaultIfEmpty(0)
                 .Last();
             distances.Add(nearest);
         }
+
         distances.Sort();
         return distances.Count == 0 ? 0.5 : distances[distances.Count / 2];
-    }
-
-    private static double ApproxSilhouette(FeatureMatrix matrix, int[] labels, int clusterCount)
-    {
-        var sample = Enumerable.Range(0, matrix.RowCount)
-            .Where(index => labels[index] < clusterCount)
-            .Take(300).ToArray();
-        var total = 0d;
-        var count = 0;
-        foreach (var i in sample)
-        {
-            var own = labels[i];
-            var ownSum = 0d;
-            var ownCount = 0;
-            var otherMin = double.PositiveInfinity;
-            for (var j = 0; j < matrix.RowCount; j++)
-            {
-                if (i == j || labels[j] >= clusterCount)
-                    continue;
-                var distance = System.Math.Sqrt(Squared(matrix.RawRows[i], matrix.RawRows[j]));
-                if (labels[j] == own)
-                {
-                    ownSum += distance;
-                    ownCount++;
-                }
-                else if (distance < otherMin)
-                    otherMin = distance;
-            }
-            if (ownCount == 0 || double.IsPositiveInfinity(otherMin))
-                continue;
-            var a = ownSum / ownCount;
-            total += (otherMin - a) / System.Math.Max(otherMin, a);
-            count++;
-        }
-        return count == 0 ? 0 : total / count;
     }
 
     private static double Squared(double[] a, double[] b)
@@ -145,6 +125,7 @@ public static class Dbscan
             var delta = a[i] - b[i];
             sum += delta * delta;
         }
+
         return sum;
     }
 }
