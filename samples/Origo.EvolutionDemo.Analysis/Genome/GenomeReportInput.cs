@@ -62,7 +62,7 @@ public sealed record GenomeReportOptions(
 /// <param name="Saves">Save summaries ordered by simulation time, then save id.</param>
 /// <param name="Rows">Analyzed creature rows (after sampling).</param>
 /// <param name="TotalCreatures">Creatures present in the saves before sampling/skips.</param>
-/// <param name="ConsideredCreatures">Creatures attempted after sampling; equals rows plus skips.</param>
+/// <param name="ConsideredCreatures">Parsed creatures attempted after sampling; excludes reader-level skips.</param>
 /// <param name="SkippedCreatures">Creatures skipped by the reader or by feature extraction.</param>
 /// <param name="ReaderWarnings">Save-reader warnings (integrity markers, ignored entities).</param>
 /// <param name="RawColumns">Feature columns selected by the mode before constant-column drops.</param>
@@ -76,6 +76,7 @@ public sealed record GenomeReportOptions(
 /// <param name="Stability">Bootstrap ARI summary, or null when the metric does not apply.</param>
 /// <param name="SilhouetteSampleSize">Rows in the deterministic silhouette sample.</param>
 /// <param name="Enrichment">Full per-cluster enrichment results (all tested signatures).</param>
+/// <param name="Sampled">True when --max actually removed rows from at least one save.</param>
 public sealed record GenomeReportInput(
     string CommandLine,
     DateTime GeneratedAtUtc,
@@ -96,4 +97,5 @@ public sealed record GenomeReportInput(
     bool NoValidCandidate,
     ClusterStability.BootstrapResult? Stability,
     int SilhouetteSampleSize,
-    IReadOnlyList<EnrichmentAnalysis> Enrichment);
+    IReadOnlyList<EnrichmentAnalysis> Enrichment,
+    bool Sampled);

@@ -199,7 +199,25 @@ public sealed class GenomeCliTests
 
         Assert.Equal(0, ExitCode);
         Assert.Contains("WARNING: analyzed", Error, StringComparison.Ordinal);
-        Assert.Contains("undecodable", Error, StringComparison.Ordinal);
+        Assert.Contains("skipped", Error, StringComparison.Ordinal);
+        Assert.DoesNotContain("sampled 3 of 4", Error, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Genome_ReaderLevelSkipWithAllowSkips_DoesNotClaimMaxSampling()
+    {
+        using var directory = new TemporaryDirectory();
+        var genome = SaveFixture.Encode(GenomeV4Factory.CreateDemoFounder(new Random(24)));
+        var save = SaveFixture.CreateV7Save(
+            directory, "save_reader_skip",
+            [("good_0", genome), ("missing_0", string.Empty), ("good_1", genome), ("good_2", genome)]);
+
+        var (ExitCode, _, Error) = Run(
+            "genome", "--save", save, "--out", Path.Combine(directory.Path, "skip.html"), "--allow-skips");
+
+        Assert.Equal(0, ExitCode);
+        Assert.Contains("WARNING: analyzed 3 of 4 save creatures", Error, StringComparison.Ordinal);
+        Assert.DoesNotContain("--max 5000 sampled", Error, StringComparison.Ordinal);
     }
 
     [Fact]

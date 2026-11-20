@@ -176,7 +176,8 @@ public sealed class GenomeReportTests
         var html = GenomeHtmlReport.Build(input);
         var json = JsonDocument.Parse(GenomeMetricsJson.Build(input)).RootElement;
 
-        Assert.Contains("1 undecodable genome(s) were skipped", html, StringComparison.Ordinal);
+        Assert.Contains("1 skipped (--allow-skips)", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("--max 5000 sampled", html, StringComparison.Ordinal);
         Assert.Equal(1, json.GetProperty("population").GetProperty("skipped").GetInt32());
     }
 }

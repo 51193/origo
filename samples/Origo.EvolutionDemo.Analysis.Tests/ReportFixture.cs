@@ -16,7 +16,8 @@ internal static class ReportFixture
         bool withNoise = false,
         int testedSignatureCount = 0,
         int stabilityRounds = 5,
-        string commandLine = "genome --save save_a --seed 1")
+        string commandLine = "genome --save save_a --seed 1",
+        bool sampled = false)
     {
         var rows = new List<FeatureRow>();
         var labels = new List<int>();
@@ -117,6 +118,7 @@ internal static class ReportFixture
             NoValidCandidate: false,
             stability,
             Silhouette.EuclideanSampleSize,
-            enrichment);
+            enrichment,
+            sampled);
     }
 }

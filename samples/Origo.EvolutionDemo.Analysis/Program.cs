@@ -185,6 +185,8 @@ internal static class Program
             .Select(cluster => GeneEnrichment.Analyze(rows, clustering.Labels, cluster))
             .ToArray();
         var saveSummaries = BuildSaveSummaries(snapshots);
+        var sampled = snapshots.Any(snapshot =>
+            maxCreatures > 0 && snapshot.Creatures.Count > maxCreatures);
         var reportInput = new GenomeReportInput(
             $"genome {string.Join(' ', args.Select(QuoteArgument))}",
             DateTime.UtcNow,
@@ -209,7 +211,8 @@ internal static class Program
             string.Equals(method, "jaccard", StringComparison.Ordinal)
                 ? Silhouette.JaccardSampleSize
                 : Silhouette.EuclideanSampleSize,
-            enrichment);
+            enrichment,
+            sampled);
         WriteFile(output, GenomeHtmlReport.Build(reportInput));
         if (!string.IsNullOrWhiteSpace(timelineCsv))
             WriteTimelineCsv(timelineCsv, saveSummaries, rows, columns);

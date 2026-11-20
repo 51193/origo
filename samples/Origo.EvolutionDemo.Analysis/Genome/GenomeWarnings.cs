@@ -18,12 +18,12 @@ public static class GenomeWarnings
     {
         ArgumentNullException.ThrowIfNull(input);
         var warnings = new List<string>(input.ReaderWarnings);
-        if (input.Options.MaxCreatures > 0 && input.ConsideredCreatures < input.TotalCreatures)
+        if (input.Sampled)
             warnings.Add(string.Create(CultureInfo.InvariantCulture,
                 $"--max {input.Options.MaxCreatures} sampled {input.ConsideredCreatures} of {input.TotalCreatures} save creatures; the analyzed rows are a sample, not the full population."));
         if (input.SkippedCreatures.Count > 0)
             warnings.Add(string.Create(CultureInfo.InvariantCulture,
-                $"analyzed {input.Rows.Count} of {input.ConsideredCreatures} considered creatures: {input.SkippedCreatures.Count} undecodable genome(s) were skipped (--allow-skips)."));
+                $"analyzed {input.Rows.Count} of {input.TotalCreatures} save creatures: {input.SkippedCreatures.Count} skipped (--allow-skips)."));
         if (input.NoValidCandidate)
         {
             var rejected = input.Candidates
