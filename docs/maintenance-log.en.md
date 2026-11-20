@@ -28,6 +28,18 @@ CI workflow shape, local test/coverage gates, package-consumer fixture smoke cov
   columns. A regression test project covers the statistics, CLI failure modes,
   and feature semantics on generated v7 saves.
 
+- **Evolution Demo perf analysis separates systems from subphases** — phase ids
+  with one dot are systems and two-dot ids nested under a system are subphases;
+  `share` is the system mean divided by the sum of system means (nested markers
+  are never added to the denominator), the subphase table renders with its parent,
+  and an inconsistent phase key set now fails fast. GC columns are labelled as
+  sampled-tick sums with the derived tick interval and an interval-scaled run-total
+  estimate, percentiles use Hyndman-Fan type 7, multi-segment profiles are split on
+  a `simTime` decrease and default to the last segment with an explicit note
+  (`perf`/`compare` accept `--segment all|last|<index>`, and `--from/--to` compose
+  inside the selection), and `compare` reports the symmetric union with `n/a` for
+  one-sided and zero-baseline rows plus per-side metadata and warnings.
+
 - **Evolution Demo analysis reader exposes controller counters and richer
   perf diffs** — `SaveSnapshot` now carries the save's numeric/string controller
   dictionaries (counters, seed, tick) for downstream tooling, and `perf compare`

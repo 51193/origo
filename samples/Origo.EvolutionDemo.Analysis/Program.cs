@@ -338,12 +338,15 @@ internal static class Program
         string? baseline = null;
         string? current = null;
         var output = "perf-compare.html";
+        string? segment = null;
+        double? fromTime = null;
+        double? toTime = null;
         for (var i = 0; i < args.Length; i++)
         {
             switch (args[i])
             {
                 case "-h" or "--help":
-                    PrintUsage();
+                    PrintCompareUsage();
                     return 0;
                 case "--baseline" when i + 1 < args.Length:
                     baseline = args[++i];
@@ -354,39 +357,8 @@ internal static class Program
                 case "--out" when i + 1 < args.Length:
                     output = args[++i];
                     break;
-                default:
-                    throw new InvalidOperationException($"Unknown compare argument '{args[i]}'.");
-            }
-        }
-
-        if (baseline is null || current is null)
-            throw new InvalidOperationException("compare requires --baseline and --current.");
-        var previous = new PerfAggregator(ProfileReader.Read(baseline));
-        var aggregate = new PerfAggregator(ProfileReader.Read(current));
-        var deltas = PerfComparison.Compare(previous, aggregate);
-        WriteFile(output, PerfCompareHtmlReport.Build(baseline, current, deltas));
-        Console.WriteLine($"wrote {output} ({deltas.Count} metrics)");
-        return 0;
-    }
-
-    private static int PerfCommand(string[] args)
-    {
-        string? profile = null;
-        var output = "perf-report.html";
-        double? fromTime = null;
-        double? toTime = null;
-        for (var i = 0; i < args.Length; i++)
-        {
-            switch (args[i])
-            {
-                case "-h" or "--help":
-                    PrintUsage();
-                    return 0;
-                case "--profile" when i + 1 < args.Length:
-                    profile = args[++i];
-                    break;
-                case "--out" when i + 1 < args.Length:
-                    output = args[++i];
+                case "--segment" when i + 1 < args.Length:
+                    segment = args[++i];
                     break;
                 case "--from" when i + 1 < args.Length:
                     fromTime = ParseDouble(args[++i], "--from");
@@ -395,28 +367,118 @@ internal static class Program
                     toTime = ParseDouble(args[++i], "--to");
                     break;
                 default:
-                    throw new InvalidOperationException($"Unknown perf argument '{args[i]}'.");
+                    throw new InvalidOperationException(
+                        $"Unknown or incomplete compare argument '{args[i]}'; run 'compare --help' for usage.");
+            }
+        }
+
+        if (baseline is null || current is null)
+            throw new InvalidOperationException("compare requires --baseline and --current.");
+        ValidateWindow(fromTime, toTime, "compare");
+        var baselineTicks = ProfileReader.Read(baseline);
+        var currentTicks = ProfileReader.Read(current);
+        var baselineSelection = ProfileSegments.Select(baselineTicks, baseline, segment, fromTime, toTime);
+        var currentSelection = ProfileSegments.Select(currentTicks, current, segment, fromTime, toTime);
+        var previous = new PerfAggregator(baselineSelection.Ticks);
+        var aggregate = new PerfAggregator(currentSelection.Ticks);
+        var comparison = PerfComparison.Compare(previous, aggregate);
+        var warnings = new List<string>();
+        warnings.AddRange(SelectionWarnings("baseline profile", baselineSelection, baselineTicks.Count, previous));
+        warnings.AddRange(SelectionWarnings("current profile", currentSelection, currentTicks.Count, aggregate));
+        warnings.AddRange(comparison.Warnings);
+        WriteFile(output, PerfCompareHtmlReport.Build(
+            new PerfCompareReportInput(baselineSelection, previous, currentSelection, aggregate, comparison, warnings)));
+        WriteWarnings(warnings);
+        var undefined = comparison.Rows.Count(static row => row.DeltaPercent is null);
+        Console.WriteLine($"wrote {output} ({comparison.Rows.Count} metrics, {undefined} n/a)");
+        return 0;
+    }
+
+    private static int PerfCommand(string[] args)
+    {
+        string? profile = null;
+        var output = "perf-report.html";
+        string? segment = null;
+        double? fromTime = null;
+        double? toTime = null;
+        for (var i = 0; i < args.Length; i++)
+        {
+            switch (args[i])
+            {
+                case "-h" or "--help":
+                    PrintPerfUsage();
+                    return 0;
+                case "--profile" when i + 1 < args.Length:
+                    profile = args[++i];
+                    break;
+                case "--out" when i + 1 < args.Length:
+                    output = args[++i];
+                    break;
+                case "--segment" when i + 1 < args.Length:
+                    segment = args[++i];
+                    break;
+                case "--from" when i + 1 < args.Length:
+                    fromTime = ParseDouble(args[++i], "--from");
+                    break;
+                case "--to" when i + 1 < args.Length:
+                    toTime = ParseDouble(args[++i], "--to");
+                    break;
+                default:
+                    throw new InvalidOperationException(
+                        $"Unknown or incomplete perf argument '{args[i]}'; run 'perf --help' for usage.");
             }
         }
 
         if (profile is null)
             throw new InvalidOperationException("perf requires --profile <profile.jsonl>.");
-        if (fromTime.HasValue && toTime.HasValue && fromTime > toTime)
-            throw new InvalidOperationException("perf --from must not be greater than --to.");
+        ValidateWindow(fromTime, toTime, "perf");
         var ticks = ProfileReader.Read(profile);
-        if (fromTime.HasValue || toTime.HasValue)
-        {
-            ticks = [.. ticks.Where(tick =>
-                (!fromTime.HasValue || tick.SimTime >= fromTime.Value)
-                && (!toTime.HasValue || tick.SimTime <= toTime.Value))];
-            if (ticks.Count == 0)
-                throw new InvalidOperationException("perf window contains no samples.");
-        }
-
-        var aggregate = new PerfAggregator(ticks);
-        WriteFile(output, PerfHtmlReport.Build(aggregate));
-        Console.WriteLine($"wrote {output} ({aggregate.Ticks.Count} samples)");
+        var selection = ProfileSegments.Select(ticks, profile, segment, fromTime, toTime);
+        var aggregate = new PerfAggregator(selection.Ticks);
+        var warnings = SelectionWarnings("profile", selection, ticks.Count, aggregate);
+        WriteFile(output, PerfHtmlReport.Build(aggregate, selection, warnings));
+        WriteWarnings(warnings);
+        var summary = $"wrote {output} ({aggregate.SampleCount} samples";
+        if (selection.SegmentCount > 1)
+            summary += $", segments={selection.SegmentCount}, segment={selection.SegmentLabel}";
+        summary += ")";
+        Console.WriteLine(summary);
         return 0;
+    }
+
+    private static void ValidateWindow(double? fromTime, double? toTime, string command)
+    {
+        if (fromTime.HasValue && toTime.HasValue && fromTime > toTime)
+            throw new InvalidOperationException($"{command} --from must not be greater than --to.");
+    }
+
+    private static List<string> SelectionWarnings(
+        string label,
+        ProfileSelection selection,
+        int totalSamples,
+        PerfAggregator aggregate)
+    {
+        var warnings = new List<string>();
+        if (selection.ImplicitLast)
+            warnings.Add(
+                $"{label} has {selection.SegmentCount} simulation segments; aggregated the last one "
+                + $"({selection.Ticks.Count} of {totalSamples} samples). Pass --segment all to pool segments "
+                + "or --segment <index> to select one.");
+        if (aggregate.SampleCount < 100)
+            warnings.Add(
+                $"{label} selection contains {aggregate.SampleCount} sample(s); p95/p99 percentile estimates "
+                + "are unstable below 100 samples.");
+        if (aggregate.TickInterval is { } interval && !aggregate.HasUniformTickInterval)
+            warnings.Add(
+                $"{label} sampled tick deltas are not uniform (median interval {interval}); the GC run-total "
+                + "estimate assumes uniform sampling.");
+        return warnings;
+    }
+
+    private static void WriteWarnings(IReadOnlyList<string> warnings)
+    {
+        foreach (var warning in warnings)
+            Console.Error.WriteLine($"WARNING: {warning}");
     }
 
     private static void WriteTimelineCsv(
@@ -601,9 +663,35 @@ internal static class Program
     {
         Console.WriteLine("Usage:");
         Console.WriteLine("  genome --save <save-dir-or-json> [--save ...] [--out report.html] [options]");
-        Console.WriteLine("  perf --profile <profile.jsonl> [--out perf.html] [--from <simsec>] [--to <simsec>]");
-        Console.WriteLine("  compare --baseline <baseline.jsonl> --current <current.jsonl> [--out compare.html]");
-        Console.WriteLine("Run 'genome --help' for the genome options.");
+        Console.WriteLine("  perf --profile <profile.jsonl> [--out perf.html] [--segment all|last|<index>] [--from <simsec>] [--to <simsec>]");
+        Console.WriteLine("  compare --baseline <baseline.jsonl> --current <current.jsonl> [--out compare.html] [options]");
+        Console.WriteLine("Run 'genome --help', 'perf --help', or 'compare --help' for the command options.");
+    }
+
+    private static void PrintPerfUsage()
+    {
+        Console.WriteLine("Usage: perf --profile <profile.jsonl> [--out perf-report.html] [options]");
+        Console.WriteLine();
+        Console.WriteLine("  --profile <path>         JSONL profile written by SimulationProfiler (schema 2).");
+        Console.WriteLine("  --out <path>             HTML report (default perf-report.html).");
+        Console.WriteLine("  --segment all|last|<n>   simulation segment selection, 0-based (default last).");
+        Console.WriteLine("                           A new segment starts when simTime decreases; 'all' pools them.");
+        Console.WriteLine("  --from <simsec>          inclusive lower simTime bound within the selected segment.");
+        Console.WriteLine("  --to <simsec>            inclusive upper simTime bound within the selected segment.");
+        Console.WriteLine("  -h, --help               Show this help.");
+    }
+
+    private static void PrintCompareUsage()
+    {
+        Console.WriteLine("Usage: compare --baseline <baseline.jsonl> --current <current.jsonl> [options]");
+        Console.WriteLine();
+        Console.WriteLine("  --baseline <path>        baseline JSONL profile (schema 2).");
+        Console.WriteLine("  --current <path>         current JSONL profile (schema 2).");
+        Console.WriteLine("  --out <path>             HTML report (default perf-compare.html).");
+        Console.WriteLine("  --segment all|last|<n>   simulation segment selection for both profiles, 0-based (default last).");
+        Console.WriteLine("  --from <simsec>          inclusive lower simTime bound within the selected segment.");
+        Console.WriteLine("  --to <simsec>            inclusive upper simTime bound within the selected segment.");
+        Console.WriteLine("  -h, --help               Show this help.");
     }
 
     private static void PrintGenomeUsage()
