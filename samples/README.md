@@ -77,9 +77,15 @@ assemblies.
 
 ### Analysis tools
 
-The game includes local, Godot-free analysis tools for current v6 saves and
+The game includes local, Godot-free analysis tools for current v7 saves and
 pipeline profiles: see the
-[analysis README](Origo.EvolutionDemo.Analysis/README.md).
+[analysis README](Origo.EvolutionDemo.Analysis/README.md). The tool and its
+regression suite are part of the root solution and the normal format/test
+gates; run them directly with:
+
+```bash
+./dotnet test samples/Origo.EvolutionDemo.Analysis.Tests/Origo.EvolutionDemo.Analysis.Tests.csproj
+```
 
 ### Logic tests
 
@@ -87,5 +93,6 @@ pipeline profiles: see the
 ./dotnet test samples/Origo.EvolutionDemo.Logic.Tests/Origo.EvolutionDemo.Logic.Tests.csproj
 ```
 
-The pure genome/neural-network/sensor layer has no Godot dependency and is part
-of the normal solution test run.
+The pure genome/neural-network/sensor layer has no Godot dependency. Its test
+project runs through the command above; it is not part of the root solution
+test gate.

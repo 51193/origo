@@ -67,6 +67,7 @@ th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.warn{color:#fca5a5}.no
         AppendEnrichment(html, input);
         html.Append("<h2>Saves</h2>");
         AppendSaves(html, input);
+        AppendControllerCounters(html, input);
         html.Append("<h2>Feature distribution</h2>");
         AppendFeatureDistribution(html, input);
         AppendDefinitions(html, input, noiseCount);
@@ -387,6 +388,44 @@ th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.warn{color:#fca5a5}.no
             html.Append(CultureInfo.InvariantCulture,
                 $"<tr><td><code>{Escape(save.Id)}</code></td><td>{save.Time:0.###}</td><td>{save.Tick:0.###}</td>"
                 + $"<td>{save.Creatures}</td><td>{save.Food}</td><td>{save.Corpses}</td><td>{save.FoodSources}</td></tr>");
+        html.Append("</table>");
+    }
+
+    private static void AppendControllerCounters(StringBuilder html, GenomeReportInput input)
+    {
+        if (input.Saves.Count == 0)
+            return;
+        var latest = input.Saves
+            .OrderBy(static save => save.Time)
+            .ThenBy(static save => save.Id, StringComparer.Ordinal)
+            .Last();
+        var keys = latest.ControllerNumbers.Keys
+            .Concat(latest.ControllerStrings.Keys)
+            .Concat(latest.ControllerBooleans.Keys)
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(static key => key, StringComparer.Ordinal)
+            .ToArray();
+        html.Append("<h2>Controller counters (latest save)</h2>");
+        html.Append(CultureInfo.InvariantCulture,
+            $"<p class=\"muted\">Save <code>{Escape(latest.Id)}</code> at simulation time {latest.Time:0.###} s, tick {latest.Tick:R}.</p>");
+        if (keys.Length == 0)
+        {
+            html.Append("<p class=\"muted\">The latest save has no controller values.</p>");
+            return;
+        }
+
+        html.Append("<table><tr><th>key</th><th>value</th></tr>");
+        foreach (var key in keys)
+        {
+            var value = latest.ControllerNumbers.TryGetValue(key, out var number)
+                ? number.ToString("R", CultureInfo.InvariantCulture)
+                : latest.ControllerStrings.TryGetValue(key, out var text)
+                    ? text
+                    : latest.ControllerBooleans.TryGetValue(key, out var boolean) && boolean ? "true" : "false";
+            html.Append(CultureInfo.InvariantCulture,
+                $"<tr><td><code>{Escape(key)}</code></td><td>{Escape(value)}</td></tr>");
+        }
+
         html.Append("</table>");
     }
 

@@ -15,6 +15,7 @@ namespace Origo.EvolutionDemo.Analysis.Genome;
 /// <param name="FoodSources">Food-source entities present in the save.</param>
 /// <param name="ControllerNumbers">Numeric controller counters from the save.</param>
 /// <param name="ControllerStrings">String controller counters from the save.</param>
+/// <param name="ControllerBooleans">Boolean controller values from the save.</param>
 public sealed record SaveSummary(
     string Id,
     string Path,
@@ -25,7 +26,8 @@ public sealed record SaveSummary(
     int Corpses,
     int FoodSources,
     IReadOnlyDictionary<string, double> ControllerNumbers,
-    IReadOnlyDictionary<string, string> ControllerStrings);
+    IReadOnlyDictionary<string, string> ControllerStrings,
+    IReadOnlyDictionary<string, bool> ControllerBooleans);
 
 /// <summary>Resolved genome command options recorded in the report provenance.</summary>
 /// <param name="Seed">Random seed for sampling, restarts, PCA and bootstrap.</param>
@@ -61,7 +63,8 @@ public sealed record GenomeReportOptions(
 /// <param name="Rows">Analyzed creature rows (after sampling).</param>
 /// <param name="TotalCreatures">Creatures present in the saves before sampling/skips.</param>
 /// <param name="ConsideredCreatures">Creatures attempted after sampling; equals rows plus skips.</param>
-/// <param name="SkippedCreatures">Creatures that could not be decoded or compiled.</param>
+/// <param name="SkippedCreatures">Creatures skipped by the reader or by feature extraction.</param>
+/// <param name="ReaderWarnings">Save-reader warnings (integrity markers, ignored entities).</param>
 /// <param name="RawColumns">Feature columns selected by the mode before constant-column drops.</param>
 /// <param name="UsedFeatureCount">Feature columns that survived standardization.</param>
 /// <param name="DroppedColumns">Constant feature columns dropped by standardization.</param>
@@ -82,6 +85,7 @@ public sealed record GenomeReportInput(
     int TotalCreatures,
     int ConsideredCreatures,
     IReadOnlyList<SkippedCreature> SkippedCreatures,
+    IReadOnlyList<string> ReaderWarnings,
     IReadOnlyList<string> RawColumns,
     int UsedFeatureCount,
     IReadOnlyList<string> DroppedColumns,

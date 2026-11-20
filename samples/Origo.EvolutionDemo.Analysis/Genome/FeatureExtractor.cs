@@ -27,10 +27,12 @@ public sealed record SkippedCreature(string SavePath, string Name, string Reason
 
 /// <summary>
 ///     Result of feature extraction: the analyzed rows plus the accounting needed
-///     to report sampling and skipped creatures. <see cref="ConsideredCreatures" />
-///     is the number of creatures attempted after <c>--max</c> sampling, and
-///     <see cref="SkippedCreatures" /> counts the ones that failed to decode. The
-///     caller decides whether skips are fatal (<c>--allow-skips</c>).
+///     to report sampling and skipped creatures. <see cref="TotalCreatures" /> is
+///     the raw creature-entity count of the saves (including reader-level skips),
+///     <see cref="ConsideredCreatures" /> is the number of parsed creatures
+///     attempted after <c>--max</c> sampling, and <see cref="SkippedCreatures" />
+///     counts reader-level skips (missing genome) plus decode/phenotype failures.
+///     The caller decides whether skips are fatal (<c>--allow-skips</c>).
 /// </summary>
 public sealed record FeatureExtractionResult(
     IReadOnlyList<FeatureRow> Rows,
@@ -65,7 +67,9 @@ public static class FeatureExtractor
         for (var saveIndex = 0; saveIndex < saves.Count; saveIndex++)
         {
             var save = saves[saveIndex];
-            total += save.Creatures.Count;
+            total += save.RawCreatureCount;
+            foreach (var skip in save.SkippedCreatures)
+                skips.Add(new SkippedCreature(save.Path, skip.Name, skip.Reason));
             var creatures = save.Creatures;
             if (maxCreatures > 0 && creatures.Count > maxCreatures)
             {

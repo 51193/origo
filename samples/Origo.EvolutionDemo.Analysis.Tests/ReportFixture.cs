@@ -69,13 +69,16 @@ internal static class ReportFixture
         {
             new("save_c", "/saves/save_c/level_pond/snd_scene.json", 300d, 3000d, 50, 10, 1, 2,
                 new Dictionary<string, double>(StringComparer.Ordinal) { ["evo.tick"] = 3000d },
-                new Dictionary<string, string>(StringComparer.Ordinal)),
+                new Dictionary<string, string>(StringComparer.Ordinal),
+                new Dictionary<string, bool>(StringComparer.Ordinal)),
             new("save_a", "/saves/save_a/level_pond/snd_scene.json", 10d, 100d, 20, 4, 2, 2,
                 new Dictionary<string, double>(StringComparer.Ordinal) { ["evo.tick"] = 100d },
-                new Dictionary<string, string>(StringComparer.Ordinal)),
+                new Dictionary<string, string>(StringComparer.Ordinal),
+                new Dictionary<string, bool>(StringComparer.Ordinal)),
             new("save_b", "/saves/save_b/level_pond/snd_scene.json", 20d, 200d, 30, 5, 0, 2,
                 new Dictionary<string, double>(StringComparer.Ordinal) { ["evo.tick"] = 200d },
-                new Dictionary<string, string>(StringComparer.Ordinal)),
+                new Dictionary<string, string>(StringComparer.Ordinal),
+                new Dictionary<string, bool>(StringComparer.Ordinal)),
         };
         var finalLabels = labels.ToArray();
         var clustering = new KMeans.Result(
@@ -102,6 +105,7 @@ internal static class ReportFixture
             rows,
             100,
             100,
+            [],
             [],
             ["f.one", "f.two", "constant"],
             2,

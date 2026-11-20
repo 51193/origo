@@ -1,7 +1,9 @@
 # Evolution Demo Analysis Tools
 
-Godot-free developer tools for the Evolution Demo. They are intentionally not
-part of `Origo.sln` or CI; run them locally when analysing a save or a profile.
+Godot-free developer tools for the Evolution Demo. The tool and its regression
+suite are part of the root solution, so the normal `scripts/bash/format.sh` and
+`scripts/bash/test.sh` gates cover them; they can still be run explicitly when
+analysing a save or a profile.
 
 ## Build
 
@@ -13,7 +15,15 @@ dotnet build samples/Origo.EvolutionDemo.Analysis/Origo.EvolutionDemo.Analysis.c
 ## Genome analysis
 
 The tool reads the current v7 SND save produced by the demo. It accepts either
-a save root, a directory containing `snd_scene.json`, or the JSON file itself.
+a save slot directory, a `level_<id>` directory, or the `snd_scene.json` file
+itself. A `--save` directory that resolves to several save scenes (for example
+the parent directory of all slots) is a hard error unless `--pool` is passed;
+`--pool` analyzes those scenes as one pooled input. The reader requires the
+demo controller with `evo.genomeVersion = 7`, `evo.time`, and `evo.tick`;
+missing metadata, malformed entities, and creatures without a usable
+`evo.bodyGenome` are reported instead of being silently defaulted. Saves whose
+slot lacks `.payload.sha`, or that contain a `.write_in_progress` marker, emit
+integrity warnings.
 
 ```bash
 dotnet run --project samples/Origo.EvolutionDemo.Analysis -c Release -- \
@@ -27,7 +37,8 @@ dotnet run --project samples/Origo.EvolutionDemo.Analysis -c Release -- \
 `genome --help` prints the full option list. Options:
 
 ```text
---save <path>            v7 save root, scene directory, or snd_scene.json; repeat to pool
+--save <path>            v7 save slot, level directory, or snd_scene.json; repeat to pool
+--pool                   allow one --save directory to expand to several save scenes
 --out <path>             HTML report (default genome-report.html); a sibling .clusters.csv is always written
 --max <n>                per-save analyzed row cap; 0 analyzes every creature (default 5000)
 --seed <n>               seed for per-save sampling, k-means restarts, and bootstrap ARI (default 1)
@@ -62,8 +73,9 @@ enrichment.csv               only with --enrichment-csv
 
 The optional timeline CSV has one row per save (sorted by simulation time) with
 the save id, time, tick, full creature population, analyzed rows, food, corpses,
-food sources, every numeric controller counter as `controller.<key>`, and the
-mean of every extracted feature column. Prefer it over cluster composition for
+food sources, every controller counter as `controller.<key>` (numeric, string,
+and boolean values), and the mean of every extracted feature column; a save
+that contributed no analyzable rows keeps its row with a blank feature mean. Prefer it over cluster composition for
 time-series questions: a pooled clustering can separate snapshots by
 age/complexity gradient instead of lineage.
 
@@ -73,7 +85,8 @@ The report contains:
   requested/actual k, stability rounds, DBSCAN epsilon/min-points, minimum
   cluster size, analyzed/total population, and used/raw feature counts;
 - save/population/food overview, ordered by simulation time and labeled by save
-  id;
+  id, plus a table of the latest save's controller counters (numeric, string,
+  and boolean values);
 - PCA scatter with the explained-variance percentages on the axes, plus the
   per-component explained-variance table;
 - cluster feature profile and top differentiating structural/body/neural/
@@ -140,13 +153,15 @@ The report contains:
   covariance; the explained-variance ratio of a component is its eigenvalue
   share of the covariance trace, so the reported ratios sum to at most 1.
 - **Sampling** is per save: `--max` samples rows from each save with a seed
-  derived from `--seed` and the save order, so adding an unrelated save does not
-  reshuffle another save's sample. The report states when the analyzed rows are
-  a sample.
-- **No silent data loss.** Creatures whose genome cannot be decoded are
-  counted, named in the report, and fail the run unless `--allow-skips` is
-  passed. The report and metrics JSON always show analyzed/total/skipped
-  counts.
+  derived from `--seed` and the save's position in the input order. Adding or
+  reordering saves therefore can change which rows of later saves are sampled;
+  the report states when the analyzed rows are a sample.
+- **No silent data loss.** Creatures without a usable `evo.bodyGenome` are
+  counted by the reader; creatures whose genome cannot be decoded or compiled
+  are counted by extraction. Both fail the run unless `--allow-skips` is passed.
+  The report and metrics JSON always show analyzed/total/skipped counts, and the
+  report lists reader warnings (ignored malformed/unknown entities, integrity
+  markers).
 
 ## Performance analysis
 
@@ -280,6 +295,9 @@ Profile schema 2 is required; older profile JSONL is rejected explicitly.
 ## Limits
 
 - Only current v7 saves are accepted; old saves are rejected explicitly.
+- The analysis reader does not verify the `.payload.sha` hash content; it warns
+  when the hash file is absent or when a write-in-progress marker is present,
+  and reads the scene JSON directly.
 - Behavior features are a single save snapshot; use multiple `--save` values or
   `--timeline-csv` for time-series comparisons.
 - A pooled clustering over multiple snapshots can encode time/age/complexity
@@ -288,7 +306,9 @@ Profile schema 2 is required; older profile JSONL is rejected explicitly.
 - `neutral.*` features are brain outputs with zero sensor input and are not
   clamped to the runtime action range.
 - Saves store no parent pointer, so lineage composition is observable but a
-  full phylogeny is not reconstructable from a save.
+  full phylogeny is not reconstructable from a save. Gene signatures use stable
+  gene ids plus payload values, so an enriched signature is lineage-local
+  rather than a cross-lineage homologous trait.
 - Profiling is sample-based. The schema has no header with the sampling
   interval, segment id, or phase kind, so the analyzer infers the interval from
   tick deltas, splits segments on a `simTime` reset, and classifies phases by

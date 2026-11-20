@@ -62,6 +62,7 @@ internal static class Program
         var dbscanMinPoints = 5;
         var minClusterSize = 0;
         var allowSkips = false;
+        var pool = false;
         string? timelineCsv = null;
         string? metricsJson = null;
         string? enrichmentCsv = null;
@@ -118,6 +119,9 @@ internal static class Program
                 case "--allow-skips":
                     allowSkips = true;
                     break;
+                case "--pool":
+                    pool = true;
+                    break;
                 case "--timeline-csv" when i + 1 < args.Length:
                     timelineCsv = args[++i];
                     break;
@@ -137,13 +141,13 @@ internal static class Program
             saves.Count, maxCreatures, requestedK, method, mode, stabilityRounds, dbscanEps,
             dbscanMinPoints, minClusterSize, explicitK, explicitStability, explicitEps,
             explicitMinPoints, explicitMinClusterSize));
-        var snapshots = SaveSnapshotReader.Read([.. saves]);
+        var snapshots = SaveSnapshotReader.Read([.. saves], pool);
         var extraction = FeatureExtractor.Extract(snapshots, maxCreatures, seed);
         if (extraction.SkippedCreatures.Count > 0 && !allowSkips)
         {
             var first = extraction.SkippedCreatures[0];
             throw new InvalidOperationException(
-                $"{extraction.SkippedCreatures.Count} of {extraction.ConsideredCreatures} creatures could not be decoded "
+                $"{extraction.SkippedCreatures.Count} of {extraction.TotalCreatures} creatures could not be analyzed "
                 + $"(first: '{first.Name}' in '{first.SavePath}': {first.Reason}). "
                 + "Pass --allow-skips to analyze the remaining creatures and report the skips.");
         }
@@ -180,7 +184,7 @@ internal static class Program
         var enrichment = Enumerable.Range(0, clustering.K)
             .Select(cluster => GeneEnrichment.Analyze(rows, clustering.Labels, cluster))
             .ToArray();
-        var saveSummaries = BuildSaveSummaries(saves, snapshots);
+        var saveSummaries = BuildSaveSummaries(snapshots);
         var reportInput = new GenomeReportInput(
             $"genome {string.Join(' ', args.Select(QuoteArgument))}",
             DateTime.UtcNow,
@@ -192,6 +196,7 @@ internal static class Program
             extraction.TotalCreatures,
             extraction.ConsideredCreatures,
             extraction.SkippedCreatures,
+            [.. snapshots.SelectMany(static snapshot => snapshot.Warnings)],
             columns,
             standardization.Matrix.Columns.Count,
             standardization.DroppedColumns,
@@ -265,25 +270,22 @@ internal static class Program
             throw new InvalidOperationException("--stability applies only to --method kmeans.");
     }
 
-    private static IReadOnlyList<SaveSummary> BuildSaveSummaries(
-        IReadOnlyList<string> requestedSaves,
-        IReadOnlyList<SaveSnapshot> snapshots)
+    private static IReadOnlyList<SaveSummary> BuildSaveSummaries(IReadOnlyList<SaveSnapshot> snapshots)
     {
         var resolved = snapshots
-            .Select(snapshot => (Snapshot: snapshot, Id: ResolveSaveId(requestedSaves, snapshot.Path)))
-            .OrderBy(static entry => entry.Snapshot.Time)
-            .ThenBy(static entry => entry.Id, StringComparer.Ordinal)
-            .ThenBy(static entry => entry.Snapshot.Path, StringComparer.Ordinal)
+            .OrderBy(static snapshot => snapshot.Time)
+            .ThenBy(static snapshot => snapshot.Id, StringComparer.Ordinal)
+            .ThenBy(static snapshot => snapshot.Path, StringComparer.Ordinal)
             .ToArray();
         var duplicates = resolved
-            .GroupBy(static entry => entry.Id, StringComparer.Ordinal)
+            .GroupBy(static snapshot => snapshot.Id, StringComparer.Ordinal)
             .Where(static group => group.Count() > 1)
             .Select(static group => group.Key)
             .ToHashSet(StringComparer.Ordinal);
         var counters = new Dictionary<string, int>(StringComparer.Ordinal);
-        return [.. resolved.Select(entry =>
+        return [.. resolved.Select(snapshot =>
         {
-            var id = entry.Id;
+            var id = snapshot.Id;
             if (duplicates.Contains(id))
             {
                 counters[id] = counters.GetValueOrDefault(id) + 1;
@@ -292,45 +294,17 @@ internal static class Program
 
             return new SaveSummary(
                 id,
-                entry.Snapshot.Path,
-                entry.Snapshot.Time,
-                entry.Snapshot.Tick,
-                entry.Snapshot.Creatures.Count,
-                entry.Snapshot.Food,
-                entry.Snapshot.Corpses,
-                entry.Snapshot.FoodSources,
-                entry.Snapshot.ControllerNumbers,
-                entry.Snapshot.ControllerStrings);
+                snapshot.Path,
+                snapshot.Time,
+                snapshot.Tick,
+                snapshot.RawCreatureCount,
+                snapshot.Food,
+                snapshot.Corpses,
+                snapshot.FoodSources,
+                snapshot.ControllerNumbers,
+                snapshot.ControllerStrings,
+                snapshot.ControllerBooleans);
         })];
-    }
-
-    private static string ResolveSaveId(IReadOnlyList<string> requestedSaves, string snapshotPath)
-    {
-        var fullSnapshot = Path.GetFullPath(snapshotPath);
-        foreach (var request in requestedSaves)
-        {
-            var fullRequest = Path.GetFullPath(request);
-            if (Directory.Exists(fullRequest))
-            {
-                var prefix = fullRequest.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
-                    + Path.DirectorySeparatorChar;
-                if (!fullSnapshot.StartsWith(prefix, StringComparison.Ordinal))
-                    continue;
-                var relative = fullSnapshot[prefix.Length..];
-                var parts = relative.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-                // A save root pools <root>/<slot>/<level>/snd_scene.json; a direct
-                // save argument is <slot>/<level>/snd_scene.json.
-                return parts.Length >= 3
-                    ? parts[0]
-                    : Path.GetFileName(fullRequest.TrimEnd(
-                        Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-            }
-
-            if (File.Exists(fullRequest) && string.Equals(fullRequest, fullSnapshot, StringComparison.Ordinal))
-                return Path.GetFileNameWithoutExtension(fullRequest);
-        }
-
-        return Path.GetFileName(Path.GetDirectoryName(fullSnapshot)) ?? Path.GetFileName(fullSnapshot);
     }
 
     private static int CompareCommand(string[] args)
@@ -488,7 +462,9 @@ internal static class Program
         string[] columns)
     {
         var controllerKeys = saves
-            .SelectMany(static save => save.ControllerNumbers.Keys)
+            .SelectMany(static save => save.ControllerNumbers.Keys
+                .Concat(save.ControllerStrings.Keys)
+                .Concat(save.ControllerBooleans.Keys))
             .Distinct(StringComparer.Ordinal)
             .OrderBy(static key => key, StringComparer.Ordinal)
             .ToArray();
@@ -522,8 +498,12 @@ internal static class Program
             foreach (var key in controllerKeys)
             {
                 writer.Write(',');
-                if (save.ControllerNumbers.TryGetValue(key, out var value))
-                    writer.Write(value.ToString("R", CultureInfo.InvariantCulture));
+                if (save.ControllerNumbers.TryGetValue(key, out var number))
+                    writer.Write(number.ToString("R", CultureInfo.InvariantCulture));
+                else if (save.ControllerStrings.TryGetValue(key, out var text))
+                    writer.Write(Csv(text));
+                else if (save.ControllerBooleans.TryGetValue(key, out var boolean))
+                    writer.Write(boolean ? "true" : "false");
             }
 
             foreach (var column in columns)
@@ -533,9 +513,8 @@ internal static class Program
                     .Select(row => row.Values.GetValueOrDefault(column, double.NaN))
                     .Where(double.IsFinite)
                     .ToArray();
-                writer.Write(values.Length > 0
-                    ? values.Average().ToString("0.####", CultureInfo.InvariantCulture)
-                    : "0");
+                if (values.Length > 0)
+                    writer.Write(values.Average().ToString("0.####", CultureInfo.InvariantCulture));
             }
 
             writer.WriteLine();
@@ -699,6 +678,7 @@ internal static class Program
         Console.WriteLine("Usage: genome --save <save-dir-or-json> [--save ...] [options]");
         Console.WriteLine();
         Console.WriteLine("  --save <path>            v7 save root, scene directory, or snd_scene.json; repeat to pool.");
+        Console.WriteLine("  --pool                   allow one --save directory to expand to several save scenes.");
         Console.WriteLine("  --out <path>             HTML report (default genome-report.html).");
         Console.WriteLine("                           A sibling .clusters.csv is always written.");
         Console.WriteLine("  --max <n>                Per-save analyzed row cap; 0 analyzes every creature (default 5000).");

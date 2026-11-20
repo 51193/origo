@@ -184,7 +184,7 @@ public sealed class GenomeCliTests
         var (ExitCode, Output, Error) = Run("genome", "--save", save, "--out", Path.Combine(directory.Path, "report.html"));
 
         Assert.Equal(1, ExitCode);
-        Assert.Contains("could not be decoded", Error, StringComparison.Ordinal);
+        Assert.Contains("could not be analyzed", Error, StringComparison.Ordinal);
         Assert.Contains("--allow-skips", Error, StringComparison.Ordinal);
     }
 
@@ -251,6 +251,72 @@ public sealed class GenomeCliTests
         using var json = JsonDocument.Parse(File.ReadAllText(metrics));
         Assert.Equal(JsonValueKind.Null,
             json.RootElement.GetProperty("clustering").GetProperty("bootstrapAri").ValueKind);
+    }
+
+    [Fact]
+    public void Genome_MultiSceneDirectory_RequiresPoolThenPools()
+    {
+        using var directory = new TemporaryDirectory();
+        var genome = SaveFixture.Encode(GenomeV4Factory.CreateDemoFounder(new Random(21)));
+        SaveFixture.CreateV7Save(directory, "save_a", [("a0", genome), ("a1", genome)], time: 10d);
+        SaveFixture.CreateV7Save(directory, "save_b", [("b0", genome), ("b1", genome)], time: 20d);
+
+        var (ExitCode, Output, Error) = Run("genome", "--save", directory.Path, "--out", Path.Combine(directory.Path, "no-pool.html"));
+        Assert.Equal(1, ExitCode);
+        Assert.Contains("--pool", Error, StringComparison.Ordinal);
+
+        var metrics = Path.Combine(directory.Path, "pooled.json");
+        var withPool = Run("genome", "--save", directory.Path, "--pool",
+            "--out", Path.Combine(directory.Path, "pooled.html"), "--metrics-json", metrics);
+        Assert.Equal(0, withPool.ExitCode);
+        using var json = JsonDocument.Parse(File.ReadAllText(metrics));
+        Assert.Equal(4, json.RootElement.GetProperty("population").GetProperty("total").GetInt32());
+        Assert.Equal(2, json.RootElement.GetProperty("saves").GetArrayLength());
+    }
+
+    [Fact]
+    public void Genome_TimelineCsv_HasOneRowPerSaveAndTypedControllerValues()
+    {
+        using var directory = new TemporaryDirectory();
+        var genome = SaveFixture.Encode(GenomeV4Factory.CreateDemoFounder(new Random(22)));
+        var first = SaveFixture.CreateV7Save(directory, "save_t1", [("c0", genome), ("c1", genome)], time: 10d);
+        var second = SaveFixture.CreateV7Save(
+            directory, "save_t2", [("c2", genome), ("c3", genome)], time: 20d,
+            extraControllerPairs: new Dictionary<string, object>
+            {
+                ["demo.paused"] = true,
+                ["demo.phase"] = "running",
+            });
+        var timeline = Path.Combine(directory.Path, "timeline.csv");
+
+        var (ExitCode, _, Error) = Run(
+            "genome", "--save", first, "--save", second, "--timeline-csv", timeline,
+            "--out", Path.Combine(directory.Path, "timeline.html"));
+
+        Assert.Equal(0, ExitCode);
+        var lines = File.ReadAllLines(timeline);
+        Assert.Equal(3, lines.Length);
+        Assert.Contains("controller.demo.paused", lines[0], StringComparison.Ordinal);
+        Assert.Contains("controller.demo.phase", lines[0], StringComparison.Ordinal);
+        Assert.Contains("save_t1,10", lines[1], StringComparison.Ordinal);
+        Assert.Contains("save_t2,20", lines[2], StringComparison.Ordinal);
+        Assert.Contains("true", lines[2], StringComparison.Ordinal);
+        Assert.Contains("running", lines[2], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Genome_SaveIntegrityWarnings_AreReportedOnStderrAndHtml()
+    {
+        using var directory = new TemporaryDirectory();
+        var save = CreateVariedSave(directory);
+        var output = Path.Combine(directory.Path, "warnings.html");
+
+        var (ExitCode, _, Error) = Run("genome", "--save", save, "--out", output);
+
+        Assert.Equal(0, ExitCode);
+        Assert.Contains(".payload.sha", Error, StringComparison.Ordinal);
+        Assert.Contains(".payload.sha", File.ReadAllText(output), StringComparison.Ordinal);
+        Assert.Contains("Controller counters (latest save)", File.ReadAllText(output), StringComparison.Ordinal);
     }
 
     private static string CreateVariedSave(TemporaryDirectory directory)

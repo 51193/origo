@@ -17,7 +17,7 @@ public static class GenomeWarnings
     public static IReadOnlyList<string> Build(GenomeReportInput input)
     {
         ArgumentNullException.ThrowIfNull(input);
-        var warnings = new List<string>();
+        var warnings = new List<string>(input.ReaderWarnings);
         if (input.Options.MaxCreatures > 0 && input.ConsideredCreatures < input.TotalCreatures)
             warnings.Add(string.Create(CultureInfo.InvariantCulture,
                 $"--max {input.Options.MaxCreatures} sampled {input.ConsideredCreatures} of {input.TotalCreatures} save creatures; the analyzed rows are a sample, not the full population."));

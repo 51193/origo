@@ -46,7 +46,9 @@ internal static class SaveFixture
         int foodSources = 1,
         double genomeVersion = 7d,
         bool includeController = true,
-        bool includeTime = true)
+        bool includeTime = true,
+        bool includeVersion = true,
+        IReadOnlyDictionary<string, object>? extraControllerPairs = null)
     {
         var saveRoot = Path.Combine(directory.Path, slotName);
         var sceneDirectory = Path.Combine(saveRoot, "level_pond");
@@ -57,7 +59,6 @@ internal static class SaveFixture
             var controllerPairs = new Dictionary<string, object>
             {
                 ["evo.kind"] = "controller",
-                ["evo.genomeVersion"] = genomeVersion,
                 ["evo.tick"] = tick,
                 ["evo.seed"] = 20261101d,
                 ["evo.population"] = creatures.Count,
@@ -65,6 +66,11 @@ internal static class SaveFixture
             };
             if (includeTime)
                 controllerPairs["evo.time"] = time;
+            if (includeVersion)
+                controllerPairs["evo.genomeVersion"] = genomeVersion;
+            if (extraControllerPairs is not null)
+                foreach (var (key, value) in extraControllerPairs)
+                    controllerPairs[key] = value;
             entities.Add(Entity("controller", controllerPairs));
         }
 
