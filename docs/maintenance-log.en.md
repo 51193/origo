@@ -316,6 +316,13 @@ Contributor-facing workflow, pull-request policy, and script/repository layout c
 
 - **BREAKING: repository scripts are grouped by implementation language** — POSIX scripts live under `scripts/bash/`, the Windows PowerShell suite under `scripts/powershell/`, and cross-platform Python helpers under `scripts/python/`; `scripts/README.md` is the gate and directory map. Entry points are now `bash scripts/bash/ci.sh` and `powershell -File scripts/powershell/ci.ps1`. Automation that invoked the old `scripts/*.sh`, `scripts/*.py` paths must update; no compatibility wrappers are provided.
 
+- **Evolution Demo logic tests join the root test gates** — the pure
+  `Origo.EvolutionDemo.Logic.Tests` suite is now listed in `Origo.sln` and both
+  PowerShell test-project arrays, so the Bash/PowerShell test gates run the
+  genome, mutation, phenotype, and demo mechanic regression tests and the
+  development-suite parity check keeps the project lists aligned instead of
+  leaving the suite as an ad-hoc local command.
+
 ---
 
 [↑ Back to Origo Manual](README.en.md)

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Origo.EvolutionDemo.Logic.Gameplay;
+using Origo.EvolutionDemo.Logic.V4;
 using Xunit;
 
 namespace Origo.EvolutionDemo.Logic.Tests;
@@ -52,6 +53,13 @@ public sealed class GameplayContentTests
         var (content, services) = host.Load();
         Assert.NotNull(content);
         Assert.Empty(services.Systems);
+    }
+
+    [Fact]
+    public void ContentIds_CoverEveryOrganKind()
+    {
+        foreach (var organ in Enum.GetValues<OrganKindV4>())
+            Assert.NotNull(GameplayContentIds.ForOrgan(organ));
     }
 
     [Fact]

@@ -37,6 +37,7 @@ internal readonly record struct CreatureSnapshot(
     public bool SpikeBattery => (OrganMask & (int)DemoOrganMaskV4.SpikeBattery) != 0;
     public bool HardDigest => (OrganMask & (int)DemoOrganMaskV4.HardDigest) != 0;
     public bool ToxinResistance => (OrganMask & (int)DemoOrganMaskV4.ToxinResistance) != 0;
+    public bool Armor => (OrganMask & (int)DemoOrganMaskV4.Armor) != 0;
 }
 
 internal readonly record struct FoodSnapshot(ISndEntity Entity, float X, float Y, bool FromCorpse, FoodType Type);

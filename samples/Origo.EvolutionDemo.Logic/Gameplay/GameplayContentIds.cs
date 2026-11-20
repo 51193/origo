@@ -18,6 +18,7 @@ public static class GameplayContentIds
         [OrganKindV4.ToxinResistance] = "gene.organ.toxin_resistance",
         [OrganKindV4.CarrionSense] = "gene.organ.carrion_sense",
         [OrganKindV4.Sprint] = "gene.organ.sprint",
+        [OrganKindV4.Armor] = "gene.organ.armor",
     };
 
     private static readonly Dictionary<ActionKindV4, string> Actions = new()

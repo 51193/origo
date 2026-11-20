@@ -35,6 +35,31 @@ public sealed class GameplayGenomeGateTests
     }
 
     [Fact]
+    public void UnlockedArmor_IsAddedByMutation()
+    {
+        var savedOrgan = GenomeContentGate.OrganFilter;
+        try
+        {
+            GenomeContentGate.OrganFilter = organ => organ == OrganKindV4.Armor;
+            var random = new Random(7);
+            var genome = GenomeV4Factory.CreateSimpleReflex();
+            var found = false;
+            for (var i = 0; i < 500 && !found; i++)
+            {
+                genome = GenomeV4Mutator.Mutate(genome, random);
+                var phenotype = GenomeV4Compiler.Compile(genome, ExpressionContextV4.Neutral);
+                found = phenotype.Body.Organs.Any(static organ => organ.Kind == OrganKindV4.Armor);
+            }
+
+            Assert.True(found, "Armor must be reachable through the mutation operator set.");
+        }
+        finally
+        {
+            GenomeContentGate.OrganFilter = savedOrgan;
+        }
+    }
+
+    [Fact]
     public void LockedActions_AreNotAddedByMutation()
     {
         var saved = GenomeContentGate.ActionFilter;

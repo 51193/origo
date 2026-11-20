@@ -20,6 +20,10 @@ public sealed class DemoSettingsTests
         settings.OvergrowthEnabled = false;
         settings.OvergrowthMutationRate = 0.37d;
         settings.SpikeRadius = 99f;
+        settings.SpikeDamageFraction = 0.42f;
+        settings.SpikeKillStealFraction = 0.25f;
+        settings.SpikeArmorDamageMultiplier = 0.33f;
+        settings.SprintSurchargeFraction = 1.75f;
         settings.IterateCheckpointIntervalSeconds = 300f;
 
         var restored = DemoSettings.FromJson(settings.ToJson());
@@ -34,6 +38,10 @@ public sealed class DemoSettingsTests
         Assert.False(restored.OvergrowthEnabled);
         Assert.Equal(settings.OvergrowthMutationRate, restored.OvergrowthMutationRate);
         Assert.Equal(settings.SpikeRadius, restored.SpikeRadius);
+        Assert.Equal(settings.SpikeDamageFraction, restored.SpikeDamageFraction);
+        Assert.Equal(settings.SpikeKillStealFraction, restored.SpikeKillStealFraction);
+        Assert.Equal(settings.SpikeArmorDamageMultiplier, restored.SpikeArmorDamageMultiplier);
+        Assert.Equal(settings.SprintSurchargeFraction, restored.SprintSurchargeFraction);
         Assert.Equal(settings.IterateCheckpointIntervalSeconds, restored.IterateCheckpointIntervalSeconds);
     }
 
@@ -80,6 +88,23 @@ public sealed class DemoSettingsTests
     }
 
     [Fact]
+    public void Normalize_ClampsSprintAndSpikeTuning()
+    {
+        var settings = DemoSettings.Defaults();
+        settings.SprintSurchargeFraction = -1f;
+        settings.SpikeDamageFraction = 2f;
+        settings.SpikeKillStealFraction = -1f;
+        settings.SpikeArmorDamageMultiplier = -1f;
+
+        settings.Normalize();
+
+        Assert.Equal(0f, settings.SprintSurchargeFraction);
+        Assert.Equal(1f, settings.SpikeDamageFraction);
+        Assert.Equal(0f, settings.SpikeKillStealFraction);
+        Assert.Equal(0f, settings.SpikeArmorDamageMultiplier);
+    }
+
+    [Fact]
     public void TuningFacade_ReadsActiveSettings()
     {
         var previous = DemoSettings.Current;
@@ -89,11 +114,19 @@ public sealed class DemoSettingsTests
             settings.PondRadius = 7_777f;
             settings.FoodPatchRadius = 123f;
             settings.IterateCheckpointIntervalSeconds = 42f;
+            settings.SprintSurchargeFraction = 1.75f;
+            settings.SpikeDamageFraction = 0.42f;
+            settings.SpikeKillStealFraction = 0.25f;
+            settings.SpikeArmorDamageMultiplier = 0.33f;
             DemoSettings.Current = settings;
 
             Assert.Equal(7_777f, Tuning.PondRadius);
             Assert.Equal(123f, Tuning.FoodPatchRadius);
             Assert.Equal(42f, Tuning.IterateCheckpointIntervalSeconds);
+            Assert.Equal(1.75f, Tuning.SprintSurchargeFraction);
+            Assert.Equal(0.42f, Tuning.SpikeDamageFraction);
+            Assert.Equal(0.25f, Tuning.SpikeKillStealFraction);
+            Assert.Equal(0.33f, Tuning.SpikeArmorDamageMultiplier);
         }
         finally
         {

@@ -30,6 +30,7 @@ public sealed class DefaultGameplayContentModule : IGameplayModule
         AddContent(content, "gene.organ.toxin_resistance", "organ", "unlock.core");
         AddContent(content, "gene.organ.carrion_sense", "organ", "unlock.core");
         AddContent(content, "gene.organ.sprint", "organ", "unlock.core");
+        AddContent(content, "gene.organ.armor", "organ", "unlock.core");
         AddContent(content, "gene.action.move", "action", "unlock.core");
         AddContent(content, "gene.action.turn", "action", "unlock.core");
         AddContent(content, "gene.action.spike", "action", "unlock.core");

@@ -95,6 +95,61 @@ public sealed class V4PhenotypeTests
     }
 
     [Fact]
+    public void ArmorOrgan_IsExpressedAndRecordedInOrganMask()
+    {
+        var body = DemoPhenotypeAdapter.ToBodyPhenotype(GenomeV4Factory.CreateLargeBody(1));
+
+        Assert.True(body.ArmorOrgan);
+        Assert.NotEqual(0, body.OrganMask & (int)DemoOrganMaskV4.Armor);
+    }
+
+    [Fact]
+    public void BothDigestiveOrgans_ExpressOnlyLargerGut()
+    {
+        var genome = new GenomeV4(
+        [
+            new GeneV4(1, GeneKind.BodySegment, 1, 1f, GenePayloadV4.BodySegment(1f, 1f)),
+            new GeneV4(2, GeneKind.Organ, 1, 1f, GenePayloadV4.Organ(OrganKindV4.HardDigest, 0.4f)),
+            new GeneV4(3, GeneKind.Organ, 1, 1f, GenePayloadV4.Organ(OrganKindV4.ToxinResistance, 0.8f)),
+        ], 4);
+
+        var phenotype = GenomeV4Compiler.Compile(genome, ExpressionContextV4.Neutral);
+
+        Assert.DoesNotContain(phenotype.Body.Organs, static organ => organ.Kind == OrganKindV4.HardDigest);
+        Assert.Contains(phenotype.Body.Organs, static organ => organ.Kind == OrganKindV4.ToxinResistance);
+    }
+
+    [Fact]
+    public void EqualDigestiveSize_PrefersHardDigestEvenWithMoreToxinCopies()
+    {
+        var genome = new GenomeV4(
+        [
+            new GeneV4(1, GeneKind.BodySegment, 1, 1f, GenePayloadV4.BodySegment(1f, 1f)),
+            new GeneV4(2, GeneKind.Organ, 1, 1f, GenePayloadV4.Organ(OrganKindV4.HardDigest, 1f)),
+            new GeneV4(3, GeneKind.Organ, 2, 1f, GenePayloadV4.Organ(OrganKindV4.ToxinResistance, 0.5f)),
+        ], 4);
+
+        var phenotype = GenomeV4Compiler.Compile(genome, ExpressionContextV4.Neutral);
+
+        Assert.Contains(phenotype.Body.Organs, static organ => organ.Kind == OrganKindV4.HardDigest);
+        Assert.DoesNotContain(phenotype.Body.Organs, static organ => organ.Kind == OrganKindV4.ToxinResistance);
+    }
+
+    [Fact]
+    public void SingleDigestiveOrgan_IsExpressedUnchanged()
+    {
+        var genome = new GenomeV4(
+        [
+            new GeneV4(1, GeneKind.BodySegment, 1, 1f, GenePayloadV4.BodySegment(1f, 1f)),
+            new GeneV4(2, GeneKind.Organ, 1, 1f, GenePayloadV4.Organ(OrganKindV4.ToxinResistance, 0.5f)),
+        ], 3);
+
+        var phenotype = GenomeV4Compiler.Compile(genome, ExpressionContextV4.Neutral);
+
+        Assert.Contains(phenotype.Body.Organs, static organ => organ.Kind == OrganKindV4.ToxinResistance);
+    }
+
+    [Fact]
     public void RegulatoryExpression_ChangesOrganUnderDifferentContexts()
     {
         var genome = GenomeV4Factory.CreateConditionalBattery();

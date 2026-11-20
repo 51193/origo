@@ -62,7 +62,9 @@ public static class Tuning
     public static float SpikeEnergyPerUnit => DemoSettings.Current.SpikeEnergyPerUnit;
     public static float SpikeAimHalfAngleRadians => DemoSettings.Current.SpikeAimHalfAngleRadians;
     public static float SpikeBeamRadius => DemoSettings.Current.SpikeBeamRadius;
-    public static float SpikeDrainFraction => DemoSettings.Current.SpikeDrainFraction;
+    public static float SpikeDamageFraction => DemoSettings.Current.SpikeDamageFraction;
+    public static float SpikeKillStealFraction => DemoSettings.Current.SpikeKillStealFraction;
+    public static float SpikeArmorDamageMultiplier => DemoSettings.Current.SpikeArmorDamageMultiplier;
     public static float SpikeRadius => DemoSettings.Current.SpikeRadius;
     public static float SpikeCooldownSeconds => DemoSettings.Current.SpikeCooldownSeconds;
     public static float InitialEnergy => DemoSettings.Current.InitialEnergy;
@@ -73,6 +75,7 @@ public static class Tuning
     public static float ToxicFoodShare => DemoSettings.Current.ToxicFoodShare;
     public static float BaseMetabolismPerSecond => DemoSettings.Current.BaseMetabolismPerSecond;
     public static float MoveEnergyPerSecond => DemoSettings.Current.MoveEnergyPerSecond;
+    public static float SprintSurchargeFraction => DemoSettings.Current.SprintSurchargeFraction;
     public static float GenomeMaintenanceScale => DemoSettings.Current.GenomeMaintenanceScale;
     public static float TurnEnergyPerSecond => DemoSettings.Current.TurnEnergyPerSecond;
     public static float ReproductionEnergy => DemoSettings.Current.ReproductionEnergy;

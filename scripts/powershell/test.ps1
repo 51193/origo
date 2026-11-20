@@ -20,6 +20,7 @@ if ($Direct) {
         'Origo.SourceGeneration.Tests\Origo.SourceGeneration.Tests.csproj',
         'tools\ApiInventoryTool.Tests\ApiInventoryTool.Tests.csproj'
         'samples\Origo.EvolutionDemo.Analysis.Tests\Origo.EvolutionDemo.Analysis.Tests.csproj'
+        'samples\Origo.EvolutionDemo.Logic.Tests\Origo.EvolutionDemo.Logic.Tests.csproj'
     )
     foreach ($project in $directProjects) {
         Write-Host ('>>> ' + $project)
@@ -46,6 +47,7 @@ $testProjects = @(
     'Origo.SourceGeneration.Tests\Origo.SourceGeneration.Tests.csproj',
     'tools\ApiInventoryTool.Tests\ApiInventoryTool.Tests.csproj'
         'samples\Origo.EvolutionDemo.Analysis.Tests\Origo.EvolutionDemo.Analysis.Tests.csproj'
+        'samples\Origo.EvolutionDemo.Logic.Tests\Origo.EvolutionDemo.Logic.Tests.csproj'
 )
 foreach ($project in $testProjects) {
     Write-Host ('>>> ' + $project)

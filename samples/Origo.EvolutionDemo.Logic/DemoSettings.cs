@@ -45,10 +45,11 @@ public sealed class DemoSettings
     public float FoodEnergy { get; set; } = 18f;
     public float ToughFoodEnergy { get; set; } = 25f;
     public float ToxicFoodEnergy { get; set; } = 32f;
-    public float ToughFoodShare { get; set; } = 0.22f;
-    public float ToxicFoodShare { get; set; } = 0.08f;
+    public float ToughFoodShare { get; set; } = 0.20f;
+    public float ToxicFoodShare { get; set; } = 0.12f;
     public float BaseMetabolismPerSecond { get; set; } = 0.55f;
     public float MoveEnergyPerSecond { get; set; } = 1.1f;
+    public float SprintSurchargeFraction { get; set; } = 2.5f;
     public float GenomeMaintenanceScale { get; set; } = 0.01f;
     public float TurnEnergyPerSecond { get; set; } = 0.2f;
     public float ReproductionEnergy { get; set; } = 140f;
@@ -70,7 +71,9 @@ public sealed class DemoSettings
     public float SpikeEnergyPerUnit { get; set; } = 0.04f;
     public float SpikeAimHalfAngleRadians { get; set; } = MathF.PI / 3f;
     public float SpikeBeamRadius { get; set; } = 32f;
-    public float SpikeDrainFraction { get; set; } = 0.70f;
+    public float SpikeDamageFraction { get; set; } = 0.50f;
+    public float SpikeKillStealFraction { get; set; } = 0.50f;
+    public float SpikeArmorDamageMultiplier { get; set; } = 0.50f;
     public float SpikeRadius { get; set; } = 48f;
     public float SpikeCooldownSeconds { get; set; } = 1.0f;
 
@@ -168,6 +171,7 @@ public sealed class DemoSettings
         ToxicFoodShare = Math.Clamp(ToxicFoodShare, 0f, 0.95f - ToughFoodShare);
         BaseMetabolismPerSecond = Math.Clamp(BaseMetabolismPerSecond, 0f, 100f);
         MoveEnergyPerSecond = Math.Clamp(MoveEnergyPerSecond, 0f, 100f);
+        SprintSurchargeFraction = Math.Clamp(SprintSurchargeFraction, 0f, 10f);
         GenomeMaintenanceScale = Math.Clamp(GenomeMaintenanceScale, 0f, 1f);
         TurnEnergyPerSecond = Math.Clamp(TurnEnergyPerSecond, 0f, 100f);
         ReproductionEnergy = Math.Clamp(ReproductionEnergy, 1f, 10_000f);
@@ -187,7 +191,9 @@ public sealed class DemoSettings
         SpikeEnergyPerUnit = Math.Clamp(SpikeEnergyPerUnit, 0f, 100f);
         SpikeAimHalfAngleRadians = Math.Clamp(SpikeAimHalfAngleRadians, 0f, MathF.PI);
         SpikeBeamRadius = Math.Clamp(SpikeBeamRadius, 0.1f, 500f);
-        SpikeDrainFraction = Math.Clamp(SpikeDrainFraction, 0f, 1f);
+        SpikeDamageFraction = Math.Clamp(SpikeDamageFraction, 0f, 1f);
+        SpikeKillStealFraction = Math.Clamp(SpikeKillStealFraction, 0f, 1f);
+        SpikeArmorDamageMultiplier = Math.Clamp(SpikeArmorDamageMultiplier, 0f, 1f);
         SpikeRadius = Math.Clamp(SpikeRadius, 1f, 2_000f);
         SpikeCooldownSeconds = Math.Clamp(SpikeCooldownSeconds, 0.05f, 3_600f);
         CollisionIterations = Math.Clamp(CollisionIterations, 1, 20);

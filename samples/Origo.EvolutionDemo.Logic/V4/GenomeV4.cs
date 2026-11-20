@@ -732,6 +732,7 @@ public static class GenomeV4Mutator
             OrganKindV4.Vision, OrganKindV4.SpikeOrgan, OrganKindV4.SpikeBattery,
             OrganKindV4.HardDigest, OrganKindV4.ToxinResistance, OrganKindV4.Rhythm,
             OrganKindV4.CreatureSense, OrganKindV4.CarrionSense, OrganKindV4.Sprint,
+            OrganKindV4.Armor,
         }.Where(GenomeContentGate.IsOrganAllowed).ToArray();
         if (allowed.Length == 0)
             return;
