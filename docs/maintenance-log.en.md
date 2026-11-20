@@ -10,6 +10,24 @@ Repository-facing maintenance changes that do not change user-visible runtime, p
 
 CI workflow shape, local test/coverage gates, package-consumer fixture smoke coverage, shell-API baseline tooling, PowerShell/Bash parity, and developer-suite commands.
 
+- **Evolution Demo genome analysis reports standard cluster statistics** — the
+  genome report now uses the Rousseeuw silhouette (mean distance to the nearest
+  other cluster, singleton rows score 0, documented deterministic systematic
+  sample), a true bootstrap adjusted Rand index, Benjamini-Hochberg correction
+  over the full tested signature set, DBSCAN noise kept as `-1` and excluded
+  from the cluster count, silhouette, and enrichment, and effective organ/trait
+  features (every `OrganKindV4` count zero-filled, every `LifeTraitKindV4`
+  value after the runtime phenotype fallbacks). k-means reports the
+  minimum-inertia solution over the documented restarts, auto-k keeps a
+  documented minimum-cluster-size validity floor (`--min-cluster-size`) and
+  reports every candidate instead of silently discarding it, and PCA reports
+  explained-variance ratios. New `--metrics-json` and `--enrichment-csv`
+  options expose the same numbers for automation and independent FDR auditing,
+  `--allow-skips` makes undecodable-creature handling explicit (the default is
+  to fail), and the timeline CSV adds tick, analyzed-row, and controller-counter
+  columns. A regression test project covers the statistics, CLI failure modes,
+  and feature semantics on generated v7 saves.
+
 - **Evolution Demo analysis reader exposes controller counters and richer
   perf diffs** — `SaveSnapshot` now carries the save's numeric/string controller
   dictionaries (counters, seed, tick) for downstream tooling, and `perf compare`

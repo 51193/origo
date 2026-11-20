@@ -16,93 +16,165 @@ public sealed record EnrichmentResult(
     double PValue,
     double QValue);
 
-/// <summary>Fisher exact tests for gene-signature presence in clusters.</summary>
+/// <summary>
+///     All Fisher/Benjamini-Hochberg results for one cluster: the full tested
+///     signature set (not a display subset), the tested count <c>m</c>, and the
+///     rows sorted by ascending p-value.
+/// </summary>
+public sealed record EnrichmentAnalysis(
+    int Cluster,
+    int TestedCount,
+    IReadOnlyList<EnrichmentResult> Signatures);
+
+/// <summary>
+///     Two-sided Fisher exact tests for gene-signature presence in one cluster
+///     versus the rest of the population, corrected with the Benjamini-Hochberg
+///     step-up over the full tested signature set (signatures supported by at
+///     least <see cref="MinimumSupport" /> rows overall). <c>m</c> is the tested
+///     count, <c>q(i) = min over j &gt;= i of p(j) * m / j</c>, so
+///     <c>q &gt;= p</c> and <c>q &lt;= 1</c>; the report never truncates the
+///     correction to a display cap. Noise rows (label <c>-1</c>) are excluded from
+///     both sides of the test.
+/// </summary>
 public static class GeneEnrichment
 {
-    public static IReadOnlyList<EnrichmentResult> Analyze(
+    /// <summary>A signature is tested only when it occurs in at least this many rows overall.</summary>
+    public const int MinimumSupport = 3;
+
+    /// <summary>Analyzes every tested signature for one cluster against the rest.</summary>
+    /// <exception cref="ArgumentException">Rows and labels have different lengths.</exception>
+    public static EnrichmentAnalysis Analyze(
         IReadOnlyList<FeatureRow> rows,
         int[] labels,
         int cluster)
     {
         ArgumentNullException.ThrowIfNull(rows);
         ArgumentNullException.ThrowIfNull(labels);
-        var clusterIndexes = Enumerable.Range(0, rows.Count).Where(index => labels[index] == cluster).ToArray();
-        var restIndexes = Enumerable.Range(0, rows.Count).Where(index => labels[index] != cluster).ToArray();
-        if (clusterIndexes.Length == 0 || restIndexes.Length == 0)
-            return [];
-        var signatures = rows.SelectMany(static row => row.GeneSignatures)
-            .Distinct(StringComparer.Ordinal)
-            .Select(signature => new
-            {
-                Signature = signature,
-                A = clusterIndexes.Count(index => rows[index].GeneSignatures.Contains(signature)),
-                B = clusterIndexes.Length - clusterIndexes.Count(index => rows[index].GeneSignatures.Contains(signature)),
-                C = restIndexes.Count(index => rows[index].GeneSignatures.Contains(signature)),
-                D = restIndexes.Length - restIndexes.Count(index => rows[index].GeneSignatures.Contains(signature)),
-            })
-            .Where(static item => item.A + item.C >= 3)
-            .Select(item => new
-            {
-                item.Signature,
-                item.A,
-                item.B,
-                item.C,
-                item.D,
-                P = FisherExact(item.A, item.B, item.C, item.D),
-                Odds = ((double)(item.A + 0.5) * (item.D + 0.5)) / ((item.B + 0.5) * (item.C + 0.5)),
-            })
-            .OrderBy(static item => item.P)
-            .ThenByDescending(static item => System.Math.Abs(item.Odds - 1))
-            .Take(40)
-            .ToArray();
-        var results = new List<EnrichmentResult>(signatures.Length);
-        double previousQ = 1;
-        for (var i = 0; i < signatures.Length; i++)
+        if (rows.Count != labels.Length)
+            throw new ArgumentException("A label is required for every row.", nameof(labels));
+        var clusterIndexes = new List<int>();
+        var restIndexes = new List<int>();
+        for (var index = 0; index < rows.Count; index++)
         {
-            var item = signatures[i];
-            var q = System.Math.Min(previousQ, item.P * signatures.Length / (i + 1));
-            previousQ = q;
-            results.Add(new EnrichmentResult(cluster, item.Signature, item.A, clusterIndexes.Length,
-                item.C, restIndexes.Length, item.Odds, item.P, System.Math.Min(1, q)));
+            if (labels[index] < 0)
+                continue;
+            if (labels[index] == cluster)
+                clusterIndexes.Add(index);
+            else
+                restIndexes.Add(index);
         }
 
-        return results;
+        if (clusterIndexes.Count == 0 || restIndexes.Count == 0)
+            return new EnrichmentAnalysis(cluster, 0, []);
+        var support = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var index in clusterIndexes.Concat(restIndexes))
+            foreach (var signature in rows[index].GeneSignatures)
+                support[signature] = support.GetValueOrDefault(signature) + 1;
+        var tested = support
+            .Where(static pair => pair.Value >= MinimumSupport)
+            .Select(static pair => pair.Key)
+            .OrderBy(static signature => signature, StringComparer.Ordinal)
+            .ToArray();
+        var logFactorials = BuildLogFactorials(rows.Count);
+        var results = new List<EnrichmentResult>(tested.Length);
+        foreach (var signature in tested)
+        {
+            var signatureCount = support[signature];
+            var clusterWith = clusterIndexes.Count(index => rows[index].GeneSignatures.Contains(signature));
+            var clusterWithout = clusterIndexes.Count - clusterWith;
+            var restWith = signatureCount - clusterWith;
+            var restWithout = restIndexes.Count - restWith;
+            var pValue = FisherExact(clusterWith, clusterWithout, restWith, restWithout, logFactorials);
+            var oddsRatio = ((clusterWith + 0.5d) * (restWithout + 0.5d))
+                / ((clusterWithout + 0.5d) * (restWith + 0.5d));
+            results.Add(new EnrichmentResult(
+                cluster, signature, clusterWith, clusterIndexes.Count,
+                restWith, restIndexes.Count, oddsRatio, pValue, 1));
+        }
+
+        results.Sort(static (left, right) =>
+        {
+            var byP = left.PValue.CompareTo(right.PValue);
+            return byP != 0 ? byP : string.CompareOrdinal(left.Signature, right.Signature);
+        });
+        var qValues = BenjaminiHochberg([.. results.Select(static result => result.PValue)]);
+        for (var index = 0; index < results.Count; index++)
+            results[index] = results[index] with { QValue = qValues[index] };
+
+        return new EnrichmentAnalysis(cluster, results.Count, results);
     }
 
-    // Two-sided Fisher exact for [a,b;c,d].
-    private static double FisherExact(int a, int b, int c, int d)
+    /// <summary>
+    ///     Benjamini-Hochberg step-up over the sorted p-values: <c>m</c> is the
+    ///     number of tested hypotheses and <c>q(i) = min over j &gt;= i of
+    ///     p(j) * m / j</c>, clamped to <c>[p(i), 1]</c> so <c>q &gt;= p</c>.
+    /// </summary>
+    /// <exception cref="ArgumentException">A p-value is not in [0, 1].</exception>
+    public static IReadOnlyList<double> BenjaminiHochberg(IReadOnlyList<double> pValues)
+    {
+        ArgumentNullException.ThrowIfNull(pValues);
+        var m = pValues.Count;
+        var qValues = new double[m];
+        var running = 1d;
+        for (var index = m - 1; index >= 0; index--)
+        {
+            var pValue = pValues[index];
+            if (!double.IsFinite(pValue) || pValue is < 0 or > 1)
+                throw new ArgumentException(
+                    $"p-value at rank {index + 1} is not in [0, 1]: '{pValue}'.", nameof(pValues));
+            running = System.Math.Min(running, pValue * m / (index + 1d));
+            qValues[index] = System.Math.Min(1d, System.Math.Max(pValue, running));
+        }
+
+        return qValues;
+    }
+
+    /// <summary>Two-sided Fisher exact test for the 2x2 table <c>[a, b; c, d]</c>.</summary>
+    /// <exception cref="ArgumentOutOfRangeException">A cell count is negative.</exception>
+    public static double FisherExact(int a, int b, int c, int d)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(a);
+        ArgumentOutOfRangeException.ThrowIfNegative(b);
+        ArgumentOutOfRangeException.ThrowIfNegative(c);
+        ArgumentOutOfRangeException.ThrowIfNegative(d);
+        return FisherExact(a, b, c, d, BuildLogFactorials(a + b + c + d));
+    }
+
+    private static double[] BuildLogFactorials(int size)
+    {
+        var logFactorials = new double[size + 1];
+        for (var value = 1; value <= size; value++)
+            logFactorials[value] = logFactorials[value - 1] + System.Math.Log(value);
+        return logFactorials;
+    }
+
+    private static double FisherExact(int a, int b, int c, int d, double[] logFactorials)
     {
         var n = a + b + c + d;
         var row1 = a + b;
-        var row2 = c + d;
-        var col1 = a + c;
-        var observed = LogHypergeometric(a, row1, col1, n);
+        var column1 = a + c;
+        if (n == 0)
+            return 1;
+        var observed = LogHypergeometric(a, row1, column1, n, logFactorials);
         var total = 0d;
-        var min = System.Math.Max(0, col1 - row2);
-        var max = System.Math.Min(row1, col1);
+        var min = System.Math.Max(0, column1 - (c + d));
+        var max = System.Math.Min(row1, column1);
         for (var x = min; x <= max; x++)
         {
-            var probability = System.Math.Exp(LogHypergeometric(x, row1, col1, n));
-            if (probability <= System.Math.Exp(observed) * (1 + 1e-9))
-                total += probability;
+            var probability = LogHypergeometric(x, row1, column1, n, logFactorials);
+            if (probability <= observed + 1e-9)
+                total += System.Math.Exp(probability);
         }
 
-        return System.Math.Min(1, total);
+        return System.Math.Min(1d, total);
     }
 
-    private static double LogHypergeometric(int x, int row1, int col1, int n)
-    {
-        static double LogChoose(int n, int k) =>
-            k < 0 || k > n ? double.NegativeInfinity
-            : LogFactorial(n) - LogFactorial(k) - LogFactorial(n - k);
-        return LogChoose(col1, x) + LogChoose(n - col1, row1 - x) - LogChoose(n, row1);
-    }
+    private static double LogHypergeometric(int x, int row1, int column1, int n, double[] logFactorials) =>
+        LogChoose(column1, x, logFactorials)
+        + LogChoose(n - column1, row1 - x, logFactorials)
+        - LogChoose(n, row1, logFactorials);
 
-    private static double LogFactorial(int n)
-    {
-        var result = 0d;
-        for (var i = 2; i <= n; i++)
-            result += System.Math.Log(i);
-        return result;
-    }
+    private static double LogChoose(int n, int k, double[] logFactorials) =>
+        k < 0 || k > n ? double.NegativeInfinity
+        : logFactorials[n] - logFactorials[k] - logFactorials[n - k];
 }
