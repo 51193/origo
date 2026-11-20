@@ -62,6 +62,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Evolution Demo skips collision scratch lists when collision is disabled** —
   the default collision-off path no longer allocates collision body/entity list
   entries every tick; enabled behaviour is unchanged.
+- **Evolution Demo spike hits deal energy damage and armor reduces them** —
+  a spike hit removes `SpikeDamageFraction` (default 0.5) of the target's
+  maximum energy and kills the target when its energy reaches zero; corpse food
+  appears only on a lethal hit. Only a lethal hit transfers
+  `SpikeKillStealFraction` (default 0.5) of the target's remaining energy to the
+  shooter, so repeated non-lethal hits cannot be used to farm energy. The
+  `Armor` organ is now a reachable founder/mutation organ and scales incoming
+  spike damage by `SpikeArmorDamageMultiplier` (default 0.5), giving prey a
+  heritable defense against predation. On the 3600 s benchmark, spike kills
+  fall from 73.0% to 34.3% of deaths, profile-integrated mean lifetime rises
+  from 72 s to 141 s, and population rises from 1,326 to 1,902; armor reaches
+  78.5% of the final population. Tough and toxic food shares are rebalanced to
+  20% and 12% so both digestive specializations have a viable niche.
+- **Evolution Demo digestive organs are a specialization** — a body expresses
+  at most one of `HardDigest` and `ToxinResistance`: when both are active, the
+  larger total gut is expressed and the other is suppressed (equal size prefers
+  hard digest). Digesting both food types at full value now requires a
+  specialization choice instead of accumulating two unconditional upgrades. On
+  the 3600 s benchmark, creatures expressing both digestive organs fall from
+  85.7% to 0%; the final population is 87.1% hard-digest, 4.3% toxin-resistant,
+  and 8.6% neither.
 - **Evolution Demo mutation controls now change mutations** — the body, brain,
   and body-length rates scale the typed V4 operator groups (normalized so every
   roll selects a real operator) and overgrowth descendants get an amplified
@@ -70,10 +91,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   unused frameshift and founder mutation settings are removed from DemoSettings,
   Advanced Settings, and the manual; their generated configs load with the
   remaining values.
-- **Evolution Demo sprint costs energy** — sprint still multiplies distance by
-  1.6x but now adds 0.6x of the driven move cost, so speed is paid per distance
-  instead of being a free universal upgrade. Population stayed viable in the
-  measured runs (300 s 1,073 -> 948, 600 s 1,471 -> 1,473).
+- **Evolution Demo sprint costs energy per distance** — sprint still multiplies
+  distance by 1.6x but now adds a configurable fraction of the driven move cost
+  (`SprintSurchargeFraction`, default 2.5), so the per-distance price of sprint
+  is higher than walking instead of sprint being a free universal upgrade. On
+  the 3600 s benchmark, sprint organ prevalence falls from 98.5% to 35.9% and
+  the cumulative share of sprinting creature-ticks falls from 81.0% to 26.2%;
+  mean tick cost is 24.58 ms at 1,793 mean population versus 22.09 ms at 1,558
+  before the change.
 - **Evolution Demo food-per-second control is labeled uniform-only** — the
   Advanced Settings row and manual now state that per-second spawning applies
   only when the patch count is zero; patch sources keep producing their own food.

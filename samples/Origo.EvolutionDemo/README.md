@@ -23,7 +23,7 @@ A playable idle artificial-life sandbox built on `Origo.Core` and
   multipliers; it runs the same simulation ticks and deferred spawn/kill work as
   the normal pond.
 - The HUD `Spikes` counter is the number of successful directional spike hits;
-  directional hits are lethal, so the parenthesized `K` value tracks kills.
+  a hit deals energy damage, and the parenthesized `K` value tracks lethal hits.
 - Speed 1x/2x/4x/8x; auto-save every 60 seconds while running, and optional
   checkpoint snapshots every N simulated seconds during timed iteration.
 
@@ -100,11 +100,12 @@ The page covers:
 - spike salvo base/per-pellet/distance cost and cooldown per extra pellet;
 - body, brain, and body-length mutation rates (they scale the typed V4
   mutation operator mix), metabolism (including the configurable genome-upkeep
-  share of the V4 energy budget), reproduction, ageing, and the lineage
-  divergence threshold (lineage splits when a child differs in at least N
-  genes);
+  share of the V4 energy budget and the sprint surcharge fraction), reproduction,
+  ageing, and the lineage divergence threshold (lineage splits when a child
+  differs in at least N genes);
 - spike threshold, base cost, cost per world-unit, aim half-angle, beam radius,
-  drain fraction, range, and cooldown;
+  damage fraction, kill steal fraction, armor damage multiplier, range, and
+  cooldown;
 - carcass food interval, feeding amount/cooldown, and related world settings;
 - tough/toxic food shares and their energy values;
 - every food-patch/source parameter: count, radius, falloff, local capacity,
@@ -253,7 +254,7 @@ and compiles, so random search stays in viable phenotype space.
 The detailed architecture and mock benchmark are in
 [`Origo.EvolutionDemo.Logic/V4/README.md`](../Origo.EvolutionDemo.Logic/V4/README.md).
 
-### Food types and digestive niches
+### Food types and digestive specialization
 
 Food sources can produce three food categories: soft, tough, and toxic. All
 bodies can eat every category, but tough food yields full energy only with the
@@ -263,8 +264,16 @@ reduced value, so a new food type cannot starve a population before digestion
 mutations appear. Founder bodies start with a mix of battery, hard-digest, and
 toxin-resistance organs.
 
+A body expresses only one digestive specialization at a time. When both organ
+genes are active, the expressed gut with the larger total organ size keeps its
+full value and the other specialization is suppressed; an equal total prefers
+hard digest. Digesting both food types at full value therefore requires a real
+specialization choice instead of accumulating two unconditional upgrades.
+
 The controller records `evo.foodSoftMeals`, `evo.foodToughMeals`, and
-`evo.foodToxicMeals`, making niche divergence measurable from a save.
+`evo.foodToxicMeals`, so diet composition is measurable from a save. The
+controller counters are intake totals, not evidence that creatures can sense a
+food type; they still eat the first food item in pickup range.
 
 ### Death and carcass nutrients
 
@@ -292,13 +301,19 @@ aim offset:
 aimAngle = bodyHeading + aimDrive * SpikeAimHalfAngle
 ```
 
-Each pellet tests creatures inside a ray/beam, picks the nearest valid target
-not already hit by this salvo, kills it, steals 70% of its current energy into
-the shooter, and spawns the normal death-food amount at the target position.
-The defaults make predation a routine part of the pond rather than a rare
-event: a low `0.05` drive threshold, a wide 32-unit beam, a 1.0 s cooldown, and
-a cheap base cost. The fan count, angle, and per-pellet jitter come from body
-genes. Energy cost is:
+Each pellet tests creatures inside a ray/beam and picks the nearest valid
+target not already hit by this salvo. A hit deals `SpikeDamageFraction`
+(default 0.5) of the target's maximum energy as damage, and the target dies when
+its energy reaches zero. Only a lethal hit transfers `SpikeKillStealFraction`
+(default 0.5) of the target's remaining energy to the shooter; non-lethal hits
+deal damage without feeding the shooter, so repeated hits cannot farm energy.
+Only a lethal hit spawns the normal corpse/death-food amount at the target
+position. The `Armor` organ scales incoming spike damage by
+`SpikeArmorDamageMultiplier` (default 0.5), so an armored body survives more
+hits; armor is available to founders and mutations. The defaults make predation
+a routine part of the pond rather than a rare event: a low `0.05` drive
+threshold, a wide 32-unit beam, a 1.0 s cooldown, and a cheap base cost. The fan
+count, angle, and per-pellet jitter come from body genes. Energy cost is:
 
 ```text
 SpikeBaseCost + SpikePerPelletCost * pelletCount
@@ -368,7 +383,10 @@ metabolism are expensive enough that an orbiting creature that never finds a
 patch will starve, and the 2,500-creature cap remains a safety valve. The
 compiled V4 energy budget (body tissue, neural tissue, and genome complexity) is
 charged as a per-second upkeep; the Advanced Settings "Genome upkeep / budget"
-scale controls it (0 disables the charge).
+scale controls it (0 disables the charge). Sprint applies a 1.6x movement
+multiplier and charges an extra fraction of the driven move cost
+(`SprintSurchargeFraction`, default 2.5), so the sprint option costs more per
+distance than walking instead of being a free speed increase.
 
 ### Adaptive SND food sources
 
@@ -500,4 +518,7 @@ adapters, sensor, appearance, food-patch, collision, diversity, and central
 - Soft collision uses each creature's body radius; it remains off by default.
 - No offline progression; the simulation runs while the game is open.
 - Procedural vector visuals only; no external art/audio assets.
+- Saves written before the digestive specialization rule keep their persisted
+  organ mask: a loaded creature can carry both HardDigest and ToxinResistance,
+  while newly born creatures express at most one digestive specialization.
 - UI text is English.

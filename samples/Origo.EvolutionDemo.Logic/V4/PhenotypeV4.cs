@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Origo.EvolutionDemo.Logic;
 
 namespace Origo.EvolutionDemo.Logic.V4;
 
@@ -113,6 +114,8 @@ public static class GenomeV4Compiler
 
         if (segments.Count == 0)
             throw new InvalidOperationException("Expressed body has no segment.");
+
+        OrganExpressionRules.ApplyDigestiveSpecialization(organs);
 
         var (nodes, edges, sensorNodes, actionNodes) = CompileNeural(active);
         var bodyCost = segments.Count * 1.0f

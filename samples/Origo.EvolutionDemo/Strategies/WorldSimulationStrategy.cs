@@ -524,15 +524,21 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             if (position.LengthSquared() > bodyLimit * bodyLimit)
                 position = NumericsVector2.Normalize(position) * bodyLimit;
 
-            var energy = creature.Energy;
+            // A creature earlier in this tick may already have been hit by a
+            // spike and written its remaining energy back to the entity; the
+            // snapshot energy would otherwise overwrite that damage at commit.
+            var energy = MathF.Max(0f, ReadFloat(entity, DemoKeys.Energy, creature.Energy));
             var age = creature.Age + tickDt;
             var cooldown = Math.Max(0f, creature.ReproCooldown - tickDt);
-            // Sprint multiplies distance by 1.6x while enabled; charge the extra
-            // movement (0.6x the driven move cost) so speed costs energy per
-            // distance instead of being a free win.
-            var sprintSurcharge = sprintDrive > 0.4f
-                ? Tuning.MoveEnergyPerSecond * 0.6f * drive
-                : 0f;
+            // Sprint multiplies distance by 1.6x while enabled; the surcharge
+            // scales with the configured fraction of driven movement cost so the
+            // per-distance price rises with the sprint multiplier instead of
+            // making sprint a free speed increase.
+            var sprintSurcharge = EnergyBudgetMath.SprintSurchargePerSecond(
+                Tuning.MoveEnergyPerSecond,
+                drive,
+                sprintDrive > 0.4f,
+                Tuning.SprintSurchargeFraction);
 
             // The compiled V4 budget (body tissue, neural tissue, genome
             // complexity) is charged as a per-second upkeep so a larger
@@ -608,14 +614,25 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     if (targetIndex < 0)
                         continue;
                     var target = creatures[targetIndex];
-                    var targetEnergy = MathF.Max(0f, target.Energy);
-                    var stolen = targetEnergy * Tuning.SpikeDrainFraction;
-                    energy = MathF.Min(energy + stolen, creature.MaxEnergy);
-                    target.Entity.SetData(DemoKeys.Energy, 0f);
-                    session.RequestKillEntity(target.Entity.Name);
+                    if (target.Entity.IsPendingKill)
+                        continue;
+                    var targetEnergy = MathF.Max(0f, ReadFloat(target.Entity, DemoKeys.Energy, target.Energy));
+                    var damage = SpikeDamageMath.Resolve(
+                        targetEnergy,
+                        target.MaxEnergy,
+                        Tuning.SpikeDamageFraction,
+                        target.Armor,
+                        Tuning.SpikeArmorDamageMultiplier,
+                        Tuning.SpikeKillStealFraction);
+                    energy = MathF.Min(energy + damage.StolenEnergy, creature.MaxEnergy);
+                    target.Entity.SetData(DemoKeys.Energy, damage.RemainingEnergy);
                     spikeHits++;
+                    spikeDrained += damage.StolenEnergy;
+                    if (!damage.Lethal)
+                        continue;
+
+                    session.RequestKillEntity(target.Entity.Name);
                     spikeKills++;
-                    spikeDrained += stolen;
                     entity.SetData(DemoKeys.Kills, ReadInt(entity, DemoKeys.Kills, 0) + 1);
 
                     var corpsePosition = ClampToPond(

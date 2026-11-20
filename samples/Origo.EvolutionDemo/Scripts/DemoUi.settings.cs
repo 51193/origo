@@ -99,6 +99,8 @@ public partial class DemoUi
             s => s.BaseMetabolismPerSecond, (s, v) => s.BaseMetabolismPerSecond = v);
         AddNumberSetting(rows, "Move energy", 0f, 5f, 0.05f,
             s => s.MoveEnergyPerSecond, (s, v) => s.MoveEnergyPerSecond = v);
+        AddNumberSetting(rows, "Sprint surcharge fraction", 0f, 5f, 0.05f,
+            s => s.SprintSurchargeFraction, (s, v) => s.SprintSurchargeFraction = v);
         AddNumberSetting(rows, "Genome upkeep / budget", 0f, 0.2f, 0.005f,
             s => s.GenomeMaintenanceScale, (s, v) => s.GenomeMaintenanceScale = v);
         AddNumberSetting(rows, "Turn energy", 0f, 2f, 0.05f,
@@ -176,8 +178,12 @@ public partial class DemoUi
             (s, v) => s.SpikeAimHalfAngleRadians = v * MathF.PI / 180f);
         AddNumberSetting(rows, "Spike beam radius", 0.1f, 500f, 0.5f,
             s => s.SpikeBeamRadius, (s, v) => s.SpikeBeamRadius = v);
-        AddNumberSetting(rows, "Spike steal fraction", 0f, 1f, 0.05f,
-            s => s.SpikeDrainFraction, (s, v) => s.SpikeDrainFraction = v);
+        AddNumberSetting(rows, "Spike damage fraction", 0f, 1f, 0.05f,
+            s => s.SpikeDamageFraction, (s, v) => s.SpikeDamageFraction = v);
+        AddNumberSetting(rows, "Spike kill steal fraction", 0f, 1f, 0.05f,
+            s => s.SpikeKillStealFraction, (s, v) => s.SpikeKillStealFraction = v);
+        AddNumberSetting(rows, "Armor damage multiplier", 0f, 1f, 0.05f,
+            s => s.SpikeArmorDamageMultiplier, (s, v) => s.SpikeArmorDamageMultiplier = v);
         AddNumberSetting(rows, "Spike radius", 10f, 300f, 5f,
             s => s.SpikeRadius, (s, v) => s.SpikeRadius = v);
         AddNumberSetting(rows, "Spike cooldown", 0.5f, 30f, 0.5f,

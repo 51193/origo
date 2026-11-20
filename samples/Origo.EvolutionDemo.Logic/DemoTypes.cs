@@ -54,5 +54,8 @@ public readonly record struct BodyPhenotype(
     /// <summary>True when the body contains the sprint organ.</summary>
     public bool SprintOrgan => HasOrgan(DemoOrganMaskV4.Sprint);
 
+    /// <summary>True when the body contains the armor organ.</summary>
+    public bool ArmorOrgan => HasOrgan(DemoOrganMaskV4.Armor);
+
     private bool HasOrgan(DemoOrganMaskV4 organ) => (OrganMask & (int)organ) != 0;
 }

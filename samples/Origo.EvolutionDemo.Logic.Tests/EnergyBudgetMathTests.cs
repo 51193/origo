@@ -29,4 +29,23 @@ public sealed class EnergyBudgetMathTests
         Assert.Throws<ArgumentOutOfRangeException>(() => EnergyBudgetMath.UpkeepPerSecond(10f, -0.01f));
         Assert.Throws<ArgumentOutOfRangeException>(() => EnergyBudgetMath.UpkeepPerSecond(10f, float.PositiveInfinity));
     }
+
+    [Fact]
+    public void SprintSurcharge_UsesConfiguredFractionOnlyWhileSprinting()
+    {
+        Assert.Equal(0.66f, EnergyBudgetMath.SprintSurchargePerSecond(1.1f, 0.5f, true, 1.2f), 5);
+        Assert.Equal(0f, EnergyBudgetMath.SprintSurchargePerSecond(1.1f, 0.5f, false, 1.2f), 5);
+        Assert.Equal(0f, EnergyBudgetMath.SprintSurchargePerSecond(1.1f, 0f, true, 1.2f), 5);
+    }
+
+    [Fact]
+    public void SprintSurcharge_RejectsInvalidInputs()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => EnergyBudgetMath.SprintSurchargePerSecond(-1f, 0.5f, true, 1.2f));
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => EnergyBudgetMath.SprintSurchargePerSecond(1.1f, float.NaN, true, 1.2f));
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => EnergyBudgetMath.SprintSurchargePerSecond(1.1f, 0.5f, true, -0.1f));
+    }
 }

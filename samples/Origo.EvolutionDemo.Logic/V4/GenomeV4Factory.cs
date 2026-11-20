@@ -211,6 +211,7 @@ public static class GenomeV4Factory
         AddOrganIfAllowed(OrganKindV4.CreatureSense, 0.5f, 0.5d);
         AddOrganIfAllowed(OrganKindV4.CarrionSense, 0.5f, 0.5d);
         AddOrganIfAllowed(OrganKindV4.Sprint, 0.5f, 0.5d);
+        AddOrganIfAllowed(OrganKindV4.Armor, 0.8f, 0.25d);
 
         var sensorIds = new List<uint>();
         void AddSensorIfAllowed(SensorKindV4 sensor)

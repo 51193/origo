@@ -19,12 +19,11 @@ public sealed class MutationProfileTests
             + settings.AddOrgan + settings.AddRegulation + settings.AddSegment;
         Assert.InRange(total, 0.999, 1.0000001);
         Assert.All(
-            new[]
-            {
+            [
                 settings.Expression, settings.CopyCount, settings.Duplicate, settings.Delete,
                 settings.Payload, settings.AddNeuron, settings.AddSynapse, settings.AddReflex,
                 settings.AddOrgan, settings.AddRegulation, settings.AddSegment,
-            },
+            ],
             weight => Assert.True(weight > 0d));
     }
 

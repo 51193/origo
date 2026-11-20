@@ -2,10 +2,10 @@
 
     <!--
         Regression suite for the local, Godot-free Evolution Demo analysis tool.
-        Like the other samples projects (including Origo.EvolutionDemo.Logic.Tests)
-        it is intentionally outside Origo.sln and therefore CI-exempt: sample
-        tooling is run explicitly by maintainers with the commands documented in
-        samples/Origo.EvolutionDemo.Analysis/README.md.
+        This project and Origo.EvolutionDemo.Logic.Tests are part of Origo.sln
+        and the normal format/test gates; the direct commands documented in
+        samples/Origo.EvolutionDemo.Analysis/README.md remain available for
+        focused local runs.
     -->
     <PropertyGroup>
         <OutputType>Exe</OutputType>

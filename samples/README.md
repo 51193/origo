@@ -93,6 +93,6 @@ gates; run them directly with:
 ./dotnet test samples/Origo.EvolutionDemo.Logic.Tests/Origo.EvolutionDemo.Logic.Tests.csproj
 ```
 
-The pure genome/neural-network/sensor layer has no Godot dependency. Its test
-project runs through the command above; it is not part of the root solution
-test gate.
+The pure genome/neural-network/sensor layer has no Godot dependency. The logic
+regression suite is part of the root solution and the normal format/test gates,
+alongside the analysis tool suite.

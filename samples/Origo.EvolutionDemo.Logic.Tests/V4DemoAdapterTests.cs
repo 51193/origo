@@ -23,6 +23,19 @@ public sealed class V4DemoAdapterTests
     }
 
     [Fact]
+    public void DemoFounders_CanExpressArmor()
+    {
+        var found = false;
+        for (var seed = 0; seed < 100 && !found; seed++)
+        {
+            var body = DemoPhenotypeAdapter.ToBodyPhenotype(GenomeV4Factory.CreateDemoFounder(new Random(seed)));
+            found = body.ArmorOrgan;
+        }
+
+        Assert.True(found, "Armor must be a reachable founder organ under the default content gate.");
+    }
+
+    [Fact]
     public void Adapter_RoundTripsThroughCodec()
     {
         var genome = GenomeV4Factory.CreateDemoFounder(new Random(42));
