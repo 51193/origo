@@ -201,11 +201,11 @@ public sealed class V4SensorRuntimeTests
         };
         DemoSensorRuntime.ComputeInto(phenotype, context, sensors);
         var hardValue = sensors[(int)SensorKindV4.FoodValueAhead];
-        Assert.Equal(25f / 32f * 0.75f, hardValue, 5);
+        Assert.Equal(25f / 26f * 0.75f, hardValue, 5);
         context = context with { HardDigest = false };
         var generalist = new float[64];
         DemoSensorRuntime.ComputeInto(phenotype, context, generalist);
-        Assert.Equal(18f / 32f * 0.75f, generalist[(int)SensorKindV4.FoodValueAhead], 5);
+        Assert.Equal(18f / 26f * 0.75f, generalist[(int)SensorKindV4.FoodValueAhead], 5);
         Assert.True(hardValue > generalist[(int)SensorKindV4.FoodValueAhead]);
     }
 

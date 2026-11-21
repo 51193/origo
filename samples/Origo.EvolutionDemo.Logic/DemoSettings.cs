@@ -44,7 +44,7 @@ public sealed class DemoSettings
     public float InitialEnergy { get; set; } = 78f;
     public float FoodEnergy { get; set; } = 18f;
     public float ToughFoodEnergy { get; set; } = 25f;
-    public float ToxicFoodEnergy { get; set; } = 32f;
+    public float ToxicFoodEnergy { get; set; } = 26f;
     public float ToughFoodShare { get; set; } = 0.40f;
     public float ToxicFoodShare { get; set; } = 0.40f;
     public float BaseMetabolismPerSecond { get; set; } = 0.55f;
@@ -77,7 +77,7 @@ public sealed class DemoSettings
     public float SpikeKillStealFraction { get; set; } = 0.50f;
     public float SpikeArmorDamageMultiplier { get; set; } = 0.40f;
     public float SpikeRadius { get; set; } = 48f;
-    public float SpikeCooldownSeconds { get; set; } = 1.0f;
+    public float SpikeCooldownSeconds { get; set; } = 1.5f;
 
     // Collision / bloom / feeding.
     public bool CollisionEnabled { get; set; }

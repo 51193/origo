@@ -298,10 +298,8 @@ Tough and toxic food each supply 40% of new food-source spawns (soft 20%);
 startup, corpse, and manual-feed food stay soft. This lets specialists find
 their preferred diet; the gutless founder cohort is small and selection
 favours the sensory organ in the tested runs. The organ has the normal organ
-upkeep cost and is carried by a minority of founders. It is currently
-founder-only: the general organ mutation operator does not yet add it, so it
-can be inherited and selected but not spontaneously created in a run without
-carriers.
+upkeep cost and is carried by a minority of founders; the organ mutation
+operator can also create it, so a lineage without carriers can evolve it.
 
 ### Death and carcass nutrients
 
@@ -342,7 +340,7 @@ hits; armor is available to founders and mutations. Armor is a mobility
 trade-off: an armored body moves and turns at `ArmorSpeedMultiplier` (default
 0.9) of its expressed speed. The defaults make predation
 a routine part of the pond rather than a rare event: a low `0.05` drive
-threshold, a wide 32-unit beam, a 1.0 s cooldown, and a cheap base cost. The fan
+threshold, a wide 32-unit beam, a 1.5 s cooldown, and a cheap base cost. The fan
 count, angle, and per-pellet jitter come from body genes. Energy cost is:
 
 ```text

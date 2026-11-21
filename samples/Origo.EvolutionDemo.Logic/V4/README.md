@@ -23,6 +23,7 @@ the demo runtime is migrated.
   contribute maintenance cost. A reflex-only brain is cheap; a large graph brain
   costs more.
 - **Transactional mutation** — a mutation is accepted only if the resulting
+  phenotype's expressed sensor/action ports also pass the content gate; the
   genome validates and compiles; otherwise the parent is returned. This keeps
   random evolutionary search in viable-phenotype space.
 
