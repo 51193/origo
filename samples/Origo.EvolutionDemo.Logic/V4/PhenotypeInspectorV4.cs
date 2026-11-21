@@ -78,3 +78,29 @@ public static class PhenotypeInspectorV4
             phenotype.Energy.MaintenancePerSecond);
     }
 }
+
+/// <summary>Formats expressed sensor values with their stable interface labels.</summary>
+public static class SensorDisplayV4
+{
+    /// <summary>
+    ///     Formats only the expressed ports, using the registry label and the
+    ///     value addressed by the stable sensor-interface id.
+    /// </summary>
+    public static string Format(IReadOnlyList<ushort> ports, ReadOnlySpan<float> values)
+    {
+        ArgumentNullException.ThrowIfNull(ports);
+        var parts = new string[ports.Count];
+        for (var index = 0; index < ports.Count; index++)
+        {
+            var port = ports[index];
+            var label = InterfaceRegistryV4.SensorDefinitions.TryGetValue(port, out var definition)
+                ? definition.DisplayName
+                : port.ToString(CultureInfo.InvariantCulture);
+            parts[index] = string.Create(
+                CultureInfo.InvariantCulture,
+                $"{label} {(port < values.Length ? values[port] : 0f):0.00}");
+        }
+
+        return string.Join("  ", parts);
+    }
+}

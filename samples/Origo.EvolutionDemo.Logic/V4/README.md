@@ -1,8 +1,7 @@
-# Genome v4 prototype
+# Genome v4
 
-Genome v4 is the clean architectural replacement for the fixed body-codon and
-372-hex neural genomes. It is implemented and benchmarked independently before
-the demo runtime is migrated.
+Genome v4 is the runtime genome of the Evolution Demo. It replaces the fixed
+body-codon and 372-hex neural genomes with a stable-ID gene graph.
 
 ## Structure
 
@@ -43,7 +42,7 @@ Measured results:
 | simple reflex | 3 | 2 | 1 | 1 | 2.461 | 91 |
 | graph, 32 hidden | 131 | 34 | 95 | 1 | 10.337 | 3927 |
 | large body, 512 organs | 17 | 0 | 0 | 512 | 321.5 | 439 |
-| large logic brain, 32 redundant | 40 | 36 | 3 | 0 | 7.070 | 1104 |
+| large logic brain, 32 redundant | 41 | 36 | 3 | 1 | 7.697 | 1129 |
 
 Non-linear AND task:
 
@@ -56,9 +55,9 @@ Mock energy economy (18 energy per correct decision, 3600 s):
 
 | opportunities/s | reflex net/s | large-brain net/s |
 |---:|---:|---:|
-| 0.2 | -0.028 | -0.028 |
-| 0.5 | 2.604 | 2.085 |
-| 1.0 | 7.039 | 10.930 |
+| 0.2 | -0.028 | -0.030 |
+| 0.5 | 1.977 | 1.458 |
+| 1.0 | 6.412 | 10.303 |
 
 So the cheap reflex wins at medium opportunity rates, while the large brain
 wins in the rich environment; both are slightly negative at the lowest rate.
@@ -66,13 +65,17 @@ wins in the rich environment; both are slightly negative at the lowest rate.
 Regulatory test: the conditional battery genome expresses 1 battery organ when
 food is low and 0 when food is high.
 
-Mutation test: 2000 sequential mutations produced genomes up to 739 genes,
+Mutation test: 2000 sequential mutations produced genomes up to 766 genes,
 242 neuron genes, and 106 organ copies; all 2000 mutated genomes compiled after
-transactional acceptance.
+transactional acceptance (21966-byte codec payload).
 
 ## Status
 
-This is a **validated prototype**, not yet wired into the playable demo. The
-migration step must replace `BodyGenome` / `NeuralGenome` and their fixed
-phenotype/sensor interfaces with the V4 graphs, then delete the old genome code
-and update the inspector/save version.
+Implemented and wired into the playable demo. `CreatureGenome` owns a
+`GenomeV4`; the legacy `BodyGenome` / `NeuralGenome` implementations have been
+removed, and the demo save schema is version 7.
+
+Regulatory conditions are a compiler/tooling capability: the playable runtime
+compiles with a neutral expression context, so regulation does not yet react to
+live food, predator, or energy changes. The standalone compiler tests and the
+mock benchmark exercise non-neutral contexts.

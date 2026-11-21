@@ -45,7 +45,7 @@ public static class DemoSensorRuntime
 
     static DemoSensorRuntime()
     {
-        Register(SensorKindV4.WallAhead, static context => WallProximity(context, Tuning.PondRadius));
+        Register(SensorKindV4.WallAhead, static context => WallProximity(context, context.ArenaRadius));
         Register(SensorKindV4.Energy, static context =>
             Math.Clamp(context.Energy / MathF.Max(1f, context.MaxEnergy), 0f, 1f));
         Register(SensorKindV4.FoodAhead, static context =>

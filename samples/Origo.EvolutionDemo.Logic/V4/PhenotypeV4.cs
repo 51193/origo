@@ -116,8 +116,9 @@ public static class GenomeV4Compiler
             throw new InvalidOperationException("Expressed body has no segment.");
 
         OrganExpressionRules.ApplyDigestiveSpecialization(organs);
-
-        var (nodes, edges, sensorNodes, actionNodes) = CompileNeural(active);
+        var sensorPorts = OrganInterfaceRegistryV4.BuildSensorPorts(organs);
+        var actionPorts = OrganInterfaceRegistryV4.BuildActionPorts(organs);
+        var (nodes, edges, sensorNodes, actionNodes) = CompileNeural(active, sensorPorts, actionPorts);
         var bodyCost = segments.Count * 1.0f
             + organs.Sum(static organ => 0.25f + (0.75f * MathF.Max(0.1f, organ.Size)));
         var brainCost = (nodes.Count * 0.15f) + (edges.Count * 0.03f);
@@ -126,8 +127,6 @@ public static class GenomeV4Compiler
         var body = new BodyPlanV4(segments, organs, traits);
         var brain = new NeuralGraphV4(nodes, edges);
         var energy = new EnergyBudgetV4(bodyCost, brainCost, genomeCost, maintenance);
-        var sensorPorts = OrganInterfaceRegistryV4.BuildSensorPorts(organs);
-        var actionPorts = OrganInterfaceRegistryV4.BuildActionPorts(organs);
         _ = sensorNodes;
         _ = actionNodes;
         return new PhenotypeV4(genome, body, brain, energy, sensorPorts, actionPorts);
@@ -138,8 +137,12 @@ public static class GenomeV4Compiler
         List<NeuralEdgeV4> Edges,
         Dictionary<SensorKindV4, ulong> SensorNodes,
         Dictionary<ActionKindV4, ulong> ActionNodes) CompileNeural(
-        IReadOnlyList<GeneV4> active)
+        IReadOnlyList<GeneV4> active,
+        IReadOnlyList<ushort> sensorPorts,
+        IReadOnlyList<ushort> actionPorts)
     {
+        var allowedSensors = sensorPorts.ToHashSet();
+        var allowedActions = actionPorts.ToHashSet();
         var nodes = new Dictionary<ulong, NeuralNodeV4>();
         var edges = new Dictionary<(ulong From, ulong To), float>();
         var sensorNodes = new Dictionary<SensorKindV4, ulong>();
@@ -185,6 +188,10 @@ public static class GenomeV4Compiler
             if (nodes.Count >= MaxExpressedNeurons)
                 throw new InvalidOperationException("Expressed neural graph exceeds the safety cap.");
             var (neuronKind, interfaceId, activation, bias) = GenePayloadV4.ReadNeuron(gene.Payload);
+            if (neuronKind == NeuronKindV4.Sensor && !allowedSensors.Contains(interfaceId))
+                continue;
+            if (neuronKind == NeuronKindV4.Output && !allowedActions.Contains(interfaceId))
+                continue;
             var nodeId = neuronKind switch
             {
                 NeuronKindV4.Sensor => SensorNode(interfaceId is > 0
@@ -221,6 +228,8 @@ public static class GenomeV4Compiler
             if (gene.Kind == GeneKind.Reflex)
             {
                 var (sensor, action, gain) = GenePayloadV4.ReadReflex(gene.Payload);
+                if (!allowedSensors.Contains((ushort)sensor) || !allowedActions.Contains((ushort)action))
+                    continue;
                 AddEdge(SensorNode(sensor), ActionNode(action), gain);
                 continue;
             }
@@ -230,9 +239,12 @@ public static class GenomeV4Compiler
             if (edges.Count >= MaxExpressedSynapses)
                 throw new InvalidOperationException("Expressed neural graph exceeds the safety cap.");
             var (fromGeneId, toGeneId, weight) = GenePayloadV4.ReadSynapse(gene.Payload);
+            // Sensors and actions that are not exposed by an organ are latent
+            // genome wiring: keep them in the genome but do not build a dead
+            // graph node. Their synapses are ignored until the organ is expressed.
             if (!nodeByGene.TryGetValue(fromGeneId, out var from)
                 || !nodeByGene.TryGetValue(toGeneId, out var to))
-                throw new InvalidDataException("Synapse references an unexpressed neuron.");
+                continue;
             AddEdge(from, to, weight);
         }
 

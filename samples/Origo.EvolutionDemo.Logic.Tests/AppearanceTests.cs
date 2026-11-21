@@ -93,3 +93,24 @@ public sealed class AppearanceTests
         Assert.InRange(color.B, 0f, 1f);
     }
 }
+
+public sealed class GenomeDiversityLengthTests
+{
+    [Fact]
+    public void Analyze_IdenticalShortGenomes_AreNotInflatedByLongerMember()
+    {
+        var metrics = GenomeDiversity.Analyze(["AB", "AB", "ABCDEFG"]);
+
+        Assert.Equal((5d / 7d + 5d / 7d) / 3d, metrics.MeanPairwiseDistance, 6);
+    }
+}
+
+public sealed class StoredAppearanceTests
+{
+    [Fact]
+    public void DeriveStored_Base64MatchesCanonicalHex()
+    {
+        var genome = CreatureGenome.RandomFounder(new Random(23));
+        Assert.Equal(GenomeAppearance.Derive(genome.Body), GenomeAppearance.DeriveStored(genome.SerializedBody));
+    }
+}
