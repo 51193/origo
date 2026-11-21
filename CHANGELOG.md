@@ -104,6 +104,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   0.835 before the change. Population settles at 1,512 from 1,902, predation
   kills rise from 34.3% to 37.5% of deaths, and mean tick cost falls from
   24.58 ms to 18.25 ms at the smaller population.
+- **Evolution Demo caches static creature snapshot fields and pre-filters
+  spike target queries** — snapshot capture now reads each creature's static
+  phenotype fields once into a weak cache and only refreshes position, energy,
+  age, and cooldowns each tick; AI reuses the cached genome and sense range.
+  Spike-target grid queries are skipped when the spike output is below the
+  action threshold, where the action could not fire. In a paired 3600 s run
+  (same seed, back-to-back) actual wall clock falls from 900.7 s to 683.7 s,
+  mean tick from 19.60 ms to 14.20 ms, the snapshot phase from 4.24 ms to
+  2.63 ms, and the spike-target phase from 2.52 ms to 0.004 ms. All 11
+  benchmark checkpoints and the final save are content-identical after
+  excluding the wall-clock `evo.realSeconds` field; allocation is unchanged
+  at about 1.1 MiB per tick and remains a separate target.
 - **Evolution Demo food-per-second control is labeled uniform-only** — the
   Advanced Settings row and manual now state that per-second spawning applies
   only when the patch count is zero; patch sources keep producing their own food.

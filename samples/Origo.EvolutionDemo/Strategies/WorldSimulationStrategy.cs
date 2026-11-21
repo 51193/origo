@@ -363,7 +363,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             var aiAllocStart = profiler.Enabled ? GC.GetAllocatedBytesForCurrentThread() : 0L;
             if (updateAi)
             {
-                bodyGenome = ReadString(entity, DemoKeys.BodyGenome, string.Empty);
+                bodyGenome = creature.BodyGenome;
 
                 // One decode/compile per genome string: GetBrainPhenotype caches
                 // the compiled graph and re-uses the entity's serialized genome.
@@ -380,7 +380,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
 
                 brainPhenotype = phenotype;
                 hasSpikePort = phenotypeHasSpikePort;
-                var senseRange = ReadFloat(entity, DemoKeys.SenseRange, Tuning.SenseRange);
+                var senseRange = creature.SenseRange;
                 var sensorStart = profiler.Enabled ? GC.GetAllocatedBytesForCurrentThread() : 0L;
                 var sensorTick = profiler.Enabled ? System.Diagnostics.Stopwatch.GetTimestamp() : 0L;
                 // Sensor cones use this creature's expressed sense range, which
@@ -440,8 +440,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             }
             if (brainPhenotype is null)
             {
-                var (cachedPhenotype, _, cachedHasSpikePort) = GetBrainPhenotype(
-                    ReadString(entity, DemoKeys.BodyGenome, string.Empty));
+                var (cachedPhenotype, _, cachedHasSpikePort) = GetBrainPhenotype(creature.BodyGenome);
                 brainPhenotype = cachedPhenotype;
                 hasSpikePort = cachedHasSpikePort;
             }
@@ -476,7 +475,12 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             // the grid query returns every creature in the covering cells. Skip
             // the walk while the spike is cooling down and pre-filter candidates
             // the beam can never reach.
-            if (hasSpikePort && creature.SpikeCooldown <= tickDt)
+            // Exact complement of the action effect's early-out, including
+            // non-finite values: a NaN spikeDrive would still reach the effect
+            // and consume its plan, so the query must not be skipped here.
+            if (hasSpikePort
+                && creature.SpikeCooldown <= tickDt
+                && !(spikeDrive < Tuning.SpikeThreshold))
             {
                 // A target can sit slightly beyond SpikeRange but still be hit
                 // near the beam edge: query the outer hit radius so the
@@ -682,7 +686,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             {
                 if (bodyGenome.Length == 0)
                 {
-                    bodyGenome = ReadString(entity, DemoKeys.BodyGenome, string.Empty);
+                    bodyGenome = creature.BodyGenome;
                 }
 
                 if (!CreatureGenome.TryDecode(bodyGenome, out var decodedParent))
