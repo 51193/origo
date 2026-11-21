@@ -623,11 +623,23 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 session.RequestKillEntity(foods[bestFoodIndex].Entity.Name);
                 energy = MathF.Min(energy + bestFoodEnergy, creature.MaxEnergy);
                 if (foodType == FoodType.Tough)
+                {
                     toughMeals++;
+                    entity.SetData(DemoKeys.CreatureToughMeals,
+                        ReadInt(entity, DemoKeys.CreatureToughMeals, 0) + 1);
+                }
                 else if (foodType == FoodType.Toxic)
+                {
                     toxicMeals++;
+                    entity.SetData(DemoKeys.CreatureToxicMeals,
+                        ReadInt(entity, DemoKeys.CreatureToxicMeals, 0) + 1);
+                }
                 else
+                {
                     softMeals++;
+                    entity.SetData(DemoKeys.CreatureSoftMeals,
+                        ReadInt(entity, DemoKeys.CreatureSoftMeals, 0) + 1);
+                }
                 ate = true;
             }
 

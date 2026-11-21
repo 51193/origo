@@ -10,6 +10,12 @@ Repository-facing maintenance changes that do not change user-visible runtime, p
 
 CI workflow shape, local test/coverage gates, package-consumer fixture smoke coverage, shell-API baseline tooling, PowerShell/Bash parity, and developer-suite commands.
 
+- **Evolution Demo genome analysis exposes per-creature diet** — the save reader accepts the new additive
+  `evo.creatureSoftMeals`/`toughMeals`/`toxicMeals` counters (older saves default to zero), feature extraction
+  adds `behavior.*Meals` and `diet.*` shares/dominance/entropy, and the HTML report's cluster behavior profile
+  and metric definitions include the diet features. The analysis suite covers the formulas and old-save
+  fallback; a real 300 s save validates the reader/report path.
+
 - **Evolution Demo genome analysis reports standard cluster statistics** — the
   genome report now uses the Rousseeuw silhouette (mean distance to the nearest
   other cluster, singleton rows score 0, documented deterministic systematic
