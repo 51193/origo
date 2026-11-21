@@ -50,6 +50,8 @@ internal static class DemoKeys
     public const string CorpseTimer = "corpse.timer";
     public const string CorpseInterval = "corpse.interval";
     public const string MaxGeneration = "evo.maxGeneration";
+    public const string Births = "evo.births";
+    public const string GameplayMode = "game.mode";
     public const string FeedRequest = "evo.feedRequest";
 
     public const string BodyGenome = "evo.bodyGenome";
@@ -102,6 +104,8 @@ internal static class DemoKeys
     public const string CollisionEnabled = "world.collisionEnabled";
     public const string BloomEnabled = "world.bloomEnabled";
     public const string FoodPatchCount = "world.foodPatchCount";
+    public const string PendingSourceSpawns = "world.pendingSourceSpawns";
+    public const string NextSourceIndex = "world.nextSourceIndex";
     public const string PatchIndex = "source.patchIndex";
     public const string PatchCount = "source.patchCount";
     public const string NextScanAt = "source.nextScanAt";

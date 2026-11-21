@@ -21,6 +21,7 @@ internal static class GameplayStateSync
         controller.SetData(DemoKeys.GameplayMilestones,
             string.Join(';', runtime.Progression.CompletedMilestones.OrderBy(static id => id, StringComparer.Ordinal)));
         controller.SetData(DemoKeys.GameplayLifetimeSeconds, (float)runtime.Progression.LifetimeSeconds);
+        controller.SetData(DemoKeys.GameplayMode, (int)runtime.Progression.Mode);
         GameplayProfileStore.Save(runtime.Progression);
     }
 }

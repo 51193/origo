@@ -26,6 +26,7 @@ public partial class UnlockOverlay : CanvasLayer
     private Label _pointsLabel = null!;
     private VBoxContainer _rows = null!;
     private string _contentFingerprint = string.Empty;
+    private readonly HashSet<string> _knownMilestones = new(StringComparer.Ordinal);
 
     public UnlockOverlay(DemoEntry entry)
     {
@@ -113,13 +114,30 @@ public partial class UnlockOverlay : CanvasLayer
         var close = new Button { Text = "Close (Esc)" };
         close.Pressed += Close;
         column.AddChild(close);
+        foreach (var milestone in _entry.Session.Runtime.Progression.CompletedMilestones)
+            _knownMilestones.Add(milestone);
     }
 
     public override void _Process(double delta)
     {
+        var runtime = _entry.Session.Runtime;
+        if (!_panel.Visible)
+            _openButton.Text = $"Unlocks (U) · {runtime.Progression.Points:N0} EP";
+        var completed = runtime.Progression.CompletedMilestones;
+        foreach (var milestone in completed)
+        {
+            if (_knownMilestones.Add(milestone))
+                _entry.Ui.ShowToast($"Milestone {MilestoneName(milestone)} complete");
+        }
+
         if (_panel.Visible)
             Refresh();
     }
+
+    private static string MilestoneName(string id) =>
+        id.StartsWith("milestone.", StringComparison.Ordinal)
+            ? id["milestone.".Length..].Replace('_', ' ')
+            : id;
 
     public override void _Input(InputEvent @event)
     {
@@ -158,9 +176,13 @@ public partial class UnlockOverlay : CanvasLayer
     private void Refresh()
     {
         var runtime = _entry.Session.Runtime;
-        _pointsLabel.Text = string.Create(
-            CultureInfo.InvariantCulture,
-            $"Evolution points: {runtime.Progression.Points:N0}");
+        var next = runtime.Content.Milestones.Values
+            .FirstOrDefault(milestone => !runtime.Progression.CompletedMilestones.Contains(milestone.Id));
+        _pointsLabel.Text = next is null
+            ? string.Create(CultureInfo.InvariantCulture,
+                $"Evolution points: {runtime.Progression.Points:N0}")
+            : string.Create(CultureInfo.InvariantCulture,
+                $"Evolution points: {runtime.Progression.Points:N0} · next: {MilestoneName(next.Id)}");
         var fingerprint = string.Join('|',
             runtime.Content.Unlocks.Values
                 .OrderBy(static unlock => unlock.Id, StringComparer.Ordinal)
@@ -182,6 +204,8 @@ public partial class UnlockOverlay : CanvasLayer
         }
 
         foreach (var unlock in runtime.Content.Unlocks.Values
+                     .Where(unlock => runtime.Unlocks.IsUnlocked(unlock.Id)
+                         || unlock.Prerequisites.All(runtime.Unlocks.IsUnlocked))
                      .OrderBy(static unlock => unlock.Category, StringComparer.Ordinal)
                      .ThenBy(static unlock => unlock.Title, StringComparer.Ordinal))
             _rows.AddChild(BuildRow(runtime, unlock));
@@ -212,15 +236,19 @@ public partial class UnlockOverlay : CanvasLayer
         };
         button.Pressed += () =>
         {
-            if (!runtime.Unlocks.TryUnlock(unlock.Id))
+            if (!runtime.TryUnlock(unlock.Id))
             {
                 _entry.Ui.ShowToast("Unlock requirements are no longer met.", true);
                 return;
             }
+            _entry.Ui.RefreshCampaignWorld();
             _entry.Ui.PersistGameplayProgression();
+            var seeded = CampaignProgressionRules.InnovationOrganMask(unlock.Id) is not null;
             _contentFingerprint = string.Empty;
             Refresh();
-            _entry.Ui.ShowToast($"Unlocked {unlock.Title}");
+            _entry.Ui.ShowToast(seeded
+                ? $"Unlocked {unlock.Title}; innovators seeded"
+                : $"Unlocked {unlock.Title}");
         };
         row.AddChild(button);
         return row;

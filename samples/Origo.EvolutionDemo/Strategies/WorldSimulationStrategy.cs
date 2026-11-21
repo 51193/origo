@@ -116,6 +116,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             entity.SetData(DemoKeys.Phase, DemoKeys.PhaseMenu);
         if (!entity.TryGetData<int>(DemoKeys.Seed).found)
             entity.SetData(DemoKeys.Seed, Random.Shared.Next(1, int.MaxValue));
+        if (!entity.TryGetData<int>(DemoKeys.GameplayMode).found)
+            entity.SetData(DemoKeys.GameplayMode, (int)GameplayMode.Sandbox);
         if (!entity.TryGetData<float>(DemoKeys.MutationRate).found)
             entity.SetData(DemoKeys.MutationRate, (float)Tuning.DefaultMutationRate);
         if (!entity.TryGetData<int>(DemoKeys.FoodPreset).found)
@@ -144,6 +146,14 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             entity.SetData(DemoKeys.NextCorpseId, 1);
         if (!entity.TryGetData<int>(DemoKeys.CorpsesCreated).found)
             entity.SetData(DemoKeys.CorpsesCreated, 0);
+        if (!entity.TryGetData<int>(DemoKeys.Births).found)
+            entity.SetData(DemoKeys.Births, 0);
+        if (!entity.TryGetData<int>(DemoKeys.FoodPatchCount).found)
+            entity.SetData(DemoKeys.FoodPatchCount, Tuning.FoodPatchCount);
+        if (!entity.TryGetData<int>(DemoKeys.NextSourceIndex).found)
+            entity.SetData(DemoKeys.NextSourceIndex, Tuning.FoodPatchCount);
+        if (!entity.TryGetData<int>(DemoKeys.PendingSourceSpawns).found)
+            entity.SetData(DemoKeys.PendingSourceSpawns, 0);
         if (!entity.TryGetData<int>(DemoKeys.CarrionFoodReleased).found)
             entity.SetData(DemoKeys.CarrionFoodReleased, 0);
         if (!entity.TryGetData<int>(DemoKeys.CorpseMeals).found)
@@ -235,6 +245,9 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
 
         for (var patch = 0; patch < patchCount; patch++)
             metas.Add(CreateFoodSourceMeta(SourceName(patch), patch, patchCount, seed));
+        controller.SetData(DemoKeys.FoodPatchCount, patchCount);
+        controller.SetData(DemoKeys.NextSourceIndex, patchCount);
+        controller.SetData(DemoKeys.PendingSourceSpawns, 0);
 
         controller.SetData(DemoKeys.Initialized, true);
         controller.SetData(DemoKeys.NextCreatureId, nextCreature);
@@ -255,6 +268,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         controller.SetData(DemoKeys.CorpsesCreated, 0);
         controller.SetData(DemoKeys.CarrionFoodReleased, 0);
         controller.SetData(DemoKeys.CorpseMeals, 0);
+        controller.SetData(DemoKeys.Births, 0);
         controller.SetData(DemoKeys.CarrionDetections, 0);
         controller.SetData(DemoKeys.SprintActions, 0);
         controller.SetData(DemoKeys.FoodSoftMeals, 0);
@@ -345,6 +359,42 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         Span<long> markerAlloc = stackalloc long[4];
         markerTicks.Clear();
         markerAlloc.Clear();
+
+        // A purchased organ unlock injects a few carriers immediately; waiting
+        // for a random mutation can make a valid purchase look ineffective.
+        if (world.Session.Runtime.Progression.Mode == GameplayMode.Campaign)
+        {
+            foreach (var unlockId in world.Session.Runtime.TakePendingInnovations())
+            {
+                var organMask = CampaignProgressionRules.InnovationOrganMask(unlockId);
+                if (organMask is not { } mask)
+                    continue;
+                for (var injected = 0; injected < 3; injected++)
+                {
+                    if (creatures.Count + pendingChildren + mutations.Count >= Tuning.PopulationCap)
+                        break;
+                    for (var attempt = 0; attempt < 200; attempt++)
+                    {
+                        var candidate = CreatureGenome.RandomFounder(rng);
+                        if ((candidate.Phenotype.OrganMask & mask) == 0)
+                            continue;
+                        var position = RandomPosition(rng);
+                        mutations.Add(CreateCreatureMeta(
+                            CreatureName(nextCreatureId++),
+                            candidate,
+                            candidate.Phenotype,
+                            position.X,
+                            position.Y,
+                            NextHeading(rng),
+                            MathF.Min(Tuning.InitialEnergy, candidate.Phenotype.MaxEnergy),
+                            0,
+                            nextLineageId++,
+                            0f));
+                        break;
+                    }
+                }
+            }
+        }
 
         for (var i = 0; i < creatures.Count; i++)
         {
@@ -750,6 +800,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     lineage,
                     0f));
                 entity.SetData(DemoKeys.Children, children);
+                controller.SetData(DemoKeys.Births, ReadInt(controller, DemoKeys.Births, 0) + 1);
                 pendingChildren++;
             }
 
@@ -851,15 +902,50 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         world.SpikeKillsTotal = ReadInt(controller, DemoKeys.SpikeKills, 0) + spikeKills;
     }
 
-    private static SndMetaData CreateFoodSourceMeta(string name, int patchIndex, int patchCount, int seed) =>
-        new SndMetaFluentBuilder(name)
+    internal static void AddPendingFoodSources(EvolutionTickContext world)
+    {
+        var controller = world.Controller;
+        var pending = ReadInt(controller, DemoKeys.PendingSourceSpawns, 0);
+        if (pending <= 0)
+            return;
+        var patchCount = Math.Clamp(ReadInt(controller, DemoKeys.FoodPatchCount, Tuning.FoodPatchCount), 0, 64);
+        var nextIndex = Math.Max(patchCount, ReadInt(controller, DemoKeys.NextSourceIndex, patchCount));
+        var seed = ReadInt(controller, DemoKeys.Seed, 1);
+        for (var i = 0; i < pending; i++)
+        {
+            var index = nextIndex++;
+            var angle = (index + 1) * 2.3999632f;
+            var radius = Tuning.PondRadius * (0.35f + (0.45f * ((index % 5) / 4f)));
+            world.Mutations.Add(CreateFoodSourceMeta(
+                SourceName(index), index, Math.Max(patchCount, index + 1), seed,
+                MathF.Cos(angle) * radius, MathF.Sin(angle) * radius));
+        }
+
+        controller.SetData(DemoKeys.NextSourceIndex, nextIndex);
+        controller.SetData(DemoKeys.PendingSourceSpawns, 0);
+    }
+
+    private static SndMetaData CreateFoodSourceMeta(
+        string name,
+        int patchIndex,
+        int patchCount,
+        int seed,
+        float? x = null,
+        float? y = null)
+    {
+        var builder = new SndMetaFluentBuilder(name)
             .SetNode("main", EvolutionEntityFactory.FoodScene)
             .SetString(DemoKeys.Kind, DemoKeys.FoodSourceKind)
             .SetInt(DemoKeys.PatchIndex, patchIndex)
-            .SetInt(DemoKeys.PatchCount, patchCount)
+            .SetInt(DemoKeys.PatchCount, Math.Max(patchCount, patchIndex + 1))
             .SetInt(DemoKeys.Seed, seed)
-            .AddLifecycleStrategy("evolution.foodsource")
-            .Build();
+            .AddLifecycleStrategy("evolution.foodsource");
+        if (x is { } px)
+            builder.SetFloat(DemoKeys.X, px);
+        if (y is { } py)
+            builder.SetFloat(DemoKeys.Y, py);
+        return builder.Build();
+    }
 
     private static SndMetaData CreateCreatureMeta(
         string name,

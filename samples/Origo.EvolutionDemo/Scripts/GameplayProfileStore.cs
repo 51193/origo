@@ -30,18 +30,19 @@ internal static class GameplayProfileStore
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            GD.PushWarning("Gameplay profile could not be read; using placeholder defaults.");
+            GD.PushWarning("Gameplay profile could not be read; using fresh defaults.");
             return false;
         }
 
         if (!GameplayProfileCodec.TryDeserialize(json, out var profile))
         {
-            GD.PushWarning("Gameplay profile is corrupt; quarantining it and using placeholder defaults.");
+            GD.PushWarning("Gameplay profile is corrupt; quarantining it and using fresh defaults.");
             QuarantineCorrupt();
             return false;
         }
 
         GameplayProfileCodec.Apply(profile!, runtime.Progression);
+        runtime.RefreshContentGates();
         return true;
     }
 

@@ -78,6 +78,7 @@ public partial class DemoUi : CanvasLayer
     private Button _pauseButton = null!;
     private Button _feedButton = null!;
     private LineEdit _seedInput = null!;
+    private OptionButton _modeOption = null!;
     private OptionButton _mutationOption = null!;
     private OptionButton _foodOption = null!;
     private OptionButton _collisionOption = null!;
@@ -85,6 +86,7 @@ public partial class DemoUi : CanvasLayer
     private ConfirmationDialog _confirmDialog = null!;
     private DemoSettings _settingsDraft = DemoSettings.Defaults();
     private DemoSettings _pendingSettings = DemoSettings.Defaults();
+    private DemoSettings _sandboxSettingsBaseline = DemoSettings.Defaults();
     private readonly List<(HSlider Slider, LineEdit Edit, Func<DemoSettings, float> Read)> _advancedNumbers = [];
     private readonly List<(CheckButton Toggle, Func<DemoSettings, bool> Read)> _advancedToggles = [];
 
@@ -94,6 +96,7 @@ public partial class DemoUi : CanvasLayer
     private bool _busy;
     private PendingWork _pending;
     private int _pendingSeed;
+    private GameplayMode _pendingMode = GameplayMode.Campaign;
     private double _pendingMutation;
     private int _pendingFoodPreset;
     private bool _pendingCollision;
@@ -129,6 +132,7 @@ public partial class DemoUi : CanvasLayer
         _entry = entry;
         _settingsDraft = DemoSettings.Current.Clone();
         _pendingSettings = _settingsDraft.Clone();
+        _sandboxSettingsBaseline = _settingsDraft.Clone();
     }
 
     public override void _Ready()
@@ -278,6 +282,31 @@ public partial class DemoUi : CanvasLayer
     public ISndEntity? GameplayController => FindController();
 
     /// <summary>Persists the current progression state after a UI unlock.</summary>
+    internal void RefreshCampaignWorld()
+    {
+        var runtime = _entry.Session.Runtime;
+        if (runtime.Progression.Mode != GameplayMode.Campaign)
+            return;
+        var settings = DemoSettings.Current;
+        CampaignProgressionRules.ApplyWorldScale(settings, runtime.Progression);
+        _settingsDraft = settings.Clone();
+        _pendingSettings = settings.Clone();
+        var controller = FindController();
+        if (controller is not null)
+        {
+            var currentPatches = ReadInt(controller, DemoKeys.FoodPatchCount, settings.FoodPatchCount);
+            var targetPatches = CampaignProgressionRules.FoodPatchCount(runtime.Progression);
+            if (targetPatches > currentPatches)
+            {
+                controller.SetData(DemoKeys.PendingSourceSpawns,
+                    ReadInt(controller, DemoKeys.PendingSourceSpawns, 0) + targetPatches - currentPatches);
+                controller.SetData(DemoKeys.FoodPatchCount, targetPatches);
+            }
+
+            controller.SetData(DemoKeys.ConfigJson, settings.ToJson());
+        }
+    }
+
     public void PersistGameplayProgression()
     {
         var controller = FindController();
@@ -509,10 +538,20 @@ public partial class DemoUi : CanvasLayer
             return;
         }
 
+        var runtime = _entry.Session.Runtime;
+        var previousMode = runtime.Progression.Mode;
+        if (_pendingMode == GameplayMode.Campaign && previousMode == GameplayMode.Sandbox)
+            _sandboxSettingsBaseline = _settingsDraft.Clone();
+        if (_pendingMode == GameplayMode.Sandbox && previousMode == GameplayMode.Campaign)
+            _settingsDraft = _sandboxSettingsBaseline.Clone();
+        runtime.SetMode(_pendingMode);
+        runtime.Progression.Mode = _pendingMode;
         _settingsDraft.DefaultMutationRate = _pendingMutation;
         _settingsDraft.BodyMutationRate = _pendingMutation;
         _settingsDraft.CollisionEnabled = _pendingCollision;
         _settingsDraft.EarlyFoodBloomEnabled = _pendingBloom;
+        if (_pendingMode == GameplayMode.Campaign)
+            CampaignProgressionRules.ApplyStartSettings(_settingsDraft, runtime.Progression);
         _settingsDraft.Normalize();
         DemoSettings.Current = _settingsDraft.Clone();
         _pendingSettings = DemoSettings.Current.Clone();
@@ -520,6 +559,7 @@ public partial class DemoUi : CanvasLayer
         controller.SetData(DemoKeys.Seed, _pendingSeed);
         controller.SetData(DemoKeys.MutationRate, (float)_pendingMutation);
         controller.SetData(DemoKeys.FoodPreset, _pendingFoodPreset);
+        controller.SetData(DemoKeys.GameplayMode, (int)_pendingMode);
         controller.SetData(DemoKeys.CollisionEnabled, _pendingCollision);
         controller.SetData(DemoKeys.BloomEnabled, _pendingBloom);
         controller.SetData(DemoKeys.Speed, 1);
@@ -536,6 +576,9 @@ public partial class DemoUi : CanvasLayer
         controller.SetData(DemoKeys.NextLineageId, 1);
         controller.SetData(DemoKeys.MaxGeneration, 0);
         controller.SetData(DemoKeys.FeedRequest, 0);
+        controller.SetData(DemoKeys.FoodPatchCount, DemoSettings.Current.FoodPatchCount);
+        controller.SetData(DemoKeys.NextSourceIndex, DemoSettings.Current.FoodPatchCount);
+        controller.SetData(DemoKeys.PendingSourceSpawns, 0);
         _wallSeconds = 0d;
         _realTimeWriteTimer = 0d;
         controller.SetData(DemoKeys.RealSeconds, 0f);
@@ -578,6 +621,9 @@ public partial class DemoUi : CanvasLayer
             _realTimeWriteTimer = 0d;
             loadedController.SetData(DemoKeys.FastForwardActive, false);
             loadedController.SetData(DemoKeys.FastForwardProgress, 0f);
+            var loadedMode = ReadInt(loadedController, DemoKeys.GameplayMode, (int)GameplayMode.Sandbox);
+            _entry.Session.Runtime.SetMode((GameplayMode)Math.Clamp(loadedMode, 0, 1));
+            _pendingMode = _entry.Session.Runtime.Progression.Mode;
             var configJson = ReadString(loadedController, DemoKeys.ConfigJson, string.Empty);
             if (configJson.Length > 0)
                 DemoSettings.Current = DemoSettings.FromJson(configJson);
@@ -606,12 +652,20 @@ public partial class DemoUi : CanvasLayer
             mutation,
             _foodOption.Selected,
             _collisionOption.Selected == 1,
-            _bloomOption.Selected == 1);
+            _bloomOption.Selected == 1,
+            _modeOption.Selected == 0 ? GameplayMode.Campaign : GameplayMode.Sandbox);
     }
 
-    private void StartNewGame(int seed, double mutation, int foodPreset, bool collision, bool bloom)
+    private void StartNewGame(
+        int seed,
+        double mutation,
+        int foodPreset,
+        bool collision,
+        bool bloom,
+        GameplayMode mode)
     {
         _pendingSeed = seed;
+        _pendingMode = mode;
         _pendingMutation = mutation;
         _pendingFoodPreset = foodPreset;
         _pendingCollision = collision;
@@ -685,8 +739,14 @@ public partial class DemoUi : CanvasLayer
     internal static string IterateCheckpointSlot(float mark) =>
         string.Create(CultureInfo.InvariantCulture, $"{DemoEntry.IterateCheckpointSlotPrefix}{mark:0}");
 
-    internal void StartSmokeGame(int seed) =>
-        StartNewGame(seed, 0.015d, 1, Tuning.CollisionEnabled, Tuning.EarlyFoodBloomEnabled);
+    internal void StartSmokeGame(int seed)
+    {
+        var mode = string.Equals(
+            OS.GetEnvironment("ORIGO_DEMO_CAMPAIGN_AUTOPLAY"), "1", StringComparison.Ordinal)
+            ? GameplayMode.Campaign
+            : GameplayMode.Sandbox;
+        StartNewGame(seed, 0.015d, 1, Tuning.CollisionEnabled, Tuning.EarlyFoodBloomEnabled, mode);
+    }
 
     internal void StartFastForwardForSmoke(float seconds) => StartFastForwardInternal(seconds);
 

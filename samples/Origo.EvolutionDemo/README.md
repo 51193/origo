@@ -5,11 +5,14 @@ A playable idle artificial-life sandbox built on `Origo.Core` and
 
 ## What you do
 
-- Start a pond from the main menu or load a saved lineage.
-- Watch 900 founders forage, move, reproduce, mutate, and die in a huge
-  circular pond (10,000 world-units in radius; up to 2,500 creatures; the cap is
-  a safety valve, not a normal operating limit). Creatures are deliberately small
-  at this scale, so the default local view reads as a sparse world.
+- Start a **Campaign** pond from the main menu (24 primordial founders in a
+  700-unit pond, basic Vision and a minimal feeding reflex) or load a saved
+  lineage. Campaign play unlocks food types, organs, senses, death/carrion,
+  predation, and pond expansions with Evolution Points. **Sandbox** mode in the
+  New Pond panel keeps the full 900-founder, 10,000-unit ecosystem.
+- Sandbox/benchmark mode runs the full content and the old 900-founder/10,000-unit
+  setup. Creatures are deliberately small at that scale, so the local view
+  reads as a sparse world; Campaign starts intentionally tiny.
 - The default camera shows a local region; wheel zoom and right-drag pan let you
   explore the space, and `R` resets to the whole pond.
 - Click a creature to inspect its V4 genome graph, phenotype,
@@ -197,12 +200,63 @@ directly. `user://gameplay_profile.json` is the authoritative meta-progression s
 survives New Game and application restarts by design, because idle unlocks are
 account-wide. Profile writes use a temp file plus atomic move; unreadable
 profiles are warned and skipped, corrupt JSON is quarantined with a warning, and
-gameplay falls back to placeholder defaults. Save version 7 rejects older saves. Evolution Points currently start at a very large placeholder value; the
-unlock shop is functional, but economy balancing is intentionally deferred.
+gameplay falls back to fresh defaults. Save version 7 rejects older saves.
+Evolution Points start at zero in Campaign, milestones and the passive
+trickle award them, and the unlock shop spends them.
 
 Press `U` while a pond is running to open the generic unlock shop. Rows are
 generated from `UnlockDefinition` data, not from a hardcoded organ list. Buying
 an unlock writes the progression back to the controller immediately.
+
+## Campaign progression
+
+`New Pond` defaults to **Campaign — primordial start + unlocks**; choose
+**Sandbox — all genes and mechanics** to keep the unrestricted ecosystem used
+by benchmarks and mechanics experiments.
+
+A fresh account's first Campaign starts with:
+
+- 24 founders in a 700-unit radius pond (population cap 64, three food patches);
+- only Vision, `FoodAhead/Left/Right`, `WallAhead`, `Energy`, `Move`, `Turn`, and
+  a minimal food reflex;
+- soft food only, instant-food death handling, no spike/armor/carrion/organ
+  senses.
+
+Evolution Points (EP) come from account-wide milestones and a passive trickle
+(1 EP per 30 simulated seconds); they survive New Game and restarts. The unlock
+tree is gated by prerequisites, milestone requirements, and EP cost:
+
+| Tier | Typical unlocks |
+|---|---|
+| Foraging | tough food, HardDigest, Sprint, pond I |
+| Chemistry | toxic food, ToxinResistance, CreatureSense, Rhythm, pond II |
+| Carrion | corpse-pulse death, CarrionSense, pond III |
+| Predation | SpikeOrgan/spike action, battery, armor, pond IV |
+| Vision | FoodTypeVision + six food sensors, enrichment spawning, pond V |
+| Frontier | pond VI |
+
+Food composition also stages with the unlocks: soft only → tough 15% → tough
+25%/toxic 15% → final tough 40%/toxic 40%. Unlocking an organ seeds up to three
+carriers of the new organ immediately so a purchase is visible without waiting
+for a random mutation (the population cap can reduce the count). Pond expansions apply their radius, population cap, food
+cap/rate, and additional food sources to the active pond. Campaign profiles use
+schema version 2; old schema-1 placeholder profiles are quarantined and start
+fresh rather than carrying the old placeholder point balance.
+
+For automated playtesting, set `ORIGO_DEMO_CAMPAIGN_AUTOPLAY=1` on a headless
+run; the smoke runner starts Campaign, buys affordable unlocks in tree order,
+seeds innovators, and reports `DEMO_CAMPAIGN` plus the usual benchmark line:
+
+```bash
+ORIGO_DEMO_CAMPAIGN_AUTOPLAY=1 \
+bash samples/Origo.EvolutionDemo/run-demo.sh --no-build --headless \
+  --seconds 5 --fast-forward 3600 --save-slot campaign
+```
+
+The interactive windowed run is the normal `run-demo.sh` command; Campaign
+mode is selected by default in the New Pond panel. Use a fresh
+`EVOLUTION_DEMO_SMOKE_HOME` for each autoplay comparison: the account profile
+persists unlocks and points across runs by design.
 
 JSON content packs live under `Content/` and are polled by
 `DemoContentWatcher`. A valid pack is merged into the built-in content at a

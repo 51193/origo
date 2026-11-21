@@ -9,13 +9,15 @@ public sealed record GameplayProfile(
     int SchemaVersion,
     long Points,
     double LifetimeSeconds,
+    double PassivePointProgress,
+    int Mode,
     string[] UnlockedIds,
     string[] CompletedMilestones);
 
 /// <summary>Validated JSON codec for the meta-progression profile.</summary>
 public static class GameplayProfileCodec
 {
-    public const int CurrentSchemaVersion = 1;
+    public const int CurrentSchemaVersion = 2;
     public const string CoreUnlockId = "unlock.core";
 
     private static readonly JsonSerializerOptions Options = new()
@@ -30,6 +32,8 @@ public static class GameplayProfileCodec
             CurrentSchemaVersion,
             progression.Points,
             progression.LifetimeSeconds,
+            progression.PassivePointProgress,
+            (int)progression.Mode,
             [.. progression.UnlockedIds.OrderBy(static id => id, StringComparer.Ordinal)],
             [.. progression.CompletedMilestones.OrderBy(static id => id, StringComparer.Ordinal)]), Options);
     }
@@ -62,6 +66,8 @@ public static class GameplayProfileCodec
         ArgumentNullException.ThrowIfNull(progression);
         progression.Points = profile.Points;
         progression.LifetimeSeconds = profile.LifetimeSeconds;
+        progression.PassivePointProgress = profile.PassivePointProgress;
+        progression.Mode = (GameplayMode)Math.Clamp(profile.Mode, 0, 1);
         progression.UnlockedIds.Clear();
         progression.UnlockedIds.Add(CoreUnlockId);
         foreach (var id in profile.UnlockedIds)
