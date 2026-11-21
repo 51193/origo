@@ -114,6 +114,7 @@ public sealed class GenomeReportTests
         Assert.Contains("noise <b>0", html, StringComparison.Ordinal);
         Assert.Contains("DBSCAN:", html, StringComparison.Ordinal);
         Assert.DoesNotContain("searched 2..0", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Auto-k candidates", html, StringComparison.Ordinal);
         Assert.Contains("min-cluster-size=n/a", html, StringComparison.Ordinal);
         Assert.Equal(0, json.GetProperty("clustering").GetProperty("dbscanNoise").GetInt32());
     }

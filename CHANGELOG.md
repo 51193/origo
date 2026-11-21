@@ -286,8 +286,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Evolution Demo enforces population and food caps across deferred work** —
   overgrowth, reproduction, innovation injection, enrichment, food sources,
   corpse pulses, manual feeding, and startup food now reserve pending slots
-  before enqueueing spawns. Catch-up ticks and multi-source bursts can no
-  longer exceed the displayed hard caps, and loaded saves clear stale
+  before enqueueing spawns, so cap checks account for queued work across
+  catch-up ticks and multi-source bursts. Loaded saves clear stale
   reservations.
 - **Evolution Demo feeding, carcass timing, and inventory UI respect settings** —
   Feed drops the configured nutrient amount, ordinary deaths use the configured

@@ -41,7 +41,7 @@ dotnet run --project samples/Origo.EvolutionDemo.Analysis -c Release -- \
 --pool                   allow one --save directory to expand to several save scenes
 --out <path>             HTML report (default genome-report.html); a sibling .clusters.csv is always written
 --max <n>                per-save analyzed row cap; 0 analyzes every creature (default 5000)
---seed <n>               seed for per-save sampling, k-means restarts, and bootstrap ARI (default 1)
+--seed <n>               seed for per-save sampling, k-means/Jaccard restarts, and bootstrap ARI (default 1)
 --k <n>                  0 = automatic k via silhouette (default 0); N = fixed N clusters
 --mode all|genotype|phenotype|behavior
 --method kmeans|jaccard|dbscan

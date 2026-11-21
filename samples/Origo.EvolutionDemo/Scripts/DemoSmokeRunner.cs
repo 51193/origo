@@ -499,6 +499,7 @@ public partial class DemoSmokeRunner : Node
                     break;
                 if (!_entry.Context.Save.ListSaves().Contains(_benchmarkSaveSlot, StringComparer.Ordinal))
                     throw new InvalidOperationException("Benchmark save is missing.");
+                AssertSaveWrittenByThisRun(_benchmarkSaveSlot);
                 PrintCampaignSummary();
                 GD.Print($"DEMO_BENCHMARK_OK population={_savedPopulation} time={_savedTime:0.0} " +
                     $"slot={_benchmarkSaveSlot} checkpoints={_verifiedCheckpoints}");
@@ -527,6 +528,18 @@ public partial class DemoSmokeRunner : Node
         AssertCameraFit();
     }
 
+    private void AssertSaveWrittenByThisRun(string slot)
+    {
+        var saveRoot = ProjectSettings.GlobalizePath(DemoEntry.SaveRoot);
+        var slotRoot = Path.Combine(saveRoot, $"save_{slot}");
+        var scene = (Directory.Exists(slotRoot)
+            ? Directory.GetFiles(slotRoot, "snd_scene.json", SearchOption.AllDirectories).FirstOrDefault()
+            : null)
+            ?? throw new InvalidOperationException($"Save '{slot}' has no scene file.");
+        if (File.GetLastWriteTimeUtc(scene) < _runStartedUtc.AddSeconds(-1d))
+            throw new InvalidOperationException($"Save '{slot}' was not written by this run.");
+    }
+
     private int VerifyIterateCheckpoints()
     {
         var marks = IterateCheckpointSchedule.Marks(
@@ -538,20 +551,12 @@ public partial class DemoSmokeRunner : Node
         }
 
         var saves = _entry.Context.Save.ListSaves();
-        var saveRoot = ProjectSettings.GlobalizePath(DemoEntry.SaveRoot);
         foreach (var mark in marks)
         {
             var slot = DemoUi.IterateCheckpointSlot(mark);
             if (!saves.Contains(slot, StringComparer.Ordinal))
                 throw new InvalidOperationException($"Iterate checkpoint save '{slot}' is missing.");
-            var slotRoot = Path.Combine(saveRoot, $"save_{slot}");
-            var scene = (Directory.Exists(slotRoot)
-                ? Directory.GetFiles(slotRoot, "snd_scene.json", SearchOption.AllDirectories).FirstOrDefault()
-                : null)
-                ?? throw new InvalidOperationException($"Iterate checkpoint save '{slot}' has no scene file.");
-            if (File.GetLastWriteTimeUtc(scene) < _runStartedUtc.AddSeconds(-1d))
-                throw new InvalidOperationException(
-                    $"Iterate checkpoint save '{slot}' was not written by this run.");
+            AssertSaveWrittenByThisRun(slot);
         }
 
         _verifiedCheckpoints = marks.Count;

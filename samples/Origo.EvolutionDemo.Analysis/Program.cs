@@ -688,7 +688,7 @@ internal static class Program
         Console.WriteLine("  --out <path>             HTML report (default genome-report.html).");
         Console.WriteLine("                           A sibling .clusters.csv is always written.");
         Console.WriteLine("  --max <n>                Per-save analyzed row cap; 0 analyzes every creature (default 5000).");
-        Console.WriteLine("  --seed <n>               Seed for sampling, restarts, and bootstrap (default 1).");
+        Console.WriteLine("  --seed <n>               Seed for sampling, k-means/Jaccard restarts, and bootstrap (default 1).");
         Console.WriteLine("  --k <n>                  Fixed cluster count; 0 auto-selects k (default 0).");
         Console.WriteLine("  --mode all|genotype|phenotype|behavior   Feature selection (default all).");
         Console.WriteLine("  --method kmeans|jaccard|dbscan           Clustering method (default kmeans).");

@@ -246,10 +246,10 @@ public sealed class GameplayRuntime
     }
 
     /// <summary>Applies an external JSON pack while retaining core content and progression.</summary>
-    public void ApplyExternalPack(string json)
+    public void ApplyExternalPack(string json, Action<GameplayRuntime>? validate = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(json);
-        ApplyExternalPacks([json]);
+        ApplyExternalPacks([json], validate);
     }
 
     /// <summary>

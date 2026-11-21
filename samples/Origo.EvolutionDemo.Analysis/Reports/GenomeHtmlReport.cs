@@ -140,7 +140,11 @@ th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.warn{color:#fca5a5}.no
 
     private static void AppendCandidates(StringBuilder html, GenomeReportInput input)
     {
-        var jaccard = string.Equals(input.Options.Method, "jaccard", StringComparison.Ordinal);
+        var method = input.Options.Method;
+        if (!string.Equals(method, "kmeans", StringComparison.Ordinal)
+            && !string.Equals(method, "jaccard", StringComparison.Ordinal))
+            return;
+        var jaccard = string.Equals(method, "jaccard", StringComparison.Ordinal);
         var criterion = jaccard ? "maximum-silhouette solution" : "min-inertia solution";
         var inertiaHeader = jaccard ? "inertia (n/a)" : "inertia (SSE)";
         html.Append(CultureInfo.InvariantCulture,

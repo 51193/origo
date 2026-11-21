@@ -1396,17 +1396,6 @@ public partial class DemoUi : CanvasLayer
         if (mark >= target - 0.05f)
             return;
         var saveId = IterateCheckpointSlot(mark);
-        try
-        {
-            if (_entry.Context.Save.ListSaves().Contains(saveId, StringComparer.Ordinal))
-                _entry.Context.Save.DeleteSave(saveId);
-        }
-        catch (Exception exception)
-        {
-            GD.PushWarning($"ITERATE_CHECKPOINT_DELETE_FAILED {saveId}: {exception.GetType().Name}: {exception.Message}");
-            return;
-        }
-
         PersistRealSeconds();
         PersistGameplayProgression();
         SetGamePaused(true);
