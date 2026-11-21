@@ -80,6 +80,55 @@ internal sealed class SensorGrid
     public void Query(float x, float y, List<SensorPoint>[] buckets, List<SensorPoint> target) =>
         Query(x, y, Tuning.SenseRange, buckets, target);
 
+    /// <summary>
+    ///     Queries food and creature buckets in one cell traversal. Each target
+    ///     list receives points in the same order as the separate queries.
+    /// </summary>
+    public void QueryPair(
+        float x,
+        float y,
+        float radius,
+        List<SensorPoint>[] foodBuckets,
+        List<SensorPoint>[] creatureBuckets,
+        List<SensorPoint> foodTarget,
+        List<SensorPoint> creatureTarget)
+    {
+        foodTarget.Clear();
+        creatureTarget.Clear();
+        var cellX = CellCoordinate(x);
+        var cellY = CellCoordinate(y);
+        var cells = Math.Max(1, (int)MathF.Ceiling(radius / _cellSize));
+        var radiusSquared = radius * radius;
+        for (var dy = -cells; dy <= cells; dy++)
+        {
+            var row = cellY + dy;
+            if (row < 0 || row >= _dimension)
+                continue;
+            for (var dx = -cells; dx <= cells; dx++)
+            {
+                var column = cellX + dx;
+                if (column < 0 || column >= _dimension)
+                    continue;
+                var cell = (row * _dimension) + column;
+                foreach (var point in foodBuckets[cell])
+                {
+                    var deltaX = point.Position.X - x;
+                    var deltaY = point.Position.Y - y;
+                    if ((deltaX * deltaX) + (deltaY * deltaY) <= radiusSquared)
+                        foodTarget.Add(point);
+                }
+
+                foreach (var point in creatureBuckets[cell])
+                {
+                    var deltaX = point.Position.X - x;
+                    var deltaY = point.Position.Y - y;
+                    if ((deltaX * deltaX) + (deltaY * deltaY) <= radiusSquared)
+                        creatureTarget.Add(point);
+                }
+            }
+        }
+    }
+
     public void Query(
         float x,
         float y,

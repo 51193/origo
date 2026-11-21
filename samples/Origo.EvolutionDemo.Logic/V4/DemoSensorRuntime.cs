@@ -5,7 +5,7 @@ using System.Numerics;
 namespace Origo.EvolutionDemo.Logic.V4;
 
 /// <summary>World snapshot available to a V4 sensor evaluator.</summary>
-public sealed class DemoSensorContext
+public readonly struct DemoSensorContext
 {
     public required Vector2 Position { get; init; }
     public required float Heading { get; init; }
@@ -65,7 +65,6 @@ public static class DemoSensorRuntime
         Span<float> sensors)
     {
         ArgumentNullException.ThrowIfNull(phenotype);
-        ArgumentNullException.ThrowIfNull(context);
         if (sensors.Length <= MaxInterfaceId)
             throw new ArgumentException($"Sensor buffer must be larger than {MaxInterfaceId}.", nameof(sensors));
         sensors.Clear();

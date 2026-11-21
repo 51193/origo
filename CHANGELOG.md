@@ -116,6 +116,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   benchmark checkpoints and the final save are content-identical after
   excluding the wall-clock `evo.realSeconds` field; allocation is unchanged
   at about 1.1 MiB per tick and remains a separate target.
+- **Evolution Demo sensor updates allocate less** — `DemoSensorContext` is now
+  a readonly struct instead of a class allocated per sensor update, food and
+  creature proximity queries share one grid traversal, and per-tick
+  action/sensor/profiler scratch buffers stay on the stack. In paired 900 s
+  runs per-tick allocation falls from 0.738 to 0.704 MiB while mean tick stays
+  within noise at the same population; all benchmark saves remain identical
+  after excluding `evo.realSeconds`. Allocation is not the current tick
+  bottleneck, so CPU work in sensors/AI is the next target.
 - **Evolution Demo food-per-second control is labeled uniform-only** — the
   Advanced Settings row and manual now state that per-second spawning applies
   only when the patch count is zero; patch sources keep producing their own food.
