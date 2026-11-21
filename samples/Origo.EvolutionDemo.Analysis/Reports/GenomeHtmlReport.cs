@@ -78,16 +78,24 @@ th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.warn{color:#fca5a5}.no
     private static void AppendProvenance(StringBuilder html, GenomeReportInput input)
     {
         var options = input.Options;
-        var k = options.RequestedK == 0
-            ? string.Create(CultureInfo.InvariantCulture, $"k={input.Clustering.K} (auto, searched 2..{input.AutoKMax}, min cluster size {options.MinClusterSize})")
-            : string.Create(CultureInfo.InvariantCulture, $"k={input.Clustering.K} (fixed)");
+        var k = options.Method switch
+        {
+            "dbscan" => string.Create(CultureInfo.InvariantCulture, $"k={input.Clustering.K} (DBSCAN)"),
+            _ when options.RequestedK == 0 => string.Create(
+                CultureInfo.InvariantCulture,
+                $"k={input.Clustering.K} (auto, searched 2..{input.AutoKMax}, min cluster size {options.MinClusterSize})"),
+            _ => string.Create(CultureInfo.InvariantCulture, $"k={input.Clustering.K} (fixed)"),
+        };
+        var minClusterSize = string.Equals(options.Method, "dbscan", StringComparison.Ordinal)
+            ? "n/a"
+            : options.MinClusterSize.ToString(CultureInfo.InvariantCulture);
         html.Append(CultureInfo.InvariantCulture,
             $"<p class=\"muted\">generated {input.GeneratedAtUtc:u}; command <code>{Escape(input.CommandLine)}</code></p>");
         html.Append(CultureInfo.InvariantCulture,
             $"<p class=\"muted\">seed={options.Seed}; max={options.MaxCreatures}; mode={Esc(input.Options.Mode)}; "
             + $"method={Esc(options.Method)}; {k}; stability rounds={options.StabilityRounds}; "
             + $"eps={(options.Eps <= 0 ? "estimated" : options.Eps.ToString("0.###", CultureInfo.InvariantCulture))}; "
-            + $"min-points={options.MinPoints}; min-cluster-size={options.MinClusterSize}; allow-skips={options.AllowSkips}; "
+            + $"min-points={options.MinPoints}; min-cluster-size={minClusterSize}; allow-skips={options.AllowSkips}; "
             + $"saves={input.Saves.Count}; analyzed={input.Rows.Count}/{input.TotalCreatures}; "
             + $"features used/raw={input.UsedFeatureCount}/{input.RawColumns.Count}</p>");
     }
@@ -107,7 +115,7 @@ th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.warn{color:#fca5a5}.no
         Card(html, "bootstrap ARI", input.Stability is { } stability
             ? string.Create(CultureInfo.InvariantCulture, $"{stability.Mean:0.000} ± {stability.StandardDeviation:0.000} ({stability.Rounds} rounds)")
             : "n/a");
-        if (noiseCount > 0)
+        if (string.Equals(input.Options.Method, "dbscan", StringComparison.Ordinal))
             Card(html, "noise", string.Create(CultureInfo.InvariantCulture,
                 $"{noiseCount} ({100d * noiseCount / System.Math.Max(1, input.Rows.Count):0.0}%)"));
         if (input.SkippedCreatures.Count > 0)
@@ -344,10 +352,12 @@ th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.warn{color:#fca5a5}.no
     {
         var tested = input.Enrichment.Count == 0 ? 0 : input.Enrichment.Max(static analysis => analysis.TestedCount);
         html.Append(CultureInfo.InvariantCulture,
-            $"<p class=\"note\">Two-sided Fisher exact per cluster vs rest, Benjamini-Hochberg step-up over all m={tested} tested signatures (support &gt;= {GeneEnrichment.MinimumSupport} rows overall). Each cluster row below shows at most 10 of the tested signatures with q &lt; 0.10; the full tested set is written by --enrichment-csv and --metrics-json.</p>");
+            $"<p class=\"note\">Two-sided Fisher exact per cluster vs rest, Benjamini-Hochberg step-up over all m={tested} tested signatures (support &gt;= {GeneEnrichment.MinimumSupport} rows overall). Each cluster row below shows at most 10 of the tested signatures with q &lt; 0.10; the complete tested set is written only by --enrichment-csv (--metrics-json keeps the capped display rows).</p>");
         if (tested == 0)
         {
-            html.Append("<p class=\"muted\">No signature passed the support filter for this clustering.</p>");
+            html.Append(input.Clustering.K < 2
+                ? "<p class=\"muted\">No cluster-versus-rest enrichment is possible with fewer than two clusters.</p>"
+                : "<p class=\"muted\">No signature passed the support filter for this clustering.</p>");
             return;
         }
 
@@ -463,10 +473,15 @@ th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.warn{color:#fca5a5}.no
             + "same cluster and b is the mean distance to the nearest other cluster over all of its rows (not the nearest point). A row whose "
             + $"cluster is a singleton scores 0. Rows are scored on the deterministic systematic sample of at most {input.SilhouetteSampleSize} rows "
             + "(indexes floor(i * n / sampleSize)); DBSCAN noise rows are excluded.");
-        AppendDefinition(html,
-            "k-means: the reported solution is the minimum-inertia solution over the documented restart budget; inertia is the sum of squared "
-            + "distances to the assigned centers. Auto-k evaluates every k in 2..min(8, n-1) with the same restart budget and selects the "
-            + $"maximum-silhouette candidate whose clusters are all at least the minimum cluster size ({input.Options.MinClusterSize}).");
+        if (string.Equals(input.Options.Method, "kmeans", StringComparison.Ordinal))
+            AppendDefinition(html,
+                "k-means: the reported solution is the minimum-inertia solution over the documented restart budget; inertia is the sum of squared "
+                + "distances to the assigned centers. Auto-k evaluates every k in 2..min(8, n-1) with the same restart budget and selects the "
+                + $"maximum-silhouette candidate whose clusters are all at least the minimum cluster size ({input.Options.MinClusterSize}).");
+        if (string.Equals(input.Options.Method, "jaccard", StringComparison.Ordinal))
+            AppendDefinition(html,
+                "Jaccard k-medoids: no inertia is defined. Auto-k evaluates every k in 2..min(6, n-1) and selects the maximum-silhouette "
+                + $"candidate whose clusters are all at least the minimum cluster size ({input.Options.MinClusterSize}).");
         AppendDefinition(html,
             "Bootstrap ARI (k-means only): each round resamples n rows with replacement, fits k-means centers on the resample, assigns every "
             + "original row to its nearest resampled center, and compares that labeling with the reference labeling by adjusted Rand index; "
@@ -486,7 +501,7 @@ th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.warn{color:#fca5a5}.no
         AppendDefinition(html,
             "PCA: components are orthonormal eigenvectors of the standardized covariance matrix; the explained-variance ratio of a component "
             + "is its eigenvalue share of the covariance trace, so the reported ratios sum to at most 1.");
-        if (noiseCount > 0)
+        if (string.Equals(input.Options.Method, "dbscan", StringComparison.Ordinal))
             AppendDefinition(html,
                 $"DBSCAN: noise keeps label -1; the reported cluster count and silhouette exclude noise, and min-points counts the point itself. {noiseCount} rows are noise in this run.");
         html.Append("</ul>");

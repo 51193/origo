@@ -97,7 +97,7 @@ th:first-child,td:first-child{text-align:left}th{color:#93c5fd}code{color:#fbbf2
                 $"<p class=\"muted\">The profile contains {selection.SegmentCount} simulation segments; this report aggregates the last one ({aggregate.SampleCount} samples). Use --segment all to pool segments or --segment &lt;index&gt; to select one.</p>"));
         if (selection is { HasWindow: true })
             html.Append(string.Create(CultureInfo.InvariantCulture,
-                $"<p class=\"muted\">The window {selection.WindowLabel} is applied to the recorded simTime inside the selected segment; both bounds are inclusive.</p>"));
+                $"<p class=\"muted\">The window {selection.WindowLabel} is applied to the selected samples' recorded simTime; both bounds are inclusive.</p>"));
     }
 
     private static void AppendWarnings(StringBuilder html, IReadOnlyList<string> warnings)

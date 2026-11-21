@@ -154,6 +154,26 @@ public sealed class GenomeCliTests
     }
 
     [Fact]
+    public void Genome_TimelineAndEnrichmentCreateTheirOwnParentDirectories()
+    {
+        using var directory = new TemporaryDirectory();
+        var save = CreateVariedSave(directory);
+        var reportDir = Path.Combine(directory.Path, "report");
+        var timeline = Path.Combine(directory.Path, "timeline", "timeline.csv");
+        var enrichment = Path.Combine(directory.Path, "enrichment", "enrichment.csv");
+
+        var (ExitCode, _, Error) = Run(
+            "genome", "--save", save,
+            "--out", Path.Combine(reportDir, "report.html"),
+            "--timeline-csv", timeline,
+            "--enrichment-csv", enrichment);
+
+        Assert.Equal(0, ExitCode);
+        Assert.True(File.Exists(timeline), Error);
+        Assert.True(File.Exists(enrichment), Error);
+    }
+
+    [Fact]
     public void Genome_SameSeed_ProducesDeterministicMetricsJson()
     {
         using var directory = new TemporaryDirectory();
