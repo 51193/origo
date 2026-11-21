@@ -163,4 +163,45 @@ public sealed class FeatureSemanticsTests
         };
         return new GenomeV4(genes, 6);
     }
+    [Fact]
+    public void Extract_DietCountersAndSharesAreDerived()
+    {
+        using var directory = new TemporaryDirectory();
+        var save = SaveFixture.CreateV7Save(
+            directory, "save_diet", SaveFixture.Creatures(SaveFixture.DefaultGenome(), 1));
+
+        var result = FeatureExtractor.Extract(SaveSnapshotReader.Read(save), maxCreatures: 0, seed: 1);
+
+        var values = result.Rows[0].Values;
+        Assert.Equal(2d, values["behavior.softMeals"]);
+        Assert.Equal(1d, values["behavior.toughMeals"]);
+        Assert.Equal(1d, values["behavior.toxicMeals"]);
+        Assert.Equal(4d, values["diet.totalMeals"]);
+        Assert.Equal(0.5d, values["diet.softShare"], 8);
+        Assert.Equal(0.25d, values["diet.toughShare"], 8);
+        Assert.Equal(0.25d, values["diet.toxicShare"], 8);
+        Assert.Equal(0.25d, values["diet.corpseShare"], 8);
+        Assert.Equal(0.5d, values["diet.dominance"], 8);
+        Assert.Equal(0.9464d, values["diet.entropy"], 4);
+    }
+
+    [Fact]
+    public void Extract_OldSaveWithoutDietCountersReadsZero()
+    {
+        using var directory = new TemporaryDirectory();
+        var save = SaveFixture.CreateV7Save(
+            directory, "save_old_diet", SaveFixture.Creatures(SaveFixture.DefaultGenome(), 1),
+            includeDietCounters: false);
+
+        var result = FeatureExtractor.Extract(SaveSnapshotReader.Read(save), maxCreatures: 0, seed: 1);
+
+        var values = result.Rows[0].Values;
+        Assert.Equal(0d, values["behavior.softMeals"]);
+        Assert.Equal(0d, values["behavior.toughMeals"]);
+        Assert.Equal(0d, values["behavior.toxicMeals"]);
+        Assert.Equal(0d, values["diet.totalMeals"]);
+        Assert.Equal(0d, values["diet.entropy"]);
+        Assert.Equal(0d, values["diet.dominance"]);
+    }
+
 }

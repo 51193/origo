@@ -34,6 +34,9 @@ internal static class DemoKeys
     public const string CarrionFoodReleased = "evo.carrionFoodReleased";
     public const string CorpseMeals = "evo.corpseMeals";
     public const string CreatureCorpseMeals = "evo.creatureCorpseMeals";
+    public const string CreatureSoftMeals = "evo.creatureSoftMeals";
+    public const string CreatureToughMeals = "evo.creatureToughMeals";
+    public const string CreatureToxicMeals = "evo.creatureToxicMeals";
     public const string FoodFromCorpse = "food.fromCorpse";
     public const string FoodType = "food.type";
     public const string FoodSoftMeals = "evo.foodSoftMeals";

@@ -13,6 +13,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 ### Added
 
+- **Evolution Demo analysis includes per-creature diet and niche metrics** —
+  each creature now persists soft, tough, toxic, and corpse meal counters.
+  The `genome` analysis exposes `behavior.*Meals`, `diet.totalMeals`,
+  `diet.*Share`, `diet.dominance`, and normalized `diet.entropy`, and shows
+  them in the cluster behavior profile. Older v7 saves without the counters
+  read as zero rather than failing; the added data is additive and does not
+  change simulation behavior.
 - **Release bundles for the framework and playable demo** — each release
   publishes one-download `origo-framework-<version>.zip` and `.tar.gz` bundles
   with the five framework packages and `nuget.config`, plus platform playable

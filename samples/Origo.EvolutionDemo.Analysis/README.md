@@ -149,6 +149,16 @@ The report contains:
   NaN by construction and a non-finite value is a hard error. Constant feature
   columns are dropped, named in the report, and the report shows used/raw
   counts.
+- **Diet and niche features.** `behavior.softMeals`, `behavior.toughMeals`,
+  `behavior.toxicMeals`, and `behavior.corpseMeals` are per-creature meal
+  counters persisted by the demo. `diet.totalMeals` is soft+tough+toxic
+  (corpse food is a soft-food subset and is reported separately), the
+  `diet.*Share` features are shares of that total, `diet.dominance` is the
+  largest food-type share, and `diet.entropy` is the normalized Shannon
+  entropy over the three food types (0 for a single type, 1 for equal
+  shares). Saves written before these counters existed read as zero rather
+  than failing. The cluster behavior profile includes the per-type counters,
+  shares, and entropy.
 - **PCA** components are orthonormal eigenvectors of the standardized
   covariance; the explained-variance ratio of a component is its eigenvalue
   share of the covariance trace, so the reported ratios sum to at most 1.

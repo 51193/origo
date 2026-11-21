@@ -166,8 +166,24 @@ public static class FeatureExtractor
             ["behavior.children"] = creature.Children,
             ["behavior.kills"] = creature.Kills,
             ["behavior.corpseMeals"] = creature.CorpseMeals,
+            ["behavior.softMeals"] = creature.SoftMeals,
+            ["behavior.toughMeals"] = creature.ToughMeals,
+            ["behavior.toxicMeals"] = creature.ToxicMeals,
             ["behavior.generation"] = creature.Generation,
         };
+        var totalMeals = creature.SoftMeals + creature.ToughMeals + creature.ToxicMeals;
+        values["diet.totalMeals"] = totalMeals;
+        var softShare = totalMeals == 0 ? 0d : (double)creature.SoftMeals / totalMeals;
+        var toughShare = totalMeals == 0 ? 0d : (double)creature.ToughMeals / totalMeals;
+        var toxicShare = totalMeals == 0 ? 0d : (double)creature.ToxicMeals / totalMeals;
+        values["diet.softShare"] = softShare;
+        values["diet.toughShare"] = toughShare;
+        values["diet.toxicShare"] = toxicShare;
+        values["diet.corpseShare"] = totalMeals == 0 ? 0d : (double)creature.CorpseMeals / totalMeals;
+        var dominance = System.Math.Max(softShare, System.Math.Max(toughShare, toxicShare));
+        values["diet.dominance"] = dominance;
+        values["diet.entropy"] = totalMeals == 0 ? 0d : DietEntropy(softShare, toughShare, toxicShare);
+
         foreach (var organKind in Enum.GetValues<OrganKindV4>())
             values[$"organ.{organKind}"] =
                 phenotype.Body.Organs.Count(organ => organ.Kind == organKind);
@@ -196,6 +212,19 @@ public static class FeatureExtractor
         _ => throw new InvalidOperationException(
             $"No effective runtime mapping for life trait '{kind}'."),
     };
+
+    private static double DietEntropy(double soft, double tough, double toxic)
+    {
+        const double log3 = 1.0986122886681098d;
+        var entropy = 0d;
+        foreach (var share in new[] { soft, tough, toxic })
+        {
+            if (share > 0d)
+                entropy -= share * System.Math.Log(share);
+        }
+
+        return entropy / log3;
+    }
 
     /// <summary>Human-readable stable gene signature for enrichment reports.</summary>
     public static string DescribeGene(GeneV4 gene)

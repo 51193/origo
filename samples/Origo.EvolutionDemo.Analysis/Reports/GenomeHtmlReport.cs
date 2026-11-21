@@ -475,6 +475,11 @@ th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.warn{color:#fca5a5}.no
             "Gene-signature enrichment: two-sided Fisher exact test per cluster versus the rest, Benjamini-Hochberg step-up over the full "
             + $"tested set (signatures with support >= {GeneEnrichment.MinimumSupport} rows overall): q(i) = min over j >= i of p(j) * m / j, so q >= p and q <= 1. The tested count m is shown; the display limits rows, never the correction.");
         AppendDefinition(html,
+            "Diet features: behavior.softMeals/toughMeals/toxicMeals/corpseMeals are per-creature persisted meal counters. "
+            + "diet.totalMeals = soft+tough+toxic (corpse food is a soft subset reported separately); diet.*Share are shares of that total, "
+            + "diet.dominance is the largest share, and diet.entropy is normalized Shannon entropy over the three food types (0 = one type, "
+            + "1 = equal shares). Older saves without the counters read as zero.");
+        AppendDefinition(html,
             "Feature semantics: organ.* is the expressed organ count for every OrganKindV4 (0 = absent); trait.* is the effective life-history "
             + "value after the same fallback defaults as the runtime phenotype adapter. Constant columns are dropped and listed; feature counts "
             + "show used/raw. A non-finite feature value is a hard error.");
@@ -553,6 +558,9 @@ th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.warn{color:#fca5a5}.no
     private static readonly string[] SelectedFeatures =
     [
         "behavior.drive", "behavior.displacement", "neutral.move", "behavior.corpseMeals",
+        "behavior.softMeals", "behavior.toughMeals", "behavior.toxicMeals",
+        "diet.totalMeals", "diet.softShare", "diet.toughShare", "diet.toxicShare",
+        "diet.corpseShare", "diet.dominance", "diet.entropy",
         "behavior.kills", "behavior.children", "behavior.age", "behavior.energyRatio",
         "gene.count", "body.organs", "neural.nodes", "neural.edges",
     ];

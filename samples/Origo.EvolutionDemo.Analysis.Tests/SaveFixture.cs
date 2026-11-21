@@ -48,7 +48,8 @@ internal static class SaveFixture
         bool includeController = true,
         bool includeTime = true,
         bool includeVersion = true,
-        IReadOnlyDictionary<string, object>? extraControllerPairs = null)
+        IReadOnlyDictionary<string, object>? extraControllerPairs = null,
+        bool includeDietCounters = true)
     {
         var saveRoot = Path.Combine(directory.Path, slotName);
         var sceneDirectory = Path.Combine(saveRoot, "level_pond");
@@ -107,6 +108,14 @@ internal static class SaveFixture
                 ["evo.maxAge"] = 200d,
                 ["evo.bodyRadius"] = 5d,
             };
+            if (includeDietCounters)
+            {
+                creaturePairs["evo.creatureCorpseMeals"] = 1d;
+                creaturePairs["evo.creatureSoftMeals"] = 2d;
+                creaturePairs["evo.creatureToughMeals"] = 1d;
+                creaturePairs["evo.creatureToxicMeals"] = 1d;
+            }
+
             entities.Add(Entity(name, creaturePairs));
         }
 
