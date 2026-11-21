@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Runtime.CompilerServices;
 using Origo.Core.Abstractions.Entity;
 using Origo.EvolutionDemo.Logic;
 using Origo.EvolutionDemo.Logic.V4;
@@ -13,6 +14,7 @@ namespace Origo.EvolutionDemo;
 internal readonly record struct CreatureSnapshot(
     ISndEntity Entity,
     int StableId,
+    string BodyGenome,
     float X,
     float Y,
     float Heading,
@@ -40,6 +42,26 @@ internal readonly record struct CreatureSnapshot(
     public bool Armor => (OrganMask & (int)DemoOrganMaskV4.Armor) != 0;
 }
 
+/// <summary>Per-entity fields that do not change after spawn or load.</summary>
+internal sealed class CreatureStaticView
+{
+    public required int StableId { get; init; }
+    public required string BodyGenome { get; init; }
+    public required float BodyRadius { get; init; }
+    public required float FoodPickupRadius { get; init; }
+    public required float MaxEnergy { get; init; }
+    public required float MoveSpeed { get; init; }
+    public required float TurnSpeed { get; init; }
+    public required float SenseRange { get; init; }
+    public required float SpikeRadius { get; init; }
+    public required float BasalMetabolism { get; init; }
+    public required float MaxAge { get; init; }
+    public required int OrganMask { get; init; }
+    public required int SpikeCount { get; init; }
+    public required float SpikeSpread { get; init; }
+    public required float SpikeJitter { get; init; }
+}
+
 internal readonly record struct FoodSnapshot(ISndEntity Entity, float X, float Y, bool FromCorpse, FoodType Type);
 
 internal readonly record struct CorpseSnapshot(
@@ -62,6 +84,10 @@ internal sealed class WorldSnapshot
     private static SensorPoint[] _creaturePoints = [];
     private static SensorPoint[] _corpsePoints = [];
     private static bool[] _foodConsumed = [];
+    // Weak keys keep the cache bounded when creatures die and disappear from
+    // the session; the underlying entity is the identity and its static fields
+    // are never written after spawn/load.
+    private static readonly ConditionalWeakTable<ISndEntity, CreatureStaticView> CreatureStaticCache = new();
 
     private WorldSnapshot(
         List<CreatureSnapshot> creatures,
@@ -162,29 +188,53 @@ internal sealed class WorldSnapshot
         return id;
     }
 
-    private static CreatureSnapshot ReadCreature(ISndEntity entity) => new(
-        entity,
-        ParseCreatureId(entity.Name),
-        ReadFloat(entity, DemoKeys.X, 0f),
-        ReadFloat(entity, DemoKeys.Y, 0f),
-        ReadFloat(entity, DemoKeys.Heading, 0f),
-        ReadFloat(entity, DemoKeys.Energy, Tuning.InitialEnergy),
-        ReadFloat(entity, DemoKeys.Age, 0f),
-        ReadFloat(entity, DemoKeys.ReproCooldown, 0f),
-        ReadFloat(entity, DemoKeys.SpikeCooldown, 0f),
-        ReadFloat(entity, DemoKeys.BodyRadius, Tuning.BodyRadius),
-        ReadFloat(entity, DemoKeys.FoodPickupRadius, Tuning.FoodPickupRadius),
-        ReadFloat(entity, DemoKeys.MaxEnergy, 200f),
-        ReadFloat(entity, DemoKeys.MoveSpeed, Tuning.CreatureSpeed),
-        ReadFloat(entity, DemoKeys.TurnSpeed, Tuning.TurnSpeed),
-        ReadFloat(entity, DemoKeys.SenseRange, Tuning.SenseRange),
-        ReadFloat(entity, DemoKeys.SpikeRadius, Tuning.SpikeRadius),
-        ReadFloat(entity, DemoKeys.BasalMetabolism, 1f),
-        ReadFloat(entity, DemoKeys.MaxAge, Tuning.MaxAgeSeconds),
-        ReadInt(entity, DemoKeys.OrganMask, 0),
-        ReadInt(entity, DemoKeys.SpikeCount, 1),
-        ReadFloat(entity, DemoKeys.SpikeSpread, 0f),
-        ReadFloat(entity, DemoKeys.SpikeJitter, 0f));
+    private static CreatureSnapshot ReadCreature(ISndEntity entity)
+    {
+        var stat = CreatureStaticCache.GetValue(entity, static target => ReadCreatureStatic(target));
+        return new CreatureSnapshot(
+            entity,
+            stat.StableId,
+            stat.BodyGenome,
+            ReadFloat(entity, DemoKeys.X, 0f),
+            ReadFloat(entity, DemoKeys.Y, 0f),
+            ReadFloat(entity, DemoKeys.Heading, 0f),
+            ReadFloat(entity, DemoKeys.Energy, Tuning.InitialEnergy),
+            ReadFloat(entity, DemoKeys.Age, 0f),
+            ReadFloat(entity, DemoKeys.ReproCooldown, 0f),
+            ReadFloat(entity, DemoKeys.SpikeCooldown, 0f),
+            stat.BodyRadius,
+            stat.FoodPickupRadius,
+            stat.MaxEnergy,
+            stat.MoveSpeed,
+            stat.TurnSpeed,
+            stat.SenseRange,
+            stat.SpikeRadius,
+            stat.BasalMetabolism,
+            stat.MaxAge,
+            stat.OrganMask,
+            stat.SpikeCount,
+            stat.SpikeSpread,
+            stat.SpikeJitter);
+    }
+
+    private static CreatureStaticView ReadCreatureStatic(ISndEntity entity) => new()
+    {
+        StableId = ParseCreatureId(entity.Name),
+        BodyGenome = ReadString(entity, DemoKeys.BodyGenome, string.Empty),
+        BodyRadius = ReadFloat(entity, DemoKeys.BodyRadius, Tuning.BodyRadius),
+        FoodPickupRadius = ReadFloat(entity, DemoKeys.FoodPickupRadius, Tuning.FoodPickupRadius),
+        MaxEnergy = ReadFloat(entity, DemoKeys.MaxEnergy, 200f),
+        MoveSpeed = ReadFloat(entity, DemoKeys.MoveSpeed, Tuning.CreatureSpeed),
+        TurnSpeed = ReadFloat(entity, DemoKeys.TurnSpeed, Tuning.TurnSpeed),
+        SenseRange = ReadFloat(entity, DemoKeys.SenseRange, Tuning.SenseRange),
+        SpikeRadius = ReadFloat(entity, DemoKeys.SpikeRadius, Tuning.SpikeRadius),
+        BasalMetabolism = ReadFloat(entity, DemoKeys.BasalMetabolism, 1f),
+        MaxAge = ReadFloat(entity, DemoKeys.MaxAge, Tuning.MaxAgeSeconds),
+        OrganMask = ReadInt(entity, DemoKeys.OrganMask, 0),
+        SpikeCount = ReadInt(entity, DemoKeys.SpikeCount, 1),
+        SpikeSpread = ReadFloat(entity, DemoKeys.SpikeSpread, 0f),
+        SpikeJitter = ReadFloat(entity, DemoKeys.SpikeJitter, 0f),
+    };
 
     private static float ReadFloat(ISndEntity entity, string key, float fallback) =>
         entity.TryGetData<float>(key) is { found: true } result ? result.value : fallback;
@@ -194,4 +244,7 @@ internal sealed class WorldSnapshot
 
     private static bool ReadBool(ISndEntity entity, string key, bool fallback) =>
         entity.TryGetData<bool>(key) is { found: true } result ? result.value : fallback;
+
+    private static string ReadString(ISndEntity entity, string key, string fallback) =>
+        entity.TryGetData<string>(key) is { found: true, value: not null } result ? result.value : fallback;
 }
