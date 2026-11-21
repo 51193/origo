@@ -79,4 +79,54 @@ public sealed class GameplayGenomeGateTests
             GenomeContentGate.ActionFilter = saved;
         }
     }
+    [Fact]
+    public void MutationCanCreateFoodTypeVisionWhenUnlocked()
+    {
+        var saved = GenomeContentGate.OrganFilter;
+        try
+        {
+            GenomeContentGate.OrganFilter = organ => organ == OrganKindV4.FoodTypeVision;
+            var random = new Random(20261121);
+            var genome = GenomeV4Factory.CreateSimpleReflex();
+            var found = false;
+            for (var i = 0; i < 2000 && !found; i++)
+            {
+                genome = GenomeV4Mutator.Mutate(genome, random);
+                var phenotype = GenomeV4Compiler.Compile(genome, ExpressionContextV4.Neutral);
+                found = phenotype.Body.Organs.Any(static organ => organ.Kind == OrganKindV4.FoodTypeVision);
+            }
+
+            Assert.True(found, "FoodTypeVision was not reachable through mutation.");
+        }
+        finally
+        {
+            GenomeContentGate.OrganFilter = saved;
+        }
+    }
+
+    [Fact]
+    public void MutationCannotExposeLockedSensorThroughAnUnlockedOrgan()
+    {
+        var savedOrgan = GenomeContentGate.OrganFilter;
+        var savedSensor = GenomeContentGate.SensorFilter;
+        try
+        {
+            GenomeContentGate.OrganFilter = organ => organ == OrganKindV4.CarrionSense;
+            GenomeContentGate.SensorFilter = sensor => sensor != SensorKindV4.CorpseAhead;
+            var random = new Random(20261122);
+            var genome = GenomeV4Factory.CreateSimpleReflex();
+            for (var i = 0; i < 2000; i++)
+            {
+                genome = GenomeV4Mutator.Mutate(genome, random);
+                var phenotype = GenomeV4Compiler.Compile(genome, ExpressionContextV4.Neutral);
+                Assert.DoesNotContain((ushort)SensorKindV4.CorpseAhead, phenotype.SensorPorts);
+            }
+        }
+        finally
+        {
+            GenomeContentGate.OrganFilter = savedOrgan;
+            GenomeContentGate.SensorFilter = savedSensor;
+        }
+    }
+
 }

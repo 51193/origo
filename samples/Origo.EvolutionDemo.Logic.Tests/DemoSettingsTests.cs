@@ -163,7 +163,8 @@ public sealed class DemoSettingsTests
         Assert.Equal(0.40f, settings.ToxicFoodShare);
         Assert.Equal(18f, settings.FoodEnergy);
         Assert.Equal(25f, settings.ToughFoodEnergy);
-        Assert.Equal(32f, settings.ToxicFoodEnergy);
+        Assert.Equal(26f, settings.ToxicFoodEnergy);
+        Assert.Equal(1.5f, settings.SpikeCooldownSeconds);
     }
 
 }

@@ -20,8 +20,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   combine them with the existing directional food sensors and movement
   actions. The organ participates in the organ mask/upkeep and is carried by
   a minority of founders; the analysis tool reports it as
-  `organ.FoodTypeVision`. Corpse food counts as soft, and the organ is
-  currently founder-only (not yet in the general organ mutation pool).
+  `organ.FoodTypeVision`. Corpse food counts as soft, and the general organ
+  mutation operator can create it like any other organ.
 - **Evolution Demo food-value vision drives digestive diet separation** — the
   `FoodTypeVision` organ now also exposes `FoodValueAhead/Left/Right`, which
   report proximity weighted by each food type's effective energy for the
@@ -35,6 +35,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   toxic vs 17.5–19.9% for hard-digest carriers; populations stayed at 1,371–1,744 and the organ
   spread to 95.0–99.9% of the population by selection.
   The raw type sensors and corpse-as-soft semantics are unchanged.
+- **Evolution Demo balance passes close the food-vision loop** — the general
+  mutation path now validates every expressed sensor/action port against the
+  content gate, so locked content cannot leak in through organ/neuron payload
+  mutation, and `FoodTypeVision` plus all six of its sensor ports are part of
+  the normal mutation candidates. Toxic food energy is reduced from 32 to 26
+  (near tough's 25) and the spike cooldown is raised from 1.0 s to 1.5 s to
+  reduce the toxin-specialist and predation skew. In 3,600 s three-seed testing,
+  populations were 1,326–1,802, spike kills were 34.8–40.4% of deaths, and
+  hard/toxin carrier counts were 447–545 / 781–1,114 (previously more
+  toxin-skewed). Hard carriers ate 47.2–48.0% tough versus 27.6–30.2% for
+  toxin carriers; toxin carriers ate 40.8–41.6% toxic versus 21.8–23.3% for
+  hard carriers, preserving the diet separation.
 - **Evolution Demo analysis includes per-creature diet and niche metrics** —
   each creature now persists soft, tough, toxic, and corpse meal counters.
   The `genome` analysis exposes `behavior.*Meals`, `diet.totalMeals`,

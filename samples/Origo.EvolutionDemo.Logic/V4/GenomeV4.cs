@@ -576,7 +576,10 @@ public static class GenomeV4Mutator
         try
         {
             GenomeV4Validator.Validate(genome);
-            _ = GenomeV4Compiler.Compile(genome, ExpressionContextV4.Neutral);
+            var phenotype = GenomeV4Compiler.Compile(genome, ExpressionContextV4.Neutral);
+            if (phenotype.SensorPorts.Any(port => !GenomeContentGate.IsSensorAllowed((SensorKindV4)port))
+                || phenotype.ActionPorts.Any(port => !GenomeContentGate.IsActionAllowed((ActionKindV4)port)))
+                return false;
             return true;
         }
         catch (Exception ex) when (ex is InvalidDataException or InvalidOperationException)
@@ -675,6 +678,8 @@ public static class GenomeV4Mutator
             SensorKindV4.FoodAhead, SensorKindV4.FoodLeft, SensorKindV4.FoodRight,
             SensorKindV4.WallAhead, SensorKindV4.Energy, SensorKindV4.CreatureAhead,
             SensorKindV4.CorpseAhead, SensorKindV4.Sin, SensorKindV4.Cos,
+            SensorKindV4.FoodSoft, SensorKindV4.FoodTough, SensorKindV4.FoodToxic,
+            SensorKindV4.FoodValueAhead, SensorKindV4.FoodValueLeft, SensorKindV4.FoodValueRight,
         }.Where(GenomeContentGate.IsSensorAllowed).ToArray();
         var actionCandidates = new[]
         {
@@ -718,6 +723,8 @@ public static class GenomeV4Mutator
             SensorKindV4.FoodAhead, SensorKindV4.FoodLeft, SensorKindV4.FoodRight,
             SensorKindV4.WallAhead, SensorKindV4.Energy, SensorKindV4.CreatureAhead,
             SensorKindV4.CorpseAhead, SensorKindV4.Sin, SensorKindV4.Cos,
+            SensorKindV4.FoodSoft, SensorKindV4.FoodTough, SensorKindV4.FoodToxic,
+            SensorKindV4.FoodValueAhead, SensorKindV4.FoodValueLeft, SensorKindV4.FoodValueRight,
         }.Where(GenomeContentGate.IsSensorAllowed).ToArray();
         var actions = new[]
         {
@@ -739,7 +746,7 @@ public static class GenomeV4Mutator
             OrganKindV4.Vision, OrganKindV4.SpikeOrgan, OrganKindV4.SpikeBattery,
             OrganKindV4.HardDigest, OrganKindV4.ToxinResistance, OrganKindV4.Rhythm,
             OrganKindV4.CreatureSense, OrganKindV4.CarrionSense, OrganKindV4.Sprint,
-            OrganKindV4.Armor,
+            OrganKindV4.Armor, OrganKindV4.FoodTypeVision,
         }.Where(GenomeContentGate.IsOrganAllowed).ToArray();
         if (allowed.Length == 0)
             return;
