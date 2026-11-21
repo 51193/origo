@@ -373,12 +373,12 @@ scavenging.
 
 ### Directional spike
 
-The spike is no longer a radius AoE. The body's `SpikeOrgan` is the organ gene
-and the body `SpikeRange` codon group is the maximum shot distance. A
-`SpikeBattery` organ plus `SpikeCount` / `SpikeSpread` / `SpikeJitter` codons
-turn the action into a salvo of rays; half of calibrated founders carry the
-battery. The fixed latent brain's fourth output slot (`Aim`) supplies a signed
-aim offset:
+The spike is no longer a radius AoE. The body's `SpikeOrgan` gene enables the
+action, and the `SpikeRange` life trait is the maximum shot distance. A
+`SpikeBattery` organ (and its copy count) turns the action into a salvo of rays;
+half of calibrated founders carry the battery. The V4 neural graph's `Aim`
+output port supplies a signed aim offset. The current adapter uses a fixed 45°
+spread and zero jitter; only the battery copy count comes from the body:
 
 ```text
 aimAngle = bodyHeading + aimDrive * SpikeAimHalfAngle
@@ -397,9 +397,7 @@ hits; armor is available to founders and mutations. Armor is a mobility
 trade-off: an armored body moves and turns at `ArmorSpeedMultiplier` (default
 0.9) of its expressed speed. The defaults make predation
 a routine part of the pond rather than a rare event: a low `0.05` drive
-threshold, a wide 32-unit beam, a 1.5 s cooldown, and a cheap base cost. The fan count comes from
-the expressed battery copies; the current V4 adapter uses a fixed spread of 45°
-and zero jitter. Energy cost is:
+threshold, a wide 32-unit beam, a 1.5 s cooldown, and a cheap base cost. Energy cost is:
 
 ```text
 SpikeBaseCost + SpikePerPelletCost * pelletCount
