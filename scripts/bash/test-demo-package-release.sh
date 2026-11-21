@@ -69,6 +69,10 @@ write_fake_root() {
     mkdir -p "$fake_root/samples/Origo.EvolutionDemo" "$fake_root/scripts/bash"
     cp "$ROOT/samples/Origo.EvolutionDemo/$PACKAGER_NAME" \
         "$fake_root/samples/Origo.EvolutionDemo/$PACKAGER_NAME"
+    # The packager sources the repository SDK bootstrap. This fixture only
+    # exercises packaging with the PATH `dotnet` stub above, so keep that
+    # bootstrap an empty no-op here.
+    printf '#!/usr/bin/env bash\n' > "$fake_root/scripts/bash/dotnet-env.sh"
     cat > "$fake_root/scripts/bash/download-godot.sh" <<EOF
 #!/usr/bin/env bash
 printf '%s\\n' "$fake_root/godot"

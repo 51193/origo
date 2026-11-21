@@ -10,6 +10,15 @@ Repository-facing maintenance changes that do not change user-visible runtime, p
 
 CI workflow shape, local test/coverage gates, package-consumer fixture smoke coverage, shell-API baseline tooling, PowerShell/Bash parity, and developer-suite commands.
 
+- **Evolution Demo is part of the root build/format gate** — the Godot demo
+  project is now listed in `Origo.sln`, so `scripts/bash/format.sh`,
+  `scripts/bash/test.sh`, and the Windows solution gate compile and format it.
+  Its three format diagnostics were fixed, and the packaging self-test now
+  stubs the SDK bootstrap and checks both the demo and Logic assemblies.
+  Regression coverage grew for V4 codec/validation, settings ranges, sensor
+  port filtering, content rollback, diversity, analysis output directories,
+  and report provenance.
+
 - **Evolution Demo genome analysis exposes per-creature diet** — the save reader accepts the new additive
   `evo.creatureSoftMeals`/`toughMeals`/`toxicMeals` counters (older saves default to zero), feature extraction
   adds `behavior.*Meals` and `diet.*` shares/dominance/entropy, and the HTML report's cluster behavior profile
