@@ -41,7 +41,11 @@ public partial class DemoEntry : OrigoDefaultEntry
     /// <inheritdoc/>
     public override void _Ready()
     {
-        var gameplayRuntime = GameplayRuntime.CreateDefault([new CoreEvolutionModule()]);
+        var gameplayMode = string.Equals(
+            OS.GetEnvironment("ORIGO_DEMO_SMOKE"), "1", StringComparison.Ordinal)
+            ? GameplayMode.Sandbox
+            : GameplayMode.Campaign;
+        var gameplayRuntime = GameplayRuntime.CreateDefault([new CoreEvolutionModule()], gameplayMode);
         DemoMechanicHandlers.Validate(gameplayRuntime);
         ConfigPath = "res://Origo/entry/entry.json";
         SceneAliasMapPath = "res://Origo/maps/scene_aliases.map";

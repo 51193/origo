@@ -25,7 +25,7 @@ public sealed class GameplayContentPackTests
         """;
         var snapshot = GameplayContentPackLoader.LoadSnapshot([json]);
         Assert.True(snapshot.Content.ContainsKey("gene.organ.spike"));
-        var progression = new GameplayProgression();
+        var progression = new GameplayProgression { Mode = GameplayMode.Campaign, Points = 10 };
         var unlocks = new UnlockService(snapshot, progression);
         Assert.True(unlocks.TryUnlock("unlock.spike"));
     }

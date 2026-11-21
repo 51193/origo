@@ -49,6 +49,12 @@ public partial class DemoUi
         _newGamePanel = CenterPanel(460f, 620f);
         var column = VBox(_newGamePanel);
         column.AddChild(Title("NEW POND", 26));
+        column.AddChild(LabelText("Mode", MutedColor));
+        _modeOption = new OptionButton();
+        _modeOption.AddItem("Campaign — primordial start + unlocks");
+        _modeOption.AddItem("Sandbox — all genes and mechanics");
+        _modeOption.Selected = 0;
+        column.AddChild(_modeOption);
         column.AddChild(LabelText("Seed (blank = random)", MutedColor));
         _seedInput = new LineEdit { PlaceholderText = "e.g. 12345" };
         column.AddChild(_seedInput);

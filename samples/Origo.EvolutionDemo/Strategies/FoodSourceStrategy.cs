@@ -148,10 +148,12 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
                 point = new System.Numerics.Vector2(point.X * scale, point.Y * scale);
             }
 
+            var (toughShare, toxicShare) = CampaignProgressionRules.FoodShares(
+                gameplaySession.Runtime.Progression, DemoSettings.Current);
             var typeRoll = rng.NextDouble();
-            var foodType = typeRoll < Tuning.ToughFoodShare
+            var foodType = typeRoll < toughShare
                 ? FoodType.Tough
-                : typeRoll < Tuning.ToughFoodShare + Tuning.ToxicFoodShare
+                : typeRoll < toughShare + toxicShare
                     ? FoodType.Toxic
                     : FoodType.Soft;
             metas.Add(EvolutionEntityFactory.Food(

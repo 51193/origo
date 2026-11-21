@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Godot;
 using Origo.EvolutionDemo.Logic;
+using Origo.EvolutionDemo.Logic.Gameplay;
 
 namespace Origo.EvolutionDemo;
 
@@ -40,6 +41,21 @@ public partial class DemoSmokeRunner : Node
     private bool _startInputClicked;
     private bool _diversityShotTaken;
     private bool _cameraTested;
+    private readonly bool _campaignAutoplay = string.Equals(
+        OS.GetEnvironment("ORIGO_DEMO_CAMPAIGN_AUTOPLAY"), "1", StringComparison.Ordinal);
+    private static readonly string[] CampaignPurchaseOrder =
+    [
+        CampaignUnlockIds.ToughFood, CampaignUnlockIds.HardDigest,
+        CampaignUnlockIds.Pond1, CampaignUnlockIds.Sprint,
+        CampaignUnlockIds.ToxicFood, CampaignUnlockIds.ToxinResistance,
+        CampaignUnlockIds.CreatureSense, CampaignUnlockIds.Rhythm,
+        CampaignUnlockIds.CorpseCycle, CampaignUnlockIds.CarrionSense,
+        CampaignUnlockIds.Pond2, CampaignUnlockIds.Predation,
+        CampaignUnlockIds.Battery, CampaignUnlockIds.Armor,
+        CampaignUnlockIds.Pond3, CampaignUnlockIds.FoodTypeVision,
+        CampaignUnlockIds.Enrichment, CampaignUnlockIds.Pond4,
+        CampaignUnlockIds.Pond5, CampaignUnlockIds.Pond6,
+    ];
     private int _verifiedCheckpoints;
     private readonly string? _configurationError;
 
@@ -155,6 +171,9 @@ public partial class DemoSmokeRunner : Node
         var ui = _entry.Ui;
         if (ui is null)
             return;
+
+        if (_campaignAutoplay && _entry.Session.Runtime.Progression.Mode == GameplayMode.Campaign)
+            TryCampaignAutoplay();
 
         switch (_state)
         {
@@ -434,6 +453,7 @@ public partial class DemoSmokeRunner : Node
                     break;
                 }
 
+                PrintCampaignSummary();
                 GD.Print($"DEMO_SMOKE_OK population={_restoredCreatures} saved_population={_savedPopulation} " +
                     $"generation={_restoredGeneration} time={_restoredTime:0.0} food={_restoredFood} " +
                     $"reset_population={_resetPopulation} fast_forward_time={fastForwarded.time:0.0} " +
@@ -449,11 +469,31 @@ public partial class DemoSmokeRunner : Node
                     break;
                 if (!_entry.Context.Save.ListSaves().Contains(_benchmarkSaveSlot, StringComparer.Ordinal))
                     throw new InvalidOperationException("Benchmark save is missing.");
+                PrintCampaignSummary();
                 GD.Print($"DEMO_BENCHMARK_OK population={_savedPopulation} time={_savedTime:0.0} " +
                     $"slot={_benchmarkSaveSlot} checkpoints={_verifiedCheckpoints}");
                 GetTree().Quit(0);
                 break;
         }
+    }
+
+    private void PrintCampaignSummary()
+    {
+        if (!_campaignAutoplay)
+            return;
+        var runtime = _entry.Session.Runtime;
+        GD.Print($"DEMO_CAMPAIGN points={runtime.Progression.Points} " +
+            $"milestones={runtime.Progression.CompletedMilestones.Count} " +
+            $"unlocks={runtime.Progression.UnlockedIds.Count} " +
+            $"mode={runtime.Progression.Mode}");
+    }
+
+    private void TryCampaignAutoplay()
+    {
+        var runtime = _entry.Session.Runtime;
+        foreach (var unlockId in CampaignPurchaseOrder)
+            runtime.TryUnlock(unlockId);
+        _entry.Ui.RefreshCampaignWorld();
     }
 
     private int VerifyIterateCheckpoints()

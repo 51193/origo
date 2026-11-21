@@ -4,12 +4,12 @@ using Xunit;
 
 namespace Origo.EvolutionDemo.Logic.Tests;
 
-public sealed class GameplayRuntimeTests
+public sealed class GameplayRuntimeTests : System.IDisposable
 {
     [Fact]
     public void ExternalContent_MergesWithoutLosingCoreProgression()
     {
-        var runtime = GameplayRuntime.CreateDefault();
+        var runtime = GameplayRuntime.CreateDefault(null, GameplayMode.Campaign);
         Assert.True(runtime.Unlocks.IsUnlocked("unlock.core"));
         const string packJson = """
         {
@@ -33,9 +33,10 @@ public sealed class GameplayRuntimeTests
     }
 
     [Fact]
-    public void Milestone_AwardsPlaceholderPointsOnce()
+    public void Milestone_AwardsPointsOnce()
     {
-        var runtime = GameplayRuntime.CreateDefault();
+        var runtime = GameplayRuntime.CreateDefault(null, GameplayMode.Campaign);
+        runtime.Progression.CompletedMilestones.Add("milestone.firstBlood");
         runtime.ApplyExternalPack("""
         {
           "schemaVersion": 1,
@@ -59,7 +60,7 @@ public sealed class GameplayRuntimeTests
     [Fact]
     public void Milestone_CanGrantUnlock()
     {
-        var runtime = GameplayRuntime.CreateDefault();
+        var runtime = GameplayRuntime.CreateDefault(null, GameplayMode.Campaign);
         Assert.False(runtime.Unlocks.IsUnlocked("unlock.spawn.enrichment"));
         runtime.ApplyExternalPack("""
         {
@@ -80,10 +81,20 @@ public sealed class GameplayRuntimeTests
     [Fact]
     public void EnrichmentSpawn_IsOnlySelectedAfterUnlock()
     {
-        var runtime = GameplayRuntime.CreateDefault();
+        var runtime = GameplayRuntime.CreateDefault(null, GameplayMode.Campaign);
         Assert.Equal("spawn.base", runtime.Resolver.Resolve("spawn.policy")?.Id);
-        Assert.True(runtime.Unlocks.TryUnlock("unlock.spawn.enrichment"));
+        runtime.Progression.Points = 5_000;
+        runtime.Progression.CompletedMilestones.Add("milestone.population100");
+        Assert.True(runtime.TryUnlock("unlock.spawn.enrichment"));
         Assert.Equal("spawn.enrichment", runtime.Resolver.Resolve("spawn.policy")?.Id);
         Assert.Equal("food_enrichment_spawn", runtime.Resolver.Resolve("spawn.policy")?.HandlerId);
     }
+
+    public void Dispose()
+    {
+        Origo.EvolutionDemo.Logic.V4.GenomeContentGate.OrganFilter = static _ => true;
+        Origo.EvolutionDemo.Logic.V4.GenomeContentGate.ActionFilter = static _ => true;
+        Origo.EvolutionDemo.Logic.V4.GenomeContentGate.SensorFilter = static _ => true;
+    }
+
 }

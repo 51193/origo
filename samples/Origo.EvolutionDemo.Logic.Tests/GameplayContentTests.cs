@@ -6,13 +6,13 @@ using Xunit;
 
 namespace Origo.EvolutionDemo.Logic.Tests;
 
-public sealed class GameplayContentTests
+public sealed class GameplayContentTests : System.IDisposable
 {
     [Fact]
     public void UnlockService_RequiresPrerequisitesAndMilestones()
     {
         var content = BuildContent();
-        var progression = new GameplayProgression();
+        var progression = new GameplayProgression { Mode = GameplayMode.Campaign, Points = 10 };
         var service = new UnlockService(content, progression);
         Assert.False(service.CanUnlock("unlock.spike"));
         Assert.True(service.TryUnlock("unlock.root"));
@@ -25,7 +25,7 @@ public sealed class GameplayContentTests
     public void Resolver_SelectsOneVariantByPriorityAndBiome()
     {
         var content = BuildContent();
-        var progression = new GameplayProgression();
+        var progression = new GameplayProgression { Mode = GameplayMode.Campaign };
         var unlocks = new UnlockService(content, progression);
         Assert.True(unlocks.TryUnlock("unlock.root"));
         var resolver = new MechanicResolver(content, unlocks);
@@ -135,4 +135,12 @@ public sealed class GameplayContentTests
         public IReadOnlyList<string> Dependencies => dependencies;
         public void Register(GameplayContentRegistry content, GameplayModuleServices services) { }
     }
+
+    public void Dispose()
+    {
+        Origo.EvolutionDemo.Logic.V4.GenomeContentGate.OrganFilter = static _ => true;
+        Origo.EvolutionDemo.Logic.V4.GenomeContentGate.ActionFilter = static _ => true;
+        Origo.EvolutionDemo.Logic.V4.GenomeContentGate.SensorFilter = static _ => true;
+    }
+
 }

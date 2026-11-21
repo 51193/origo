@@ -13,6 +13,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 ### Added
 
+- **Evolution Demo adds a primordial campaign progression** — New Pond
+  defaults to a campaign start with 24 founders in a 700-unit pond, basic
+  Vision/feeding reflexes, and soft-only food. Account-wide milestone rewards
+  plus a passive 1 EP/30 s trickle buy gene and mechanic unlocks in prerequisite
+  order: tough/toxic food, HardDigest/ToxinResistance, senses, corpse/carrion,
+  predation/defense, FoodTypeVision, enrichment, and six pond-expansion tiers.
+  Organ unlocks seed up to three live innovators; pond expansions grow the active
+  pond and add food sources. Sandbox mode preserves the full benchmark
+  ecosystem, and the profile schema is bumped to version 2 with old placeholder
+  profiles quarantined.
 - **Evolution Demo adds a heritable food-type vision organ** — the
   `FoodTypeVision` organ exposes `FoodSoft`, `FoodTough`, and `FoodToxic`
   sensor ports carrying the best proximity of each food type in sense range.

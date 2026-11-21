@@ -5,6 +5,7 @@ using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Origo.EvolutionDemo.Logic;
 using Origo.EvolutionDemo.Logic.Gameplay;
+using Origo.EvolutionDemo.Logic.V4;
 
 namespace Origo.EvolutionDemo;
 
@@ -85,6 +86,7 @@ internal sealed class SnapshotSimulationSystem : IGameplaySystem
         world.CarrionFoodReleased = 0;
         world.NextFoodId = ReadInt(world.Controller, DemoKeys.NextFoodId, 1);
         world.Mutations.Clear();
+        WorldSimulationStrategy.AddPendingFoodSources(world);
         world.Rng = new Random(unchecked(
             (ReadInt(world.Controller, DemoKeys.Seed, 1) * 397)
             ^ ReadInt(world.Controller, DemoKeys.Tick, 0)));
@@ -336,12 +338,42 @@ internal sealed class ProgressionSimulationSystem : IGameplaySystem
         if (context is not EvolutionTickContext world)
             throw new InvalidOperationException("ProgressionSimulationSystem requires EvolutionTickContext.");
         var runtime = world.Session.Runtime;
-        runtime.Progression.LifetimeSeconds += Tuning.SimulationTickSeconds;
-        runtime.EvaluateMilestones(
-            runtime.Progression.LifetimeSeconds,
-            world.Alive,
-            world.SpikeKillsTotal);
+        if (runtime.Progression.Mode == GameplayMode.Sandbox)
+            return;
+        var controller = world.Controller;
+        var hardDigest = 0;
+        var toxinResistance = 0;
+        if (world.Snapshot is { } snapshot)
+        {
+            foreach (var creature in snapshot.Creatures)
+            {
+                if ((creature.OrganMask & (int)DemoOrganMaskV4.HardDigest) != 0)
+                    hardDigest++;
+                if ((creature.OrganMask & (int)DemoOrganMaskV4.ToxinResistance) != 0)
+                    toxinResistance++;
+            }
+        }
+
+        runtime.TickProgression(
+            world.TickSeconds,
+            new MilestoneMetrics(
+                Population: world.Alive,
+                Kills: world.SpikeKillsTotal,
+                MealsTotal: ReadCounter(controller, DemoKeys.FoodSoftMeals)
+                    + ReadCounter(controller, DemoKeys.FoodToughMeals)
+                    + ReadCounter(controller, DemoKeys.FoodToxicMeals),
+                ToughMeals: ReadCounter(controller, DemoKeys.FoodToughMeals),
+                ToxicMeals: ReadCounter(controller, DemoKeys.FoodToxicMeals),
+                CorpseMeals: ReadCounter(controller, DemoKeys.CorpseMeals),
+                Births: ReadCounter(controller, DemoKeys.Births),
+                MaxGeneration: ReadCounter(controller, DemoKeys.MaxGeneration),
+                Lineages: Math.Max(0, ReadCounter(controller, DemoKeys.NextLineageId) - 1),
+                HardDigestCreatures: hardDigest,
+                ToxinResistanceCreatures: toxinResistance));
     }
+
+    private static int ReadCounter(ISndEntity entity, string key) =>
+        entity.TryGetData<int>(key) is { found: true } result ? result.value : 0;
 }
 
 
