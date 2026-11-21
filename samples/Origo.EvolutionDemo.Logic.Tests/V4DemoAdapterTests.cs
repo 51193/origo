@@ -36,6 +36,27 @@ public sealed class V4DemoAdapterTests
     }
 
     [Fact]
+    public void Armor_ReducesMoveAndTurnSpeed()
+    {
+        var genes = new System.Collections.Generic.List<GeneV4>
+        {
+            new(1, GeneKind.BodySegment, 1, 1f, GenePayloadV4.BodySegment(1f, 1f)),
+            new(2, GeneKind.LifeHistory, 1, 1f, GenePayloadV4.LifeHistory(LifeTraitKindV4.Speed, 80f)),
+            new(3, GeneKind.LifeHistory, 1, 1f, GenePayloadV4.LifeHistory(LifeTraitKindV4.TurnSpeed, 4f)),
+            new(4, GeneKind.Organ, 1, 1f, GenePayloadV4.Organ(OrganKindV4.Armor, 0.8f)),
+        };
+        var armored = DemoPhenotypeAdapter.ToBodyPhenotype(
+            new GenomeV4(genes, 5));
+        var unarmored = DemoPhenotypeAdapter.ToBodyPhenotype(
+            new GenomeV4(genes.GetRange(0, 3), 5));
+
+        Assert.True(armored.MoveSpeed < unarmored.MoveSpeed);
+        Assert.True(armored.TurnSpeed < unarmored.TurnSpeed);
+        Assert.Equal(unarmored.MoveSpeed * Tuning.ArmorSpeedMultiplier, armored.MoveSpeed, 4);
+        Assert.Equal(unarmored.TurnSpeed * Tuning.ArmorSpeedMultiplier, armored.TurnSpeed, 4);
+    }
+
+    [Fact]
     public void Adapter_RoundTripsThroughCodec()
     {
         var genome = GenomeV4Factory.CreateDemoFounder(new Random(42));

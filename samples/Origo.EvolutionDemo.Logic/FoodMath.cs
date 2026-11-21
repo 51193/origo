@@ -32,4 +32,24 @@ public static class FoodMath
             FoodType.Toxic => MathF.Max(0f, toxicEnergy) * (toxinResistance ? 1f : 0.25f),
             _ => 0f,
         };
+
+    /// <summary>
+    ///     Returns true when a candidate food item is a better pickup than the
+    ///     current best: higher effective energy first, then shorter distance,
+    ///     then lower entity index for deterministic ties.
+    /// </summary>
+    public static bool IsBetterChoice(
+        float candidateEnergy,
+        float currentEnergy,
+        float candidateDistanceSquared,
+        float currentDistanceSquared,
+        int candidateIndex,
+        int currentIndex)
+    {
+        if (candidateEnergy != currentEnergy)
+            return candidateEnergy > currentEnergy;
+        if (candidateDistanceSquared != currentDistanceSquared)
+            return candidateDistanceSquared < currentDistanceSquared;
+        return candidateIndex < currentIndex;
+    }
 }

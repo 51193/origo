@@ -24,6 +24,8 @@ public sealed class DemoSettingsTests
         settings.SpikeKillStealFraction = 0.25f;
         settings.SpikeArmorDamageMultiplier = 0.33f;
         settings.SprintSurchargeFraction = 1.75f;
+        settings.OrganUpkeepPerSecond = 0.07f;
+        settings.ArmorSpeedMultiplier = 0.7f;
         settings.IterateCheckpointIntervalSeconds = 300f;
 
         var restored = DemoSettings.FromJson(settings.ToJson());
@@ -42,6 +44,8 @@ public sealed class DemoSettingsTests
         Assert.Equal(settings.SpikeKillStealFraction, restored.SpikeKillStealFraction);
         Assert.Equal(settings.SpikeArmorDamageMultiplier, restored.SpikeArmorDamageMultiplier);
         Assert.Equal(settings.SprintSurchargeFraction, restored.SprintSurchargeFraction);
+        Assert.Equal(settings.OrganUpkeepPerSecond, restored.OrganUpkeepPerSecond);
+        Assert.Equal(settings.ArmorSpeedMultiplier, restored.ArmorSpeedMultiplier);
         Assert.Equal(settings.IterateCheckpointIntervalSeconds, restored.IterateCheckpointIntervalSeconds);
     }
 
@@ -95,6 +99,8 @@ public sealed class DemoSettingsTests
         settings.SpikeDamageFraction = 2f;
         settings.SpikeKillStealFraction = -1f;
         settings.SpikeArmorDamageMultiplier = -1f;
+        settings.OrganUpkeepPerSecond = -1f;
+        settings.ArmorSpeedMultiplier = 2f;
 
         settings.Normalize();
 
@@ -102,6 +108,18 @@ public sealed class DemoSettingsTests
         Assert.Equal(1f, settings.SpikeDamageFraction);
         Assert.Equal(0f, settings.SpikeKillStealFraction);
         Assert.Equal(0f, settings.SpikeArmorDamageMultiplier);
+        Assert.Equal(0f, settings.OrganUpkeepPerSecond);
+        Assert.Equal(1f, settings.ArmorSpeedMultiplier);
+    }
+
+    [Fact]
+    public void Defaults_PinOrganAndArmorTradeOffs()
+    {
+        var settings = DemoSettings.Defaults();
+
+        Assert.Equal(0.06f, settings.OrganUpkeepPerSecond);
+        Assert.Equal(0.9f, settings.ArmorSpeedMultiplier);
+        Assert.Equal(0.4f, settings.SpikeArmorDamageMultiplier);
     }
 
     [Fact]
@@ -118,6 +136,8 @@ public sealed class DemoSettingsTests
             settings.SpikeDamageFraction = 0.42f;
             settings.SpikeKillStealFraction = 0.25f;
             settings.SpikeArmorDamageMultiplier = 0.33f;
+            settings.OrganUpkeepPerSecond = 0.07f;
+            settings.ArmorSpeedMultiplier = 0.7f;
             DemoSettings.Current = settings;
 
             Assert.Equal(7_777f, Tuning.PondRadius);
@@ -127,6 +147,8 @@ public sealed class DemoSettingsTests
             Assert.Equal(0.42f, Tuning.SpikeDamageFraction);
             Assert.Equal(0.25f, Tuning.SpikeKillStealFraction);
             Assert.Equal(0.33f, Tuning.SpikeArmorDamageMultiplier);
+            Assert.Equal(0.07f, Tuning.OrganUpkeepPerSecond);
+            Assert.Equal(0.7f, Tuning.ArmorSpeedMultiplier);
         }
         finally
         {

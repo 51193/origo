@@ -50,4 +50,23 @@ public static class EnergyBudgetMath
                 nameof(surchargeFraction), "Sprint surcharge must be a finite, non-negative value.");
         return sprinting ? moveEnergyPerSecond * surchargeFraction * drive : 0f;
     }
+
+    /// <summary>
+    ///     Returns the per-second upkeep for the organ types expressed by one
+    ///     body. Each distinct organ type is one maintenance slot; organ sizes and
+    ///     duplicate copies are already paid for by the compiled body budget.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     Thrown when the organ count is negative or the per-organ upkeep is
+    ///     negative or not finite.
+    /// </exception>
+    public static float OrganUpkeepPerSecond(int organCount, float perOrganUpkeep)
+    {
+        if (organCount < 0)
+            throw new ArgumentOutOfRangeException(nameof(organCount), "Organ count must be non-negative.");
+        if (!float.IsFinite(perOrganUpkeep) || perOrganUpkeep < 0f)
+            throw new ArgumentOutOfRangeException(
+                nameof(perOrganUpkeep), "Organ upkeep must be a finite, non-negative value.");
+        return organCount * perOrganUpkeep;
+    }
 }
