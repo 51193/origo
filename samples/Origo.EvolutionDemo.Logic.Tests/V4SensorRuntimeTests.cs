@@ -65,4 +65,38 @@ public sealed class V4SensorRuntimeTests
             sensors);
         Assert.True(sensors[(int)SensorKindV4.CorpseAhead] > 0f);
     }
+    [Fact]
+    public void FoodConeBatch_EvaluatesForwardFood()
+    {
+        PhenotypeV4? phenotype = null;
+        for (var seed = 0; seed < 100 && phenotype is null; seed++)
+        {
+            var candidate = GenomeV4Factory.CreateDemoFounder(new Random(seed));
+            var compiled = GenomeV4Compiler.Compile(candidate, ExpressionContextV4.Neutral);
+            if (compiled.SensorPorts.Contains((ushort)SensorKindV4.FoodAhead))
+                phenotype = compiled;
+        }
+
+        Assert.NotNull(phenotype);
+        var sensors = new float[64];
+        DemoSensorRuntime.ComputeInto(
+            phenotype,
+            new DemoSensorContext
+            {
+                Position = Vector2.Zero,
+                Heading = 0f,
+                Energy = 50f,
+                MaxEnergy = 100f,
+                SenseRange = 200f,
+                Food = [new(0, new Vector2(80f, 0f))],
+                Creatures = [],
+                Corpses = [],
+                SelfId = 0,
+                OscillatorPhase = 0f,
+                ArenaRadius = 10_000f,
+            },
+            sensors);
+        Assert.True(sensors[(int)SensorKindV4.FoodAhead] > 0f);
+    }
+
 }

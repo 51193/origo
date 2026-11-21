@@ -332,17 +332,19 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         var spikeDrained = 0f;
         var carrionDetections = 0;
         var sprintActions = 0;
-        var actionBuffer = new float[64];
+        Span<float> actionBuffer = stackalloc float[64];
         var tickDt = Tuning.SimulationTickSeconds;
         var pondTime = ReadFloat(controller, DemoKeys.Time, 0f);
-        var sensorBuffer = new float[64];
+        Span<float> sensorBuffer = stackalloc float[64];
         var aiStride = Math.Max(1, (creatures.Count + Tuning.AiUpdateBatch - 1) / Tuning.AiUpdateBatch);
         var tickNumber = ReadInt(controller, DemoKeys.Tick, 0);
         var profiler = world.Session.Profiler;
         var aiTicks = 0d;
         var aiAlloc = 0L;
-        var markerTicks = new double[4];
-        var markerAlloc = new long[4];
+        Span<double> markerTicks = stackalloc double[4];
+        Span<long> markerAlloc = stackalloc long[4];
+        markerTicks.Clear();
+        markerAlloc.Clear();
 
         for (var i = 0; i < creatures.Count; i++)
         {
@@ -387,8 +389,14 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 // can exceed the default Tuning.SenseRange; query the actual
                 // range so the distance-filtered grid keeps every candidate the
                 // cones can see.
-                sensorGrid.Query(creature.X, creature.Y, senseRange, sensorGrid.Food, nearFood);
-                sensorGrid.Query(creature.X, creature.Y, senseRange, sensorGrid.Creatures, nearCreatures);
+                sensorGrid.QueryPair(
+                    creature.X,
+                    creature.Y,
+                    senseRange,
+                    sensorGrid.Food,
+                    sensorGrid.Creatures,
+                    nearFood,
+                    nearCreatures);
                 DemoSensorRuntime.ComputeInto(
                     phenotype,
                     new DemoSensorContext
@@ -978,7 +986,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         return false;
     }
 
-    private static string FormatSensors(float[] sensors) => string.Create(
+    private static string FormatSensors(ReadOnlySpan<float> sensors) => string.Create(
         CultureInfo.InvariantCulture,
         $"F {sensors[0]:0.00} L {sensors[1]:0.00} R {sensors[2]:0.00} W {sensors[4]:0.00} C {sensors[3]:0.00} E {sensors[5]:0.00} S/C {sensors[6]:0.00}/{sensors[7]:0.00} Carrion {sensors[8]:0.00}");
 

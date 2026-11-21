@@ -5,7 +5,7 @@ using System.Numerics;
 namespace Origo.EvolutionDemo.Logic.V4;
 
 /// <summary>World snapshot available to a V4 sensor evaluator.</summary>
-public sealed class DemoSensorContext
+public readonly struct DemoSensorContext
 {
     public required Vector2 Position { get; init; }
     public required float Heading { get; init; }
@@ -31,6 +31,8 @@ public static class DemoSensorRuntime
     public const int MaxInterfaceId = 63;
 
     private static readonly Dictionary<ushort, Func<DemoSensorContext, float>> Evaluators = [];
+    private static readonly bool _defaultsRegistered;
+    private static bool _customFoodEvaluator;
 
     static DemoSensorRuntime()
     {
@@ -49,12 +51,18 @@ public static class DemoSensorRuntime
             BestInCone(context, context.Corpses, Forward(context), context.SenseRange));
         Register(SensorKindV4.Sin, static context => MathF.Sin(context.OscillatorPhase));
         Register(SensorKindV4.Cos, static context => MathF.Cos(context.OscillatorPhase));
+        _defaultsRegistered = true;
     }
 
     /// <summary>Registers or replaces a sensor evaluator for a stable interface id.</summary>
     public static void Register(SensorKindV4 sensor, Func<DemoSensorContext, float> evaluator)
     {
         ArgumentNullException.ThrowIfNull(evaluator);
+        if (_defaultsRegistered
+            && (sensor == SensorKindV4.FoodAhead
+                || sensor == SensorKindV4.FoodLeft
+                || sensor == SensorKindV4.FoodRight))
+            _customFoodEvaluator = true;
         Evaluators[(ushort)sensor] = evaluator;
     }
 
@@ -65,16 +73,86 @@ public static class DemoSensorRuntime
         Span<float> sensors)
     {
         ArgumentNullException.ThrowIfNull(phenotype);
-        ArgumentNullException.ThrowIfNull(context);
         if (sensors.Length <= MaxInterfaceId)
             throw new ArgumentException($"Sensor buffer must be larger than {MaxInterfaceId}.", nameof(sensors));
         sensors.Clear();
+        var batchFood = !_customFoodEvaluator;
+        var foodAhead = 0f;
+        var foodLeft = 0f;
+        var foodRight = 0f;
+        if (batchFood)
+        {
+            foreach (var port in phenotype.SensorPorts)
+            {
+                if (port is (ushort)SensorKindV4.FoodAhead
+                    or (ushort)SensorKindV4.FoodLeft
+                    or (ushort)SensorKindV4.FoodRight)
+                {
+                    ComputeFoodCones(context, out foodAhead, out foodLeft, out foodRight);
+                    break;
+                }
+            }
+        }
+
         foreach (var port in phenotype.SensorPorts)
         {
             if (port > MaxInterfaceId)
                 continue;
+            if (batchFood)
+            {
+                switch (port)
+                {
+                    case (ushort)SensorKindV4.FoodAhead:
+                        sensors[port] = foodAhead;
+                        continue;
+                    case (ushort)SensorKindV4.FoodLeft:
+                        sensors[port] = foodLeft;
+                        continue;
+                    case (ushort)SensorKindV4.FoodRight:
+                        sensors[port] = foodRight;
+                        continue;
+                }
+            }
+
             if (Evaluators.TryGetValue(port, out var evaluator))
                 sensors[port] = evaluator(context);
+        }
+    }
+
+    /// <summary>
+    ///     Evaluates the three food cones in one pass over the food list. The
+    ///     registry fast path is used only while the built-in food evaluators are
+    ///     installed; custom registrations fall back to the per-port evaluators.
+    /// </summary>
+    private static void ComputeFoodCones(
+        DemoSensorContext context,
+        out float ahead,
+        out float left,
+        out float right)
+    {
+        ahead = 0f;
+        left = 0f;
+        right = 0f;
+        var range = context.SenseRange;
+        var rangeSquared = range * range;
+        var cosHalfAngle = MathF.Cos(Tuning.SenseHalfAngle);
+        var forward = Forward(context);
+        var leftDirection = new Vector2(forward.Y, -forward.X);
+        var rightDirection = new Vector2(-forward.Y, forward.X);
+        foreach (var point in context.Food)
+        {
+            var delta = point.Position - context.Position;
+            var distanceSquared = delta.LengthSquared();
+            if (distanceSquared <= 0.0001f || distanceSquared > rangeSquared)
+                continue;
+            var distance = MathF.Sqrt(distanceSquared);
+            var score = 1f - (distance / range);
+            if (!(Vector2.Dot(delta, forward) / distance < cosHalfAngle))
+                ahead = MathF.Max(ahead, score);
+            if (!(Vector2.Dot(delta, leftDirection) / distance < cosHalfAngle))
+                left = MathF.Max(left, score);
+            if (!(Vector2.Dot(delta, rightDirection) / distance < cosHalfAngle))
+                right = MathF.Max(right, score);
         }
     }
 
