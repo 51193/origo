@@ -13,6 +13,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 ### Added
 
+- **Evolution Demo adds a heritable food-type vision organ** — the
+  `FoodTypeVision` organ exposes `FoodSoft`, `FoodTough`, and `FoodToxic`
+  sensor ports carrying the best proximity of each food type in sense range.
+  The sensors do not encode a preference or steering rule; neural genes can
+  combine them with the existing directional food sensors and movement
+  actions. The organ participates in the organ mask/upkeep and is carried by
+  a minority of founders; the analysis tool reports it as
+  `organ.FoodTypeVision`. Corpse food counts as soft, and the organ is
+  currently founder-only (not yet in the general organ mutation pool).
 - **Evolution Demo analysis includes per-creature diet and niche metrics** —
   each creature now persists soft, tough, toxic, and corpse meal counters.
   The `genome` analysis exposes `behavior.*Meals`, `diet.totalMeals`,

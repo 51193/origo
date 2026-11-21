@@ -84,6 +84,7 @@ internal sealed class WorldSnapshot
     private static SensorPoint[] _creaturePoints = [];
     private static SensorPoint[] _corpsePoints = [];
     private static bool[] _foodConsumed = [];
+    private static readonly List<FoodType> _foodTypes = [];
     // Weak keys keep the cache bounded when creatures die and disappear from
     // the session; the underlying entity is the identity and its static fields
     // are never written after spawn/load.
@@ -118,6 +119,9 @@ internal sealed class WorldSnapshot
     public bool[] FoodConsumed { get; }
     public SensorPoint[] CorpsePoints { get; }
     public int FoodAlive => Foods.Count;
+
+    /// <summary>Food type by food/ground point id; corpse points are soft.</summary>
+    public static List<FoodType> FoodTypes => _foodTypes;
 
     public static WorldSnapshot Capture(ISndEntity controller)
     {
@@ -159,11 +163,18 @@ internal sealed class WorldSnapshot
             _creaturePoints = new SensorPoint[_creatures.Count];
         if (_foodConsumed.Length < _foods.Count)
             _foodConsumed = new bool[_foods.Count];
+        _foodTypes.Clear();
         for (var i = 0; i < _foods.Count; i++)
+        {
             _foodPoints[i] = new SensorPoint(i, new NumericsVector2(_foods[i].X, _foods[i].Y));
+            _foodTypes.Add(_foods[i].Type);
+        }
         for (var i = 0; i < _corpses.Count; i++)
+        {
             _foodPoints[_foods.Count + i] = new SensorPoint(
                 _foods.Count + i, new NumericsVector2(_corpses[i].X, _corpses[i].Y));
+            _foodTypes.Add(FoodType.Soft);
+        }
         for (var i = 0; i < _creatures.Count; i++)
             _creaturePoints[i] = new SensorPoint(i, new NumericsVector2(_creatures[i].X, _creatures[i].Y));
         if (_corpsePoints.Length < _corpses.Count)

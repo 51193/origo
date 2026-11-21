@@ -18,6 +18,7 @@ public enum DemoOrganMaskV4
     CarrionSense = 1 << 7,
     Sprint = 1 << 8,
     Armor = 1 << 9,
+    FoodTypeVision = 1 << 10,
 }
 
 /// <summary>Maps V4 organ instances to the demo's compact organ mask.</summary>
@@ -41,6 +42,7 @@ public static class DemoOrganMaskBuilder
                 OrganKindV4.CarrionSense => DemoOrganMaskV4.CarrionSense,
                 OrganKindV4.Sprint => DemoOrganMaskV4.Sprint,
                 OrganKindV4.Armor => DemoOrganMaskV4.Armor,
+                OrganKindV4.FoodTypeVision => DemoOrganMaskV4.FoodTypeVision,
                 _ => DemoOrganMaskV4.None,
             };
         }

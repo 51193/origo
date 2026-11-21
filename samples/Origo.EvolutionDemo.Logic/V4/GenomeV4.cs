@@ -31,6 +31,7 @@ public enum OrganKindV4 : ushort
     CreatureSense = 8,
     CarrionSense = 9,
     Sprint = 10,
+    FoodTypeVision = 11,
 }
 
 /// <summary>Neural node kinds.</summary>
@@ -53,6 +54,9 @@ public enum SensorKindV4 : ushort
     CorpseAhead = 7,
     Sin = 8,
     Cos = 9,
+    FoodSoft = 10,
+    FoodTough = 11,
+    FoodToxic = 12,
 }
 
 /// <summary>Action interface identifiers. New actions extend this registry.</summary>
