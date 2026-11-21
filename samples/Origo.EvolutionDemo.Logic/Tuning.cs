@@ -76,6 +76,8 @@ public static class Tuning
     public static float BaseMetabolismPerSecond => DemoSettings.Current.BaseMetabolismPerSecond;
     public static float MoveEnergyPerSecond => DemoSettings.Current.MoveEnergyPerSecond;
     public static float SprintSurchargeFraction => DemoSettings.Current.SprintSurchargeFraction;
+    public static float OrganUpkeepPerSecond => DemoSettings.Current.OrganUpkeepPerSecond;
+    public static float ArmorSpeedMultiplier => DemoSettings.Current.ArmorSpeedMultiplier;
     public static float GenomeMaintenanceScale => DemoSettings.Current.GenomeMaintenanceScale;
     public static float TurnEnergyPerSecond => DemoSettings.Current.TurnEnergyPerSecond;
     public static float ReproductionEnergy => DemoSettings.Current.ReproductionEnergy;

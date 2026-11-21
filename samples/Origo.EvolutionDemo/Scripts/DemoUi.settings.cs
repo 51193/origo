@@ -101,6 +101,10 @@ public partial class DemoUi
             s => s.MoveEnergyPerSecond, (s, v) => s.MoveEnergyPerSecond = v);
         AddNumberSetting(rows, "Sprint surcharge fraction", 0f, 5f, 0.05f,
             s => s.SprintSurchargeFraction, (s, v) => s.SprintSurchargeFraction = v);
+        AddNumberSetting(rows, "Organ upkeep / organ", 0f, 2f, 0.005f,
+            s => s.OrganUpkeepPerSecond, (s, v) => s.OrganUpkeepPerSecond = v);
+        AddNumberSetting(rows, "Armor speed multiplier", 0.1f, 1f, 0.01f,
+            s => s.ArmorSpeedMultiplier, (s, v) => s.ArmorSpeedMultiplier = v);
         AddNumberSetting(rows, "Genome upkeep / budget", 0f, 0.2f, 0.005f,
             s => s.GenomeMaintenanceScale, (s, v) => s.GenomeMaintenanceScale = v);
         AddNumberSetting(rows, "Turn energy", 0f, 2f, 0.05f,

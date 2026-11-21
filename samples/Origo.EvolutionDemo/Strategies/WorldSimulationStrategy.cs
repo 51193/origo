@@ -546,15 +546,23 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             var genomeUpkeep = EnergyBudgetMath.UpkeepPerSecond(
                 brainPhenotype.Energy.MaintenancePerSecond,
                 Tuning.GenomeMaintenanceScale);
+            var organUpkeep = EnergyBudgetMath.OrganUpkeepPerSecond(
+                System.Numerics.BitOperations.PopCount((uint)creature.OrganMask),
+                Tuning.OrganUpkeepPerSecond);
             energy -= (float)(((Tuning.BaseMetabolismPerSecond * creature.BasalMetabolism)
                 + (Tuning.MoveEnergyPerSecond * drive)
                 + (Tuning.TurnEnergyPerSecond * Math.Abs(turn))
                 + sprintSurcharge
-                + genomeUpkeep) * tickDt);
+                + genomeUpkeep
+                + organUpkeep) * tickDt);
             energy = MathF.Min(energy, creature.MaxEnergy);
 
             var ate = false;
             sensorGrid.Query(position.X, position.Y, sensorGrid.Food, nearFood);
+            var pickupRadiusSquared = creature.FoodPickupRadius * creature.FoodPickupRadius;
+            var bestFoodIndex = -1;
+            var bestFoodEnergy = float.NegativeInfinity;
+            var bestFoodDistanceSquared = float.PositiveInfinity;
             foreach (var point in nearFood)
             {
                 var foodIndex = point.Id;
@@ -563,11 +571,35 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 if (foodConsumed[foodIndex])
                     continue;
                 var delta = new NumericsVector2(foods[foodIndex].X, foods[foodIndex].Y) - position;
-                if (delta.LengthSquared() > creature.FoodPickupRadius * creature.FoodPickupRadius)
+                var distanceSquared = delta.LengthSquared();
+                if (distanceSquared > pickupRadiusSquared)
                     continue;
-                foodConsumed[foodIndex] = true;
+                var candidateType = foods[foodIndex].Type;
+                var candidateEnergy = FoodMath.EnergyFor(
+                    candidateType,
+                    Tuning.FoodEnergy,
+                    Tuning.ToughFoodEnergy,
+                    Tuning.ToxicFoodEnergy,
+                    creature.HardDigest,
+                    creature.ToxinResistance);
+                if (!FoodMath.IsBetterChoice(
+                        candidateEnergy,
+                        bestFoodEnergy,
+                        distanceSquared,
+                        bestFoodDistanceSquared,
+                        foodIndex,
+                        bestFoodIndex))
+                    continue;
+                bestFoodIndex = foodIndex;
+                bestFoodEnergy = candidateEnergy;
+                bestFoodDistanceSquared = distanceSquared;
+            }
+
+            if (bestFoodIndex >= 0)
+            {
+                foodConsumed[bestFoodIndex] = true;
                 foodAlive--;
-                if (foods[foodIndex].FromCorpse)
+                if (foods[bestFoodIndex].FromCorpse)
                 {
                     corpseMeals++;
                     entity.SetData(
@@ -575,16 +607,9 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                         ReadInt(entity, DemoKeys.CreatureCorpseMeals, 0) + 1);
                 }
 
-                var foodType = foods[foodIndex].Type;
-                var foodEnergy = FoodMath.EnergyFor(
-                    foodType,
-                    Tuning.FoodEnergy,
-                    Tuning.ToughFoodEnergy,
-                    Tuning.ToxicFoodEnergy,
-                    creature.HardDigest,
-                    creature.ToxinResistance);
-                session.RequestKillEntity(foods[foodIndex].Entity.Name);
-                energy = MathF.Min(energy + foodEnergy, creature.MaxEnergy);
+                var foodType = foods[bestFoodIndex].Type;
+                session.RequestKillEntity(foods[bestFoodIndex].Entity.Name);
+                energy = MathF.Min(energy + bestFoodEnergy, creature.MaxEnergy);
                 if (foodType == FoodType.Tough)
                     toughMeals++;
                 else if (foodType == FoodType.Toxic)
@@ -592,7 +617,6 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 else
                     softMeals++;
                 ate = true;
-                break;
             }
 
             var spikeCooldown = Math.Max(0f, creature.SpikeCooldown - tickDt);

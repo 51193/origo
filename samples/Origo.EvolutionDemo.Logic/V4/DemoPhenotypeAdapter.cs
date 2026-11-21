@@ -27,18 +27,28 @@ public static class DemoPhenotypeAdapter
         var bodyRadius = Tuning.BodyRadiusBase * size;
         var spikeBattery = organs.Where(static organ => organ.Kind == OrganKindV4.SpikeBattery).ToList();
         var spikeCount = Math.Clamp(spikeBattery.Count, 1, 8);
+        var organMask = DemoOrganMaskBuilder.FromOrgans(organs);
+        var armor = (organMask & (int)DemoOrganMaskV4.Armor) != 0;
+        var moveSpeed = TraitOrDefault(phenotype, LifeTraitKindV4.Speed, Tuning.CreatureSpeed);
+        var turnSpeed = TraitOrDefault(phenotype, LifeTraitKindV4.TurnSpeed, Tuning.TurnSpeed);
+        if (armor)
+        {
+            moveSpeed *= Tuning.ArmorSpeedMultiplier;
+            turnSpeed *= Tuning.ArmorSpeedMultiplier;
+        }
+
         return new BodyPhenotype(
             size,
             bodyRadius,
             bodyRadius + Tuning.FoodPickupPadding,
             Tuning.BodyMaxEnergyBase + (Tuning.BodyMaxEnergyPerSize * size * size),
-            TraitOrDefault(phenotype, LifeTraitKindV4.Speed, Tuning.CreatureSpeed),
-            TraitOrDefault(phenotype, LifeTraitKindV4.TurnSpeed, Tuning.TurnSpeed),
+            moveSpeed,
+            turnSpeed,
             TraitOrDefault(phenotype, LifeTraitKindV4.SenseRange, Tuning.SenseRange),
             TraitOrDefault(phenotype, LifeTraitKindV4.SpikeRange, Tuning.SpikeRadius),
             TraitOrDefault(phenotype, LifeTraitKindV4.Metabolism, 1f),
             TraitOrDefault(phenotype, LifeTraitKindV4.MaxAge, Tuning.MaxAgeSeconds),
-            DemoOrganMaskBuilder.FromOrgans(organs),
+            organMask,
             spikeCount,
             MathF.PI / 4f,
             0f);

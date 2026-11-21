@@ -31,4 +31,14 @@ public sealed class FoodMathTests
     {
         Assert.Equal(0f, FoodMath.EnergyFor(FoodType.Soft, -5f, -5f, -5f, true, true));
     }
+
+    [Fact]
+    public void FoodChoice_PrefersHigherEnergyThenNearerThenLowerIndex()
+    {
+        Assert.True(FoodMath.IsBetterChoice(25f, 18f, 9f, 1f, 2, 1));
+        Assert.False(FoodMath.IsBetterChoice(18f, 25f, 1f, 9f, 2, 1));
+        Assert.True(FoodMath.IsBetterChoice(18f, 18f, 4f, 9f, 2, 1));
+        Assert.False(FoodMath.IsBetterChoice(18f, 18f, 9f, 9f, 2, 1));
+        Assert.True(FoodMath.IsBetterChoice(18f, 18f, 9f, 9f, 1, 2));
+    }
 }

@@ -48,4 +48,21 @@ public sealed class EnergyBudgetMathTests
         Assert.Throws<ArgumentOutOfRangeException>(
             () => EnergyBudgetMath.SprintSurchargePerSecond(1.1f, 0.5f, true, -0.1f));
     }
+
+    [Theory]
+    [InlineData(0, 0.06f, 0f)]
+    [InlineData(1, 0.06f, 0.06f)]
+    [InlineData(5, 0.06f, 0.3f)]
+    public void OrganUpkeep_MultipliesOrganCountByPerOrganCost(int organCount, float perOrgan, float expected)
+    {
+        Assert.Equal(expected, EnergyBudgetMath.OrganUpkeepPerSecond(organCount, perOrgan), 5);
+    }
+
+    [Fact]
+    public void OrganUpkeep_RejectsInvalidInputs()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => EnergyBudgetMath.OrganUpkeepPerSecond(-1, 0.06f));
+        Assert.Throws<ArgumentOutOfRangeException>(() => EnergyBudgetMath.OrganUpkeepPerSecond(3, -0.1f));
+        Assert.Throws<ArgumentOutOfRangeException>(() => EnergyBudgetMath.OrganUpkeepPerSecond(3, float.NaN));
+    }
 }

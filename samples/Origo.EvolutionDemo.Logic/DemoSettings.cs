@@ -50,6 +50,8 @@ public sealed class DemoSettings
     public float BaseMetabolismPerSecond { get; set; } = 0.55f;
     public float MoveEnergyPerSecond { get; set; } = 1.1f;
     public float SprintSurchargeFraction { get; set; } = 2.5f;
+    public float OrganUpkeepPerSecond { get; set; } = 0.06f;
+    public float ArmorSpeedMultiplier { get; set; } = 0.90f;
     public float GenomeMaintenanceScale { get; set; } = 0.01f;
     public float TurnEnergyPerSecond { get; set; } = 0.2f;
     public float ReproductionEnergy { get; set; } = 140f;
@@ -73,7 +75,7 @@ public sealed class DemoSettings
     public float SpikeBeamRadius { get; set; } = 32f;
     public float SpikeDamageFraction { get; set; } = 0.50f;
     public float SpikeKillStealFraction { get; set; } = 0.50f;
-    public float SpikeArmorDamageMultiplier { get; set; } = 0.50f;
+    public float SpikeArmorDamageMultiplier { get; set; } = 0.40f;
     public float SpikeRadius { get; set; } = 48f;
     public float SpikeCooldownSeconds { get; set; } = 1.0f;
 
@@ -172,6 +174,8 @@ public sealed class DemoSettings
         BaseMetabolismPerSecond = Math.Clamp(BaseMetabolismPerSecond, 0f, 100f);
         MoveEnergyPerSecond = Math.Clamp(MoveEnergyPerSecond, 0f, 100f);
         SprintSurchargeFraction = Math.Clamp(SprintSurchargeFraction, 0f, 10f);
+        OrganUpkeepPerSecond = Math.Clamp(OrganUpkeepPerSecond, 0f, 10f);
+        ArmorSpeedMultiplier = Math.Clamp(ArmorSpeedMultiplier, 0.1f, 1f);
         GenomeMaintenanceScale = Math.Clamp(GenomeMaintenanceScale, 0f, 1f);
         TurnEnergyPerSecond = Math.Clamp(TurnEnergyPerSecond, 0f, 100f);
         ReproductionEnergy = Math.Clamp(ReproductionEnergy, 1f, 10_000f);
