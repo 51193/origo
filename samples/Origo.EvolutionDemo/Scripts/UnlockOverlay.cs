@@ -183,13 +183,7 @@ public partial class UnlockOverlay : CanvasLayer
                 $"Evolution points: {runtime.Progression.Points:N0}")
             : string.Create(CultureInfo.InvariantCulture,
                 $"Evolution points: {runtime.Progression.Points:N0} · next: {MilestoneName(next.Id)}");
-        var fingerprint = string.Join('|',
-            runtime.Content.Unlocks.Values
-                .OrderBy(static unlock => unlock.Id, StringComparer.Ordinal)
-                .Select(static unlock =>
-                    $"{unlock.Id}:{unlock.Cost}:{unlock.Title}:{unlock.Category}:" +
-                    $"{string.Join(',', unlock.Prerequisites)}:{string.Join(',', unlock.Grants)}:" +
-                    $"{string.Join(',', unlock.RequiredMilestones)}"));
+        var fingerprint = UnlockShopState.Fingerprint(runtime.Content, runtime.Progression);
         if (string.Equals(fingerprint, _contentFingerprint, StringComparison.Ordinal)
             && _rows.GetChildCount() > 0)
         {

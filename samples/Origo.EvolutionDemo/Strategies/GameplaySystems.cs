@@ -113,7 +113,11 @@ internal sealed class CorpseSimulationSystem : IGameplaySystem
         {
             if (corpse.Entity.IsPendingKill)
                 continue;
-            var freeSlots = Math.Max(0, Tuning.FoodCap - (world.FoodAlive + world.PendingFood));
+            var pendingFoodSpawns = world.Controller.TryGetData<int>(DemoKeys.PendingFoodSpawns)
+                is { found: true } result ? result.value : 0;
+            var freeSlots = Math.Max(
+                0,
+                Tuning.FoodCap - (world.FoodAlive + world.PendingFood + pendingFoodSpawns));
             var release = CarcassMath.Advance(
                 corpse.Timer, corpse.Remaining, corpse.Interval, tickDt, freeSlots);
             for (var pulse = 0; pulse < release.Pulses; pulse++)
@@ -200,8 +204,11 @@ internal sealed class FoodBloomSimulationSystem : IGameplaySystem
             ? Tuning.EarlyFoodSpawnBonus * (1f - (world.PondTime / Tuning.EarlyFoodRampSeconds))
             : 0f;
         var foodAccumulator = world.FoodAccumulator + ((Tuning.FoodPerSecond + bloomRate) * tickDt);
+        var pendingFoodSpawns = world.Controller.TryGetData<int>(DemoKeys.PendingFoodSpawns)
+            is { found: true } result ? result.value : 0;
         var feedRequest = world.FeedRequest;
-        while (feedRequest > 0 && world.FoodAlive < Tuning.FoodCap)
+        while (feedRequest > 0
+            && world.FoodAlive + world.PendingFood + pendingFoodSpawns < Tuning.FoodCap)
         {
             var position = WorldSimulationStrategy.RandomFoodPosition(
                 world.Rng, world.Seed, world.PatchCount);
@@ -215,8 +222,8 @@ internal sealed class FoodBloomSimulationSystem : IGameplaySystem
         if (world.PatchCount <= 0)
         {
             while (foodAccumulator >= 1f
-                && world.FoodAlive + world.PendingFood < foodTarget
-                && world.FoodAlive < Tuning.FoodCap)
+                && world.FoodAlive + world.PendingFood + pendingFoodSpawns < foodTarget
+                && world.FoodAlive + pendingFoodSpawns < Tuning.FoodCap)
             {
                 var position = WorldSimulationStrategy.RandomFoodPosition(
                     world.Rng, world.Seed, world.PatchCount);
@@ -287,8 +294,28 @@ internal sealed class CommitSimulationSystem : IGameplaySystem
         if (world.Mutations.Count > 0)
         {
             var spawn = world.Mutations.ToArray();
-            world.SndContext.Deferred.EnqueueBusinessDeferred(
-                () => world.Controller.OwningSession.SpawnMany(spawn));
+            var pendingCreatures = world.PendingChildren;
+            var pendingFood = world.PendingFood;
+            if (pendingFood > 0)
+                world.Controller.SetData(
+                    DemoKeys.PendingFoodSpawns,
+                    ReadInt(world.Controller, DemoKeys.PendingFoodSpawns, 0) + pendingFood);
+            world.SndContext.Deferred.EnqueueBusinessDeferred(() =>
+            {
+                world.Controller.OwningSession.SpawnMany(spawn);
+                if (pendingCreatures > 0)
+                    world.Controller.SetData(
+                        DemoKeys.PendingCreatureSpawns,
+                        Math.Max(
+                            0,
+                            ReadInt(world.Controller, DemoKeys.PendingCreatureSpawns, 0) - pendingCreatures));
+                if (pendingFood > 0)
+                    world.Controller.SetData(
+                        DemoKeys.PendingFoodSpawns,
+                        Math.Max(
+                            0,
+                            ReadInt(world.Controller, DemoKeys.PendingFoodSpawns, 0) - pendingFood));
+            });
         }
 
         if (world.Alive == 0

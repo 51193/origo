@@ -46,6 +46,10 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
     {
         ArgumentNullException.ThrowIfNull(entity);
         EnsureDefaults(entity);
+        // Deferred spawn callbacks do not survive a process restart; a loaded
+        // save must not reserve population or food slots for work that no longer exists.
+        entity.SetData(DemoKeys.PendingCreatureSpawns, 0);
+        entity.SetData(DemoKeys.PendingFoodSpawns, 0);
     }
 
     /// <inheritdoc/>
@@ -154,6 +158,10 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             entity.SetData(DemoKeys.NextSourceIndex, Tuning.FoodPatchCount);
         if (!entity.TryGetData<int>(DemoKeys.PendingSourceSpawns).found)
             entity.SetData(DemoKeys.PendingSourceSpawns, 0);
+        if (!entity.TryGetData<int>(DemoKeys.PendingCreatureSpawns).found)
+            entity.SetData(DemoKeys.PendingCreatureSpawns, 0);
+        if (!entity.TryGetData<int>(DemoKeys.PendingFoodSpawns).found)
+            entity.SetData(DemoKeys.PendingFoodSpawns, 0);
         if (!entity.TryGetData<int>(DemoKeys.CarrionFoodReleased).found)
             entity.SetData(DemoKeys.CarrionFoodReleased, 0);
         if (!entity.TryGetData<int>(DemoKeys.CorpseMeals).found)
@@ -191,8 +199,6 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             DemoSettings.Current = DemoSettings.FromJson(configResult.value);
         else
             entity.SetData(DemoKeys.ConfigJson, DemoSettings.Current.ToJson());
-        if (!entity.TryGetData<int>(DemoKeys.FoodPatchCount).found)
-            entity.SetData(DemoKeys.FoodPatchCount, Tuning.FoodPatchCount);
     }
 
     private static void StartWorld(ISndEntity controller, ISndContext ctx)
@@ -203,6 +209,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         var patchCount = Math.Clamp(ReadInt(controller, DemoKeys.FoodPatchCount, Tuning.FoodPatchCount), 0, 64);
         var bloomEnabled = ReadBool(controller, DemoKeys.BloomEnabled, Tuning.EarlyFoodBloomEnabled);
         var foodTarget = FoodTargetForPreset(foodPreset, 0f, bloomEnabled);
+        var foodCap = Tuning.FoodCap;
+        var startupFood = 0;
         var metas = new List<SndMetaData>();
         var nextCreature = 1;
         var nextFood = 1;
@@ -231,12 +239,17 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             // evolution can begin.
             for (var snack = 0; snack < Tuning.StartupFoodPerFounder; snack++)
             {
+                if (startupFood >= foodCap)
+                    break;
                 var foodPosition = ClampToPond(position + RandomOffset(rng), phenotype.FoodPickupRadius);
                 metas.Add(CreateFoodMeta(FoodName(nextFood++), foodPosition.X, foodPosition.Y));
+                startupFood++;
             }
         }
 
-        var initialFood = Math.Min(Tuning.InitialFood, foodTarget);
+        var initialFood = Math.Min(
+            Math.Min(Tuning.InitialFood, foodTarget),
+            Math.Max(0, foodCap - startupFood));
         for (var i = 0; i < initialFood; i++)
         {
             var position = RandomFoodPosition(rng, seed, patchCount);
@@ -248,6 +261,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         controller.SetData(DemoKeys.FoodPatchCount, patchCount);
         controller.SetData(DemoKeys.NextSourceIndex, patchCount);
         controller.SetData(DemoKeys.PendingSourceSpawns, 0);
+        controller.SetData(DemoKeys.PendingCreatureSpawns, 0);
+        controller.SetData(DemoKeys.PendingFoodSpawns, 0);
 
         controller.SetData(DemoKeys.Initialized, true);
         controller.SetData(DemoKeys.NextCreatureId, nextCreature);
@@ -317,6 +332,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         var foodConsumed = snapshot.FoodConsumed;
         var foodAlive = world.FoodAlive;
         var pendingChildren = 0;
+        var pendingDeferredCreatures = ReadInt(controller, DemoKeys.PendingCreatureSpawns, 0);
         var pendingFood = world.PendingFood;
         var mutations = world.Mutations;
         var collisionBodies = world.CollisionBodies;
@@ -371,7 +387,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     continue;
                 for (var injected = 0; injected < 3; injected++)
                 {
-                    if (creatures.Count + pendingChildren + mutations.Count >= Tuning.PopulationCap)
+                    if (creatures.Count + pendingChildren + pendingDeferredCreatures + mutations.Count
+                        >= Tuning.PopulationCap)
                         break;
                     for (var attempt = 0; attempt < 200; attempt++)
                     {
@@ -390,6 +407,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                             0,
                             nextLineageId++,
                             0f));
+                        pendingChildren++;
                         break;
                     }
                 }
@@ -755,7 +773,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             if (!ate
                 && energy >= Tuning.ReproductionEnergy
                 && cooldown <= 0f
-                && creatures.Count + pendingChildren < Tuning.PopulationCap)
+                && creatures.Count + pendingChildren + pendingDeferredCreatures < Tuning.PopulationCap)
             {
                 if (bodyGenome.Length == 0)
                 {
@@ -818,7 +836,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 && inspectTarget.Length > 0
                 && string.Equals(inspectTarget, entity.Name, StringComparison.Ordinal))
             {
-                entity.SetData(DemoKeys.Sensors, FormatSensors(sensorBuffer));
+                entity.SetData(DemoKeys.Sensors, SensorDisplayV4.Format(brainPhenotype!.SensorPorts, sensorBuffer));
                 entity.SetData(DemoKeys.Outputs, string.Create(
                     CultureInfo.InvariantCulture,
                     $"M {drive:0.00} / T {turn:0.00} / S {spikeDrive:0.00} / A {aimDrive:0.00}"));
@@ -869,6 +887,10 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             profiler.RecordMarker("evolution.core.brain", markerTicks[2], markerAlloc[2]);
             profiler.RecordMarker("evolution.core.spike_targets", markerTicks[3], markerAlloc[3]);
         }
+        if (pendingChildren > 0)
+            controller.SetData(
+                DemoKeys.PendingCreatureSpawns,
+                pendingDeferredCreatures + pendingChildren);
         world.PondTime = pondTime;
         world.BloomEnabled = bloomEnabled;
         world.CollisionEnabled = collisionEnabled;
@@ -1086,10 +1108,6 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
 
         return false;
     }
-
-    private static string FormatSensors(ReadOnlySpan<float> sensors) => string.Create(
-        CultureInfo.InvariantCulture,
-        $"F {sensors[0]:0.00} L {sensors[1]:0.00} R {sensors[2]:0.00} W {sensors[4]:0.00} C {sensors[3]:0.00} E {sensors[5]:0.00} S/C {sensors[6]:0.00}/{sensors[7]:0.00} Carrion {sensors[8]:0.00}");
 
     private static string ReadString(ISndEntity entity, string key, string fallback)
     {

@@ -143,8 +143,9 @@ Escape cancels. The normal simulation path and timed iteration share
 0=off)** is positive, timed iteration pauses at every absolute multiple of that
 interval and writes a snapshot before continuing. A checkpoint uses the save ID
 `iterate_<seconds>` (for example `iterate_300`), the same Origo save pipeline
-and display metadata as a manual save, and its recorded `evo.time` is the
-checkpoint mark, so a long iteration produces a reproducible time series
+and display metadata as a manual save, and its recorded `evo.time` is the first simulation tick at or after the
+checkpoint mark (at most one tick later), so a long iteration produces a
+reproducible time series
 without the player saving by hand. Checkpoints are ordinary save slots and are
 shown in the Load Game panel; interval values below 30 simulated seconds are
 rejected instead of flooding the save root, and the final target time is never a
@@ -283,6 +284,8 @@ stable-ID genes, not a fixed codon table:
   There is no fixed 372-hex latent lattice, no fixed 12-sensor array, and no fixed
   hidden-layer shape.
 - **Regulation** — genes can require low food, nearby predators, or low energy.
+  This is a compiler/tooling capability; the playable runtime currently compiles
+  with a neutral context (see the limits below).
 - **Interface registry** — sensor/action definitions have stable IDs and labels;
   new interfaces are registered rather than allocated as fixed genome slots.
   `CarrionSense` is the first post-migration sensor gene: it exposes a corpse
@@ -394,8 +397,9 @@ hits; armor is available to founders and mutations. Armor is a mobility
 trade-off: an armored body moves and turns at `ArmorSpeedMultiplier` (default
 0.9) of its expressed speed. The defaults make predation
 a routine part of the pond rather than a rare event: a low `0.05` drive
-threshold, a wide 32-unit beam, a 1.5 s cooldown, and a cheap base cost. The fan
-count, angle, and per-pellet jitter come from body genes. Energy cost is:
+threshold, a wide 32-unit beam, a 1.5 s cooldown, and a cheap base cost. The fan count comes from
+the expressed battery copies; the current V4 adapter uses a fixed spread of 45°
+and zero jitter. Energy cost is:
 
 ```text
 SpikeBaseCost + SpikePerPelletCost * pelletCount
@@ -597,6 +601,9 @@ adapters, sensor, appearance, food-patch, collision, diversity, and central
 - One pond; predation, scavenging, and food niches are present, but there are no
   scripted goals or direct creature control.
 - Point/step mutations and body-length mutations only; no crossover.
+- Regulatory conditions are evaluated by the V4 compiler, but the playable
+  demo compiles with a neutral context; regulation is not yet a live
+  food/predator/energy response.
 - Neural topology is gene-expressed within safety and energy caps; no fixed
   latent lattice.
 - Soft collision uses each creature's body radius; it remains off by default.

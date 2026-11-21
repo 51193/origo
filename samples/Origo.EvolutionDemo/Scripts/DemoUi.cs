@@ -85,7 +85,6 @@ public partial class DemoUi : CanvasLayer
     private OptionButton _bloomOption = null!;
     private ConfirmationDialog _confirmDialog = null!;
     private DemoSettings _settingsDraft = DemoSettings.Defaults();
-    private DemoSettings _pendingSettings = DemoSettings.Defaults();
     private DemoSettings _sandboxSettingsBaseline = DemoSettings.Defaults();
     private readonly List<(HSlider Slider, LineEdit Edit, Func<DemoSettings, float> Read)> _advancedNumbers = [];
     private readonly List<(CheckButton Toggle, Func<DemoSettings, bool> Read)> _advancedToggles = [];
@@ -115,7 +114,7 @@ public partial class DemoUi : CanvasLayer
     private ulong _fastForwardLastWallMs;
     private float _fastForwardLastSimTime;
     private double _fastForwardInstantRate;
-    private IReadOnlyList<float> _iterateCheckpointMarks = Array.Empty<float>();
+    private IReadOnlyList<float> _iterateCheckpointMarks = [];
     private int _iterateCheckpointIndex;
     private bool _resumeAfterCheckpointSave;
     private double _diversityTimer;
@@ -131,7 +130,6 @@ public partial class DemoUi : CanvasLayer
     {
         _entry = entry;
         _settingsDraft = DemoSettings.Current.Clone();
-        _pendingSettings = _settingsDraft.Clone();
         _sandboxSettingsBaseline = _settingsDraft.Clone();
     }
 
@@ -288,9 +286,9 @@ public partial class DemoUi : CanvasLayer
         if (runtime.Progression.Mode != GameplayMode.Campaign)
             return;
         var settings = DemoSettings.Current;
+        var previousRadius = settings.PondRadius;
         CampaignProgressionRules.ApplyWorldScale(settings, runtime.Progression);
         _settingsDraft = settings.Clone();
-        _pendingSettings = settings.Clone();
         var controller = FindController();
         if (controller is not null)
         {
@@ -305,6 +303,9 @@ public partial class DemoUi : CanvasLayer
 
             controller.SetData(DemoKeys.ConfigJson, settings.ToJson());
         }
+
+        if (!Mathf.IsEqualApprox(previousRadius, settings.PondRadius))
+            _entry.WorldView.RefreshWorldBounds();
     }
 
     public void PersistGameplayProgression()
@@ -554,7 +555,6 @@ public partial class DemoUi : CanvasLayer
             CampaignProgressionRules.ApplyStartSettings(_settingsDraft, runtime.Progression);
         _settingsDraft.Normalize();
         DemoSettings.Current = _settingsDraft.Clone();
-        _pendingSettings = DemoSettings.Current.Clone();
         controller.SetData(DemoKeys.ConfigJson, DemoSettings.Current.ToJson());
         controller.SetData(DemoKeys.Seed, _pendingSeed);
         controller.SetData(DemoKeys.MutationRate, (float)_pendingMutation);
@@ -579,6 +579,8 @@ public partial class DemoUi : CanvasLayer
         controller.SetData(DemoKeys.FoodPatchCount, DemoSettings.Current.FoodPatchCount);
         controller.SetData(DemoKeys.NextSourceIndex, DemoSettings.Current.FoodPatchCount);
         controller.SetData(DemoKeys.PendingSourceSpawns, 0);
+        controller.SetData(DemoKeys.PendingCreatureSpawns, 0);
+        controller.SetData(DemoKeys.PendingFoodSpawns, 0);
         _wallSeconds = 0d;
         _realTimeWriteTimer = 0d;
         controller.SetData(DemoKeys.RealSeconds, 0f);
@@ -605,7 +607,7 @@ public partial class DemoUi : CanvasLayer
         if (ReadInt(controller, DemoKeys.GenomeVersion, 0) < DemoEntry.GenomeVersion)
         {
             controller.SetData(DemoKeys.Paused, true);
-            ShowToast("This save predates genome v6 and is not compatible.", true);
+            ShowToast("This save predates genome v7 and is not compatible.", true);
             ShowMainMenu();
             return;
         }
@@ -670,11 +672,6 @@ public partial class DemoUi : CanvasLayer
         _pendingFoodPreset = foodPreset;
         _pendingCollision = collision;
         _pendingBloom = bloom;
-        _pendingSettings = _settingsDraft.Clone();
-        _pendingSettings.DefaultMutationRate = mutation;
-        _pendingSettings.BodyMutationRate = mutation;
-        _pendingSettings.CollisionEnabled = collision;
-        _pendingSettings.EarlyFoodBloomEnabled = bloom;
 
         var controller = FindController();
         var needsReload = controller is not null
@@ -920,10 +917,17 @@ public partial class DemoUi : CanvasLayer
         var controller = FindController();
         if (controller is null || _feedCooldown > 0d)
             return;
+        var amount = Math.Max(0, Tuning.FeedFoodCount);
+        if (amount == 0)
+        {
+            ShowToast("Feed amount is zero.", true);
+            return;
+        }
+
         var request = ReadInt(controller, DemoKeys.FeedRequest, 0);
-        controller.SetData(DemoKeys.FeedRequest, request + 1);
+        controller.SetData(DemoKeys.FeedRequest, FeedRequestMath.Add(request, amount));
         _feedCooldown = Tuning.FeedCooldownSeconds;
-        ShowToast("Nutrients dropped.");
+        ShowToast($"Dropped {amount} nutrients.");
     }
 
     private ISndEntity? FindCreatureNear(Vector2 worldPoint, float radius)
@@ -1033,12 +1037,19 @@ public partial class DemoUi : CanvasLayer
         _inspector.Visible = true;
         var lineage = ReadInt(entity, DemoKeys.Lineage, 1);
         var bodyGenome = ReadString(entity, DemoKeys.BodyGenome, string.Empty);
-        var genome = CreatureGenome.TryDecode(bodyGenome, out var decoded)
-            ? decoded!
-            : CreatureGenome.RandomFounder(new Random(0));
+        if (!CreatureGenome.TryDecode(bodyGenome, out var decoded) || decoded is null)
+        {
+            _inspectorTitle.Text = $"{_selectedName}   genome unavailable";
+            _inspectorStats.Text = "The stored genome could not be decoded.";
+            _inspectorSensors.Text = string.Empty;
+            _inspectorGenome.Text = string.Empty;
+            return;
+        }
+
+        var genome = decoded;
         var phenotype = genome.Phenotype;
         var v4Phenotype = GenomeV4Compiler.Compile(genome.Genome, ExpressionContextV4.Neutral);
-        var look = GenomeAppearance.Derive(bodyGenome);
+        var look = GenomeAppearance.DeriveStored(bodyGenome);
         var kills = ReadInt(entity, DemoKeys.Kills, 0);
         var scavenged = ReadInt(entity, DemoKeys.CreatureCorpseMeals, 0);
         var growthPercent = (GrowthScaling.SizeMultiplier(kills, scavenged) - 1f) * 100f;
@@ -1337,7 +1348,7 @@ public partial class DemoUi : CanvasLayer
         }
 
         _hudRefreshTimer = 0;
-        _iterateCheckpointMarks = Array.Empty<float>();
+        _iterateCheckpointMarks = [];
         _iterateCheckpointIndex = 0;
         PersistGameplayProgression();
         UpdateHud();
@@ -1354,8 +1365,6 @@ public partial class DemoUi : CanvasLayer
         if (mark >= target - 0.05f)
             return;
         var saveId = IterateCheckpointSlot(mark);
-        if (_entry.Context.Save.ListSaves().Contains(saveId, StringComparer.Ordinal))
-            return;
         PersistRealSeconds();
         PersistGameplayProgression();
         SetGamePaused(true);

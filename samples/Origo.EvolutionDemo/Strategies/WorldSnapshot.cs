@@ -88,7 +88,7 @@ internal sealed class WorldSnapshot
     // Weak keys keep the cache bounded when creatures die and disappear from
     // the session; the underlying entity is the identity and its static fields
     // are never written after spawn/load.
-    private static readonly ConditionalWeakTable<ISndEntity, CreatureStaticView> CreatureStaticCache = new();
+    private static readonly ConditionalWeakTable<ISndEntity, CreatureStaticView> CreatureStaticCache = [];
 
     private WorldSnapshot(
         List<CreatureSnapshot> creatures,

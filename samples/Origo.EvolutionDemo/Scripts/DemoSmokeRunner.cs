@@ -138,6 +138,31 @@ public partial class DemoSmokeRunner : Node
         return false;
     }
 
+    private static void AssertWithinCaps((int creatures, int food, int generation, float time, string phase) stats)
+    {
+        if (stats.creatures > Tuning.PopulationCap)
+            throw new InvalidOperationException(
+                $"Population {stats.creatures} exceeds the cap {Tuning.PopulationCap}.");
+        if (stats.food > Tuning.FoodCap)
+            throw new InvalidOperationException(
+                $"Food {stats.food} exceeds the cap {Tuning.FoodCap}.");
+    }
+
+    private void AssertCameraFit()
+    {
+        var viewport = GetViewport().GetVisibleRect().Size;
+        if (viewport.X <= 180f || viewport.Y <= 160f)
+            return;
+        var expected = MathF.Max(
+            0.02f,
+            MathF.Min(
+                (viewport.X - 180f) / (Tuning.PondRadius * 2f),
+                (viewport.Y - 160f) / (Tuning.PondRadius * 2f)));
+        if (MathF.Abs(_entry.WorldView.FitViewScale - expected) > 0.001f)
+            throw new InvalidOperationException(
+                $"Camera fit {_entry.WorldView.FitViewScale:0.0000} is stale for pond radius {Tuning.PondRadius:0}; expected {expected:0.0000}.");
+    }
+
     private Vector2 ToWindowPosition(Vector2 viewportPosition)
     {
         var viewportSize = GetViewport().GetVisibleRect().Size;
@@ -312,6 +337,7 @@ public partial class DemoSmokeRunner : Node
                 if (_frame > RunningFrameLimit)
                     throw new InvalidOperationException("The pond did not accumulate simulation time.");
                 var running = ui.SmokeStats();
+                AssertWithinCaps(running);
                 if (_spedUp && running.time < _targetSeconds && running.creatures > 0)
                 {
                     if (_frame % 30 == 0 && HasFoodOutsidePond())
@@ -392,6 +418,7 @@ public partial class DemoSmokeRunner : Node
                 if (ui.IsBusyForSmoke)
                     break;
                 var restored = ui.SmokeStats();
+                AssertWithinCaps(restored);
                 if (restored.creatures == 0)
                     throw new InvalidOperationException("Loaded pond has no creatures.");
                 if (restored.generation < 1)
@@ -440,6 +467,7 @@ public partial class DemoSmokeRunner : Node
                 if (ui.IsFastForwardingForSmoke)
                     break;
                 var fastForwarded = ui.SmokeStats();
+                AssertWithinCaps(fastForwarded);
                 if (fastForwarded.time < _fastForwardStartTime + 2f)
                     throw new InvalidOperationException("Timed iteration did not advance simulation time.");
                 var expectedCheckpoints = VerifyIterateCheckpoints();
@@ -494,6 +522,7 @@ public partial class DemoSmokeRunner : Node
         foreach (var unlockId in CampaignPurchaseOrder)
             runtime.TryUnlock(unlockId);
         _entry.Ui.RefreshCampaignWorld();
+        AssertCameraFit();
     }
 
     private int VerifyIterateCheckpoints()

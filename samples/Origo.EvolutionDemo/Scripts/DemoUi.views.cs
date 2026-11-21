@@ -304,7 +304,7 @@ public partial class DemoUi
                 continue;
             genomes.Add(genome);
             bodySet.Add(genome);
-            var look = GenomeAppearance.Derive(genome);
+            var look = GenomeAppearance.DeriveStored(genome);
             if (themes[look.ThemeIndex] == 0)
                 themeColors[look.ThemeIndex] = ToColor(look.Body);
             themes[look.ThemeIndex]++;

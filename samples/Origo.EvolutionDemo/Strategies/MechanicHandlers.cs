@@ -34,9 +34,11 @@ internal sealed class InstantFoodDeathHandler : IGameplayHandler<DeathHandlerCon
     public void Execute(DeathHandlerContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
+        var pendingFoodSpawns = context.Controller.TryGetData<int>(DemoKeys.PendingFoodSpawns)
+            is { found: true } result ? result.value : 0;
         var foodCount = Math.Min(
             Tuning.DeathFoodCount,
-            Math.Max(0, Tuning.FoodCap - (context.FoodAlive + context.PendingFood)));
+            Math.Max(0, Tuning.FoodCap - (context.FoodAlive + context.PendingFood + pendingFoodSpawns)));
         for (var bite = 0; bite < foodCount; bite++)
         {
             var foodPosition = WorldSimulationStrategy.ClampToPond(
@@ -68,12 +70,13 @@ internal sealed class CorpsePulseDeathHandler : IGameplayHandler<DeathHandlerCon
             || interval <= 0f)
             throw new InvalidOperationException(
                 $"Corpse handler variant '{context.Variant.Id}' needs a positive interval.");
+        var resolvedInterval = CarcassMath.ResolveInterval(Tuning.CarcassFoodIntervalSeconds, interval);
         context.Mutations.Add(EvolutionEntityFactory.Corpse(
             EvolutionEntityFactory.CorpseName(context.NextCorpseId++),
             context.Position.X,
             context.Position.Y,
             Tuning.DeathFoodCount,
-            interval));
+            resolvedInterval));
         context.CorpsesCreated++;
     }
 }
@@ -89,6 +92,7 @@ internal sealed class SpawnPolicyContext
     public required MechanicVariant Variant { get; init; }
     public int NextCreatureId { get; set; }
     public int NextLineageId { get; set; }
+    public int SpawnedCreatures { get; set; }
 }
 
 internal sealed class BaseSpawnPolicyHandler : IGameplayHandler<SpawnPolicyContext>
@@ -114,7 +118,9 @@ internal sealed class FoodEnrichmentSpawnHandler : IGameplayHandler<SpawnPolicyC
                 CultureInfo.InvariantCulture, out var parsedChance)
             && float.IsFinite(parsedChance))
             chance = Math.Clamp(parsedChance, 0f, 1f);
-        if (CountCreatures(session) >= Tuning.PopulationCap || context.Rng.NextDouble() >= chance)
+        var pending = ReadInt(context.Controller, DemoKeys.PendingCreatureSpawns, 0);
+        if (CountCreatures(session) + pending >= Tuning.PopulationCap
+            || context.Rng.NextDouble() >= chance)
             return;
         var founder = CreatureGenome.RandomFounder(context.Rng);
         var position = new NumericsVector2(
@@ -131,6 +137,7 @@ internal sealed class FoodEnrichmentSpawnHandler : IGameplayHandler<SpawnPolicyC
             0,
             context.NextLineageId++,
             0f));
+        context.SpawnedCreatures++;
     }
 
     private static int CountCreatures(ISessionRun session)
@@ -150,6 +157,9 @@ internal sealed class FoodEnrichmentSpawnHandler : IGameplayHandler<SpawnPolicyC
 
     private static float ReadFloat(ISndEntity entity, string key, float fallback) =>
         entity.TryGetData<float>(key) is { found: true } result ? result.value : fallback;
+
+    private static int ReadInt(ISndEntity entity, string key, int fallback) =>
+        entity.TryGetData<int>(key) is { found: true } result ? result.value : fallback;
 }
 
 /// <summary>Startup-built typed handler registries for the demo.</summary>

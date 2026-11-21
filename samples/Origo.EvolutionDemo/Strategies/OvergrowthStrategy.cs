@@ -121,7 +121,9 @@ public sealed class OvergrowthStrategy : LifecycleStrategyBase
             creatures.Add(candidate);
         }
 
-        if (creatures.Count == 0)
+        var pendingCreatureSpawns = ReadInt(entity, DemoKeys.PendingCreatureSpawns, 0);
+        if (creatures.Count == 0
+            || creatures.Count + pendingCreatureSpawns >= Tuning.PopulationCap)
             return;
 
         var parent = creatures[rng.Next(creatures.Count)];
@@ -173,7 +175,14 @@ public sealed class OvergrowthStrategy : LifecycleStrategyBase
             session.RequestKillEntity(targetFoods[i].Name);
 
         entity.SetData(DemoKeys.OvergrowthCount, ReadInt(entity, DemoKeys.OvergrowthCount, 0) + 1);
-        ctx.Deferred.EnqueueBusinessDeferred(() => session.SpawnMany(child));
+        entity.SetData(DemoKeys.PendingCreatureSpawns, pendingCreatureSpawns + 1);
+        ctx.Deferred.EnqueueBusinessDeferred(() =>
+        {
+            session.SpawnMany(child);
+            entity.SetData(
+                DemoKeys.PendingCreatureSpawns,
+                Math.Max(0, ReadInt(entity, DemoKeys.PendingCreatureSpawns, 0) - 1));
+        });
     }
 
     private static long CellKey(float x, float y, float radius, float cellSize, int dimension)

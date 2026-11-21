@@ -105,6 +105,8 @@ internal static class DemoKeys
     public const string BloomEnabled = "world.bloomEnabled";
     public const string FoodPatchCount = "world.foodPatchCount";
     public const string PendingSourceSpawns = "world.pendingSourceSpawns";
+    public const string PendingCreatureSpawns = "world.pendingCreatureSpawns";
+    public const string PendingFoodSpawns = "world.pendingFoodSpawns";
     public const string NextSourceIndex = "world.nextSourceIndex";
     public const string PatchIndex = "source.patchIndex";
     public const string PatchCount = "source.patchCount";
