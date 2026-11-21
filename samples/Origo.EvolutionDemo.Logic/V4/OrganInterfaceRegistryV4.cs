@@ -18,6 +18,9 @@ public static class OrganInterfaceRegistryV4
         RegisterSensor(OrganKindV4.Rhythm, SensorKindV4.Sin);
         RegisterSensor(OrganKindV4.Rhythm, SensorKindV4.Cos);
         RegisterSensor(OrganKindV4.CarrionSense, SensorKindV4.CorpseAhead);
+        RegisterSensor(OrganKindV4.FoodTypeVision, SensorKindV4.FoodSoft);
+        RegisterSensor(OrganKindV4.FoodTypeVision, SensorKindV4.FoodTough);
+        RegisterSensor(OrganKindV4.FoodTypeVision, SensorKindV4.FoodToxic);
 
         RegisterAction(OrganKindV4.SpikeOrgan, ActionKindV4.Aim, 20);
         RegisterAction(OrganKindV4.SpikeOrgan, ActionKindV4.Spike, 40);

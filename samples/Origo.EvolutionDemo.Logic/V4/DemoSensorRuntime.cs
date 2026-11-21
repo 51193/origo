@@ -18,6 +18,9 @@ public readonly struct DemoSensorContext
     public required int SelfId { get; init; }
     public required float OscillatorPhase { get; init; }
     public required float ArenaRadius { get; init; }
+
+    /// <summary>Food type per food/ground point id; corpse points are soft.</summary>
+    public IReadOnlyList<FoodType>? FoodTypes { get; init; }
 }
 
 /// <summary>
@@ -51,6 +54,9 @@ public static class DemoSensorRuntime
             BestInCone(context, context.Corpses, Forward(context), context.SenseRange));
         Register(SensorKindV4.Sin, static context => MathF.Sin(context.OscillatorPhase));
         Register(SensorKindV4.Cos, static context => MathF.Cos(context.OscillatorPhase));
+        Register(SensorKindV4.FoodSoft, static context => BestFoodType(context, FoodType.Soft));
+        Register(SensorKindV4.FoodTough, static context => BestFoodType(context, FoodType.Tough));
+        Register(SensorKindV4.FoodToxic, static context => BestFoodType(context, FoodType.Toxic));
         _defaultsRegistered = true;
     }
 
@@ -164,6 +170,31 @@ public static class DemoSensorRuntime
 
     private static Vector2 Right(DemoSensorContext context) =>
         new(-Forward(context).Y, Forward(context).X);
+
+    private static float BestFoodType(DemoSensorContext context, FoodType type)
+    {
+        var types = context.FoodTypes
+            ?? throw new InvalidOperationException(
+                "FoodTypeVision sensors require DemoSensorContext.FoodTypes.");
+        var best = 0f;
+        var rangeSquared = context.SenseRange * context.SenseRange;
+        foreach (var point in context.Food)
+        {
+            if (point.Id < 0 || point.Id >= types.Count)
+                throw new InvalidOperationException(
+                    $"Food point id {point.Id} is outside the FoodTypes table ({types.Count}).");
+            if (types[point.Id] != type)
+                continue;
+            var delta = point.Position - context.Position;
+            var distanceSquared = delta.LengthSquared();
+            if (distanceSquared > rangeSquared)
+                continue;
+            var distance = MathF.Sqrt(distanceSquared);
+            best = MathF.Max(best, 1f - (distance / context.SenseRange));
+        }
+
+        return best;
+    }
 
     private static float BestInCone(
         DemoSensorContext context,

@@ -278,10 +278,22 @@ toxic food, and a body with neither prefers soft food. This turns the existing
 food categories and digestive organs into a diet specialization with measurable
 niches instead of a passive energy multiplier.
 
-The controller records `evo.foodSoftMeals`, `evo.foodToughMeals`, and
-`evo.foodToxicMeals`, so diet composition is measurable from a save. The
-controller counters are intake totals, not evidence that creatures can sense a
-food type beyond the profitable-choice rule above.
+Each creature also records its own `evo.creatureSoftMeals`,
+`evo.creatureToughMeals`, `evo.creatureToxicMeals`, and
+`evo.creatureCorpseMeals`, which the analysis tool exposes as `behavior.*Meals`
+and `diet.*` features.
+
+The heritable `FoodTypeVision` organ exposes three omnidirectional sensor ports:
+`FoodSoft`, `FoodTough`, and `FoodToxic` — the best proximity of each food type
+inside the creature's sense range; corpse food counts as soft. The sensors
+report only proximity and type; they do not steer or prefer food themselves.
+Neural genes decide how the signals combine with the existing directional
+`FoodAhead/FoodLeft/FoodRight` inputs and the `Move`/`Turn` actions, so the
+combination of visual sensing, digestion, and locomotion is left to selection.
+The organ has the normal organ upkeep cost and is carried by a minority of
+founders. It is currently founder-only: the general organ mutation operator does
+not yet add it, so it can be inherited and selected but not spontaneously
+created in a run without carriers.
 
 ### Death and carcass nutrients
 

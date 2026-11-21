@@ -31,6 +31,7 @@ public sealed class DefaultGameplayContentModule : IGameplayModule
         AddContent(content, "gene.organ.carrion_sense", "organ", "unlock.core");
         AddContent(content, "gene.organ.sprint", "organ", "unlock.core");
         AddContent(content, "gene.organ.armor", "organ", "unlock.core");
+        AddContent(content, "gene.organ.food_type_vision", "organ", "unlock.core");
         AddContent(content, "gene.action.move", "action", "unlock.core");
         AddContent(content, "gene.action.turn", "action", "unlock.core");
         AddContent(content, "gene.action.spike", "action", "unlock.core");
@@ -45,6 +46,9 @@ public sealed class DefaultGameplayContentModule : IGameplayModule
         AddContent(content, "gene.sensor.corpse_ahead", "sensor", "unlock.core");
         AddContent(content, "gene.sensor.sin", "sensor", "unlock.core");
         AddContent(content, "gene.sensor.cos", "sensor", "unlock.core");
+        AddContent(content, "gene.sensor.food_soft", "sensor", "unlock.core");
+        AddContent(content, "gene.sensor.food_tough", "sensor", "unlock.core");
+        AddContent(content, "gene.sensor.food_toxic", "sensor", "unlock.core");
         AddContent(content, "mechanic.death.instant_food", "mechanic", "unlock.core");
         AddContent(content, "mechanic.death.corpse_pulse", "mechanic", "unlock.core");
         AddContent(content, "mechanic.spawn.base", "mechanic", "unlock.core");

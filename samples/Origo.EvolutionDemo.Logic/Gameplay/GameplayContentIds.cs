@@ -19,6 +19,7 @@ public static class GameplayContentIds
         [OrganKindV4.CarrionSense] = "gene.organ.carrion_sense",
         [OrganKindV4.Sprint] = "gene.organ.sprint",
         [OrganKindV4.Armor] = "gene.organ.armor",
+        [OrganKindV4.FoodTypeVision] = "gene.organ.food_type_vision",
     };
 
     private static readonly Dictionary<ActionKindV4, string> Actions = new()
@@ -41,6 +42,9 @@ public static class GameplayContentIds
         [SensorKindV4.CorpseAhead] = "gene.sensor.corpse_ahead",
         [SensorKindV4.Sin] = "gene.sensor.sin",
         [SensorKindV4.Cos] = "gene.sensor.cos",
+        [SensorKindV4.FoodSoft] = "gene.sensor.food_soft",
+        [SensorKindV4.FoodTough] = "gene.sensor.food_tough",
+        [SensorKindV4.FoodToxic] = "gene.sensor.food_toxic",
     };
 
     public static string? ForOrgan(OrganKindV4 organ) =>

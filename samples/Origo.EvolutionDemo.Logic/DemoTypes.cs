@@ -57,5 +57,8 @@ public readonly record struct BodyPhenotype(
     /// <summary>True when the body contains the armor organ.</summary>
     public bool ArmorOrgan => HasOrgan(DemoOrganMaskV4.Armor);
 
+    /// <summary>True when the body contains the food-type vision organ.</summary>
+    public bool FoodTypeVisionOrgan => HasOrgan(DemoOrganMaskV4.FoodTypeVision);
+
     private bool HasOrgan(DemoOrganMaskV4 organ) => (OrganMask & (int)organ) != 0;
 }

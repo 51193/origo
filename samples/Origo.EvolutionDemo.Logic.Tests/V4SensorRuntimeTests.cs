@@ -99,4 +99,82 @@ public sealed class V4SensorRuntimeTests
         Assert.True(sensors[(int)SensorKindV4.FoodAhead] > 0f);
     }
 
+    [Fact]
+    public void FoodTypeVision_ExposesTypeSpecificProximity()
+    {
+        var phenotype = CompileFoodTypeVisionPhenotype();
+        var sensors = new float[64];
+        DemoSensorRuntime.ComputeInto(
+            phenotype,
+            new DemoSensorContext
+            {
+                Position = Vector2.Zero,
+                Heading = 0f,
+                Energy = 50f,
+                MaxEnergy = 100f,
+                SenseRange = 200f,
+                Food = [new(1, new Vector2(10f, 0f)), new(0, new Vector2(150f, 0f))],
+                Creatures = [],
+                Corpses = [],
+                SelfId = 0,
+                OscillatorPhase = 0f,
+                ArenaRadius = 10_000f,
+                FoodTypes = [FoodType.Soft, FoodType.Tough],
+            },
+            sensors);
+        Assert.Equal(0.25f, sensors[(int)SensorKindV4.FoodSoft], 5);
+        Assert.Equal(0.95f, sensors[(int)SensorKindV4.FoodTough], 5);
+        Assert.Equal(0f, sensors[(int)SensorKindV4.FoodToxic]);
+    }
+
+    [Fact]
+    public void FoodTypeVision_RejectsIdOutsideTypeTable()
+    {
+        var phenotype = CompileFoodTypeVisionPhenotype();
+        var sensors = new float[64];
+        var exception = Assert.Throws<InvalidOperationException>(() => DemoSensorRuntime.ComputeInto(
+            phenotype,
+            new DemoSensorContext
+            {
+                Position = Vector2.Zero,
+                Heading = 0f,
+                Energy = 50f,
+                MaxEnergy = 100f,
+                SenseRange = 200f,
+                Food = [new(3, new Vector2(10f, 0f))],
+                Creatures = [],
+                Corpses = [],
+                SelfId = 0,
+                OscillatorPhase = 0f,
+                ArenaRadius = 10_000f,
+                FoodTypes = [FoodType.Soft],
+            },
+            sensors));
+        Assert.Contains("FoodTypes", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void FoodTypeVision_OrganAbsentExposesNoTypeSensors()
+    {
+        var genome = new GenomeV4(
+        [
+            new GeneV4(1, GeneKind.BodySegment, 1, 1f, GenePayloadV4.BodySegment(1f, 0.6f)),
+        ], 2);
+        var phenotype = GenomeV4Compiler.Compile(genome, ExpressionContextV4.Neutral);
+        Assert.DoesNotContain((ushort)SensorKindV4.FoodSoft, phenotype.SensorPorts);
+        Assert.DoesNotContain((ushort)SensorKindV4.FoodTough, phenotype.SensorPorts);
+        Assert.DoesNotContain((ushort)SensorKindV4.FoodToxic, phenotype.SensorPorts);
+    }
+
+    private static PhenotypeV4 CompileFoodTypeVisionPhenotype()
+    {
+        var genome = new GenomeV4(
+        [
+            new GeneV4(1, GeneKind.BodySegment, 1, 1f, GenePayloadV4.BodySegment(1f, 0.6f)),
+            new GeneV4(2, GeneKind.Organ, 1, 1f,
+                GenePayloadV4.Organ(OrganKindV4.FoodTypeVision, 1f)),
+        ], 3);
+        return GenomeV4Compiler.Compile(genome, ExpressionContextV4.Neutral);
+    }
+
 }
