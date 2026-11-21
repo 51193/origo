@@ -317,46 +317,60 @@ public static class GenomeV4Codec
     public static GenomeV4 Deserialize(byte[] data)
     {
         ArgumentNullException.ThrowIfNull(data);
-        using var stream = new MemoryStream(data, writable: false);
-        using var reader = new BinaryReader(stream, Encoding.UTF8, leaveOpen: false);
-        var magic = reader.ReadBytes(Magic.Length);
-        if (!magic.AsSpan().SequenceEqual(Magic))
-            throw new InvalidDataException("Not a GenomeV4 payload.");
-        var version = reader.ReadUInt16();
-        if (version != GenomeV4.SchemaVersion)
-            throw new InvalidDataException($"Unsupported GenomeV4 schema version {version}.");
-        var count = reader.ReadInt32();
-        if (count < 0)
-            throw new InvalidDataException("Negative gene count.");
-        var genes = new List<GeneV4>(count);
-        for (var i = 0; i < count; i++)
+        try
         {
-            var id = reader.ReadUInt32();
-            var kind = (GeneKind)reader.ReadUInt16();
-            var copies = reader.ReadByte();
-            var expression = reader.ReadSingle();
-            var regulationCount = reader.ReadInt32();
-            if (regulationCount < 0)
-                throw new InvalidDataException("Negative regulation count.");
-            var regulations = new List<RegulationV4>(regulationCount);
-            for (var r = 0; r < regulationCount; r++)
+            using var stream = new MemoryStream(data, writable: false);
+            using var reader = new BinaryReader(stream, Encoding.UTF8, leaveOpen: false);
+            var magic = reader.ReadBytes(Magic.Length);
+            if (!magic.AsSpan().SequenceEqual(Magic))
+                throw new InvalidDataException("Not a GenomeV4 payload.");
+            var version = reader.ReadUInt16();
+            if (version != GenomeV4.SchemaVersion)
+                throw new InvalidDataException($"Unsupported GenomeV4 schema version {version}.");
+            var count = reader.ReadInt32();
+            if (count < 0 || count > GenomeV4Validator.MaxGenes)
+                throw new InvalidDataException(
+                    $"Gene count {count} is outside the supported range 0..{GenomeV4Validator.MaxGenes}.");
+            var genes = new List<GeneV4>(count);
+            for (var i = 0; i < count; i++)
             {
-                var condition = (ConditionKindV4)reader.ReadUInt16();
-                var threshold = reader.ReadSingle();
-                regulations.Add(new RegulationV4(condition, threshold));
+                var id = reader.ReadUInt32();
+                var kind = (GeneKind)reader.ReadUInt16();
+                var copies = reader.ReadByte();
+                var expression = reader.ReadSingle();
+                var regulationCount = reader.ReadInt32();
+                if (regulationCount < 0 || regulationCount > GenomeV4Validator.MaxRegulatorsPerGene)
+                    throw new InvalidDataException(
+                        $"Gene {id} regulation count {regulationCount} is outside the supported range.");
+                var regulations = new List<RegulationV4>(regulationCount);
+                for (var r = 0; r < regulationCount; r++)
+                {
+                    var condition = (ConditionKindV4)reader.ReadUInt16();
+                    var threshold = reader.ReadSingle();
+                    regulations.Add(new RegulationV4(condition, threshold));
+                }
+
+                var payloadLength = reader.ReadInt32();
+                if (payloadLength < 0 || payloadLength > GenomeV4Validator.MaxPayloadBytes)
+                    throw new InvalidDataException(
+                        $"Gene {id} payload length {payloadLength} is outside the supported range.");
+                if (payloadLength > stream.Length - stream.Position)
+                    throw new InvalidDataException($"Gene {id} payload is truncated.");
+                var payload = reader.ReadBytes(payloadLength);
+                genes.Add(new GeneV4(id, kind, copies, expression, payload, regulations));
             }
 
-            var payloadLength = reader.ReadInt32();
-            if (payloadLength < 0)
-                throw new InvalidDataException("Negative payload length.");
-            var payload = reader.ReadBytes(payloadLength);
-            genes.Add(new GeneV4(id, kind, copies, expression, payload, regulations));
+            var nextId = reader.ReadUInt32();
+            if (stream.Position != stream.Length)
+                throw new InvalidDataException("GenomeV4 payload contains trailing bytes.");
+            var genome = new GenomeV4(genes, nextId);
+            GenomeV4Validator.Validate(genome);
+            return genome;
         }
-
-        var nextId = reader.ReadUInt32();
-        var genome = new GenomeV4(genes, nextId);
-        GenomeV4Validator.Validate(genome);
-        return genome;
+        catch (EndOfStreamException exception)
+        {
+            throw new InvalidDataException("GenomeV4 payload is truncated.", exception);
+        }
     }
 
     public static string ToHex(GenomeV4 genome) => Convert.ToHexString(Serialize(genome));
@@ -400,6 +414,15 @@ public static class GenomeV4Validator
 {
     public const int MaxGenes = 4096;
 
+    /// <summary>Maximum serialized payload bytes accepted for one gene.</summary>
+    public const int MaxPayloadBytes = 64;
+
+    /// <summary>Maximum regulatory links accepted for one gene.</summary>
+    public const int MaxRegulatorsPerGene = 64;
+
+    /// <summary>Maximum copy count accepted for one gene.</summary>
+    public const int MaxCopies = 32;
+
     public static void Validate(GenomeV4 genome)
     {
         ArgumentNullException.ThrowIfNull(genome);
@@ -415,41 +438,132 @@ public static class GenomeV4Validator
                 throw new InvalidDataException($"Duplicate gene id {gene.Id}.");
             if (gene.Id >= genome.NextGeneId)
                 throw new InvalidDataException($"Gene id {gene.Id} is not below next id {genome.NextGeneId}.");
-            if (gene.Payload.Length == 0)
-                throw new InvalidDataException($"Gene {gene.Id} has an empty payload.");
-            if (gene.CopyCount == 0)
-                throw new InvalidDataException($"Gene {gene.Id} has zero copies.");
+            if (gene.CopyCount == 0 || gene.CopyCount > MaxCopies)
+                throw new InvalidDataException(
+                    $"Gene {gene.Id} has copy count {gene.CopyCount}; the supported range is 1..{MaxCopies}.");
             if (!float.IsFinite(gene.Expression))
                 throw new InvalidDataException($"Gene {gene.Id} has non-finite expression.");
+            if (gene.Regulators.Count > MaxRegulatorsPerGene)
+                throw new InvalidDataException(
+                    $"Gene {gene.Id} has too many regulatory links ({gene.Regulators.Count}).");
             foreach (var regulation in gene.Regulators)
+            {
                 if (!float.IsFinite(regulation.Threshold))
                     throw new InvalidDataException($"Gene {gene.Id} has a non-finite regulation threshold.");
+                if (!Enum.IsDefined(regulation.Condition))
+                    throw new InvalidDataException($"Gene {gene.Id} has an unknown condition.");
+            }
+
+            ValidatePayload(gene);
             if (gene.Kind == GeneKind.Neuron)
-            {
-                var (neuronKind, interfaceId, _, _) = GenePayloadV4.ReadNeuron(gene.Payload);
+                neuronIds.Add(gene.Id);
+        }
+
+        foreach (var gene in genome.Genes)
+        {
+            if (gene.Kind != GeneKind.Synapse)
+                continue;
+            var (fromGeneId, toGeneId, _) = GenePayloadV4.ReadSynapse(gene.Payload);
+            if (!neuronIds.Contains(fromGeneId) || !neuronIds.Contains(toGeneId))
+                throw new InvalidDataException($"Synapse gene {gene.Id} references a non-neuron gene.");
+        }
+    }
+
+    private static void ValidatePayload(GeneV4 gene)
+    {
+        if (!Enum.IsDefined(gene.Kind))
+            throw new InvalidDataException($"Gene {gene.Id} has an unknown kind.");
+        switch (gene.Kind)
+        {
+            case GeneKind.BodySegment:
+                RequirePayload(gene, sizeof(float) * 2);
+                var (length, width) = GenePayloadV4.ReadBodySegment(gene.Payload);
+                RequirePositive(gene, length, "length");
+                RequirePositive(gene, width, "width");
+                break;
+            case GeneKind.Organ:
+                RequirePayload(gene, sizeof(ushort) + sizeof(float));
+                var (organKind, size) = GenePayloadV4.ReadOrgan(gene.Payload);
+                if (!Enum.IsDefined(organKind))
+                    throw new InvalidDataException($"Gene {gene.Id} has an unknown organ kind.");
+                RequirePositive(gene, size, "organ size");
+                break;
+            case GeneKind.Neuron:
+                RequirePayload(gene, sizeof(byte) + sizeof(ushort) + sizeof(byte) + sizeof(float));
+                var (neuronKind, interfaceId, activation, bias) = GenePayloadV4.ReadNeuron(gene.Payload);
+                if (!Enum.IsDefined(neuronKind))
+                    throw new InvalidDataException($"Gene {gene.Id} has an unknown neuron kind.");
+                if (!Enum.IsDefined(activation))
+                    throw new InvalidDataException($"Gene {gene.Id} has an unknown activation.");
+                if (!float.IsFinite(bias))
+                    throw new InvalidDataException($"Gene {gene.Id} has a non-finite bias.");
                 if (neuronKind == NeuronKindV4.Sensor
                     && !Enum.IsDefined(interfaceId is > 0 ? (SensorKindV4)interfaceId : 0))
                     throw new InvalidDataException($"Gene {gene.Id} has an unknown sensor interface.");
                 if (neuronKind == NeuronKindV4.Output
                     && !Enum.IsDefined(interfaceId is > 0 ? (ActionKindV4)interfaceId : 0))
                     throw new InvalidDataException($"Gene {gene.Id} has an unknown action interface.");
-                neuronIds.Add(gene.Id);
-            }
+                if (neuronKind == NeuronKindV4.Interneuron && interfaceId != 0)
+                    throw new InvalidDataException($"Gene {gene.Id} is an interneuron with an interface id.");
+                break;
+            case GeneKind.Synapse:
+                RequirePayload(gene, sizeof(uint) + sizeof(uint) + sizeof(float));
+                var (from, to, weight) = GenePayloadV4.ReadSynapse(gene.Payload);
+                if (from == 0 || to == 0)
+                    throw new InvalidDataException($"Gene {gene.Id} has a zero synapse endpoint.");
+                if (!float.IsFinite(weight))
+                    throw new InvalidDataException($"Gene {gene.Id} has a non-finite synapse weight.");
+                break;
+            case GeneKind.Reflex:
+                RequirePayload(gene, sizeof(ushort) + sizeof(ushort) + sizeof(float));
+                var (sensor, action, gain) = GenePayloadV4.ReadReflex(gene.Payload);
+                if (!Enum.IsDefined(sensor) || !Enum.IsDefined(action))
+                    throw new InvalidDataException($"Gene {gene.Id} has an unknown reflex interface.");
+                if (!float.IsFinite(gain))
+                    throw new InvalidDataException($"Gene {gene.Id} has a non-finite reflex gain.");
+                break;
+            case GeneKind.LifeHistory:
+                RequirePayload(gene, sizeof(ushort) + sizeof(float));
+                var (trait, value) = GenePayloadV4.ReadLifeHistory(gene.Payload);
+                if (!Enum.IsDefined(trait))
+                    throw new InvalidDataException($"Gene {gene.Id} has an unknown life trait.");
+                if (!float.IsFinite(value))
+                    throw new InvalidDataException($"Gene {gene.Id} has a non-finite life trait value.");
+                var (minimum, maximum) = LifeTraitBounds(trait);
+                if (value < minimum || value > maximum)
+                    throw new InvalidDataException(
+                        $"Gene {gene.Id} life trait {trait}={value} is outside the schema range "
+                        + $"{minimum}..{maximum}.");
+                break;
+            default:
+                throw new InvalidDataException($"Gene {gene.Id} has an unknown kind.");
         }
+    }
 
-        foreach (var gene in genome.Genes)
-        {
-            if (gene.Kind == GeneKind.Synapse)
-            {
-                var (fromGeneId, toGeneId, _) = GenePayloadV4.ReadSynapse(gene.Payload);
-                if (!neuronIds.Contains(fromGeneId) || !neuronIds.Contains(toGeneId))
-                    throw new InvalidDataException($"Synapse gene {gene.Id} references a non-neuron gene.");
-            }
 
-            foreach (var regulation in gene.Regulators)
-                if (!Enum.IsDefined(regulation.Condition))
-                    throw new InvalidDataException($"Gene {gene.Id} has an unknown condition.");
-        }
+    private static (float Minimum, float Maximum) LifeTraitBounds(LifeTraitKindV4 trait) => trait switch
+    {
+        LifeTraitKindV4.Size => (0.1f, 5f),
+        LifeTraitKindV4.Speed => (1f, 500f),
+        LifeTraitKindV4.TurnSpeed => (0.05f, 20f),
+        LifeTraitKindV4.SenseRange => (5f, 2_000f),
+        LifeTraitKindV4.Metabolism => (0f, 100f),
+        LifeTraitKindV4.MaxAge => (1f, 100_000f),
+        LifeTraitKindV4.SpikeRange => (1f, 2_000f),
+        _ => throw new InvalidDataException($"Unknown life trait {trait}."),
+    };
+
+    private static void RequirePayload(GeneV4 gene, int expected)
+    {
+        if (gene.Payload.Length != expected)
+            throw new InvalidDataException(
+                $"Gene {gene.Id} ({gene.Kind}) payload must be {expected} bytes, got {gene.Payload.Length}.");
+    }
+
+    private static void RequirePositive(GeneV4 gene, float value, string field)
+    {
+        if (!float.IsFinite(value) || value <= 0f)
+            throw new InvalidDataException($"Gene {gene.Id} has a non-positive {field}.");
     }
 }
 
@@ -653,6 +767,7 @@ public static class GenomeV4Mutator
             GeneKind.Organ => sizeof(ushort),
             GeneKind.Neuron => sizeof(byte) + sizeof(ushort) + sizeof(byte),
             GeneKind.Synapse => sizeof(uint) + sizeof(uint),
+            GeneKind.Reflex => sizeof(ushort) + sizeof(ushort),
             GeneKind.LifeHistory => sizeof(ushort),
             _ => -1,
         };

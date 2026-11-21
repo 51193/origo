@@ -63,6 +63,71 @@ public sealed class GameplayContentTests : System.IDisposable
     }
 
     [Fact]
+    public void ApplyExternalPacks_RestoresPreviousSnapshotWhenValidationFails()
+    {
+        var runtime = GameplayRuntime.CreateDefault([new DefaultGameplayContentModule()]);
+        var previousContent = runtime.Content;
+        var previousUnlocks = runtime.Unlocks;
+        var previousResolver = runtime.Resolver;
+
+        Assert.Throws<InvalidOperationException>(() =>
+            runtime.ApplyExternalPacks([], _ => throw new InvalidOperationException("handler rejected")));
+
+        Assert.Same(previousContent, runtime.Content);
+        Assert.Same(previousUnlocks, runtime.Unlocks);
+        Assert.Same(previousResolver, runtime.Resolver);
+        Assert.NotNull(runtime.Resolver.Resolve("death.handler"));
+    }
+
+    [Fact]
+    public void ApplyExternalPacks_CommitsWhenValidationSucceeds()
+    {
+        var runtime = GameplayRuntime.CreateDefault([new DefaultGameplayContentModule()]);
+        var previousContent = runtime.Content;
+        var validated = false;
+
+        runtime.ApplyExternalPacks([], candidate =>
+        {
+            validated = true;
+            Assert.NotSame(previousContent, candidate.Content);
+        });
+
+        Assert.True(validated);
+        Assert.NotSame(previousContent, runtime.Content);
+    }
+
+    [Fact]
+    public void LoadedSaveValidation_RejectsUndecodableCreature()
+    {
+        var valid = GenomeV4Factory.CreateSimpleReflex();
+        var encoded = GenomeV4Codec.ToBase64(valid);
+
+        Assert.True(LoadedSaveValidation.TryValidateCreatures(
+            [("good", encoded)], out var noError));
+        Assert.Null(noError);
+        Assert.False(LoadedSaveValidation.TryValidateCreatures(
+            [("good", encoded), ("bad", encoded[..^8])], out var error));
+        Assert.Contains("bad", error, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void UnlockShopFingerprint_ChangesWithProgression()
+    {
+        var runtime = GameplayRuntime.CreateDefault([new DefaultGameplayContentModule()]);
+        var first = UnlockShopState.Fingerprint(runtime.Content, runtime.Progression);
+        runtime.Progression.Points++;
+        var second = UnlockShopState.Fingerprint(runtime.Content, runtime.Progression);
+        runtime.Progression.CompletedMilestones.Add("milestone.firstMeal");
+        var third = UnlockShopState.Fingerprint(runtime.Content, runtime.Progression);
+        runtime.Progression.Mode = GameplayMode.Campaign;
+        var fourth = UnlockShopState.Fingerprint(runtime.Content, runtime.Progression);
+
+        Assert.NotEqual(first, second);
+        Assert.NotEqual(second, third);
+        Assert.NotEqual(third, fourth);
+    }
+
+    [Fact]
     public void Registry_RejectsUnknownHandler()
     {
         var registry = new GameplayContentRegistry();

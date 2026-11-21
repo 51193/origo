@@ -107,8 +107,9 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
 
         var localFood = ReadInt(entity, DemoKeys.LocalFood, 0);
         var globalFood = ReadInt(entity, DemoKeys.GlobalFood, 0);
+        var pendingFoodSpawns = ReadInt(controller, DemoKeys.PendingFoodSpawns, 0);
         var capacity = Math.Max(1, ReadInt(entity, DemoKeys.LocalCapacity, Tuning.FoodPatchLocalCapacity));
-        if (localFood >= capacity || globalFood >= Tuning.FoodCap)
+        if (localFood >= capacity || globalFood + pendingFoodSpawns >= Tuning.FoodCap)
             return;
 
         var period = Math.Max(1f, ReadFloat(entity, DemoKeys.CyclePeriod, 90f));
@@ -127,7 +128,8 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
         var metas = new List<SndMetaData>();
         for (var i = 0; i < Tuning.FoodSourceSpawnBurst; i++)
         {
-            if (localFood + metas.Count >= capacity || globalFood + metas.Count >= Tuning.FoodCap)
+            if (localFood + metas.Count >= capacity
+                || globalFood + pendingFoodSpawns + metas.Count >= Tuning.FoodCap)
                 break;
             if (rng.NextDouble() >= density)
                 continue;
@@ -167,6 +169,7 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
             return;
 
         var foodSpawned = metas.Count;
+        var spawnedCreatures = 0;
         var spawnVariant = gameplaySession.Runtime.Resolver.Resolve("spawn.policy");
         if (spawnVariant is not null)
         {
@@ -188,13 +191,39 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
                 controller.SetData(DemoKeys.NextCreatureId, spawnContext.NextCreatureId);
             if (spawnContext.NextLineageId != nextLineage)
                 controller.SetData(DemoKeys.NextLineageId, spawnContext.NextLineageId);
+            if (spawnContext.SpawnedCreatures > 0)
+            {
+                spawnedCreatures = spawnContext.SpawnedCreatures;
+                controller.SetData(
+                    DemoKeys.PendingCreatureSpawns,
+                    ReadInt(controller, DemoKeys.PendingCreatureSpawns, 0) + spawnedCreatures);
+            }
         }
 
         entity.SetData(DemoKeys.SourceSpawnCount, spawnCount + 1);
         entity.SetData(DemoKeys.SourceNextFoodId, nextFoodId);
         entity.SetData(DemoKeys.LocalFood, localFood + foodSpawned);
+        if (foodSpawned > 0)
+            controller.SetData(
+                DemoKeys.PendingFoodSpawns,
+                ReadInt(controller, DemoKeys.PendingFoodSpawns, 0) + foodSpawned);
         var spawn = metas.ToArray();
-        ctx.Deferred.EnqueueBusinessDeferred(() => session.SpawnMany(spawn));
+        ctx.Deferred.EnqueueBusinessDeferred(() =>
+        {
+            session.SpawnMany(spawn);
+            if (spawnedCreatures > 0)
+                controller.SetData(
+                    DemoKeys.PendingCreatureSpawns,
+                    Math.Max(
+                        0,
+                        ReadInt(controller, DemoKeys.PendingCreatureSpawns, 0) - spawnedCreatures));
+            if (foodSpawned > 0)
+                controller.SetData(
+                    DemoKeys.PendingFoodSpawns,
+                    Math.Max(
+                        0,
+                        ReadInt(controller, DemoKeys.PendingFoodSpawns, 0) - foodSpawned));
+        });
     }
 
     private static void UpdateWalk(ISndEntity entity, int seed, int patchIndex, float time)

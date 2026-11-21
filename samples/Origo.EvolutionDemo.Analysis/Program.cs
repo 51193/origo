@@ -473,6 +473,7 @@ internal static class Program
             .ToArray();
         var bySave = rows.GroupBy(static row => row.SavePath, StringComparer.Ordinal)
             .ToDictionary(static group => group.Key, static group => group.ToArray(), StringComparer.Ordinal);
+        EnsureDirectory(path);
         using var writer = new StreamWriter(path);
         writer.Write("save,time,tick,creatures,analyzed,food,corpses,food_sources");
         foreach (var key in controllerKeys)
@@ -529,6 +530,7 @@ internal static class Program
 
     private static void WriteEnrichmentCsv(string path, EnrichmentAnalysis[] enrichment)
     {
+        EnsureDirectory(path);
         using var writer = new StreamWriter(path);
         writer.WriteLine("cluster,signature,cluster_with,cluster_total,rest_with,rest_total,odds,p_value,q_value");
         var rows = enrichment
@@ -552,6 +554,7 @@ internal static class Program
 
     private static void WriteClustersCsv(string path, IReadOnlyList<FeatureRow> rows, KMeans.Result clustering)
     {
+        EnsureDirectory(path);
         using var writer = new StreamWriter(path);
         writer.WriteLine("name,save,lineage,generation,cluster");
         for (var index = 0; index < rows.Count; index++)
@@ -685,7 +688,7 @@ internal static class Program
         Console.WriteLine("  --out <path>             HTML report (default genome-report.html).");
         Console.WriteLine("                           A sibling .clusters.csv is always written.");
         Console.WriteLine("  --max <n>                Per-save analyzed row cap; 0 analyzes every creature (default 5000).");
-        Console.WriteLine("  --seed <n>               Seed for sampling, restarts, PCA, and bootstrap (default 1).");
+        Console.WriteLine("  --seed <n>               Seed for sampling, k-means/Jaccard restarts, and bootstrap (default 1).");
         Console.WriteLine("  --k <n>                  Fixed cluster count; 0 auto-selects k (default 0).");
         Console.WriteLine("  --mode all|genotype|phenotype|behavior   Feature selection (default all).");
         Console.WriteLine("  --method kmeans|jaccard|dbscan           Clustering method (default kmeans).");

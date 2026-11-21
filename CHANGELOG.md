@@ -248,8 +248,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the framework goal and routes readers to the manual instead of carrying a
   feature catalogue or a placeholder quick start. The manual index, usage
   index, capability map, and agent reference now describe current workflows;
-  a runnable demo and getting-started walkthrough are intentionally deferred
-  until the demo exists.
+  the runnable Evolution Demo is linked from the manual and usage index.
 - **BREAKING: save and level IDs are lowercase, path-safe identifiers** — IDs must use lowercase ASCII letters, digits, `.`, `_`, and `-`, must not be dot-only, and must not end with `.`. Save/level IDs are directory names, so `Foo`/`foo` and `foo`/`foo.` alias the same directory on default Windows/macOS file systems; the previous ordinal checks could overwrite a slot, bypass active-save deletion protection, or lose a level. Legacy mixed-case or trailing-dot slots are detected and rejected with a rename instruction rather than silently merged. Rename existing IDs before upgrading.
 - **Hyphenated release tags are always pre-releases** — the Release workflow
   marks any tag containing `-` as a pre-release, not only dispatches with the
@@ -267,6 +266,48 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **Evolution Demo content reloads are transactional** — a valid external
+  content pack replaces the live snapshot only after the handler registries
+  accept the candidate snapshot. A pack that parses but uses an incompatible
+  handler now restores the previous content, unlocks, resolver, and genome
+  gates instead of leaving a live snapshot that throws on every death.
+- **Evolution Demo rejects corrupt or out-of-range V4 genomes** — deserialization
+  now bounds gene/regulation/payload lengths before allocation, converts
+  truncation to a readable integrity error, rejects trailing bytes, and
+  validates every payload shape, enum, synapse reference, and life-trait range.
+  Malformed saves and hand-edited genomes fail at the save boundary instead of
+  crashing later with OOM or `EndOfStreamException`.
+- **Evolution Demo expresses only organ-backed sensors, actions, and reflexes** —
+  latent sensor/action genes no longer create brain nodes or dead reflexes when
+  their organ is absent, while the genes remain available for later organ
+  expression. Founders and mutations also clamp life traits to the configured
+  body-gene ranges, so the Advanced Settings body ranges affect new genomes
+  instead of being ignored.
+- **Evolution Demo enforces population and food caps across deferred work** —
+  overgrowth, reproduction, innovation injection, enrichment, food sources,
+  corpse pulses, manual feeding, and startup food now reserve pending slots
+  before enqueueing spawns, so cap checks account for queued work across
+  catch-up ticks and multi-source bursts. Loaded saves clear stale
+  reservations.
+- **Evolution Demo feeding, carcass timing, and inventory UI respect settings** —
+  Feed drops the configured nutrient amount, ordinary deaths use the configured
+  carcass interval, the unlock shop rebuilds when points/milestones change,
+  and the camera re-fits after a live pond expansion.
+- **Evolution Demo checkpoint and inspector correctness** — checkpoint saves
+  overwrite a same-ID slot from an earlier run instead of reporting a stale
+  checkpoint as verified, checkpoint metadata documents the one-tick mark
+  tolerance, inspector sensors are labelled from the expressed V4 ports, decode
+  failures show an explicit message instead of a random founder, and the
+  incompatible-save message names the current v7 schema.
+- **Evolution Demo appearance and diversity use canonical genomes** — runtime
+  appearance is derived from the decoded hex genome rather than the base64
+  storage string, and mixed-length Hamming distance no longer counts two absent
+  positions as different.
+- **Evolution Demo analysis output and provenance are consistent** — timeline
+  and enrichment CSVs create their parent directories, DBSCAN/Jaccard reports
+  describe their own algorithms, zero-noise DBSCAN runs still report noise, and
+  the metrics JSON/HTML no longer claim the capped display rows are the complete
+  enrichment set.
 - **Configured main-menu level IDs are honored** — `OrigoDefaultEntry.ConfigPath`
   entry configs whose `main_menu_level` is not `main_menu` now mount the
   foreground session with the configured level ID instead of the hard-coded

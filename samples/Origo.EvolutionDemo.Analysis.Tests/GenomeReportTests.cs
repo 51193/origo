@@ -96,6 +96,58 @@ public sealed class GenomeReportTests
     }
 
     [Fact]
+    public void Build_DbscanZeroNoiseStillReportsNoiseAndDbscanDefinitions()
+    {
+        var baseInput = ReportFixture.Create(clusterCount: 2, withNoise: false);
+        var dbscanInput = baseInput with
+        {
+            Clustering = baseInput.Clustering with { Inertia = null },
+            Candidates = [],
+            AutoKMax = 0,
+            Stability = null,
+            Options = baseInput.Options with { Method = "dbscan", RequestedK = 0 },
+        };
+
+        var html = GenomeHtmlReport.Build(dbscanInput);
+        var json = JsonDocument.Parse(GenomeMetricsJson.Build(dbscanInput)).RootElement;
+
+        Assert.Contains("noise <b>0", html, StringComparison.Ordinal);
+        Assert.Contains("DBSCAN:", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("searched 2..0", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Auto-k candidates", html, StringComparison.Ordinal);
+        Assert.Contains("min-cluster-size=n/a", html, StringComparison.Ordinal);
+        Assert.Equal(0, json.GetProperty("clustering").GetProperty("dbscanNoise").GetInt32());
+    }
+
+    [Fact]
+    public void Build_JaccardUsesJaccardDefinitionsNotKMeansDefinitions()
+    {
+        var input = ReportFixture.Create() with
+        {
+            Options = ReportFixture.Create().Options with { Method = "jaccard", RequestedK = 0 },
+        };
+
+        var html = GenomeHtmlReport.Build(input);
+
+        Assert.Contains("Jaccard k-medoids", html, StringComparison.Ordinal);
+        Assert.Contains("maximum-silhouette solution", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("min-inertia solution", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("k-means: the reported solution", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Build_EnrichmentNoteDoesNotClaimMetricsJsonIsComplete()
+    {
+        var input = ReportFixture.Create(testedSignatureCount: 3);
+
+        var html = GenomeHtmlReport.Build(input);
+
+        Assert.Contains("complete tested set is written only by --enrichment-csv", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("full tested set is written by --enrichment-csv and --metrics-json", html,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void MetricsJson_IsValidAndCarriesTheSameNumbersAsTheHtmlReport()
     {
         var input = ReportFixture.Create();

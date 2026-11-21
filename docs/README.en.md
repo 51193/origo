@@ -13,13 +13,14 @@ persistence.
 | Building a game | [Usage Documentation](usage/README.en.md), then the [SND Entity Model](usage/snd-entity-model.en.md) |
 | Using an AI agent | [Agent Workflow](../AGENTS.md), [Agent Reference](usage/agent-reference.en.md), and the [generated contract API](generated/contract-api.en.md) |
 | Maintaining the framework | [Contributing](../CONTRIBUTING.md), [META](META.en.md), [Release Process](release-process.en.md), and [Review Process](review-process.en.md) |
+| Running the Evolution Demo | [Samples](../samples/README.md) |
 | Looking for a specific module | [Project Module Index](#project-module-index) |
 
-A runnable game demo and a getting-started walkthrough are intentionally not
-published yet; the demo is still being built. Until then, use the capability
-map, architecture documents, and the tested
-[package-consumer fixture](usage/shell-package-consumer.en.md) rather than an
-unverified walkthrough.
+A runnable Evolution Demo and its local analysis tools live in
+[`samples/`](../samples/README.md). The demo is a consumer-facing example built
+on the local framework projects; the capability map, architecture documents, and
+the tested [package-consumer fixture](usage/shell-package-consumer.en.md) remain
+the API references.
 
 ## What Origo owns
 

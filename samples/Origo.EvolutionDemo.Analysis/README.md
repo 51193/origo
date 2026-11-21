@@ -41,7 +41,7 @@ dotnet run --project samples/Origo.EvolutionDemo.Analysis -c Release -- \
 --pool                   allow one --save directory to expand to several save scenes
 --out <path>             HTML report (default genome-report.html); a sibling .clusters.csv is always written
 --max <n>                per-save analyzed row cap; 0 analyzes every creature (default 5000)
---seed <n>               seed for per-save sampling, k-means restarts, and bootstrap ARI (default 1)
+--seed <n>               seed for per-save sampling, k-means/Jaccard restarts, and bootstrap ARI (default 1)
 --k <n>                  0 = automatic k via silhouette (default 0); N = fixed N clusters
 --mode all|genotype|phenotype|behavior
 --method kmeans|jaccard|dbscan
@@ -57,8 +57,9 @@ dotnet run --project samples/Origo.EvolutionDemo.Analysis -c Release -- \
 
 Invalid or inapplicable options are errors: unknown methods/modes, `--k` with
 DBSCAN, `--eps`/`--min-points` with k-means or Jaccard, `--stability` with a
-non-k-means method, `--min-cluster-size` with DBSCAN, negative values, and
-missing save inputs. Output directories are created as needed. Warnings go to
+non-k-means method, `--min-cluster-size` with DBSCAN, negative values except
+`--seed`, and missing save inputs. Output directories are created as needed.
+Warnings go to
 stderr and the HTML report.
 
 ### Outputs
@@ -163,9 +164,10 @@ The report contains:
   covariance; the explained-variance ratio of a component is its eigenvalue
   share of the covariance trace, so the reported ratios sum to at most 1.
 - **Sampling** is per save: `--max` samples rows from each save with a seed
-  derived from `--seed` and the save's position in the input order. Adding or
-  reordering saves therefore can change which rows of later saves are sampled;
-  the report states when the analyzed rows are a sample.
+  derived from `--seed` and the save's position in the canonical path-sorted
+  input order. Reordering `--save` arguments does not change the sample; adding
+  a save whose path sorts before an existing one can change which rows of later
+  saves are sampled. The report states when the analyzed rows are a sample.
 - **No silent data loss.** Creatures without a usable `evo.bodyGenome` are
   counted by the reader; creatures whose genome cannot be decoded or compiled
   are counted by extraction. Both fail the run unless `--allow-skips` is passed.
@@ -204,8 +206,8 @@ dotnet run --project samples/Origo.EvolutionDemo.Analysis -c Release -- \
 --profile <path>         profile JSONL written by SimulationProfiler (schema 2)
 --out <path>             HTML report (default perf-report.html)
 --segment all|last|<n>   simulation segment selection, 0-based (default last)
---from <simsec>          inclusive lower simTime bound inside the selected segment
---to <simsec>            inclusive upper simTime bound inside the selected segment
+--from <simsec>          inclusive lower simTime bound inside the selected samples
+--to <simsec>            inclusive upper simTime bound inside the selected samples
 ```
 
 ### Simulation segments
@@ -220,10 +222,12 @@ benchmark subject, print a warning on stderr, and state the selection in the
 report. `--segment all` pools every segment (the historical behaviour),
 `--segment last` makes the default explicit, and `--segment <n>` selects one
 zero-based segment. `--from`/`--to` are then applied to the recorded `simTime`
-of the selected samples (both bounds inclusive), so the window never mixes
-segments; an empty window is an error. `--from 0 --to 12` on a two-segment
-profile therefore selects 11 benchmark samples, not 11 smoke plus 11 benchmark
-samples; add `--segment all` to pool them.
+of the selected samples (both bounds inclusive). With `--segment <n>` or the
+default last segment the window cannot mix segments; `--segment all` pools the
+segments first and a window may then span them. An empty window is an error.
+`--from 0 --to 12` on a two-segment profile therefore selects 11 benchmark
+samples, not 11 smoke plus 11 benchmark samples; add `--segment all` to pool
+them.
 
 ### Systems and subphases
 

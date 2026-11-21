@@ -5,6 +5,18 @@ namespace Origo.EvolutionDemo.Logic;
 /// <summary>Pure scheduling helper for delayed carcass nutrient release.</summary>
 public static class CarcassMath
 {
+
+    /// <summary>
+    ///     Resolves the configured corpse interval, falling back to the mechanic
+    ///     variant value when the configured value is not positive or finite.
+    /// </summary>
+    public static float ResolveInterval(float configured, float fallback)
+    {
+        if (!float.IsFinite(fallback) || fallback <= 0f)
+            throw new ArgumentOutOfRangeException(nameof(fallback), "Fallback interval must be positive.");
+        return float.IsFinite(configured) && configured > 0f ? configured : fallback;
+    }
+
     /// <summary>
     ///     Advances one carcass timer and releases at most the available food
     ///     slots. The unused timer remainder is preserved so slow frames do not

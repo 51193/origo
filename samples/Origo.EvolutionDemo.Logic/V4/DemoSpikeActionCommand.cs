@@ -14,6 +14,7 @@ public readonly record struct SpikeTargetV4(
     bool PendingKill);
 
 /// <summary>Inputs for planning one directional spike salvo.</summary>
+/// <param name="SelfId">Creature id to exclude from targets; pass -1 only when the caller already filtered self out.</param>
 public sealed record SpikePlanInputV4(
     int SelfId,
     Vector2 Position,

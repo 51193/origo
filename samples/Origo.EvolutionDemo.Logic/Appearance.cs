@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using Origo.EvolutionDemo.Logic.V4;
 
 namespace Origo.EvolutionDemo.Logic;
 
@@ -85,6 +87,44 @@ public sealed record CreatureAppearance(
 public static class GenomeAppearance
 {
     private const float Tau = MathF.PI * 2f;
+
+    private static readonly Dictionary<string, string> CanonicalHexCache = new(StringComparer.Ordinal);
+
+    /// <summary>
+    ///     Derives an appearance from the SND storage form. Prefixed base64
+    ///     genomes are decoded once to their canonical hex form and cached;
+    ///     unprefixed strings (hex or fixtures) are used directly.
+    /// </summary>
+    public static CreatureAppearance DeriveStored(string genome) => Derive(CanonicalHex(genome));
+
+    /// <summary>
+    ///     Returns the canonical hex form for a stored genome, decoding prefixed
+    ///     base64 once and caching the result. Non-base64 inputs are returned
+    ///     unchanged for fixtures and debugging strings.
+    /// </summary>
+    public static string CanonicalHex(string genome)
+    {
+        ArgumentNullException.ThrowIfNull(genome);
+        if (!genome.StartsWith(GenomeV4Codec.Base64Prefix, StringComparison.Ordinal))
+            return genome;
+        if (CanonicalHexCache.TryGetValue(genome, out var cached))
+            return cached;
+        string canonical;
+        try
+        {
+            canonical = GenomeV4Codec.ToHex(GenomeV4Codec.FromBase64(genome));
+        }
+        catch (Exception exception) when (exception is FormatException or ArgumentException
+            or InvalidOperationException or System.IO.InvalidDataException)
+        {
+            canonical = genome;
+        }
+
+        if (CanonicalHexCache.Count >= CacheEviction.DefaultLimit)
+            CacheEviction.TrimOldestHalf(CanonicalHexCache);
+        CanonicalHexCache[genome] = canonical;
+        return canonical;
+    }
 
     /// <summary>Derives an appearance from a raw genome string.</summary>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="genome" /> is null.</exception>

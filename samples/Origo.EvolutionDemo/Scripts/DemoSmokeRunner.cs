@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using Godot;
 using Origo.EvolutionDemo.Logic;
@@ -58,6 +59,7 @@ public partial class DemoSmokeRunner : Node
     ];
     private int _verifiedCheckpoints;
     private readonly string? _configurationError;
+    private readonly DateTime _runStartedUtc = DateTime.UtcNow;
 
     public DemoSmokeRunner(DemoEntry entry)
     {
@@ -136,6 +138,31 @@ public partial class DemoSmokeRunner : Node
         }
 
         return false;
+    }
+
+    private static void AssertWithinCaps((int creatures, int food, int generation, float time, string phase) stats)
+    {
+        if (stats.creatures > Tuning.PopulationCap)
+            throw new InvalidOperationException(
+                $"Population {stats.creatures} exceeds the cap {Tuning.PopulationCap}.");
+        if (stats.food > Tuning.FoodCap)
+            throw new InvalidOperationException(
+                $"Food {stats.food} exceeds the cap {Tuning.FoodCap}.");
+    }
+
+    private void AssertCameraFit()
+    {
+        var viewport = GetViewport().GetVisibleRect().Size;
+        if (viewport.X <= 180f || viewport.Y <= 160f)
+            return;
+        var expected = MathF.Max(
+            0.02f,
+            MathF.Min(
+                (viewport.X - 180f) / (Tuning.PondRadius * 2f),
+                (viewport.Y - 160f) / (Tuning.PondRadius * 2f)));
+        if (MathF.Abs(_entry.WorldView.FitViewScale - expected) > 0.001f)
+            throw new InvalidOperationException(
+                $"Camera fit {_entry.WorldView.FitViewScale:0.0000} is stale for pond radius {Tuning.PondRadius:0}; expected {expected:0.0000}.");
     }
 
     private Vector2 ToWindowPosition(Vector2 viewportPosition)
@@ -312,6 +339,7 @@ public partial class DemoSmokeRunner : Node
                 if (_frame > RunningFrameLimit)
                     throw new InvalidOperationException("The pond did not accumulate simulation time.");
                 var running = ui.SmokeStats();
+                AssertWithinCaps(running);
                 if (_spedUp && running.time < _targetSeconds && running.creatures > 0)
                 {
                     if (_frame % 30 == 0 && HasFoodOutsidePond())
@@ -392,6 +420,7 @@ public partial class DemoSmokeRunner : Node
                 if (ui.IsBusyForSmoke)
                     break;
                 var restored = ui.SmokeStats();
+                AssertWithinCaps(restored);
                 if (restored.creatures == 0)
                     throw new InvalidOperationException("Loaded pond has no creatures.");
                 if (restored.generation < 1)
@@ -440,6 +469,7 @@ public partial class DemoSmokeRunner : Node
                 if (ui.IsFastForwardingForSmoke)
                     break;
                 var fastForwarded = ui.SmokeStats();
+                AssertWithinCaps(fastForwarded);
                 if (fastForwarded.time < _fastForwardStartTime + 2f)
                     throw new InvalidOperationException("Timed iteration did not advance simulation time.");
                 var expectedCheckpoints = VerifyIterateCheckpoints();
@@ -469,6 +499,7 @@ public partial class DemoSmokeRunner : Node
                     break;
                 if (!_entry.Context.Save.ListSaves().Contains(_benchmarkSaveSlot, StringComparer.Ordinal))
                     throw new InvalidOperationException("Benchmark save is missing.");
+                AssertSaveWrittenByThisRun(_benchmarkSaveSlot);
                 PrintCampaignSummary();
                 GD.Print($"DEMO_BENCHMARK_OK population={_savedPopulation} time={_savedTime:0.0} " +
                     $"slot={_benchmarkSaveSlot} checkpoints={_verifiedCheckpoints}");
@@ -494,6 +525,19 @@ public partial class DemoSmokeRunner : Node
         foreach (var unlockId in CampaignPurchaseOrder)
             runtime.TryUnlock(unlockId);
         _entry.Ui.RefreshCampaignWorld();
+        AssertCameraFit();
+    }
+
+    private void AssertSaveWrittenByThisRun(string slot)
+    {
+        var saveRoot = ProjectSettings.GlobalizePath(DemoEntry.SaveRoot);
+        var slotRoot = Path.Combine(saveRoot, $"save_{slot}");
+        var scene = (Directory.Exists(slotRoot)
+            ? Directory.GetFiles(slotRoot, "snd_scene.json", SearchOption.AllDirectories).FirstOrDefault()
+            : null)
+            ?? throw new InvalidOperationException($"Save '{slot}' has no scene file.");
+        if (File.GetLastWriteTimeUtc(scene) < _runStartedUtc.AddSeconds(-1d))
+            throw new InvalidOperationException($"Save '{slot}' was not written by this run.");
     }
 
     private int VerifyIterateCheckpoints()
@@ -512,6 +556,7 @@ public partial class DemoSmokeRunner : Node
             var slot = DemoUi.IterateCheckpointSlot(mark);
             if (!saves.Contains(slot, StringComparer.Ordinal))
                 throw new InvalidOperationException($"Iterate checkpoint save '{slot}' is missing.");
+            AssertSaveWrittenByThisRun(slot);
         }
 
         _verifiedCheckpoints = marks.Count;

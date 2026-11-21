@@ -302,9 +302,10 @@ public partial class DemoUi
             var genome = ReadString(entity, DemoKeys.BodyGenome, string.Empty);
             if (genome.Length == 0)
                 continue;
-            genomes.Add(genome);
-            bodySet.Add(genome);
-            var look = GenomeAppearance.Derive(genome);
+            var canonical = GenomeAppearance.CanonicalHex(genome);
+            genomes.Add(canonical);
+            bodySet.Add(canonical);
+            var look = GenomeAppearance.Derive(canonical);
             if (themes[look.ThemeIndex] == 0)
                 themeColors[look.ThemeIndex] = ToColor(look.Body);
             themes[look.ThemeIndex]++;

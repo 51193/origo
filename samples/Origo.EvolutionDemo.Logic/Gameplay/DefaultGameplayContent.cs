@@ -246,27 +246,55 @@ public sealed class GameplayRuntime
     }
 
     /// <summary>Applies an external JSON pack while retaining core content and progression.</summary>
-    public void ApplyExternalPack(string json)
+    public void ApplyExternalPack(string json, Action<GameplayRuntime>? validate = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(json);
-        ApplyExternalPacks([json]);
+        ApplyExternalPacks([json], validate);
     }
 
     /// <summary>
     ///     Rebuilds the merged content from the built-in base plus all external
     ///     packs. Safe to call repeatedly when content files change.
     /// </summary>
-    public void ApplyExternalPacks(IEnumerable<string> packJson)
+    /// <param name="packJson">External JSON packs to merge over the built-in content.</param>
+    /// <param name="validate">
+    ///     Optional validation run against the candidate runtime before it is
+    ///     committed. When it throws, the previous content, unlock service, and
+    ///     resolver are restored and the exception is rethrown.
+    /// </param>
+    public void ApplyExternalPacks(
+        IEnumerable<string> packJson,
+        Action<GameplayRuntime>? validate = null)
     {
         ArgumentNullException.ThrowIfNull(packJson);
         var registry = new GameplayContentRegistry();
         registry.AddSnapshot(BaseContent);
         foreach (var json in packJson)
             GameplayContentPackLoader.AddTo(registry, json);
-        Content = registry.BuildSnapshot();
-        Unlocks = new UnlockService(Content, Progression);
-        Resolver = new MechanicResolver(Content, Unlocks);
+        var nextContent = registry.BuildSnapshot();
+        var nextUnlocks = new UnlockService(nextContent, Progression);
+        var nextResolver = new MechanicResolver(nextContent, nextUnlocks);
+        var previousContent = Content;
+        var previousUnlocks = Unlocks;
+        var previousResolver = Resolver;
+        Content = nextContent;
+        Unlocks = nextUnlocks;
+        Resolver = nextResolver;
         ConfigureGenomeGate();
+        if (validate is null)
+            return;
+        try
+        {
+            validate(this);
+        }
+        catch
+        {
+            Content = previousContent;
+            Unlocks = previousUnlocks;
+            Resolver = previousResolver;
+            ConfigureGenomeGate();
+            throw;
+        }
     }
 
     public static GameplayRuntime CreateDefault(

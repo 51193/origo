@@ -85,8 +85,9 @@ public static class GenomeV4Factory
             new(6, GeneKind.Synapse, 1, 1f, GenePayloadV4.Synapse(2, 4, 1f)),
             new(7, GeneKind.Synapse, 1, 1f, GenePayloadV4.Synapse(3, 4, 1f)),
             new(8, GeneKind.Synapse, 1, 1f, GenePayloadV4.Synapse(4, 5, 1f)),
+            new(9, GeneKind.Organ, 1, 1f, GenePayloadV4.Organ(OrganKindV4.Vision, 0.5f)),
         };
-        return new GenomeV4(genes, 9);
+        return new GenomeV4(genes, 10);
     }
 
     /// <summary>
@@ -123,8 +124,9 @@ public static class GenomeV4Factory
                 GenePayloadV4.Reflex(SensorKindV4.FoodLeft, ActionKindV4.Move, 1f)),
             new(3, GeneKind.Reflex, 1, 1f,
                 GenePayloadV4.Reflex(SensorKindV4.FoodRight, ActionKindV4.Move, 1f)),
+            new(4, GeneKind.Organ, 1, 1f, GenePayloadV4.Organ(OrganKindV4.Vision, 0.5f)),
         };
-        return new GenomeV4(genes, 4);
+        return new GenomeV4(genes, 5);
     }
 
     /// <summary>A conditional spike battery expressed only when food is low.</summary>
@@ -181,20 +183,24 @@ public static class GenomeV4Factory
         }
 
         Add(GeneKind.BodySegment, GenePayloadV4.BodySegment(1f, 0.6f));
-        Add(GeneKind.LifeHistory, GenePayloadV4.LifeHistory(LifeTraitKindV4.Size,
-            0.75f + ((float)random.NextDouble() * 0.5f)));
-        Add(GeneKind.LifeHistory, GenePayloadV4.LifeHistory(LifeTraitKindV4.Speed,
-            40f + ((float)random.NextDouble() * 40f)));
-        Add(GeneKind.LifeHistory, GenePayloadV4.LifeHistory(LifeTraitKindV4.TurnSpeed,
-            2f + ((float)random.NextDouble() * 2f)));
-        Add(GeneKind.LifeHistory, GenePayloadV4.LifeHistory(LifeTraitKindV4.SenseRange,
-            100f + ((float)random.NextDouble() * 80f)));
-        Add(GeneKind.LifeHistory, GenePayloadV4.LifeHistory(LifeTraitKindV4.SpikeRange,
-            35f + ((float)random.NextDouble() * 45f)));
-        Add(GeneKind.LifeHistory, GenePayloadV4.LifeHistory(LifeTraitKindV4.Metabolism,
-            0.55f + ((float)random.NextDouble() * 0.4f)));
-        Add(GeneKind.LifeHistory, GenePayloadV4.LifeHistory(LifeTraitKindV4.MaxAge,
-            180f + ((float)random.NextDouble() * 220f)));
+
+        float Range(float minimum, float maximum) =>
+            minimum + ((float)random.NextDouble() * (maximum - minimum));
+
+        Add(GeneKind.LifeHistory, GenePayloadV4.LifeHistory(
+            LifeTraitKindV4.Size, Range(Tuning.BodySizeMin, Tuning.BodySizeMax)));
+        Add(GeneKind.LifeHistory, GenePayloadV4.LifeHistory(
+            LifeTraitKindV4.Speed, Range(Tuning.BodySpeedMin, Tuning.BodySpeedMax)));
+        Add(GeneKind.LifeHistory, GenePayloadV4.LifeHistory(
+            LifeTraitKindV4.TurnSpeed, Range(Tuning.BodyTurnMin, Tuning.BodyTurnMax)));
+        Add(GeneKind.LifeHistory, GenePayloadV4.LifeHistory(
+            LifeTraitKindV4.SenseRange, Range(Tuning.BodySenseMin, Tuning.BodySenseMax)));
+        Add(GeneKind.LifeHistory, GenePayloadV4.LifeHistory(
+            LifeTraitKindV4.SpikeRange, Range(Tuning.BodySpikeMin, Tuning.BodySpikeMax)));
+        Add(GeneKind.LifeHistory, GenePayloadV4.LifeHistory(
+            LifeTraitKindV4.Metabolism, Range(Tuning.BodyMetabolismMin, Tuning.BodyMetabolismMax)));
+        Add(GeneKind.LifeHistory, GenePayloadV4.LifeHistory(
+            LifeTraitKindV4.MaxAge, Range(Tuning.BodyAgeMin, Tuning.BodyAgeMax)));
 
         void AddOrganIfAllowed(OrganKindV4 kind, float size, double chance = 1d, byte copies = 1)
         {

@@ -24,9 +24,6 @@ public sealed class CreatureGenome
     /// <summary>Compact base64 representation stored in SND entities and saves.</summary>
     public string SerializedBody => GenomeV4Codec.ToBase64(Genome);
 
-    /// <summary>Brain is part of the same V4 genome; retained as an empty display field.</summary>
-    public string Brain => Genome.Genes.Count > 0 ? string.Empty : string.Empty;
-
     /// <summary>Number of genes, used for reproductive cost and display.</summary>
     public int GeneCount => Genome.Genes.Count;
 
@@ -60,7 +57,7 @@ public sealed class CreatureGenome
             return true;
         }
         catch (Exception ex) when (ex is FormatException or ArgumentException or InvalidOperationException
-            or System.IO.InvalidDataException)
+            or System.IO.InvalidDataException or System.IO.IOException)
         {
             genome = null;
             return false;
@@ -84,7 +81,7 @@ public sealed class CreatureGenome
         ArgumentNullException.ThrowIfNull(parent);
         ArgumentNullException.ThrowIfNull(profile);
         ArgumentNullException.ThrowIfNull(random);
-        var working = parent.Genome;
+        var working = parent.Genome.Clone();
         for (var step = 0; step < profile.Steps; step++)
         {
             var next = GenomeV4Mutator.Mutate(working, random, profile.Settings);
@@ -94,7 +91,39 @@ public sealed class CreatureGenome
             working = next;
         }
 
+        ClampLifeTraits(working, DemoSettings.Current);
         changes = GenomeDivergence.CountChangedGenes(parent.Genome, working);
         return new CreatureGenome(working);
     }
+
+    private static void ClampLifeTraits(GenomeV4 genome, DemoSettings settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        foreach (var gene in genome.Genes)
+        {
+            if (gene.Kind != GeneKind.LifeHistory)
+                continue;
+            var (trait, value) = GenePayloadV4.ReadLifeHistory(gene.Payload);
+            var (minimum, maximum) = TraitRange(trait, settings);
+            if (minimum > maximum)
+                (minimum, maximum) = (maximum, minimum);
+            var clamped = Math.Clamp(value, minimum, maximum);
+            if (clamped.Equals(value))
+                continue;
+            BitConverter.GetBytes(clamped).CopyTo(gene.Payload, sizeof(ushort));
+        }
+    }
+
+    private static (float Minimum, float Maximum) TraitRange(LifeTraitKindV4 trait, DemoSettings settings) =>
+        trait switch
+        {
+            LifeTraitKindV4.Size => (settings.BodySizeMin, settings.BodySizeMax),
+            LifeTraitKindV4.Speed => (settings.BodySpeedMin, settings.BodySpeedMax),
+            LifeTraitKindV4.TurnSpeed => (settings.BodyTurnMin, settings.BodyTurnMax),
+            LifeTraitKindV4.SenseRange => (settings.BodySenseMin, settings.BodySenseMax),
+            LifeTraitKindV4.SpikeRange => (settings.BodySpikeMin, settings.BodySpikeMax),
+            LifeTraitKindV4.Metabolism => (settings.BodyMetabolismMin, settings.BodyMetabolismMax),
+            LifeTraitKindV4.MaxAge => (settings.BodyAgeMin, settings.BodyAgeMax),
+            _ => throw new InvalidOperationException($"No configured range for life trait '{trait}'."),
+        };
 }

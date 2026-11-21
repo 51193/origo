@@ -3,6 +3,7 @@
 # Usage: package-release.sh <version> <artifacts-dir>
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+source "$ROOT/scripts/bash/dotnet-env.sh"
 PROJECT="$ROOT/samples/Origo.EvolutionDemo"
 VERSION="${1:?version required (x.y.z or x.y.z-suffix)}"
 ARTIFACTS="${2:?artifacts directory required}"
@@ -44,11 +45,13 @@ fi
 # Godot exports the .NET assemblies only when the project solution is present
 # and the publish succeeds; a package without them cannot start.
 for demo_platform in linux windows macos; do
-    if [[ -z "$(find "${WORK}/${demo_platform}" -type f \
-        -name "Origo.EvolutionDemo.dll" -print -quit)" ]]; then
-        echo "ERROR: ${demo_platform} demo package is missing Origo.EvolutionDemo.dll." >&2
-        exit 1
-    fi
+    for demo_assembly in Origo.EvolutionDemo.dll Origo.EvolutionDemo.Logic.dll; do
+        if [[ -z "$(find "${WORK}/${demo_platform}" -type f \
+            -name "${demo_assembly}" -print -quit)" ]]; then
+            echo "ERROR: ${demo_platform} demo package is missing ${demo_assembly}." >&2
+            exit 1
+        fi
+    done
 done
 
 cat > "${WORK}/README.txt" <<'README'

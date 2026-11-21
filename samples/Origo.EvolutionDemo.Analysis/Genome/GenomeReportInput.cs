@@ -30,7 +30,7 @@ public sealed record SaveSummary(
     IReadOnlyDictionary<string, bool> ControllerBooleans);
 
 /// <summary>Resolved genome command options recorded in the report provenance.</summary>
-/// <param name="Seed">Random seed for sampling, restarts, PCA and bootstrap.</param>
+/// <param name="Seed">Random seed for sampling, k-means/Jaccard restarts, and bootstrap ARI.</param>
 /// <param name="MaxCreatures">Per-save row cap; zero analyzes every creature.</param>
 /// <param name="Mode">Feature mode: all, genotype, phenotype, or behavior.</param>
 /// <param name="Method">Clustering method: kmeans, jaccard, or dbscan.</param>

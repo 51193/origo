@@ -176,7 +176,7 @@ public static class GenomeMetricsJson
         }
 
         var noise = clustering.Labels.Count(static label => label < 0);
-        if (noise > 0)
+        if (string.Equals(input.Options.Method, "dbscan", StringComparison.Ordinal))
             writer.WriteNumber("dbscanNoise", noise);
         else
             writer.WriteNull("dbscanNoise");

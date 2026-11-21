@@ -50,3 +50,19 @@ public sealed class CarcassMathTests
         Assert.Equal(0f, timer);
     }
 }
+
+public sealed class CarcassMathIntervalTests
+{
+    [Fact]
+    public void ResolveInterval_PrefersConfiguredValue()
+    {
+        Assert.Equal(10f, CarcassMath.ResolveInterval(10f, 1.25f));
+    }
+
+    [Fact]
+    public void ResolveInterval_FallsBackForInvalidConfiguration()
+    {
+        Assert.Equal(1.25f, CarcassMath.ResolveInterval(0f, 1.25f));
+        Assert.Equal(1.25f, CarcassMath.ResolveInterval(float.NaN, 1.25f));
+    }
+}

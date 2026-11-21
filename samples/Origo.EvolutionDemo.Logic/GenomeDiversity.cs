@@ -98,8 +98,10 @@ public static class GenomeDiversity
         var differences = 0;
         for (var i = 0; i < maxLength; i++)
         {
+            if (i >= a.Length && i >= b.Length)
+                continue;
             var left = i < a.Length ? char.ToUpperInvariant(a[i]) : '\0';
-            var right = i < b.Length ? char.ToUpperInvariant(b[i]) : '\u0001';
+            var right = i < b.Length ? char.ToUpperInvariant(b[i]) : '\0';
             if (left != right)
                 differences++;
         }

@@ -279,12 +279,12 @@ public partial class EvolutionWorldView : Node2D
 
             if (!string.Equals(kind, DemoKeys.CreatureKind, StringComparison.Ordinal))
                 continue;
-            creatureCount++;
 
             var currentPosition = ReadPosition(entity);
             var bodyRadius = ReadFloat(entity, DemoKeys.BodyRadius, Tuning.BodyRadius);
             if (!IsVisible(currentPosition, bodyRadius + 32f, viewMin, viewMax))
                 continue;
+            creatureCount++;
             var currentHeading = ReadFloat(entity, DemoKeys.Heading, 0f);
             var previousPosition = new Vector2(
                 ReadFloat(entity, DemoKeys.PrevX, currentPosition.X),
@@ -297,7 +297,7 @@ public partial class EvolutionWorldView : Node2D
             {
                 if (_appearanceCache.Count >= CacheEviction.DefaultLimit)
                     CacheEviction.TrimOldestHalf(_appearanceCache);
-                look = GenomeAppearance.Derive(bodyGenome);
+                look = GenomeAppearance.DeriveStored(bodyGenome);
                 _appearanceCache[bodyGenome] = look;
             }
             var body = ToColor(look.Body);
@@ -319,9 +319,11 @@ public partial class EvolutionWorldView : Node2D
             var screenPosition = creaturePosition;
             var forward = new Vector2(Mathf.Cos(heading), Mathf.Sin(heading));
 
+            var isSelected = SelectedName is not null
+                && string.Equals(SelectedName, entity.Name, StringComparison.Ordinal);
             var detailed = (ViewScale * drawRadius) >= 4f;
             DrawCircle(screenPosition, drawRadius, new Color(body, 0.95f));
-            if (detailed)
+            if (detailed && (!highDensity || isSelected))
                 DrawPattern(screenPosition, look, accent, heading, drawRadius);
 
             // Judgment-radius rim. A screen-constant white line keeps the body
@@ -361,8 +363,6 @@ public partial class EvolutionWorldView : Node2D
                     DrawCircle(end, 3f + (3f * pulse), spikeColor);
                 }
             }
-            var isSelected = SelectedName is not null
-                && string.Equals(SelectedName, entity.Name, StringComparison.Ordinal);
             if (!highDensity || isSelected)
             {
                 DrawLine(screenPosition, screenPosition + (forward * (drawRadius * 2.6f)),

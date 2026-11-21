@@ -40,6 +40,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Origo.EvolutionDemo.Analysi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Origo.EvolutionDemo.Logic.Tests", "samples\Origo.EvolutionDemo.Logic.Tests\Origo.EvolutionDemo.Logic.Tests.csproj", "{1BE70DFE-D701-4B78-8639-C5CEBDC231A2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Origo.EvolutionDemo", "samples\Origo.EvolutionDemo\Origo.EvolutionDemo.csproj", "{0C027B05-D4B6-4FED-86EB-3FEB1B63BD38}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -118,6 +120,10 @@ Global
 		{1BE70DFE-D701-4B78-8639-C5CEBDC231A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1BE70DFE-D701-4B78-8639-C5CEBDC231A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1BE70DFE-D701-4B78-8639-C5CEBDC231A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C027B05-D4B6-4FED-86EB-3FEB1B63BD38}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C027B05-D4B6-4FED-86EB-3FEB1B63BD38}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C027B05-D4B6-4FED-86EB-3FEB1B63BD38}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C027B05-D4B6-4FED-86EB-3FEB1B63BD38}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -129,5 +135,6 @@ Global
 		{7F62F89F-5510-4414-93BC-4B5034D07BCD} = {5D20AA90-6969-D8BD-9DCD-8634F4692FDA}
 		{781B52BD-19CA-49B2-A180-FF0DDE70D805} = {5D20AA90-6969-D8BD-9DCD-8634F4692FDA}
 		{1BE70DFE-D701-4B78-8639-C5CEBDC231A2} = {5D20AA90-6969-D8BD-9DCD-8634F4692FDA}
+		{0C027B05-D4B6-4FED-86EB-3FEB1B63BD38} = {5D20AA90-6969-D8BD-9DCD-8634F4692FDA}
 	EndGlobalSection
 EndGlobal

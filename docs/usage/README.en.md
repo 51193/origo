@@ -6,12 +6,11 @@ Task-oriented documentation for developers and agents building games with
 Origo. The framework goal is to let game code describe content, scenes, and
 strategies while Origo owns runtime orchestration and persistence.
 
-A full runnable game demo and a getting-started walkthrough are not published yet.
-The package-consumer fixture now includes a demo-like capability scenario
-(authored level, custom strategy discovery, node mapping, and save/load) and is
-the closest supported reference while the full demo is tracked separately. Use
-the capability map, task documents, and the
-[package-consumer fixture](shell-package-consumer.en.md).
+The runnable [Evolution Demo](../../samples/README.md) is the consumer-facing
+example built on the local framework projects, with a headless smoke path and
+local analysis tools. The [package-consumer fixture](shell-package-consumer.en.md)
+remains the package-adoption reference. Use the capability map and task
+documents below for the framework API.
 
 ## Start by task
 

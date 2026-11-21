@@ -67,8 +67,7 @@ public partial class DemoContentWatcher : Node
         try
         {
             var runtime = _session.Runtime;
-            runtime.ApplyExternalPacks(texts);
-            DemoMechanicHandlers.Validate(runtime);
+            runtime.ApplyExternalPacks(texts, DemoMechanicHandlers.Validate);
         }
         catch
         {

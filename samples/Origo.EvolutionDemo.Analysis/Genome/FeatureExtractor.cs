@@ -73,8 +73,9 @@ public static class FeatureExtractor
             var creatures = save.Creatures;
             if (maxCreatures > 0 && creatures.Count > maxCreatures)
             {
-                // Per-save derived seed: adding or resizing another save does not
-                // change which rows of this save are sampled.
+                // The seed uses the save's position in the canonical path-sorted
+                // input. Adding a save whose path sorts earlier can shift later
+                // samples; reordering --save arguments cannot.
                 var random = new Random(seed + (saveIndex * 7919));
                 creatures = [.. creatures.OrderBy(_ => random.Next()).Take(maxCreatures)];
             }

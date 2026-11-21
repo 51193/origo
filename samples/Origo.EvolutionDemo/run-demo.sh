@@ -61,8 +61,8 @@ while (($# > 0)); do
             shift 2
             ;;
         --checkpoint-interval)
-            if (($# < 2)) || ! [[ "$2" =~ ^[0-9]+([.][0-9]+)?$ ]] || [[ "$2" =~ ^0+([.]0+)?$ ]]; then
-                echo "ERROR: --checkpoint-interval requires a positive number of simulation seconds." >&2
+            if (($# < 2)) || ! [[ "$2" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
+                echo "ERROR: --checkpoint-interval requires a non-negative number of simulation seconds." >&2
                 exit 1
             fi
             CHECKPOINT_INTERVAL="$2"
