@@ -140,9 +140,13 @@ th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.warn{color:#fca5a5}.no
 
     private static void AppendCandidates(StringBuilder html, GenomeReportInput input)
     {
+        var jaccard = string.Equals(input.Options.Method, "jaccard", StringComparison.Ordinal);
+        var criterion = jaccard ? "maximum-silhouette solution" : "min-inertia solution";
+        var inertiaHeader = jaccard ? "inertia (n/a)" : "inertia (SSE)";
         html.Append(CultureInfo.InvariantCulture,
-            $"<h2>Auto-k candidates (k={input.AutoKMax} cap, restarts per k, min-inertia solution, minimum cluster size {input.Options.MinClusterSize})</h2>");
-        html.Append("<table><tr><th>k</th><th>inertia (SSE)</th><th>silhouette</th><th>cluster sizes</th><th>flags</th></tr>");
+            $"<h2>Auto-k candidates (k={input.AutoKMax} cap, restarts per k, {criterion}, minimum cluster size {input.Options.MinClusterSize})</h2>");
+        html.Append(CultureInfo.InvariantCulture,
+            $"<table><tr><th>k</th><th>{inertiaHeader}</th><th>silhouette</th><th>cluster sizes</th><th>flags</th></tr>");
         foreach (var candidate in input.Candidates)
         {
             var selected = candidate.Flags.Contains("selected", StringComparer.Ordinal);

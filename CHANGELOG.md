@@ -248,8 +248,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the framework goal and routes readers to the manual instead of carrying a
   feature catalogue or a placeholder quick start. The manual index, usage
   index, capability map, and agent reference now describe current workflows;
-  a runnable demo and getting-started walkthrough are intentionally deferred
-  until the demo exists.
+  the runnable Evolution Demo is linked from the manual and usage index.
 - **BREAKING: save and level IDs are lowercase, path-safe identifiers** — IDs must use lowercase ASCII letters, digits, `.`, `_`, and `-`, must not be dot-only, and must not end with `.`. Save/level IDs are directory names, so `Foo`/`foo` and `foo`/`foo.` alias the same directory on default Windows/macOS file systems; the previous ordinal checks could overwrite a slot, bypass active-save deletion protection, or lose a level. Legacy mixed-case or trailing-dot slots are detected and rejected with a rename instruction rather than silently merged. Rename existing IDs before upgrading.
 - **Hyphenated release tags are always pre-releases** — the Release workflow
   marks any tag containing `-` as a pre-release, not only dispatches with the

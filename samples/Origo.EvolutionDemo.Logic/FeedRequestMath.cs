@@ -11,6 +11,6 @@ public static class FeedRequestMath
     {
         ArgumentOutOfRangeException.ThrowIfNegative(currentRequest);
         ArgumentOutOfRangeException.ThrowIfNegative(configuredAmount);
-        return currentRequest + configuredAmount;
+        return checked(currentRequest + configuredAmount);
     }
 }

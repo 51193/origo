@@ -259,6 +259,7 @@ public sealed class V4RobustnessTests
         Assert.Equal(0, FeedRequestMath.Add(0, 0));
         Assert.Throws<ArgumentOutOfRangeException>(() => FeedRequestMath.Add(-1, 40));
         Assert.Throws<ArgumentOutOfRangeException>(() => FeedRequestMath.Add(0, -1));
+        Assert.Throws<OverflowException>(() => FeedRequestMath.Add(int.MaxValue, 1));
     }
 
     [Fact]

@@ -97,6 +97,20 @@ public sealed class GameplayContentTests : System.IDisposable
     }
 
     [Fact]
+    public void LoadedSaveValidation_RejectsUndecodableCreature()
+    {
+        var valid = GenomeV4Factory.CreateSimpleReflex();
+        var encoded = GenomeV4Codec.ToBase64(valid);
+
+        Assert.True(LoadedSaveValidation.TryValidateCreatures(
+            [("good", encoded)], out var noError));
+        Assert.Null(noError);
+        Assert.False(LoadedSaveValidation.TryValidateCreatures(
+            [("good", encoded), ("bad", encoded[..^8])], out var error));
+        Assert.Contains("bad", error, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void UnlockShopFingerprint_ChangesWithProgression()
     {
         var runtime = GameplayRuntime.CreateDefault([new DefaultGameplayContentModule()]);
@@ -105,9 +119,12 @@ public sealed class GameplayContentTests : System.IDisposable
         var second = UnlockShopState.Fingerprint(runtime.Content, runtime.Progression);
         runtime.Progression.CompletedMilestones.Add("milestone.firstMeal");
         var third = UnlockShopState.Fingerprint(runtime.Content, runtime.Progression);
+        runtime.Progression.Mode = GameplayMode.Campaign;
+        var fourth = UnlockShopState.Fingerprint(runtime.Content, runtime.Progression);
 
         Assert.NotEqual(first, second);
         Assert.NotEqual(second, third);
+        Assert.NotEqual(third, fourth);
     }
 
     [Fact]

@@ -88,20 +88,27 @@ public static class GenomeAppearance
 {
     private const float Tau = MathF.PI * 2f;
 
-    private static readonly Dictionary<string, string> StoredHexCache = new(StringComparer.Ordinal);
+    private static readonly Dictionary<string, string> CanonicalHexCache = new(StringComparer.Ordinal);
 
     /// <summary>
     ///     Derives an appearance from the SND storage form. Prefixed base64
     ///     genomes are decoded once to their canonical hex form and cached;
     ///     unprefixed strings (hex or fixtures) are used directly.
     /// </summary>
-    public static CreatureAppearance DeriveStored(string genome)
+    public static CreatureAppearance DeriveStored(string genome) => Derive(CanonicalHex(genome));
+
+    /// <summary>
+    ///     Returns the canonical hex form for a stored genome, decoding prefixed
+    ///     base64 once and caching the result. Non-base64 inputs are returned
+    ///     unchanged for fixtures and debugging strings.
+    /// </summary>
+    public static string CanonicalHex(string genome)
     {
         ArgumentNullException.ThrowIfNull(genome);
         if (!genome.StartsWith(GenomeV4Codec.Base64Prefix, StringComparison.Ordinal))
-            return Derive(genome);
-        if (StoredHexCache.TryGetValue(genome, out var cached))
-            return Derive(cached);
+            return genome;
+        if (CanonicalHexCache.TryGetValue(genome, out var cached))
+            return cached;
         string canonical;
         try
         {
@@ -113,10 +120,10 @@ public static class GenomeAppearance
             canonical = genome;
         }
 
-        if (StoredHexCache.Count >= CacheEviction.DefaultLimit)
-            CacheEviction.TrimOldestHalf(StoredHexCache);
-        StoredHexCache[genome] = canonical;
-        return Derive(canonical);
+        if (CanonicalHexCache.Count >= CacheEviction.DefaultLimit)
+            CacheEviction.TrimOldestHalf(CanonicalHexCache);
+        CanonicalHexCache[genome] = canonical;
+        return canonical;
     }
 
     /// <summary>Derives an appearance from a raw genome string.</summary>

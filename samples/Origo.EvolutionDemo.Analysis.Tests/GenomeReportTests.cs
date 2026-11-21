@@ -129,6 +129,8 @@ public sealed class GenomeReportTests
         var html = GenomeHtmlReport.Build(input);
 
         Assert.Contains("Jaccard k-medoids", html, StringComparison.Ordinal);
+        Assert.Contains("maximum-silhouette solution", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("min-inertia solution", html, StringComparison.Ordinal);
         Assert.DoesNotContain("k-means: the reported solution", html, StringComparison.Ordinal);
     }
 

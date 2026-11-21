@@ -592,6 +592,27 @@ public partial class DemoUi : CanvasLayer
         ShowToast("A new pond is alive.");
     }
 
+    private bool TryValidateLoadedCreatures(out string? error)
+    {
+        var creatures = new List<(string Name, string SerializedGenome)>();
+        var session = _entry.Runtime.SessionManager.ForegroundSession;
+        if (session is null)
+        {
+            error = "the foreground pond session is missing";
+            return false;
+        }
+
+        foreach (var entity in session.GetEntities())
+        {
+            var (found, kind) = entity.TryGetData<string>(DemoKeys.Kind);
+            if (!found || !string.Equals(kind, DemoKeys.CreatureKind, StringComparison.Ordinal))
+                continue;
+            creatures.Add((entity.Name, ReadString(entity, DemoKeys.BodyGenome, string.Empty)));
+        }
+
+        return LoadedSaveValidation.TryValidateCreatures(creatures, out error);
+    }
+
     private void FinishLoad()
     {
         _pending = PendingWork.None;
@@ -604,10 +625,18 @@ public partial class DemoUi : CanvasLayer
             return;
         }
 
-        if (ReadInt(controller, DemoKeys.GenomeVersion, 0) < DemoEntry.GenomeVersion)
+        if (ReadInt(controller, DemoKeys.GenomeVersion, 0) != DemoEntry.GenomeVersion)
         {
             controller.SetData(DemoKeys.Paused, true);
-            ShowToast("This save predates genome v7 and is not compatible.", true);
+            ShowToast("This save requires genome v7 and is not compatible.", true);
+            ShowMainMenu();
+            return;
+        }
+
+        if (!TryValidateLoadedCreatures(out var validationError))
+        {
+            controller.SetData(DemoKeys.Paused, true);
+            ShowToast($"Load failed: {validationError}.", true);
             ShowMainMenu();
             return;
         }
@@ -1043,6 +1072,8 @@ public partial class DemoUi : CanvasLayer
             _inspectorStats.Text = "The stored genome could not be decoded.";
             _inspectorSensors.Text = string.Empty;
             _inspectorGenome.Text = string.Empty;
+            _inspectorLook.Text = "Genome unavailable";
+            _inspectorSwatch.Color = new Color(0.2f, 0.2f, 0.2f);
             return;
         }
 
@@ -1365,6 +1396,17 @@ public partial class DemoUi : CanvasLayer
         if (mark >= target - 0.05f)
             return;
         var saveId = IterateCheckpointSlot(mark);
+        try
+        {
+            if (_entry.Context.Save.ListSaves().Contains(saveId, StringComparer.Ordinal))
+                _entry.Context.Save.DeleteSave(saveId);
+        }
+        catch (Exception exception)
+        {
+            GD.PushWarning($"ITERATE_CHECKPOINT_DELETE_FAILED {saveId}: {exception.GetType().Name}: {exception.Message}");
+            return;
+        }
+
         PersistRealSeconds();
         PersistGameplayProgression();
         SetGamePaused(true);

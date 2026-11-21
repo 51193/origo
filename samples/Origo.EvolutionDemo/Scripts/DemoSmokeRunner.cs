@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using Godot;
 using Origo.EvolutionDemo.Logic;
@@ -58,6 +59,7 @@ public partial class DemoSmokeRunner : Node
     ];
     private int _verifiedCheckpoints;
     private readonly string? _configurationError;
+    private readonly DateTime _runStartedUtc = DateTime.UtcNow;
 
     public DemoSmokeRunner(DemoEntry entry)
     {
@@ -536,11 +538,20 @@ public partial class DemoSmokeRunner : Node
         }
 
         var saves = _entry.Context.Save.ListSaves();
+        var saveRoot = ProjectSettings.GlobalizePath(DemoEntry.SaveRoot);
         foreach (var mark in marks)
         {
             var slot = DemoUi.IterateCheckpointSlot(mark);
             if (!saves.Contains(slot, StringComparer.Ordinal))
                 throw new InvalidOperationException($"Iterate checkpoint save '{slot}' is missing.");
+            var slotRoot = Path.Combine(saveRoot, $"save_{slot}");
+            var scene = (Directory.Exists(slotRoot)
+                ? Directory.GetFiles(slotRoot, "snd_scene.json", SearchOption.AllDirectories).FirstOrDefault()
+                : null)
+                ?? throw new InvalidOperationException($"Iterate checkpoint save '{slot}' has no scene file.");
+            if (File.GetLastWriteTimeUtc(scene) < _runStartedUtc.AddSeconds(-1d))
+                throw new InvalidOperationException(
+                    $"Iterate checkpoint save '{slot}' was not written by this run.");
         }
 
         _verifiedCheckpoints = marks.Count;

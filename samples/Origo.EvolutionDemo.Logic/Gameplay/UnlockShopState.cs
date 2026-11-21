@@ -22,6 +22,7 @@ public static class UnlockShopState
                 $"{string.Join(',', unlock.Prerequisites)}:{string.Join(',', unlock.Grants)}:" +
                 $"{string.Join(',', unlock.RequiredMilestones)}");
         return string.Join('|', definitions)
+            + $"|mode={progression.Mode}"
             + $"|points={progression.Points}"
             + $"|unlocked={string.Join(';', progression.UnlockedIds.OrderBy(static id => id, StringComparer.Ordinal))}"
             + $"|milestones={string.Join(';', progression.CompletedMilestones.OrderBy(static id => id, StringComparer.Ordinal))}";

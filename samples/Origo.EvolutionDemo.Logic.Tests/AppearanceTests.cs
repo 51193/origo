@@ -111,6 +111,7 @@ public sealed class StoredAppearanceTests
     public void DeriveStored_Base64MatchesCanonicalHex()
     {
         var genome = CreatureGenome.RandomFounder(new Random(23));
+        Assert.Equal(genome.Body, GenomeAppearance.CanonicalHex(genome.SerializedBody));
         Assert.Equal(GenomeAppearance.Derive(genome.Body), GenomeAppearance.DeriveStored(genome.SerializedBody));
     }
 }
