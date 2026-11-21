@@ -332,10 +332,10 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         var spikeDrained = 0f;
         var carrionDetections = 0;
         var sprintActions = 0;
-        var actionBuffer = new float[64];
+        Span<float> actionBuffer = stackalloc float[64];
         var tickDt = Tuning.SimulationTickSeconds;
         var pondTime = ReadFloat(controller, DemoKeys.Time, 0f);
-        var sensorBuffer = new float[64];
+        Span<float> sensorBuffer = stackalloc float[64];
         var aiStride = Math.Max(1, (creatures.Count + Tuning.AiUpdateBatch - 1) / Tuning.AiUpdateBatch);
         var tickNumber = ReadInt(controller, DemoKeys.Tick, 0);
         var profiler = world.Session.Profiler;
@@ -343,6 +343,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         var aiAlloc = 0L;
         Span<double> markerTicks = stackalloc double[4];
         Span<long> markerAlloc = stackalloc long[4];
+        markerTicks.Clear();
+        markerAlloc.Clear();
 
         for (var i = 0; i < creatures.Count; i++)
         {

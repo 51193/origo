@@ -122,8 +122,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   action/sensor/profiler scratch buffers stay on the stack. In paired 900 s
   runs per-tick allocation falls from 0.738 to 0.704 MiB while mean tick stays
   within noise at the same population; all benchmark saves remain identical
-  after excluding `evo.realSeconds`. Allocation is not the current tick
-  bottleneck, so CPU work in sensors/AI is the next target.
+  after excluding the runtime counters `evo.realSeconds` and
+  `game.lifetimeSeconds`. Allocation is not the current tick bottleneck, so
+  CPU work in sensors/AI is the next target.
+- **Evolution Demo evaluates food sensor cones in one pass** — FoodAhead,
+  FoodLeft, and FoodRight now share one scan over the food list instead of
+  scanning it once per cone; custom food evaluators registered through
+  `DemoSensorRuntime.Register` keep the per-port fallback. In paired 900 s
+  runs at equal population mean tick falls from 11.26 to 10.80 ms, p95 from
+  16.01 to 14.89 ms, and the sensor phase from 2.29 to 2.12 ms. All benchmark
+  saves remain identical after excluding the runtime counters `evo.realSeconds` and
+  `game.lifetimeSeconds`. The action, sensor, and profiler marker
+  buffers are stack-allocated.
 - **Evolution Demo food-per-second control is labeled uniform-only** — the
   Advanced Settings row and manual now state that per-second spawning applies
   only when the patch count is zero; patch sources keep producing their own food.
