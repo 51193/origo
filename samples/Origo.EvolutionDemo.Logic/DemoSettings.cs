@@ -45,8 +45,8 @@ public sealed class DemoSettings
     public float FoodEnergy { get; set; } = 18f;
     public float ToughFoodEnergy { get; set; } = 25f;
     public float ToxicFoodEnergy { get; set; } = 32f;
-    public float ToughFoodShare { get; set; } = 0.20f;
-    public float ToxicFoodShare { get; set; } = 0.12f;
+    public float ToughFoodShare { get; set; } = 0.40f;
+    public float ToxicFoodShare { get; set; } = 0.40f;
     public float BaseMetabolismPerSecond { get; set; } = 0.55f;
     public float MoveEnergyPerSecond { get; set; } = 1.1f;
     public float SprintSurchargeFraction { get; set; } = 2.5f;

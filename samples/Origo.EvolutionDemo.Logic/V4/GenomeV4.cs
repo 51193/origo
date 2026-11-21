@@ -57,6 +57,9 @@ public enum SensorKindV4 : ushort
     FoodSoft = 10,
     FoodTough = 11,
     FoodToxic = 12,
+    FoodValueAhead = 13,
+    FoodValueLeft = 14,
+    FoodValueRight = 15,
 }
 
 /// <summary>Action interface identifiers. New actions extend this registry.</summary>

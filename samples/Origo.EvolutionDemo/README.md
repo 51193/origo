@@ -283,17 +283,25 @@ Each creature also records its own `evo.creatureSoftMeals`,
 `evo.creatureCorpseMeals`, which the analysis tool exposes as `behavior.*Meals`
 and `diet.*` features.
 
-The heritable `FoodTypeVision` organ exposes three omnidirectional sensor ports:
-`FoodSoft`, `FoodTough`, and `FoodToxic` — the best proximity of each food type
-inside the creature's sense range; corpse food counts as soft. The sensors
-report only proximity and type; they do not steer or prefer food themselves.
-Neural genes decide how the signals combine with the existing directional
-`FoodAhead/FoodLeft/FoodRight` inputs and the `Move`/`Turn` actions, so the
-combination of visual sensing, digestion, and locomotion is left to selection.
-The organ has the normal organ upkeep cost and is carried by a minority of
-founders. It is currently founder-only: the general organ mutation operator does
-not yet add it, so it can be inherited and selected but not spontaneously
-created in a run without carriers.
+The heritable `FoodTypeVision` organ exposes three omnidirectional type
+sensors — `FoodSoft`, `FoodTough`, and `FoodToxic` — plus three directional
+value sensors — `FoodValueAhead`, `FoodValueLeft`, and `FoodValueRight`. The
+type sensors report the best proximity of each food type in sense range
+(corpse food counts as soft). The value sensors report proximity multiplied by
+the food's effective energy for the creature's expressed gut, so the same food
+looks more valuable to its matching specialist. The sensors do not encode an
+absolute preference; founder carriers receive a simple value-following reflex
+scaffold, and neural mutation can rewire or override it, leaving the
+combination of sensing, digestion, and locomotion to selection.
+
+Tough and toxic food each supply 40% of new food-source spawns (soft 20%);
+startup, corpse, and manual-feed food stay soft. This lets specialists find
+their preferred diet; the gutless founder cohort is small and selection
+favours the sensory organ in the tested runs. The organ has the normal organ
+upkeep cost and is carried by a minority of founders. It is currently
+founder-only: the general organ mutation operator does not yet add it, so it
+can be inherited and selected but not spontaneously created in a run without
+carriers.
 
 ### Death and carcass nutrients
 

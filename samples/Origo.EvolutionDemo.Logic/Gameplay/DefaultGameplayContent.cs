@@ -49,6 +49,9 @@ public sealed class DefaultGameplayContentModule : IGameplayModule
         AddContent(content, "gene.sensor.food_soft", "sensor", "unlock.core");
         AddContent(content, "gene.sensor.food_tough", "sensor", "unlock.core");
         AddContent(content, "gene.sensor.food_toxic", "sensor", "unlock.core");
+        AddContent(content, "gene.sensor.food_value_ahead", "sensor", "unlock.core");
+        AddContent(content, "gene.sensor.food_value_left", "sensor", "unlock.core");
+        AddContent(content, "gene.sensor.food_value_right", "sensor", "unlock.core");
         AddContent(content, "mechanic.death.instant_food", "mechanic", "unlock.core");
         AddContent(content, "mechanic.death.corpse_pulse", "mechanic", "unlock.core");
         AddContent(content, "mechanic.spawn.base", "mechanic", "unlock.core");

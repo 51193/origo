@@ -21,6 +21,9 @@ public static class OrganInterfaceRegistryV4
         RegisterSensor(OrganKindV4.FoodTypeVision, SensorKindV4.FoodSoft);
         RegisterSensor(OrganKindV4.FoodTypeVision, SensorKindV4.FoodTough);
         RegisterSensor(OrganKindV4.FoodTypeVision, SensorKindV4.FoodToxic);
+        RegisterSensor(OrganKindV4.FoodTypeVision, SensorKindV4.FoodValueAhead);
+        RegisterSensor(OrganKindV4.FoodTypeVision, SensorKindV4.FoodValueLeft);
+        RegisterSensor(OrganKindV4.FoodTypeVision, SensorKindV4.FoodValueRight);
 
         RegisterAction(OrganKindV4.SpikeOrgan, ActionKindV4.Aim, 20);
         RegisterAction(OrganKindV4.SpikeOrgan, ActionKindV4.Spike, 40);

@@ -177,4 +177,36 @@ public sealed class V4SensorRuntimeTests
         return GenomeV4Compiler.Compile(genome, ExpressionContextV4.Neutral);
     }
 
+    [Fact]
+    public void FoodValueVision_UsesGutDependentEnergy()
+    {
+        var phenotype = CompileFoodTypeVisionPhenotype();
+        Assert.Contains((ushort)SensorKindV4.FoodValueAhead, phenotype.SensorPorts);
+        var sensors = new float[64];
+        var context = new DemoSensorContext
+        {
+            Position = Vector2.Zero,
+            Heading = 0f,
+            Energy = 50f,
+            MaxEnergy = 100f,
+            SenseRange = 200f,
+            Food = [new(0, new Vector2(50f, 0f)), new(1, new Vector2(50f, 0f))],
+            Creatures = [],
+            Corpses = [],
+            SelfId = 0,
+            OscillatorPhase = 0f,
+            ArenaRadius = 10_000f,
+            FoodTypes = [FoodType.Soft, FoodType.Tough],
+            HardDigest = true,
+        };
+        DemoSensorRuntime.ComputeInto(phenotype, context, sensors);
+        var hardValue = sensors[(int)SensorKindV4.FoodValueAhead];
+        Assert.Equal(25f / 32f * 0.75f, hardValue, 5);
+        context = context with { HardDigest = false };
+        var generalist = new float[64];
+        DemoSensorRuntime.ComputeInto(phenotype, context, generalist);
+        Assert.Equal(18f / 32f * 0.75f, generalist[(int)SensorKindV4.FoodValueAhead], 5);
+        Assert.True(hardValue > generalist[(int)SensorKindV4.FoodValueAhead]);
+    }
+
 }

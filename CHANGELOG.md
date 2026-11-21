@@ -22,6 +22,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   a minority of founders; the analysis tool reports it as
   `organ.FoodTypeVision`. Corpse food counts as soft, and the organ is
   currently founder-only (not yet in the general organ mutation pool).
+- **Evolution Demo food-value vision drives digestive diet separation** — the
+  `FoodTypeVision` organ now also exposes `FoodValueAhead/Left/Right`, which
+  report proximity weighted by each food type's effective energy for the
+  creature's gut, so tough food looks valuable to hard-digest bodies and toxic
+  food to toxin-resistant bodies. Founder carriers receive a heritable
+  value-following reflex scaffold that neural mutation can rewire. Tough and
+  toxic food each supply 40% of new food (soft 20%) so specialists can find
+  their diet. In 3,600 s three-seed testing, hard-digest carriers ate
+  48.4–50.5% tough vs 31.2–32.5% for toxin-resistant carriers (unweighted
+  per-carrier diet shares), while toxin-resistant carriers ate 37.7–38.3%
+  toxic vs 17.5–19.9% for hard-digest carriers; populations stayed at 1,371–1,744 and the organ
+  spread to 95.0–99.9% of the population by selection.
+  The raw type sensors and corpse-as-soft semantics are unchanged.
 - **Evolution Demo analysis includes per-creature diet and niche metrics** —
   each creature now persists soft, tough, toxic, and corpse meal counters.
   The `genome` analysis exposes `behavior.*Meals`, `diet.totalMeals`,
@@ -87,7 +100,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `Armor` organ is now a reachable founder/mutation organ and scales incoming
   spike damage by `SpikeArmorDamageMultiplier` (default 0.4), giving prey a
   heritable defense against predation. Tough and toxic food shares are
-  rebalanced to 20% and 12% so both digestive specializations have a viable
+  rebalanced to 40% each so both digestive specializations have a viable
   niche.
 - **Evolution Demo digestive organs are a specialization** — a body expresses
   at most one of `HardDigest` and `ToxinResistance`: when both are active, the
