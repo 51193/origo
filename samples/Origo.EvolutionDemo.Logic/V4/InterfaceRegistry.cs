@@ -29,6 +29,12 @@ public static class InterfaceRegistryV4
         RegisterSensor(new SensorDefinitionV4((ushort)SensorKindV4.CorpseAhead, "corpse.ahead", "Carrion ahead"));
         RegisterSensor(new SensorDefinitionV4((ushort)SensorKindV4.Sin, "rhythm.sin", "Rhythm sin"));
         RegisterSensor(new SensorDefinitionV4((ushort)SensorKindV4.Cos, "rhythm.cos", "Rhythm cos"));
+        RegisterSensor(new SensorDefinitionV4((ushort)SensorKindV4.FoodSoft, "food.soft", "Soft food proximity"));
+        RegisterSensor(new SensorDefinitionV4((ushort)SensorKindV4.FoodTough, "food.tough", "Tough food proximity"));
+        RegisterSensor(new SensorDefinitionV4((ushort)SensorKindV4.FoodToxic, "food.toxic", "Toxic food proximity"));
+        RegisterSensor(new SensorDefinitionV4((ushort)SensorKindV4.FoodValueAhead, "food.value.ahead", "Value food ahead"));
+        RegisterSensor(new SensorDefinitionV4((ushort)SensorKindV4.FoodValueLeft, "food.value.left", "Value food left"));
+        RegisterSensor(new SensorDefinitionV4((ushort)SensorKindV4.FoodValueRight, "food.value.right", "Value food right"));
 
         RegisterAction(new ActionDefinitionV4((ushort)ActionKindV4.Move, "move", "Move"));
         RegisterAction(new ActionDefinitionV4((ushort)ActionKindV4.Turn, "turn", "Turn"));

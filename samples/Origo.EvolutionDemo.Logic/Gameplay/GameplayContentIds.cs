@@ -45,6 +45,9 @@ public static class GameplayContentIds
         [SensorKindV4.FoodSoft] = "gene.sensor.food_soft",
         [SensorKindV4.FoodTough] = "gene.sensor.food_tough",
         [SensorKindV4.FoodToxic] = "gene.sensor.food_toxic",
+        [SensorKindV4.FoodValueAhead] = "gene.sensor.food_value_ahead",
+        [SensorKindV4.FoodValueLeft] = "gene.sensor.food_value_left",
+        [SensorKindV4.FoodValueRight] = "gene.sensor.food_value_right",
     };
 
     public static string? ForOrgan(OrganKindV4 organ) =>

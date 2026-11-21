@@ -21,6 +21,12 @@ public readonly struct DemoSensorContext
 
     /// <summary>Food type per food/ground point id; corpse points are soft.</summary>
     public IReadOnlyList<FoodType>? FoodTypes { get; init; }
+
+    /// <summary>Whether the creature expresses hard digestion.</summary>
+    public bool HardDigest { get; init; }
+
+    /// <summary>Whether the creature expresses toxin resistance.</summary>
+    public bool ToxinResistance { get; init; }
 }
 
 /// <summary>
@@ -57,6 +63,12 @@ public static class DemoSensorRuntime
         Register(SensorKindV4.FoodSoft, static context => BestFoodType(context, FoodType.Soft));
         Register(SensorKindV4.FoodTough, static context => BestFoodType(context, FoodType.Tough));
         Register(SensorKindV4.FoodToxic, static context => BestFoodType(context, FoodType.Toxic));
+        Register(SensorKindV4.FoodValueAhead, static context =>
+            BestFoodValueInCone(context, context.Food, Forward(context), context.SenseRange));
+        Register(SensorKindV4.FoodValueLeft, static context =>
+            BestFoodValueInCone(context, context.Food, Left(context), context.SenseRange));
+        Register(SensorKindV4.FoodValueRight, static context =>
+            BestFoodValueInCone(context, context.Food, Right(context), context.SenseRange));
         _defaultsRegistered = true;
     }
 
@@ -191,6 +203,48 @@ public static class DemoSensorRuntime
                 continue;
             var distance = MathF.Sqrt(distanceSquared);
             best = MathF.Max(best, 1f - (distance / context.SenseRange));
+        }
+
+        return best;
+    }
+
+    private static float BestFoodValueInCone(
+        DemoSensorContext context,
+        IReadOnlyList<SensorPoint> points,
+        Vector2 direction,
+        float range)
+    {
+        var types = context.FoodTypes
+            ?? throw new InvalidOperationException(
+                "FoodValueVision sensors require DemoSensorContext.FoodTypes.");
+        var maxEnergy = MathF.Max(Tuning.FoodEnergy,
+            MathF.Max(Tuning.ToughFoodEnergy, Tuning.ToxicFoodEnergy));
+        if (maxEnergy <= 0f)
+            return 0f;
+        var best = 0f;
+        var rangeSquared = range * range;
+        var cosHalfAngle = MathF.Cos(Tuning.SenseHalfAngle);
+        foreach (var point in points)
+        {
+            if (point.Id < 0 || point.Id >= types.Count)
+                throw new InvalidOperationException(
+                    $"Food point id {point.Id} is outside the FoodTypes table ({types.Count}).");
+            var delta = point.Position - context.Position;
+            var distanceSquared = delta.LengthSquared();
+            if (distanceSquared <= 0.0001f || distanceSquared > rangeSquared)
+                continue;
+            var distance = MathF.Sqrt(distanceSquared);
+            if (Vector2.Dot(delta, direction) / distance < cosHalfAngle)
+                continue;
+            var energy = FoodMath.EnergyFor(
+                types[point.Id],
+                Tuning.FoodEnergy,
+                Tuning.ToughFoodEnergy,
+                Tuning.ToxicFoodEnergy,
+                context.HardDigest,
+                context.ToxinResistance);
+            var score = (1f - (distance / range)) * (energy / maxEnergy);
+            best = MathF.Max(best, score);
         }
 
         return best;

@@ -242,6 +242,12 @@ public static class GenomeV4Factory
             AddSensorIfAllowed(SensorKindV4.FoodSoft);
             AddSensorIfAllowed(SensorKindV4.FoodTough);
             AddSensorIfAllowed(SensorKindV4.FoodToxic);
+            AddSensorIfAllowed(SensorKindV4.FoodValueAhead);
+            AddSensorIfAllowed(SensorKindV4.FoodValueLeft);
+            AddSensorIfAllowed(SensorKindV4.FoodValueRight);
+            AddReflexIfAllowed(SensorKindV4.FoodValueAhead, ActionKindV4.Move, 1.8f);
+            AddReflexIfAllowed(SensorKindV4.FoodValueLeft, ActionKindV4.Turn, -1.5f);
+            AddReflexIfAllowed(SensorKindV4.FoodValueRight, ActionKindV4.Turn, 1.5f);
         }
 
         var outputIds = new List<uint>();

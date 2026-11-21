@@ -155,4 +155,15 @@ public sealed class DemoSettingsTests
             DemoSettings.Current = previous;
         }
     }
+    [Fact]
+    public void Defaults_PinFoodComposition()
+    {
+        var settings = DemoSettings.Defaults();
+        Assert.Equal(0.40f, settings.ToughFoodShare);
+        Assert.Equal(0.40f, settings.ToxicFoodShare);
+        Assert.Equal(18f, settings.FoodEnergy);
+        Assert.Equal(25f, settings.ToughFoodEnergy);
+        Assert.Equal(32f, settings.ToxicFoodEnergy);
+    }
+
 }

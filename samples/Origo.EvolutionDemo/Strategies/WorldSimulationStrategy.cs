@@ -413,6 +413,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                         OscillatorPhase = creature.Age * 2f * MathF.PI / Tuning.OscillatorPeriodSeconds,
                         ArenaRadius = Tuning.PondRadius,
                         FoodTypes = WorldSnapshot.FoodTypes,
+                        HardDigest = creature.HardDigest,
+                        ToxinResistance = creature.ToxinResistance,
                     },
                     sensorBuffer);
                 if (profiler.Enabled)
