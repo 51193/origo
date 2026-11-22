@@ -46,7 +46,8 @@ ORIGO_DEMO_SMOKE=1 ORIGO_DEMO_SMOKE_SECONDS=30 \
 ```
 
 It prints `DEMO_SMOKE_OK ...` on success and exits non-zero on a failed check.
-This is a developer verification path, not a framework gate. Setting
+The Godot CI gate also runs a short campaign-autoplay checkpoint smoke; the
+command above remains useful for longer local runs. Setting
 `ORIGO_DEMO_SCREENSHOT_DIR` additionally writes `menu.png`/`game.png` captures
 for local UI review.
 

@@ -107,4 +107,17 @@ if [[ "$GODOT_OUTPUT" == *"ObjectDB instances were leaked"* ]]; then
     exit 1
 fi
 
+if [[ $EXIT_CODE -eq 0 ]]; then
+    # The playable demo carries its own headless acceptance harness (caps,
+    # camera fit, checkpoint provenance and save/load). Run it in the same CI
+    # gate so those integration-level assertions cannot rot outside CI.
+    DEMO_SMOKE_HOME="$(mktemp -d "${TMPDIR:-/tmp}/origo-demo-smoke.XXXXXX")"
+    trap 'rm -rf "$DEMO_SMOKE_HOME"' EXIT
+    echo ""
+    echo "Building Evolution Demo for the headless acceptance smoke..."
+    dotnet build "$ROOT/samples/Origo.EvolutionDemo/Origo.EvolutionDemo.csproj"         --configuration Debug --nologo --verbosity quiet
+    echo "Running Evolution Demo headless acceptance smoke..."
+    EVOLUTION_DEMO_SMOKE_HOME="$DEMO_SMOKE_HOME"     ORIGO_DEMO_CAMPAIGN_AUTOPLAY=1         bash "$ROOT/samples/Origo.EvolutionDemo/run-demo.sh" --no-build --headless         --seconds 2 --fast-forward 65 --checkpoint-interval 30 --save-slot ci_smoke
+fi
+
 exit $EXIT_CODE

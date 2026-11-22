@@ -10,6 +10,21 @@ Repository-facing maintenance changes that do not change user-visible runtime, p
 
 CI workflow shape, local test/coverage gates, package-consumer fixture smoke coverage, shell-API baseline tooling, PowerShell/Bash parity, and developer-suite commands.
 
+- **Godot export-template downloads are checksum-pinned** — the release
+  template installer now refuses an archive that does not match the SHA-512
+  entry in `samples/Origo.EvolutionDemo/export-templates.sha512`, before
+  unpacking. The self-test serves a matching and a tampered archive, pins the
+  success path, tamper rejection, and the unpinned-version error. Update the
+  checksum with the Godot.NET.Sdk version.
+
+- **Evolution Demo acceptance smoke runs in both Godot CI gates** — after the
+  Godot integration tests, the Bash and PowerShell gates build the demo and run
+  a short campaign-autoplay headless smoke with checkpoints and a final save in
+  a temporary user-data home. The existing runner assertions now cover
+  population/food caps, camera fit, save/load/reset, and checkpoint provenance
+  in CI instead of only in a local developer run. A parity guard pins both
+  wiring paths in `test-dev-suite.sh`.
+
 - **Evolution Demo is part of the root build/format gate** — the Godot demo
   project is now listed in `Origo.sln`, so `scripts/bash/format.sh`,
   `scripts/bash/test.sh`, and the Windows solution gate compile and format it.

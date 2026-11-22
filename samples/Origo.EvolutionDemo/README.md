@@ -66,7 +66,10 @@ The windowed runner stores Godot user data in `.godot-home/`; headless smoke
 uses a separate `.godot-home-smoke/`, so test runs can never overwrite player
 saves. Override them with `EVOLUTION_DEMO_HOME` and
 `EVOLUTION_DEMO_SMOKE_HOME` respectively. The runner prints the active user-data
-directory on startup. Windowed saves live under:
+directory on startup. `scripts/bash/godot-test.sh` runs a short campaign autoplay
+smoke after the Godot integration tests, so cap, camera-fit, checkpoint
+provenance, save/load, and reset assertions are exercised by the Godot CI gate.
+Windowed saves live under:
 `.godot-home/.local/share/godot/app_userdata/Origo Evolution Demo/evolution_demo_saves/`.
 
 ## Controls

@@ -50,7 +50,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\powershell\ci.ps1
 | Shell API baseline | `scripts\powershell\api-inventory.ps1` | `scripts/bash/api-inventory.sh` |
 | Build + tests + coverage | `scripts\powershell\test.ps1` | `scripts/bash/test.sh` |
 | Benchmarks | `scripts\powershell\benchmark.ps1` | `scripts/bash/benchmark.sh` |
-| Godot integration | `scripts\powershell\godot-test.ps1` | `scripts/bash/godot-test.sh` |
+| Godot integration + demo smoke | `scripts\powershell\godot-test.ps1` | `scripts/bash/godot-test.sh` |
 | Package consumer smoke | `scripts\powershell\package-consumer-smoke.ps1` | `scripts/bash/package-consumer-smoke.sh` |
 | Script lint | `scripts\powershell\lint-scripts.ps1` | `scripts/bash/lint-scripts.sh` |
 | Documentation check | `scripts\powershell\docs.ps1` | `scripts/bash/docs.sh` |

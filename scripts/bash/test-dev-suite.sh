@@ -102,6 +102,33 @@ for self_test in scripts/bash/test-*.sh; do
         || FAIL "Bash self-test is not wired into lint-scripts.sh: $name"
 done
 
+# The Godot gate must also run the playable demo's headless acceptance smoke;
+# otherwise cap/camera/checkpoint assertions exist only in the demo harness.
+grep -Fq 'samples/Origo.EvolutionDemo/run-demo.sh' scripts/bash/godot-test.sh \
+    || FAIL "godot-test.sh does not run the Evolution Demo acceptance smoke"
+grep -Eq 'ORIGO_DEMO_CAMPAIGN_AUTOPLAY=1([[:space:]]|$)' scripts/bash/godot-test.sh \
+    || FAIL "godot-test.sh demo smoke does not exercise campaign camera autoplay"
+grep -Eq -- '--fast-forward 65([[:space:]]|$)' scripts/bash/godot-test.sh \
+    || FAIL "godot-test.sh demo smoke does not exercise the checkpoint window"
+grep -Eq -- '--checkpoint-interval 30([[:space:]]|$)' scripts/bash/godot-test.sh \
+    || FAIL "godot-test.sh demo smoke does not exercise checkpoint provenance"
+grep -Eq -- '--save-slot ci_smoke([[:space:]]|$)' scripts/bash/godot-test.sh \
+    || FAIL "godot-test.sh demo smoke does not save the benchmark slot"
+grep -Fq 'Invoke-OrigoDemoAcceptanceSmoke -GodotBinary $godot' scripts/powershell/godot-test.ps1 \
+    || FAIL "godot-test.ps1 does not invoke the Evolution Demo acceptance smoke"
+grep -Fq "ORIGO_DEMO_CAMPAIGN_AUTOPLAY = '1'" scripts/powershell/godot-test.ps1 \
+    || FAIL "godot-test.ps1 demo smoke does not exercise campaign camera autoplay"
+grep -Fq "ORIGO_DEMO_SMOKE_FAST_FORWARD = '65'" scripts/powershell/godot-test.ps1 \
+    || FAIL "godot-test.ps1 demo smoke does not exercise the checkpoint window"
+grep -Fq "ORIGO_DEMO_SMOKE_CHECKPOINT_INTERVAL = '30'" scripts/powershell/godot-test.ps1 \
+    || FAIL "godot-test.ps1 demo smoke does not exercise checkpoint provenance"
+grep -Fq "ORIGO_DEMO_SMOKE_SAVE_SLOT = 'ci_smoke'" scripts/powershell/godot-test.ps1 \
+    || FAIL "godot-test.ps1 demo smoke does not save the benchmark slot"
+grep -Fq 'DEMO_CAMERA_OK' scripts/powershell/godot-test.ps1 \
+    || FAIL "godot-test.ps1 demo smoke does not check the camera result"
+grep -Fq 'DEMO_BENCHMARK_OK' scripts/powershell/godot-test.ps1 \
+    || FAIL "godot-test.ps1 demo smoke does not check the benchmark result"
+
 # The Godot leak gate must not pipe command output into `grep -q`: the early
 # reader exit can fail the producer with SIGPIPE under `set -o pipefail` (see
 # package-consumer-smoke-lib.sh) and the `if` would then silently pass.
