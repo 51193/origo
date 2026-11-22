@@ -70,10 +70,12 @@ origo-evolution-demo-<version>-macos-universal.zip
 ```
 
 The release job exports them from the pinned Godot mono version; packages
-include the Godot runtime and demo assemblies. The demo project carries the
-solution file and the ETC2/ASTC import flag that the macOS universal export
-requires, and packaging fails if a platform export omits the published demo
-assemblies.
+include the Godot runtime and demo assemblies. Before unpacking the mono export
+templates, the release job verifies the archive against the SHA-512 pinned in
+`Origo.EvolutionDemo/export-templates.sha512`; update that entry with the
+Godot.NET.Sdk pin. The demo project carries the solution file and the ETC2/ASTC
+import flag that the macOS universal export requires, and packaging fails if a
+platform export omits the published demo assemblies.
 
 ### Analysis tools
 

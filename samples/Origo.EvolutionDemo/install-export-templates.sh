@@ -16,6 +16,17 @@ if [[ -f "${TEMPLATE_DIR}/linux_release.x86_64" \
 fi
 
 ARCHIVE="Godot_v${VERSION}-stable_mono_export_templates.tpz"
+CHECKSUMS="${ROOT}/samples/Origo.EvolutionDemo/export-templates.sha512"
+if [[ ! -f "$CHECKSUMS" ]]; then
+    echo "ERROR: missing pinned export-template checksums: $CHECKSUMS" >&2
+    exit 1
+fi
+EXPECTED_SHA512="$(awk -v archive="$ARCHIVE" '$2 == archive { print $1; exit }' "$CHECKSUMS")"
+if [[ -z "$EXPECTED_SHA512" ]]; then
+    echo "ERROR: no pinned SHA-512 for $ARCHIVE in $CHECKSUMS" >&2
+    echo "Update export-templates.sha512 with the Godot.NET.Sdk pin." >&2
+    exit 1
+fi
 URL="https://github.com/godotengine/godot-builds/releases/download/${VERSION}-stable/${ARCHIVE}"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
@@ -26,6 +37,20 @@ elif command -v wget >/dev/null 2>&1; then
     wget -q -O "${WORK}/${ARCHIVE}" "$URL"
 else
     echo "ERROR: curl or wget is required." >&2
+    exit 1
+fi
+if command -v sha512sum >/dev/null 2>&1; then
+    if ! printf '%s  %s\n' "$EXPECTED_SHA512" "${WORK}/${ARCHIVE}" | sha512sum -c -; then
+        echo "ERROR: export-template SHA-512 mismatch for ${ARCHIVE}" >&2
+        exit 1
+    fi
+elif command -v shasum >/dev/null 2>&1; then
+    if ! printf '%s  %s\n' "$EXPECTED_SHA512" "${WORK}/${ARCHIVE}" | shasum -a 512 -c -; then
+        echo "ERROR: export-template SHA-512 mismatch for ${ARCHIVE}" >&2
+        exit 1
+    fi
+else
+    echo "ERROR: sha512sum or shasum is required to verify export templates." >&2
     exit 1
 fi
 unzip -q "${WORK}/${ARCHIVE}" -d "${WORK}/extract"

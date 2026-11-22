@@ -1,0 +1,4 @@
+# SHA-512 for the mono export-template archive pinned by Godot.NET.Sdk.
+# Update this entry when the Godot version advances; the installer refuses
+# an archive that is not listed here.
+bb5c41d72370ed743660361f6228006f808ab04ca33abdc545d740b044f3fe057f32ae8cb7873a1bc86ddcd82ae683b9f6dfdfe4179852f2c0f1acde2ff6bd5a  Godot_v4.7.2-stable_mono_export_templates.tpz

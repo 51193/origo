@@ -115,6 +115,7 @@ bash scripts/bash/test-check-weekly-base.sh
 bash scripts/bash/test-verify-release-provenance.sh
 bash scripts/bash/test-package-framework-artifacts.sh
 bash scripts/bash/test-demo-package-release.sh
+bash scripts/bash/test-demo-export-templates.sh
 bash scripts/bash/test-package-consumer-smoke-lib.sh
 bash scripts/bash/test-download-godot-deps.sh
 bash scripts/bash/test-pre-push-hook.sh
