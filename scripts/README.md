@@ -69,7 +69,7 @@ Rules:
 | `format.sh` | `dotnet format --verify-no-changes` |
 | `api-inventory.sh` | Shell API inventory and previous-release comparison |
 | `benchmark.sh` | Benchmark tests and baseline comparison |
-| `godot-test.sh` | Godot headless integration behavior tests (not package adoption) |
+| `godot-test.sh` | Godot headless integration tests plus the Evolution Demo acceptance smoke |
 | `package-consumer-smoke.sh` | Packed-package consumer adoption smoke (not behavior) |
 | `lint-scripts.sh` | ShellCheck, Python syntax, workflow YAML, script self-tests |
 | `lint-commits.sh` | Conventional Commit message lint |
@@ -91,6 +91,7 @@ Rules:
 | `test-docs.sh` | Generated-document, local-link, and local-anchor validation |
 | `test-check-weekly-base.sh` | Weekly snapshot base/version validation |
 | `test-demo-package-release.sh` | Playable-demo release archive, layout, and .NET payload regression tests |
+| `test-demo-export-templates.sh` | Pinned SHA-512 and tamper-rejection tests for Godot export templates |
 | `test-dev-suite.sh` | Bash/PowerShell gate parity, test-project parity, self-test wiring, and script-map guard |
 | `test-dotnet-env.sh` | SDK bootstrap, selection, and installer regression tests |
 | `test-download-godot-deps.sh` | Godot downloader dependency/cache tests |
@@ -152,7 +153,7 @@ standalone platform entry points.
 | `format.ps1` | `dotnet format --verify-no-changes` |
 | `api-inventory.ps1` | Shell API inventory and previous-release comparison |
 | `benchmark.ps1` | Benchmark tests and baseline comparison |
-| `godot-test.ps1` | Godot headless integration behavior tests (not package adoption) |
+| `godot-test.ps1` | Godot headless integration tests plus the Evolution Demo acceptance smoke |
 | `package-consumer-smoke.ps1` | Packed-package consumer adoption smoke (not behavior) |
 | `lint-scripts.ps1` | PowerShell parse check and Python guard scripts |
 | `lint-commits.ps1` | Conventional Commit message lint |
