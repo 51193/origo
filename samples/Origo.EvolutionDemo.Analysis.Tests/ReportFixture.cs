@@ -81,6 +81,27 @@ internal static class ReportFixture
                 new Dictionary<string, string>(StringComparer.Ordinal),
                 new Dictionary<string, bool>(StringComparer.Ordinal)),
         };
+        var ecology = saves.Select(save => new SaveEcology(
+            save.Id,
+            save.Path,
+            save.Time,
+            save.Tick,
+            new FoodTypeCounts(4, 2, 2, 1),
+            2,
+            60d,
+            1000d,
+            2d * 60d * 60d / (1000d * 1000d),
+            new FoodAccessSummary(20, 0.25d, 0.5d, 0.75d, 2d, 5d, 120d, 300d),
+            0d,
+            1d,
+            10,
+            new DietShares(0.4d, 0.3d, 0.3d, 0.2d, 10),
+            new DietShares(0.4d, 0.3d, 0.3d, 0.2d, 10),
+            new DietShares(0.5d, 0.25d, 0.25d, 0.3d, 100),
+            5,
+            0.2d,
+            0.8d,
+            [])).ToArray();
         var finalLabels = labels.ToArray();
         var clustering = new KMeans.Result(
             finalLabels,
@@ -103,6 +124,7 @@ internal static class ReportFixture
             new DateTime(2026, 11, 20, 12, 0, 0, DateTimeKind.Utc),
             new GenomeReportOptions(1, 5000, "all", "kmeans", 0, stabilityRounds, 0d, 5, 10, false),
             saves,
+            ecology,
             rows,
             100,
             100,

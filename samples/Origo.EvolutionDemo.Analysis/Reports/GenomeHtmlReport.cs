@@ -22,6 +22,7 @@ public static class GenomeHtmlReport
     {
         ArgumentNullException.ThrowIfNull(input);
         ArgumentNullException.ThrowIfNull(input.Saves);
+        ArgumentNullException.ThrowIfNull(input.Ecology);
         ArgumentNullException.ThrowIfNull(input.Rows);
         ArgumentNullException.ThrowIfNull(input.RawColumns);
         ArgumentNullException.ThrowIfNull(input.Pca);
@@ -52,6 +53,7 @@ th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.warn{color:#fca5a5}.no
         AppendProvenance(html, input);
         AppendCards(html, input, noiseCount, testedCount);
         AppendWarnings(html, input);
+        AppendEcology(html, input);
         if (input.Candidates.Count > 0)
             AppendCandidates(html, input);
         html.Append("<h2>PCA scatter</h2>");
@@ -136,6 +138,37 @@ th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.warn{color:#fca5a5}.no
         foreach (var warning in warnings)
             html.Append("<li class=\"warn\">").Append(Escape(warning)).Append("</li>");
         html.Append("</ul>");
+    }
+
+    private static void AppendEcology(StringBuilder html, GenomeReportInput input)
+    {
+        if (input.Ecology.Count == 0)
+            return;
+        html.Append("<h2>Food, access, and origin</h2>");
+        html.Append("<p class=\"muted\">Computed from every parsed creature and positioned food entity in each save, not from the optional --max clustering sample. "
+            + "Nearest-food distance is capped at 600 world units; diet.living includes corpse food in soft meals.</p>");
+        html.Append("<table><tr><th>save</th><th>time</th><th>food soft/tough/toxic/corpse</th>"
+            + "<th>patch n / radius / coverage</th><th>food in sense</th><th>food in 300</th>"
+            + "<th>nearest food p50</th><th>founder share</th><th>mean generation</th>"
+            + "<th>living diet S/T/X</th><th>specialist &gt;60%</th></tr>");
+        foreach (var ecology in input.Ecology
+            .OrderBy(static item => item.Time)
+            .ThenBy(static item => item.SaveId, StringComparer.Ordinal))
+        {
+            var diet = ecology.LivingDiet;
+            html.Append(CultureInfo.InvariantCulture,
+                $"<tr><td><code>{Escape(ecology.SaveId)}</code></td><td>{ecology.Time:0.###}</td>"
+                + $"<td>{ecology.Food.Soft}/{ecology.Food.Tough}/{ecology.Food.Toxic}/{ecology.Food.Corpse}</td>"
+                + $"<td>{FormatMetric(ecology.LivePatchCount, "0")} / {FormatMetric(ecology.PatchRadius, "0.##")} / "
+                + $"{(ecology.PatchCoverage is { } coverage ? $"{coverage:0.0%}" : "n/a")}</td>"
+                + $"<td>{ecology.Access.FractionInSense:0.0%}</td><td>{ecology.Access.FractionIn300:0.0%}</td>"
+                + $"<td>{FormatMetric(ecology.Access.NearestFoodP50, "0.#")}</td>"
+                + $"<td>{ecology.FounderShare:0.0%}</td><td>{ecology.MeanGeneration:0.0}</td>"
+                + $"<td>{diet.Soft:0.00}/{diet.Tough:0.00}/{diet.Toxic:0.00}</td>"
+                + $"<td>{ecology.SpecialistShare60:0.0%}</td></tr>");
+        }
+
+        html.Append("</table>");
     }
 
     private static void AppendCandidates(StringBuilder html, GenomeReportInput input)
@@ -502,6 +535,17 @@ th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.warn{color:#fca5a5}.no
             + "diet.totalMeals = soft+tough+toxic (corpse food is a soft subset reported separately); diet.*Share are shares of that total, "
             + "diet.dominance is the largest share, and diet.entropy is normalized Shannon entropy over the three food types (0 = one type, "
             + "1 = equal shares). Older saves without the counters read as zero.");
+        AppendDefinition(html,
+            "Food and access: food.soft/tough/toxic count food types in the save; food.corpse counts food released by corpses (a soft subset). "
+            + "origin.founderShare is the share of parsed creatures at generation 0. access.foodInPickup/foodInSense/foodIn300/foodIn600 count "
+            + "positioned food inside the creature's pickup radius, sense range, or fixed 300/600 units; access.nearestFoodDistance is capped at "
+            + "600 units and access.nearestSourceDistance is capped at 10,000 units. Save-level access shares and diet.living/experienced/controller "
+            + "are computed from all parsed creatures; the optional --max sample affects only the clustering rows and feature means.");
+        AppendDefinition(html,
+            "Diet population semantics: diet.*Share is 0 for a creature with no meals, so the mean over all creatures is age-structure sensitive "
+            + "and is not a valid population diet. Use the timeline diet.living.* (sum over living creatures) or diet.controller.* (cumulative "
+            + "controller counters); diet.experienced.* restricts the summary to creatures with at least 10 meals. diet.corpseOfSoftShare is the "
+            + "corpse share of soft meals; corpse food is already included in soft meals.");
         AppendDefinition(html,
             "Feature semantics: organ.* is the expressed organ count for every OrganKindV4 (0 = absent); trait.* is the effective life-history "
             + "value after the same fallback defaults as the runtime phenotype adapter. Constant columns are dropped and listed; feature counts "

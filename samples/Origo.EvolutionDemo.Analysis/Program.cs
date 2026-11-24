@@ -66,6 +66,8 @@ internal static class Program
         string? timelineCsv = null;
         string? metricsJson = null;
         string? enrichmentCsv = null;
+        string? featuresCsv = null;
+        var timelinePercentiles = false;
         var explicitK = false;
         var explicitStability = false;
         var explicitEps = false;
@@ -131,6 +133,12 @@ internal static class Program
                 case "--enrichment-csv" when i + 1 < args.Length:
                     enrichmentCsv = args[++i];
                     break;
+                case "--features-csv" when i + 1 < args.Length:
+                    featuresCsv = args[++i];
+                    break;
+                case "--timeline-percentiles":
+                    timelinePercentiles = true;
+                    break;
                 default:
                     throw new InvalidOperationException(
                         $"Unknown or incomplete genome argument '{args[i]}'; run 'genome --help' for usage.");
@@ -142,6 +150,7 @@ internal static class Program
             dbscanMinPoints, minClusterSize, explicitK, explicitStability, explicitEps,
             explicitMinPoints, explicitMinClusterSize));
         var snapshots = SaveSnapshotReader.Read([.. saves], pool);
+        var ecology = SaveEcologyAnalyzer.Analyze(snapshots);
         var extraction = FeatureExtractor.Extract(snapshots, maxCreatures, seed);
         if (extraction.SkippedCreatures.Count > 0 && !allowSkips)
         {
@@ -194,6 +203,7 @@ internal static class Program
                 seed, maxCreatures, mode, method, requestedK, stabilityRounds, dbscanEps,
                 dbscanMinPoints, floor, allowSkips),
             saveSummaries,
+            ecology,
             rows,
             extraction.TotalCreatures,
             extraction.ConsideredCreatures,
@@ -215,7 +225,9 @@ internal static class Program
             sampled);
         WriteFile(output, GenomeHtmlReport.Build(reportInput));
         if (!string.IsNullOrWhiteSpace(timelineCsv))
-            WriteTimelineCsv(timelineCsv, saveSummaries, rows, columns);
+            WriteTimelineCsv(timelineCsv, saveSummaries, ecology, rows, columns, timelinePercentiles);
+        if (!string.IsNullOrWhiteSpace(featuresCsv))
+            WriteFeaturesCsv(featuresCsv, rows, clustering);
         if (!string.IsNullOrWhiteSpace(metricsJson))
             WriteFile(metricsJson, GenomeMetricsJson.Build(reportInput));
         if (!string.IsNullOrWhiteSpace(enrichmentCsv))
@@ -458,11 +470,20 @@ internal static class Program
             Console.Error.WriteLine($"WARNING: {warning}");
     }
 
+    private static readonly string[] TimelinePercentileColumns =
+    [
+        "behavior.age", "behavior.energyRatio", "behavior.kills", "behavior.children",
+        "behavior.generation", "diet.totalMeals", "diet.entropy", "body.bodyRadius",
+        "body.moveSpeed", "body.senseRange", "body.maxAge",
+    ];
+
     private static void WriteTimelineCsv(
         string path,
         IReadOnlyList<SaveSummary> saves,
+        IReadOnlyList<SaveEcology> ecology,
         IReadOnlyList<FeatureRow> rows,
-        string[] columns)
+        string[] columns,
+        bool includePercentiles)
     {
         var controllerKeys = saves
             .SelectMany(static save => save.ControllerNumbers.Keys
@@ -474,15 +495,35 @@ internal static class Program
         var bySave = rows.GroupBy(static row => row.SavePath, StringComparer.Ordinal)
             .ToDictionary(static group => group.Key, static group => group.ToArray(), StringComparer.Ordinal);
         EnsureDirectory(path);
+        var ecologyByPath = ecology.ToDictionary(static item => item.Path, StringComparer.Ordinal);
+        var percentileColumns = includePercentiles
+            ? columns.Where(column => TimelinePercentileColumns.Contains(column, StringComparer.Ordinal)).ToArray()
+            : [];
         using var writer = new StreamWriter(path);
         writer.Write("save,time,tick,creatures,analyzed,food,corpses,food_sources");
+        writer.Write(",food.soft,food.tough,food.toxic,food.corpse");
+        writer.Write(",patch.count,patch.radius,patch.coverage");
+        writer.Write(",origin.founderShare,origin.meanGeneration,origin.maxGeneration");
+        writer.Write(",access.foodInPickupShare,access.foodInSenseShare,access.foodIn300Share");
+        writer.Write(",access.meanFoodInSense,access.meanFoodIn300,access.nearestFoodP50,access.nearestSourceP50");
+        writer.Write(",diet.living.soft,diet.living.tough,diet.living.toxic,diet.living.corpseOfSoft");
+        writer.Write(",diet.experienced.specialistShare60,diet.experienced.entropy");
+        writer.Write(",diet.controller.soft,diet.controller.tough,diet.controller.toxic,diet.controller.corpseOfSoft");
+        writer.Write(",delta.population,delta.births,delta.kills,delta.enrichmentSpawns");
+        writer.Write(",delta.deathsEstimated,delta.predationShareEstimated");
         foreach (var key in controllerKeys)
             writer.Write(",{0}", Csv("controller." + key));
         foreach (var column in columns)
             writer.Write(",{0}", Csv(column + ".mean"));
+        foreach (var column in percentileColumns)
+            foreach (var suffix in new[] { "p50", "p90", "p95" })
+                writer.Write(",{0}", Csv(column + "." + suffix));
         writer.WriteLine();
-        foreach (var save in saves)
+        for (var index = 0; index < saves.Count; index++)
         {
+            var save = saves[index];
+            var saveEcology = ecologyByPath[save.Path];
+            var saveRows = bySave.GetValueOrDefault(save.Path, []);
             writer.Write(Csv(save.Id));
             writer.Write(',');
             writer.Write(save.Time.ToString("0.###", CultureInfo.InvariantCulture));
@@ -491,7 +532,6 @@ internal static class Program
             writer.Write(',');
             writer.Write(save.Creatures.ToString(CultureInfo.InvariantCulture));
             writer.Write(',');
-            var saveRows = bySave.GetValueOrDefault(save.Path, []);
             writer.Write(saveRows.Length.ToString(CultureInfo.InvariantCulture));
             writer.Write(',');
             writer.Write(save.Food.ToString(CultureInfo.InvariantCulture));
@@ -499,6 +539,34 @@ internal static class Program
             writer.Write(save.Corpses.ToString(CultureInfo.InvariantCulture));
             writer.Write(',');
             writer.Write(save.FoodSources.ToString(CultureInfo.InvariantCulture));
+            WriteCsvNumber(writer, saveEcology.Food.Soft);
+            WriteCsvNumber(writer, saveEcology.Food.Tough);
+            WriteCsvNumber(writer, saveEcology.Food.Toxic);
+            WriteCsvNumber(writer, saveEcology.Food.Corpse);
+            WriteCsvNumber(writer, saveEcology.LivePatchCount);
+            WriteCsvNumber(writer, saveEcology.PatchRadius);
+            WriteCsvNumber(writer, saveEcology.PatchCoverage);
+            WriteCsvNumber(writer, saveEcology.FounderShare);
+            WriteCsvNumber(writer, saveEcology.MeanGeneration);
+            WriteCsvNumber(writer, saveEcology.MaxGeneration);
+            WriteCsvNumber(writer, saveEcology.Access.FractionInPickup);
+            WriteCsvNumber(writer, saveEcology.Access.FractionInSense);
+            WriteCsvNumber(writer, saveEcology.Access.FractionIn300);
+            WriteCsvNumber(writer, saveEcology.Access.MeanFoodInSense);
+            WriteCsvNumber(writer, saveEcology.Access.MeanFoodIn300);
+            WriteCsvNumber(writer, saveEcology.Access.NearestFoodP50);
+            WriteCsvNumber(writer, saveEcology.Access.NearestSourceP50);
+            WriteCsvNumber(writer, saveEcology.LivingDiet.Soft);
+            WriteCsvNumber(writer, saveEcology.LivingDiet.Tough);
+            WriteCsvNumber(writer, saveEcology.LivingDiet.Toxic);
+            WriteCsvNumber(writer, saveEcology.LivingDiet.CorpseOfSoft);
+            WriteCsvNumber(writer, saveEcology.SpecialistShare60);
+            WriteCsvNumber(writer, saveEcology.MeanExperiencedEntropy);
+            WriteCsvNumber(writer, saveEcology.ControllerDiet?.Soft);
+            WriteCsvNumber(writer, saveEcology.ControllerDiet?.Tough);
+            WriteCsvNumber(writer, saveEcology.ControllerDiet?.Toxic);
+            WriteCsvNumber(writer, saveEcology.ControllerDiet?.CorpseOfSoft);
+            WriteDeltaColumns(writer, saves, index);
             foreach (var key in controllerKeys)
             {
                 writer.Write(',');
@@ -521,11 +589,133 @@ internal static class Program
                     writer.Write(values.Average().ToString("0.####", CultureInfo.InvariantCulture));
             }
 
+            foreach (var column in percentileColumns)
+            {
+                var values = saveRows
+                    .Select(row => row.Values.GetValueOrDefault(column, double.NaN))
+                    .Where(double.IsFinite)
+                    .OrderBy(static value => value)
+                    .ToArray();
+                foreach (var fraction in new[] { 0.50d, 0.90d, 0.95d })
+                {
+                    writer.Write(',');
+                    if (values.Length > 0)
+                        writer.Write(Percentile(values, fraction).ToString("0.####", CultureInfo.InvariantCulture));
+                }
+            }
+
+            writer.WriteLine();
+        }
+
+        var percentileSummary = includePercentiles
+            ? $", {percentileColumns.Length * 3} percentile columns"
+            : string.Empty;
+        Console.WriteLine(string.Create(CultureInfo.InvariantCulture,
+            $"wrote {path} ({saves.Count} saves, {controllerKeys.Length} controller counters, {columns.Length} feature means{percentileSummary})"));
+    }
+
+    private static void WriteDeltaColumns(
+        TextWriter writer, IReadOnlyList<SaveSummary> saves, int index)
+    {
+        if (index == 0)
+        {
+            writer.Write(",,,,,,");
+            return;
+        }
+
+        var previous = saves[index - 1];
+        var current = saves[index];
+        var births = TryDelta(current.ControllerNumbers, previous.ControllerNumbers, "evo.births");
+        var kills = TryDelta(current.ControllerNumbers, previous.ControllerNumbers, "evo.spikeKills");
+        var enrichment = TryDelta(current.ControllerNumbers, previous.ControllerNumbers, "evo.enrichmentSpawns");
+        var population = current.Creatures - previous.Creatures;
+        writer.Write(',');
+        writer.Write(population.ToString(CultureInfo.InvariantCulture));
+        WriteCsvValue(writer, births?.ToString("0.###", CultureInfo.InvariantCulture));
+        WriteCsvValue(writer, kills?.ToString("0.###", CultureInfo.InvariantCulture));
+        WriteCsvValue(writer, enrichment?.ToString("0.###", CultureInfo.InvariantCulture));
+        if (births is { } birthDelta && kills is { } killDelta)
+        {
+            var recruits = birthDelta + (enrichment ?? 0d);
+            var deaths = recruits - population;
+            WriteCsvValue(writer, deaths.ToString("0.###", CultureInfo.InvariantCulture));
+            WriteCsvValue(writer, deaths > 0d
+                ? (killDelta / deaths).ToString("0.######", CultureInfo.InvariantCulture)
+                : string.Empty);
+        }
+        else
+        {
+            writer.Write(",,");
+        }
+    }
+
+    private static double? TryDelta(
+        IReadOnlyDictionary<string, double> current,
+        IReadOnlyDictionary<string, double> previous,
+        string key) =>
+        current.TryGetValue(key, out var now)
+            ? now - (previous.TryGetValue(key, out var before) ? before : 0d)
+            : null;
+
+    private static void WriteCsvNumber(TextWriter writer, int? value) =>
+        WriteCsvValue(writer, value?.ToString(CultureInfo.InvariantCulture));
+
+    private static void WriteCsvNumber(TextWriter writer, double? value) =>
+        WriteCsvValue(writer, value is { } number && double.IsFinite(number)
+            ? number.ToString("0.######", CultureInfo.InvariantCulture)
+            : string.Empty);
+
+    private static void WriteCsvValue(TextWriter writer, string? value)
+    {
+        writer.Write(',');
+        writer.Write(value ?? string.Empty);
+    }
+
+    private static double Percentile(double[] sorted, double fraction)
+    {
+        var position = (sorted.Length - 1) * fraction;
+        var lower = (int)System.Math.Floor(position);
+        var upper = System.Math.Min(lower + 1, sorted.Length - 1);
+        return sorted[lower] + (position - lower) * (sorted[upper] - sorted[lower]);
+    }
+
+    private static void WriteFeaturesCsv(string path, IReadOnlyList<FeatureRow> rows, KMeans.Result clustering)
+    {
+        EnsureDirectory(path);
+        var columns = rows.SelectMany(static row => row.Values.Keys)
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(static name => name, StringComparer.Ordinal)
+            .ToArray();
+        using var writer = new StreamWriter(path);
+        writer.Write("name,save,time,lineage,generation,cluster");
+        foreach (var column in columns)
+            writer.Write(",{0}", Csv(column));
+        writer.WriteLine();
+        for (var index = 0; index < rows.Count; index++)
+        {
+            var row = rows[index];
+            writer.Write(Csv(row.Name));
+            writer.Write(',');
+            writer.Write(Csv(row.SavePath));
+            writer.Write(',');
+            writer.Write(row.SaveTime.ToString("0.###", CultureInfo.InvariantCulture));
+            writer.Write(',');
+            writer.Write(row.Lineage.ToString(CultureInfo.InvariantCulture));
+            writer.Write(',');
+            writer.Write(row.Generation.ToString(CultureInfo.InvariantCulture));
+            writer.Write(',');
+            writer.Write(clustering.Labels[index].ToString(CultureInfo.InvariantCulture));
+            foreach (var column in columns)
+            {
+                writer.Write(',');
+                writer.Write(row.Values.GetValueOrDefault(column, double.NaN)
+                    .ToString("R", CultureInfo.InvariantCulture));
+            }
             writer.WriteLine();
         }
 
         Console.WriteLine(string.Create(CultureInfo.InvariantCulture,
-            $"wrote {path} ({saves.Count} saves, {controllerKeys.Length} controller counters, {columns.Length} feature means)"));
+            $"wrote {path} ({rows.Count} creatures, {columns.Length} feature columns)"));
     }
 
     private static void WriteEnrichmentCsv(string path, EnrichmentAnalysis[] enrichment)
@@ -600,6 +790,8 @@ internal static class Program
             || column.StartsWith("ports.", StringComparison.Ordinal)
             || column.StartsWith("organ.", StringComparison.Ordinal),
         "behavior" => column.StartsWith("behavior.", StringComparison.Ordinal)
+            || column.StartsWith("diet.", StringComparison.Ordinal)
+            || column.StartsWith("access.", StringComparison.Ordinal)
             || column.StartsWith("neutral.", StringComparison.Ordinal),
         _ => throw new InvalidOperationException($"Unknown mode '{mode}'."),
     };
@@ -700,6 +892,8 @@ internal static class Program
         Console.WriteLine("  --timeline-csv <path>    One row per save: population, counters, feature means.");
         Console.WriteLine("  --metrics-json <path>    Machine-readable metrics (same numbers as the HTML report).");
         Console.WriteLine("  --enrichment-csv <path>  All tested signatures with p/q values for FDR auditing.");
+        Console.WriteLine("  --features-csv <path>    One row per analyzed creature with every feature value and cluster.");
+        Console.WriteLine("  --timeline-percentiles   Add p50/p90/p95 columns for key features to the timeline CSV.");
         Console.WriteLine("  -h, --help               Show this help.");
     }
 

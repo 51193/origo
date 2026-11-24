@@ -317,13 +317,22 @@ public sealed class GenomeCliTests
     {
         using var directory = new TemporaryDirectory();
         var genome = SaveFixture.Encode(GenomeV4Factory.CreateDemoFounder(new Random(22)));
-        var first = SaveFixture.CreateV7Save(directory, "save_t1", [("c0", genome), ("c1", genome)], time: 10d);
+        var first = SaveFixture.CreateV7Save(
+            directory, "save_t1", [("c0", genome), ("c1", genome)], time: 10d,
+            extraControllerPairs: new Dictionary<string, object>
+            {
+                ["evo.births"] = 10d,
+                ["evo.spikeKills"] = 2d,
+            });
         var second = SaveFixture.CreateV7Save(
-            directory, "save_t2", [("c2", genome), ("c3", genome)], time: 20d,
+            directory, "save_t2", [("c2", genome), ("c3", genome), ("c4", genome)], time: 20d,
             extraControllerPairs: new Dictionary<string, object>
             {
                 ["demo.paused"] = true,
                 ["demo.phase"] = "running",
+                ["evo.births"] = 15d,
+                ["evo.spikeKills"] = 4d,
+                ["evo.enrichmentSpawns"] = 1d,
             });
         var timeline = Path.Combine(directory.Path, "timeline.csv");
 
@@ -340,6 +349,64 @@ public sealed class GenomeCliTests
         Assert.Contains("save_t2,20", lines[2], StringComparison.Ordinal);
         Assert.Contains("true", lines[2], StringComparison.Ordinal);
         Assert.Contains("running", lines[2], StringComparison.Ordinal);
+        var header = lines[0].Split(',');
+        var row = lines[2].Split(',');
+        var deaths = row[Array.IndexOf(header, "delta.deathsEstimated")];
+        var predation = row[Array.IndexOf(header, "delta.predationShareEstimated")];
+        Assert.Equal("5", deaths);
+        Assert.Equal("0.4", predation);
+    }
+
+    [Fact]
+    public void Genome_FeaturesCsvTimelinePercentilesAndEcologyMetrics_AreWritten()
+    {
+        using var directory = new TemporaryDirectory();
+        var save = CreateVariedSave(directory);
+        var timeline = Path.Combine(directory.Path, "timeline.csv");
+        var features = Path.Combine(directory.Path, "features.csv");
+        var metrics = Path.Combine(directory.Path, "metrics.json");
+        var (exitCode, _, _) = Run(
+            "genome", "--save", save,
+            "--out", Path.Combine(directory.Path, "report.html"),
+            "--timeline-csv", timeline,
+            "--timeline-percentiles",
+            "--features-csv", features,
+            "--metrics-json", metrics);
+
+        Assert.Equal(0, exitCode);
+        var timelineHeader = File.ReadLines(timeline).First();
+        Assert.Contains("food.soft", timelineHeader, StringComparison.Ordinal);
+        Assert.Contains("access.foodInSenseShare", timelineHeader, StringComparison.Ordinal);
+        Assert.Contains("origin.founderShare", timelineHeader, StringComparison.Ordinal);
+        Assert.Contains("delta.deathsEstimated", timelineHeader, StringComparison.Ordinal);
+        Assert.Contains("behavior.age.p50", timelineHeader, StringComparison.Ordinal);
+        var featuresHeader = File.ReadLines(features).First();
+        Assert.Contains("access.foodInSense", featuresHeader, StringComparison.Ordinal);
+        Assert.Contains("diet.hasMeals", featuresHeader, StringComparison.Ordinal);
+        Assert.Contains("origin.generationZero", featuresHeader, StringComparison.Ordinal);
+        Assert.Contains("cluster", featuresHeader, StringComparison.Ordinal);
+        using var json = JsonDocument.Parse(File.ReadAllText(metrics));
+        var saveJson = json.RootElement.GetProperty("saves")[0];
+        Assert.Equal(3, saveJson.GetProperty("food").GetProperty("soft").GetInt32());
+        Assert.True(saveJson.GetProperty("access").TryGetProperty("foodInSenseShare", out _));
+        Assert.True(saveJson.GetProperty("controller").GetProperty("numbers").TryGetProperty("evo.tick", out _));
+        Assert.True(saveJson.GetProperty("diet").TryGetProperty("living", out _));
+    }
+
+    [Fact]
+    public void Genome_BehaviorModeIncludesDietAndAccessFeatures()
+    {
+        using var directory = new TemporaryDirectory();
+        var save = CreateVariedSave(directory);
+        var output = Path.Combine(directory.Path, "behavior.html");
+
+        var (exitCode, _, _) = Run("genome", "--save", save, "--mode", "behavior", "--out", output);
+
+        Assert.Equal(0, exitCode);
+        var html = File.ReadAllText(output);
+        Assert.Contains("diet.hasMeals", html, StringComparison.Ordinal);
+        Assert.Contains("access.foodInSense", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("origin.generationZero", html, StringComparison.Ordinal);
     }
 
     [Fact]

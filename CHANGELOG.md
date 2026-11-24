@@ -13,6 +13,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 ### Added
 
+- **Evolution Demo analysis adds food-access, origin, and diet observability** —
+  the genome analysis tool now reports food inventory by type (soft/tough/
+  toxic/corpse), live patch count/radius/coverage, per-creature food access
+  (pickup/sense/300/600 counts and nearest food/source distance), generation-0
+  founder share, and exact living/experienced/controller diet composition. The
+  timeline CSV adds these columns plus interval population/birth/kill/death
+  estimates; `--timeline-percentiles` adds p50/p90/p95 for key features, and
+  `--features-csv` writes one row per analyzed creature with every feature and
+  its cluster. The HTML report, metrics JSON (including controller counters),
+  and warnings now expose the same ecology numbers, including a stale
+  `world.config` patch-count warning and a genotype-enrichment caveat. Diet
+  means remain over all creatures (zero-meal creatures contribute 0), so the
+  new living/experienced/controller columns are the population-diet view.
 - **Evolution Demo adds a primordial campaign progression** — New Pond
   defaults to a campaign start with 24 founders in a 700-unit pond, basic
   Vision/feeding reflexes, and soft-only food. Account-wide milestone rewards

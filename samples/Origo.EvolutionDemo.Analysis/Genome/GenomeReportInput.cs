@@ -60,6 +60,7 @@ public sealed record GenomeReportOptions(
 /// <param name="GeneratedAtUtc">Wall-clock generation time (provenance).</param>
 /// <param name="Options">Resolved command options.</param>
 /// <param name="Saves">Save summaries ordered by simulation time, then save id.</param>
+/// <param name="Ecology">Per-save food, access, origin, and diet metrics.</param>
 /// <param name="Rows">Analyzed creature rows (after sampling).</param>
 /// <param name="TotalCreatures">Creatures present in the saves before sampling/skips.</param>
 /// <param name="ConsideredCreatures">Parsed creatures attempted after sampling; excludes reader-level skips.</param>
@@ -82,6 +83,7 @@ public sealed record GenomeReportInput(
     DateTime GeneratedAtUtc,
     GenomeReportOptions Options,
     IReadOnlyList<SaveSummary> Saves,
+    IReadOnlyList<SaveEcology> Ecology,
     IReadOnlyList<FeatureRow> Rows,
     int TotalCreatures,
     int ConsideredCreatures,

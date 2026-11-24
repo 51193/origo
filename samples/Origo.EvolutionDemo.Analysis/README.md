@@ -43,14 +43,16 @@ dotnet run --project samples/Origo.EvolutionDemo.Analysis -c Release -- \
 --max <n>                per-save analyzed row cap; 0 analyzes every creature (default 5000)
 --seed <n>               seed for per-save sampling, k-means/Jaccard restarts, and bootstrap ARI (default 1)
 --k <n>                  0 = automatic k via silhouette (default 0); N = fixed N clusters
---mode all|genotype|phenotype|behavior
+--mode all|genotype|phenotype|behavior   behavior includes behavior/diet/access; origin is all-only
 --method kmeans|jaccard|dbscan
 --stability <n>          true bootstrap ARI rounds, kmeans only (default 5; 0 = n/a)
 --eps <x>                DBSCAN epsilon (0 = median k-distance estimate)
 --min-points <n>         DBSCAN minimum points, counting the point itself (default 5)
 --min-cluster-size <n>   auto-k validity floor (default max(2, ceil(0.01 * analyzed rows)))
 --allow-skips            analyze the remaining creatures when a genome cannot be decoded
---timeline-csv <path>    one row per save: time, tick, counts, controller counters, feature means
+--timeline-csv <path>    one row per save: time, tick, counts, ecology/access/diet deltas, controller counters, feature means
+--timeline-percentiles   add p50/p90/p95 columns for key features to the timeline CSV
+--features-csv <path>    one row per analyzed creature with every feature value and its cluster
 --metrics-json <path>    machine-readable metrics, same numbers as the HTML report
 --enrichment-csv <path>  every tested signature with counts, odds, p, and BH q values
 ```
@@ -68,17 +70,46 @@ stderr and the HTML report.
 genome-report.html
 genome-report.clusters.csv   name,save,lineage,generation,cluster (DBSCAN noise = -1)
 timeline.csv                 only with --timeline-csv
+features.csv                 only with --features-csv
 metrics.json                 only with --metrics-json
 enrichment.csv               only with --enrichment-csv
 ```
 
 The optional timeline CSV has one row per save (sorted by simulation time) with
 the save id, time, tick, full creature population, analyzed rows, food, corpses,
-food sources, every controller counter as `controller.<key>` (numeric, string,
-and boolean values), and the mean of every extracted feature column; a save
-that contributed no analyzable rows keeps its row with a blank feature mean. Prefer it over cluster composition for
-time-series questions: a pooled clustering can separate snapshots by
-age/complexity gradient instead of lineage.
+food sources, the ecology/access/diet columns listed below, every controller
+counter as `controller.<key>` (numeric, string, and boolean values), the mean of
+every extracted feature column, and (with `--timeline-percentiles`) p50/p90/p95
+for the key age/energy/kill/generation/diet/body columns. A save that contributed
+no analyzable rows keeps its row with a blank feature mean. Prefer it over cluster
+composition for time-series questions: a pooled clustering can separate snapshots
+by age/complexity gradient instead of lineage.
+
+The ecology columns are computed from **every parsed creature and food entity**,
+not from the optional `--max` clustering sample:
+
+- `food.soft/tough/toxic/corpse`: food inventory by type; corpse is a soft subset.
+- `patch.count/patch.radius/patch.coverage`: live `world.foodPatchCount` (falling
+  back to `world.config`), serialized patch radius, and `count*radius^2/pondRadius^2`.
+  A mismatch between the live count and the serialized settings is reported as a
+  warning and the live value is used.
+- `origin.founderShare/meanGeneration/maxGeneration`: living generation-0 share,
+  mean generation, and the controller's historical maximum generation.
+- `access.foodInPickupShare/foodInSenseShare/foodIn300Share`: share of creatures
+  with at least one positioned food inside the creature's saved pickup radius,
+  saved sense range, or 300 world units. `access.meanFoodInSense` and
+  `access.meanFoodIn300` are per-creature means; `access.nearestFoodP50` and
+  `access.nearestSourceP50` are medians. Nearest food is capped at 600 units;
+  nearest source at 10,000 units.
+- `diet.living.*`: shares summed over all living creatures' meal counters.
+  `diet.experienced.*`: the same over creatures with at least 10 meals.
+  `diet.controller.*`: cumulative controller meal counters.
+- `delta.population/births/kills/enrichmentSpawns`: change from the previous
+  save. `delta.deathsEstimated = birthsDelta + enrichmentSpawnsDelta - populationDelta`
+  (enrichment defaults to zero when the counter is absent). `delta.predationShareEstimated
+  = killsDelta / deathsEstimated` when positive. These are estimates: a game build
+  without `evo.enrichmentSpawns` makes the death estimate a lower bound and the
+  predation share an upper bound.
 
 The report contains:
 
@@ -88,6 +119,9 @@ The report contains:
 - save/population/food overview, ordered by simulation time and labeled by save
   id, plus a table of the latest save's controller counters (numeric, string,
   and boolean values);
+- a food/access/origin table with food-type inventory, live patch count/radius/
+  coverage, food-in-sense and food-in-300 shares, nearest-food/source medians,
+  founder share, mean generation, and living/experienced diet composition;
 - PCA scatter with the explained-variance percentages on the axes, plus the
   per-component explained-variance table;
 - cluster feature profile and top differentiating structural/body/neural/
@@ -138,6 +172,10 @@ The report contains:
   `q(i) = min over j >= i of p(j) * m / j`, with `m` the tested count, so
   `q >= p` and `q <= 1`. The display limits rows; the correction never is.
   `--enrichment-csv` writes the complete tested set for FDR auditing.
+  **When the clustering mode is `genotype` or `all`, the gene/organ features
+  also define the clusters**, so the enrichment is descriptive of the cluster
+  definition rather than an independent adaptive test; the report warns about
+  this. Use `phenotype` or `behavior` for an independent gene test.
 - **DBSCAN** keeps noise label `-1`; the reported cluster count and silhouette
   exclude noise, the noise count is reported, and the core-point test counts
   the point itself (`min-points 3` = two other neighbours plus the point).
@@ -157,9 +195,25 @@ The report contains:
   `diet.*Share` features are shares of that total, `diet.dominance` is the
   largest food-type share, and `diet.entropy` is the normalized Shannon
   entropy over the three food types (0 for a single type, 1 for equal
-  shares). Saves written before these counters existed read as zero rather
-  than failing. The cluster behavior profile includes the per-type counters,
-  shares, and entropy.
+  shares). `diet.hasMeals` is 1 when the creature has any meal, and
+  `diet.corpseOfSoftShare` is the corpse share of its soft meals. Saves
+  written before these counters existed read as zero rather than failing.
+  **A zero-meal creature receives 0 for every diet share**, so means over all
+  creatures are age-structure sensitive and do not form a composition; use
+  `diet.living.*`, `diet.experienced.*`, or `diet.controller.*` for a
+  population diet. The cluster behavior profile includes the per-type
+  counters, shares, and entropy.
+- **Food access, origin, and rate features.** `access.foodInPickup`,
+  `access.foodInSense`, `access.foodIn300`, and `access.foodIn600` count
+  positioned food inside the creature's pickup radius, saved sense range, or
+  300/600 world units. `access.nearestFoodDistance` is capped at 600 units;
+  `access.nearestSourceDistance` is capped at 10,000 units when no source
+  exists. `origin.generationZero` and `origin.generationLe2` flag founder and
+  recent-generation individuals. `behavior.killsPer100s`,
+  `behavior.mealsPer100s`, and `behavior.childrenPer100s` divide lifetime
+  counters by `max(age, 1)` seconds, so a young individual cannot look
+  experienced. The `diet.*` and `access.*` features are included in the
+  `behavior` mode; the `origin.*` cohort flags are included in `all` only.
 - **PCA** components are orthonormal eigenvectors of the standardized
   covariance; the explained-variance ratio of a component is its eigenvalue
   share of the covariance trace, so the reported ratios sum to at most 1.
@@ -312,6 +366,18 @@ Profile schema 2 is required; older profile JSONL is rejected explicitly.
 - The analysis reader does not verify the `.payload.sha` hash content; it warns
   when the hash file is absent or when a write-in-progress marker is present,
   and reads the scene JSON directly.
+- Food without a finite `evo.x`/`evo.y` is counted in the inventory but excluded
+  from spatial access metrics; the reader reports the count. Food without
+  `food.type` reads as soft, and `food.fromCorpse` defaults to false, so older
+  v7 saves remain readable but cannot retroactively distinguish types.
+- `world.config` can be stale after a campaign pond expansion: the live
+  controller `world.foodPatchCount` is used and a mismatch is warned about.
+  `patch.coverage` is approximate (patch circles may overlap) and is `n/a`
+  when settings are absent.
+- The save-level access/diet/origin metrics use every parsed creature, while the
+  cluster feature matrix uses the optional `--max` sample. A sampled run's
+  `saves` table and `timeline` ecology columns therefore describe the full save,
+  not the sampled rows.
 - Behavior features are a single save snapshot; use multiple `--save` values or
   `--timeline-csv` for time-series comparisons.
 - A pooled clustering over multiple snapshots can encode time/age/complexity
