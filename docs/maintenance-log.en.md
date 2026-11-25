@@ -10,6 +10,14 @@ Repository-facing maintenance changes that do not change user-visible runtime, p
 
 CI workflow shape, local test/coverage gates, package-consumer fixture smoke coverage, shell-API baseline tooling, PowerShell/Bash parity, and developer-suite commands.
 
+- **Sample demo documentation has an explicit boundary** — AGENTS and the
+  documentation meta-rule now distinguish the framework manual under `docs/`
+  from design/playtest documentation under `samples/<Demo>/Docs/`. The latter
+  uses problem → thinking → decision → result and owns player-model baselines;
+  `docs/` may link to it but must not absorb it. The Evolution Demo's first
+  campaign baselines and the audit finding that no demo design docs were
+  scattered under `docs/` are recorded in the sample docs.
+
 - **Godot export-template downloads are checksum-pinned** — the release
   template installer now refuses an archive that does not match the SHA-512
   entry in `samples/Origo.EvolutionDemo/export-templates.sha512`, before

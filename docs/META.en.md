@@ -12,6 +12,26 @@
 
 `Origo.Core`, `Origo.Core.Contracts`, `Origo.GodotAdapter`, and `Origo.ConsoleBridge` are 0.1.x shell packages that promise source/behavior compatibility, except for maintainer-approved pre-1.0 breaking changes recorded in the shell API approved-break file; the implementation package `Origo.Core.Kernel` and nightly builds make no consumer compatibility promise. The exception covers only shell contracts, kernel-shell ports, and compatibility tests; it never relaxes fail-fast, single-access-path, or architectural isolation rules. See [shell-kernel-boundary](architecture/shell-kernel-boundary.en.md) for the design and [shell-api-baseline](architecture/shell-api-baseline.en.md) plus [release-process](release-process.en.md) for the gates.
 
+## Framework vs Sample Demo Documentation
+
+`docs/` is the framework manual. A playable sample demo keeps a separate
+documentation set under `samples/<Demo>/Docs/`:
+
+- **Framework docs** (`docs/`) describe APIs, architecture, contracts, tests,
+  and release/development process. They mirror the source tree and follow the
+  bottom-up file/interface style in this file.
+- **Sample demo docs** (`samples/<Demo>/Docs/`) describe the game as a design
+  artifact: **Problem → Thinking → Decision → Result**. They record player
+  experience, playtest methods, balance decisions, representative player
+  strategies, and archived baselines. They are not API references and do not
+  need file/interface lists.
+- `docs/` may link to a sample's docs (for example from the manual index or a
+  usage page), but must not absorb its design prose, playtest records, or
+  balance baselines. A sample change updates the sample's `Docs/` entry, not a
+  framework module entry, unless the sample also changes the framework surface.
+- Sample docs are maintained with the sample and are not generated or mirrored
+  into `docs/generated/`. Keep their own index and links valid.
+
 ## Writing Principles
 
 ### Bottom-Up
@@ -73,9 +93,12 @@ the documented design.
 5. **New config key/command** → update relevant README and usage docs
 6. **Inter-module dependency change** → update module README links
 7. **Test capability/method change** → update the corresponding `docs/Origo.*.Tests/` capability docs
-8. **Release or Changelog rule change** → update [release-process.en.md](release-process.en.md)
-9. **AGENTS.md meta-instruction changes** → [AGENTS.md](../AGENTS.md) is authoritative on conflict; synchronize the affected sections of this document in the same change. Do not hard-code AGENTS section numbers; when a rule is owned by this document, keep the full rule here rather than a summary that can go stale.
-10. **Review, remediation, or pull-request process change** → update [review-process.en.md](review-process.en.md) and, when the pull-request text rules change, the Pull Requests and Review Units section below
+8. **Sample demo gameplay/content/playtest/player-model change** → update
+   `samples/<Demo>/Docs/` (problem → thinking → decision → result) and refresh
+   its archived baseline; do not add the design prose to `docs/`
+9. **Release or Changelog rule change** → update [release-process.en.md](release-process.en.md)
+10. **AGENTS.md meta-instruction changes** → [AGENTS.md](../AGENTS.md) is authoritative on conflict; synchronize the affected sections of this document in the same change. Do not hard-code AGENTS section numbers; when a rule is owned by this document, keep the full rule here rather than a summary that can go stale.
+11. **Review, remediation, or pull-request process change** → update [review-process.en.md](review-process.en.md) and, when the pull-request text rules change, the Pull Requests and Review Units section below
 
 ### Situations NOT Requiring Documentation Update
 
@@ -91,6 +114,8 @@ After a code PR is merged, check:
 - [ ] Are all links and local heading anchors valid?
 - [ ] Does the design decisions section reflect current design intent?
 - [ ] Do `docs/usage/` and test capability docs cover new scenarios/capabilities?
+- [ ] For sample demo changes, is the demo `Docs/` entry updated and is the
+      affected baseline archive refreshed?
 - [ ] If release or Changelog rules changed, was `release-process.en.md` updated?
 
 ## Git Commit Message Format

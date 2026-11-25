@@ -70,5 +70,7 @@ playtest documents under `docs/`: the framework index and usage page only linked
 to `samples/`, and `docs/maintenance-log.en.md` contains repository-maintenance
 entries rather than demo design prose. The demo's existing design material was
 already under `samples/` (`GENOME_V4_DESIGN.md`, `Content/README.md`, and
-`Logic/V4/README.md`). This directory now makes the design/playtest boundary
-explicit; new demo design records belong here, not in `docs/`.
+`Logic/V4/README.md`). The pull-request history for #155/#156 refreshed demo
+technical READMEs and framework index links; neither moved demo design docs
+under `docs/`. This directory now makes the design/playtest boundary explicit;
+new demo design records belong here, not in `docs/`.
