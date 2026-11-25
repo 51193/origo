@@ -1,0 +1,1265 @@
+{
+ "schema": 1,
+ "date": "2026-11-25",
+ "base_commit": "77466b55",
+ "hint": "4 strategies x 6 seeds, 3600 s, 300 s checkpoints, fresh progression; analysis tool from merged main 77466b55",
+ "runs": [
+  {
+   "strategy": "planned",
+   "seed": 20261201,
+   "points": 204,
+   "milestones": 17,
+   "unlocks": 21,
+   "purchases": 20,
+   "first_purchase": 10.1,
+   "last_purchase": 2296.089,
+   "enrichment_time": 2296.1,
+   "ponds": {
+    "1": 30.1,
+    "2": 211.0,
+    "3": 241.0,
+    "4": 251.0,
+    "5": 1056.3,
+    "6": 1955.0
+   },
+   "trajectory": {
+    "600": 837,
+    "1500": 1539,
+    "1800": 1598,
+    "3600": 335
+   },
+   "peak": {
+    "population": 1598,
+    "seconds": 1800.0
+   },
+   "final": {
+    "population": 335,
+    "food": 1670,
+    "founder_share": 0.152,
+    "gene_count": 52.88,
+    "access_sense": 0.701,
+    "access_300": 0.976,
+    "diet_entropy": 0.924,
+    "specialist_share60": 0.067,
+    "predation_share_last_interval": 1.058
+   },
+   "clusters": {
+    "k": 8,
+    "silhouette": 0.168,
+    "bootstrap_ari_mean": 0.542
+   },
+   "top_organs": {
+    "Vision": 0.997,
+    "SpikeOrgan": 0.973,
+    "Armor": 0.797,
+    "CarrionSense": 0.675,
+    "HardDigest": 0.639
+   },
+   "smoke_seconds": 10
+  },
+  {
+   "strategy": "planned",
+   "seed": 20261202,
+   "points": 204,
+   "milestones": 17,
+   "unlocks": 21,
+   "purchases": 20,
+   "first_purchase": 10.1,
+   "last_purchase": 2075.874,
+   "enrichment_time": 2075.9,
+   "ponds": {
+    "1": 40.2,
+    "2": 261.0,
+    "3": 301.0,
+    "4": 341.0,
+    "5": 1177.5,
+    "6": 1955.0
+   },
+   "trajectory": {
+    "600": 897,
+    "1500": 1599,
+    "1800": 1599,
+    "3600": 328
+   },
+   "peak": {
+    "population": 1599,
+    "seconds": 1500.1
+   },
+   "final": {
+    "population": 328,
+    "food": 884,
+    "founder_share": 0.137,
+    "gene_count": 52.58,
+    "access_sense": 0.613,
+    "access_300": 0.79,
+    "diet_entropy": 0.934,
+    "specialist_share60": 0.056,
+    "predation_share_last_interval": 1.064
+   },
+   "clusters": {
+    "k": 8,
+    "silhouette": 0.16,
+    "bootstrap_ari_mean": 0.583
+   },
+   "top_organs": {
+    "Vision": 0.945,
+    "SpikeOrgan": 0.845,
+    "Armor": 0.735,
+    "HardDigest": 0.546,
+    "CarrionSense": 0.473
+   },
+   "smoke_seconds": 10
+  },
+  {
+   "strategy": "planned",
+   "seed": 20261203,
+   "points": 204,
+   "milestones": 17,
+   "unlocks": 21,
+   "purchases": 20,
+   "first_purchase": 10.1,
+   "last_purchase": 3317.085,
+   "enrichment_time": 3317.1,
+   "ponds": {
+    "1": 30.1,
+    "2": 141.0,
+    "3": 171.0,
+    "4": 211.0,
+    "5": 1238.0,
+    "6": 1955.0
+   },
+   "trajectory": {
+    "600": 899,
+    "1500": 1561,
+    "1800": 1598,
+    "3600": 262
+   },
+   "peak": {
+    "population": 1992,
+    "seconds": 3300.1
+   },
+   "final": {
+    "population": 262,
+    "food": 1185,
+    "founder_share": 0.187,
+    "gene_count": 53.6,
+    "access_sense": 0.828,
+    "access_300": 0.954,
+    "diet_entropy": 0.929,
+    "specialist_share60": 0.077,
+    "predation_share_last_interval": 0.782
+   },
+   "clusters": {
+    "k": 5,
+    "silhouette": 0.246,
+    "bootstrap_ari_mean": 0.791
+   },
+   "top_organs": {
+    "Vision": 0.989,
+    "Armor": 0.767,
+    "SpikeOrgan": 0.691,
+    "HardDigest": 0.519,
+    "Sprint": 0.508
+   },
+   "smoke_seconds": 2
+  },
+  {
+   "strategy": "planned",
+   "seed": 20261204,
+   "points": 204,
+   "milestones": 17,
+   "unlocks": 21,
+   "purchases": 20,
+   "first_purchase": 10.1,
+   "last_purchase": 2055.855,
+   "enrichment_time": 2055.9,
+   "ponds": {
+    "1": 30.1,
+    "2": 70.5,
+    "3": 100.8,
+    "4": 141.0,
+    "5": 1056.3,
+    "6": 1955.0
+   },
+   "trajectory": {
+    "600": 887,
+    "1500": 1596,
+    "1800": 1599,
+    "3600": 312
+   },
+   "peak": {
+    "population": 1599,
+    "seconds": 1800.0
+   },
+   "final": {
+    "population": 312,
+    "food": 1355,
+    "founder_share": 0.147,
+    "gene_count": 47.5,
+    "access_sense": 0.689,
+    "access_300": 0.869,
+    "diet_entropy": 0.914,
+    "specialist_share60": 0.122,
+    "predation_share_last_interval": 1.041
+   },
+   "clusters": {
+    "k": 2,
+    "silhouette": 0.151,
+    "bootstrap_ari_mean": 0.769
+   },
+   "top_organs": {
+    "Vision": 0.997,
+    "SpikeOrgan": 0.984,
+    "Armor": 0.788,
+    "HardDigest": 0.715,
+    "Rhythm": 0.513
+   },
+   "smoke_seconds": 2
+  },
+  {
+   "strategy": "planned",
+   "seed": 20261205,
+   "points": 204,
+   "milestones": 17,
+   "unlocks": 21,
+   "purchases": 20,
+   "first_purchase": 10.1,
+   "last_purchase": 2306.099,
+   "enrichment_time": 2306.1,
+   "ponds": {
+    "1": 30.1,
+    "2": 201.0,
+    "3": 231.0,
+    "4": 261.0,
+    "5": 1056.3,
+    "6": 1955.0
+   },
+   "trajectory": {
+    "600": 899,
+    "1500": 1376,
+    "1800": 1484,
+    "3600": 355
+   },
+   "peak": {
+    "population": 1484,
+    "seconds": 1800.0
+   },
+   "final": {
+    "population": 355,
+    "food": 1335,
+    "founder_share": 0.144,
+    "gene_count": 52.94,
+    "access_sense": 0.569,
+    "access_300": 0.837,
+    "diet_entropy": 0.941,
+    "specialist_share60": 0.058,
+    "predation_share_last_interval": 1.038
+   },
+   "clusters": {
+    "k": 8,
+    "silhouette": 0.169,
+    "bootstrap_ari_mean": 0.692
+   },
+   "top_organs": {
+    "Vision": 0.997,
+    "SpikeOrgan": 0.969,
+    "Armor": 0.842,
+    "HardDigest": 0.817,
+    "Sprint": 0.648
+   },
+   "smoke_seconds": 2
+  },
+  {
+   "strategy": "planned",
+   "seed": 20261206,
+   "points": 204,
+   "milestones": 17,
+   "unlocks": 21,
+   "purchases": 20,
+   "first_purchase": 10.1,
+   "last_purchase": 2236.031,
+   "enrichment_time": 2236.0,
+   "ponds": {
+    "1": 30.1,
+    "2": 161.0,
+    "3": 191.0,
+    "4": 201.0,
+    "5": 1056.3,
+    "6": 1955.0
+   },
+   "trajectory": {
+    "600": 898,
+    "1500": 1539,
+    "1800": 1597,
+    "3600": 361
+   },
+   "peak": {
+    "population": 1597,
+    "seconds": 1800.0
+   },
+   "final": {
+    "population": 361,
+    "food": 1038,
+    "founder_share": 0.105,
+    "gene_count": 59.14,
+    "access_sense": 0.85,
+    "access_300": 0.972,
+    "diet_entropy": 0.942,
+    "specialist_share60": 0.032,
+    "predation_share_last_interval": 1.029
+   },
+   "clusters": {
+    "k": 2,
+    "silhouette": 0.201,
+    "bootstrap_ari_mean": 0.963
+   },
+   "top_organs": {
+    "SpikeOrgan": 0.994,
+    "Vision": 0.986,
+    "Armor": 0.873,
+    "Rhythm": 0.784,
+    "CarrionSense": 0.634
+   },
+   "smoke_seconds": 2
+  },
+  {
+   "strategy": "idle",
+   "seed": 20261201,
+   "points": 134,
+   "milestones": 16,
+   "unlocks": 20,
+   "purchases": 19,
+   "first_purchase": 300.109,
+   "last_purchase": 2400.491,
+   "enrichment_time": 600.2,
+   "ponds": {
+    "1": 300.1,
+    "2": 1500.3,
+    "3": 1800.3,
+    "4": 1800.3,
+    "5": 2100.4
+   },
+   "trajectory": {
+    "600": 120,
+    "1500": 120,
+    "1800": 250,
+    "3600": 295
+   },
+   "peak": {
+    "population": 353,
+    "seconds": 3300.1
+   },
+   "final": {
+    "population": 295,
+    "food": 1389,
+    "founder_share": 0.186,
+    "gene_count": 50.26,
+    "access_sense": 0.658,
+    "access_300": 0.851,
+    "diet_entropy": 0.93,
+    "specialist_share60": 0.085,
+    "predation_share_last_interval": 1.035
+   },
+   "clusters": {
+    "k": 2,
+    "silhouette": 0.156,
+    "bootstrap_ari_mean": 0.986
+   },
+   "top_organs": {
+    "Vision": 0.997,
+    "SpikeOrgan": 0.993,
+    "HardDigest": 0.759,
+    "Armor": 0.664,
+    "Rhythm": 0.525
+   },
+   "smoke_seconds": 10
+  },
+  {
+   "strategy": "idle",
+   "seed": 20261202,
+   "points": 134,
+   "milestones": 16,
+   "unlocks": 20,
+   "purchases": 19,
+   "first_purchase": 300.109,
+   "last_purchase": 2400.491,
+   "enrichment_time": 600.2,
+   "ponds": {
+    "1": 300.1,
+    "2": 1500.3,
+    "3": 1800.3,
+    "4": 1800.3,
+    "5": 2100.4
+   },
+   "trajectory": {
+    "600": 120,
+    "1500": 120,
+    "1800": 250,
+    "3600": 274
+   },
+   "peak": {
+    "population": 290,
+    "seconds": 3300.1
+   },
+   "final": {
+    "population": 274,
+    "food": 816,
+    "founder_share": 0.161,
+    "gene_count": 55.19,
+    "access_sense": 0.73,
+    "access_300": 0.832,
+    "diet_entropy": 0.919,
+    "specialist_share60": 0.087,
+    "predation_share_last_interval": 1.06
+   },
+   "clusters": {
+    "k": 4,
+    "silhouette": 0.176,
+    "bootstrap_ari_mean": 0.77
+   },
+   "top_organs": {
+    "Vision": 0.996,
+    "SpikeOrgan": 0.989,
+    "HardDigest": 0.792,
+    "Armor": 0.723,
+    "CarrionSense": 0.606
+   },
+   "smoke_seconds": 10
+  },
+  {
+   "strategy": "idle",
+   "seed": 20261203,
+   "points": 134,
+   "milestones": 16,
+   "unlocks": 20,
+   "purchases": 19,
+   "first_purchase": 300.109,
+   "last_purchase": 2700.584,
+   "enrichment_time": 600.2,
+   "ponds": {
+    "1": 300.1,
+    "2": 1800.3,
+    "3": 2100.4,
+    "4": 2100.4,
+    "5": 2100.4
+   },
+   "trajectory": {
+    "600": 120,
+    "1500": 120,
+    "1800": 120,
+    "3600": 333
+   },
+   "peak": {
+    "population": 333,
+    "seconds": 3600.1
+   },
+   "final": {
+    "population": 333,
+    "food": 954,
+    "founder_share": 0.174,
+    "gene_count": 54.02,
+    "access_sense": 0.688,
+    "access_300": 0.856,
+    "diet_entropy": 0.931,
+    "specialist_share60": 0.08,
+    "predation_share_last_interval": 1.044
+   },
+   "clusters": {
+    "k": 2,
+    "silhouette": 0.187,
+    "bootstrap_ari_mean": 0.988
+   },
+   "top_organs": {
+    "SpikeOrgan": 0.997,
+    "Vision": 0.988,
+    "Armor": 0.799,
+    "HardDigest": 0.64,
+    "Rhythm": 0.634
+   },
+   "smoke_seconds": 2
+  },
+  {
+   "strategy": "idle",
+   "seed": 20261204,
+   "points": 134,
+   "milestones": 16,
+   "unlocks": 20,
+   "purchases": 19,
+   "first_purchase": 300.109,
+   "last_purchase": 2400.491,
+   "enrichment_time": 600.2,
+   "ponds": {
+    "1": 300.1,
+    "2": 1500.3,
+    "3": 1800.3,
+    "4": 1800.3,
+    "5": 2100.4
+   },
+   "trajectory": {
+    "600": 120,
+    "1500": 119,
+    "1800": 250,
+    "3600": 274
+   },
+   "peak": {
+    "population": 306,
+    "seconds": 3300.1
+   },
+   "final": {
+    "population": 274,
+    "food": 1022,
+    "founder_share": 0.15,
+    "gene_count": 53.18,
+    "access_sense": 0.635,
+    "access_300": 0.821,
+    "diet_entropy": 0.931,
+    "specialist_share60": 0.059,
+    "predation_share_last_interval": 1.032
+   },
+   "clusters": {
+    "k": 5,
+    "silhouette": 0.181,
+    "bootstrap_ari_mean": 0.739
+   },
+   "top_organs": {
+    "SpikeOrgan": 0.993,
+    "Vision": 0.967,
+    "Armor": 0.777,
+    "HardDigest": 0.719,
+    "Rhythm": 0.624
+   },
+   "smoke_seconds": 2
+  },
+  {
+   "strategy": "idle",
+   "seed": 20261205,
+   "points": 134,
+   "milestones": 16,
+   "unlocks": 20,
+   "purchases": 19,
+   "first_purchase": 300.109,
+   "last_purchase": 2400.491,
+   "enrichment_time": 600.2,
+   "ponds": {
+    "1": 300.1,
+    "2": 1500.3,
+    "3": 1800.3,
+    "4": 1800.3,
+    "5": 2100.4
+   },
+   "trajectory": {
+    "600": 120,
+    "1500": 120,
+    "1800": 250,
+    "3600": 306
+   },
+   "peak": {
+    "population": 314,
+    "seconds": 3300.1
+   },
+   "final": {
+    "population": 306,
+    "food": 1181,
+    "founder_share": 0.124,
+    "gene_count": 53.7,
+    "access_sense": 0.572,
+    "access_300": 0.85,
+    "diet_entropy": 0.932,
+    "specialist_share60": 0.104,
+    "predation_share_last_interval": 1.013
+   },
+   "clusters": {
+    "k": 2,
+    "silhouette": 0.168,
+    "bootstrap_ari_mean": 0.795
+   },
+   "top_organs": {
+    "SpikeOrgan": 0.997,
+    "Vision": 0.99,
+    "Armor": 0.765,
+    "HardDigest": 0.693,
+    "CarrionSense": 0.539
+   },
+   "smoke_seconds": 2
+  },
+  {
+   "strategy": "idle",
+   "seed": 20261206,
+   "points": 134,
+   "milestones": 16,
+   "unlocks": 20,
+   "purchases": 19,
+   "first_purchase": 300.109,
+   "last_purchase": 2400.491,
+   "enrichment_time": 600.2,
+   "ponds": {
+    "1": 300.1,
+    "2": 1500.3,
+    "3": 1800.3,
+    "4": 1800.3,
+    "5": 2100.4
+   },
+   "trajectory": {
+    "600": 108,
+    "1500": 120,
+    "1800": 250,
+    "3600": 321
+   },
+   "peak": {
+    "population": 321,
+    "seconds": 3600.1
+   },
+   "final": {
+    "population": 321,
+    "food": 822,
+    "founder_share": 0.153,
+    "gene_count": 57.86,
+    "access_sense": 0.875,
+    "access_300": 0.956,
+    "diet_entropy": 0.939,
+    "specialist_share60": 0.032,
+    "predation_share_last_interval": 1.007
+   },
+   "clusters": {
+    "k": 4,
+    "silhouette": 0.223,
+    "bootstrap_ari_mean": 0.918
+   },
+   "top_organs": {
+    "SpikeOrgan": 0.988,
+    "Armor": 0.869,
+    "Vision": 0.76,
+    "FoodTypeVision": 0.679,
+    "Sprint": 0.67
+   },
+   "smoke_seconds": 2
+  },
+  {
+   "strategy": "cheapest",
+   "seed": 20261201,
+   "points": 134,
+   "milestones": 16,
+   "unlocks": 20,
+   "purchases": 19,
+   "first_purchase": 15.1,
+   "last_purchase": 1809.005,
+   "enrichment_time": 631.5,
+   "ponds": {
+    "1": 571.1,
+    "2": 646.6,
+    "3": 661.7,
+    "4": 676.8,
+    "5": 1809.0
+   },
+   "trajectory": {
+    "600": 120,
+    "1500": 197,
+    "1800": 153,
+    "3600": 365
+   },
+   "peak": {
+    "population": 365,
+    "seconds": 3600.1
+   },
+   "final": {
+    "population": 365,
+    "food": 1082,
+    "founder_share": 0.126,
+    "gene_count": 59.02,
+    "access_sense": 0.718,
+    "access_300": 0.89,
+    "diet_entropy": 0.941,
+    "specialist_share60": 0.06,
+    "predation_share_last_interval": 1.01
+   },
+   "clusters": {
+    "k": 2,
+    "silhouette": 0.51,
+    "bootstrap_ari_mean": 0.812
+   },
+   "top_organs": {
+    "Vision": 0.997,
+    "SpikeOrgan": 0.995,
+    "Armor": 0.866,
+    "HardDigest": 0.838,
+    "Rhythm": 0.592
+   },
+   "smoke_seconds": 10
+  },
+  {
+   "strategy": "cheapest",
+   "seed": 20261202,
+   "points": 134,
+   "milestones": 16,
+   "unlocks": 20,
+   "purchases": 19,
+   "first_purchase": 15.1,
+   "last_purchase": 1809.005,
+   "enrichment_time": 480.7,
+   "ponds": {
+    "1": 420.7,
+    "2": 495.7,
+    "3": 601.3,
+    "4": 616.4,
+    "5": 1809.0
+   },
+   "trajectory": {
+    "600": 250,
+    "1500": 171,
+    "1800": 177,
+    "3600": 305
+   },
+   "peak": {
+    "population": 389,
+    "seconds": 3300.1
+   },
+   "final": {
+    "population": 305,
+    "food": 798,
+    "founder_share": 0.151,
+    "gene_count": 51.46,
+    "access_sense": 0.59,
+    "access_300": 0.944,
+    "diet_entropy": 0.936,
+    "specialist_share60": 0.048,
+    "predation_share_last_interval": 1.021
+   },
+   "clusters": {
+    "k": 3,
+    "silhouette": 0.197,
+    "bootstrap_ari_mean": 0.967
+   },
+   "top_organs": {
+    "SpikeOrgan": 1.0,
+    "Vision": 0.987,
+    "Armor": 0.816,
+    "CarrionSense": 0.777,
+    "HardDigest": 0.587
+   },
+   "smoke_seconds": 10
+  },
+  {
+   "strategy": "cheapest",
+   "seed": 20261203,
+   "points": 134,
+   "milestones": 16,
+   "unlocks": 20,
+   "purchases": 19,
+   "first_purchase": 15.1,
+   "last_purchase": 1809.005,
+   "enrichment_time": 240.7,
+   "ponds": {
+    "1": 210.7,
+    "2": 300.7,
+    "3": 601.3,
+    "4": 616.4,
+    "5": 1809.0
+   },
+   "trajectory": {
+    "600": 250,
+    "1500": 206,
+    "1800": 134,
+    "3600": 260
+   },
+   "peak": {
+    "population": 280,
+    "seconds": 3300.1
+   },
+   "final": {
+    "population": 260,
+    "food": 1041,
+    "founder_share": 0.154,
+    "gene_count": 51.24,
+    "access_sense": 0.785,
+    "access_300": 0.931,
+    "diet_entropy": 0.952,
+    "specialist_share60": 0.027,
+    "predation_share_last_interval": 1.044
+   },
+   "clusters": {
+    "k": 2,
+    "silhouette": 0.208,
+    "bootstrap_ari_mean": 0.981
+   },
+   "top_organs": {
+    "SpikeOrgan": 0.996,
+    "Vision": 0.958,
+    "Armor": 0.781,
+    "HardDigest": 0.719,
+    "CarrionSense": 0.535
+   },
+   "smoke_seconds": 2
+  },
+  {
+   "strategy": "cheapest",
+   "seed": 20261204,
+   "points": 134,
+   "milestones": 16,
+   "unlocks": 20,
+   "purchases": 19,
+   "first_purchase": 15.1,
+   "last_purchase": 1809.005,
+   "enrichment_time": 210.7,
+   "ponds": {
+    "1": 180.7,
+    "2": 405.7,
+    "3": 601.3,
+    "4": 616.4,
+    "5": 1809.0
+   },
+   "trajectory": {
+    "600": 250,
+    "1500": 234,
+    "1800": 279,
+    "3600": 401
+   },
+   "peak": {
+    "population": 401,
+    "seconds": 3600.1
+   },
+   "final": {
+    "population": 401,
+    "food": 638,
+    "founder_share": 0.072,
+    "gene_count": 80.21,
+    "access_sense": 0.898,
+    "access_300": 0.96,
+    "diet_entropy": 0.949,
+    "specialist_share60": 0.038,
+    "predation_share_last_interval": 0.982
+   },
+   "clusters": {
+    "k": 2,
+    "silhouette": 0.328,
+    "bootstrap_ari_mean": 0.994
+   },
+   "top_organs": {
+    "SpikeOrgan": 1.0,
+    "Vision": 1.0,
+    "Armor": 0.905,
+    "Rhythm": 0.82,
+    "Sprint": 0.761
+   },
+   "smoke_seconds": 2
+  },
+  {
+   "strategy": "cheapest",
+   "seed": 20261205,
+   "points": 134,
+   "milestones": 16,
+   "unlocks": 20,
+   "purchases": 19,
+   "first_purchase": 15.1,
+   "last_purchase": 1809.005,
+   "enrichment_time": 270.7,
+   "ponds": {
+    "1": 210.7,
+    "2": 285.7,
+    "3": 601.3,
+    "4": 616.4,
+    "5": 1809.0
+   },
+   "trajectory": {
+    "600": 250,
+    "1500": 166,
+    "1800": 223,
+    "3600": 346
+   },
+   "peak": {
+    "population": 346,
+    "seconds": 3600.1
+   },
+   "final": {
+    "population": 346,
+    "food": 1020,
+    "founder_share": 0.145,
+    "gene_count": 54.61,
+    "access_sense": 0.728,
+    "access_300": 0.942,
+    "diet_entropy": 0.929,
+    "specialist_share60": 0.062,
+    "predation_share_last_interval": 1.077
+   },
+   "clusters": {
+    "k": 8,
+    "silhouette": 0.158,
+    "bootstrap_ari_mean": 0.53
+   },
+   "top_organs": {
+    "Vision": 0.988,
+    "SpikeOrgan": 0.986,
+    "Armor": 0.795,
+    "HardDigest": 0.743,
+    "Rhythm": 0.595
+   },
+   "smoke_seconds": 2
+  },
+  {
+   "strategy": "cheapest",
+   "seed": 20261206,
+   "points": 134,
+   "milestones": 16,
+   "unlocks": 20,
+   "purchases": 19,
+   "first_purchase": 15.1,
+   "last_purchase": 1809.005,
+   "enrichment_time": 450.7,
+   "ponds": {
+    "1": 420.7,
+    "2": 586.2,
+    "3": 601.3,
+    "4": 616.4,
+    "5": 1809.0
+   },
+   "trajectory": {
+    "600": 250,
+    "1500": 238,
+    "1800": 295,
+    "3600": 466
+   },
+   "peak": {
+    "population": 466,
+    "seconds": 3600.1
+   },
+   "final": {
+    "population": 466,
+    "food": 612,
+    "founder_share": 0.088,
+    "gene_count": 54.13,
+    "access_sense": 0.837,
+    "access_300": 0.951,
+    "diet_entropy": 0.945,
+    "specialist_share60": 0.024,
+    "predation_share_last_interval": 0.969
+   },
+   "clusters": {
+    "k": 2,
+    "silhouette": 0.219,
+    "bootstrap_ari_mean": 0.998
+   },
+   "top_organs": {
+    "Vision": 0.994,
+    "SpikeOrgan": 0.944,
+    "Armor": 0.865,
+    "CarrionSense": 0.83,
+    "Rhythm": 0.672
+   },
+   "smoke_seconds": 2
+  },
+  {
+   "strategy": "greedy",
+   "seed": 20261201,
+   "points": 134,
+   "milestones": 16,
+   "unlocks": 20,
+   "purchases": 19,
+   "first_purchase": 0.1,
+   "last_purchase": 1799.208,
+   "enrichment_time": 72.6,
+   "ponds": {
+    "1": 12.1,
+    "2": 38.0,
+    "3": 599.5,
+    "4": 1499.3,
+    "5": 1799.2
+   },
+   "trajectory": {
+    "600": 330,
+    "1500": 681,
+    "1800": 217,
+    "3600": 351
+   },
+   "peak": {
+    "population": 681,
+    "seconds": 1500.1
+   },
+   "final": {
+    "population": 351,
+    "food": 645,
+    "founder_share": 0.171,
+    "gene_count": 51.86,
+    "access_sense": 0.63,
+    "access_300": 0.732,
+    "diet_entropy": 0.923,
+    "specialist_share60": 0.093,
+    "predation_share_last_interval": 1.026
+   },
+   "clusters": {
+    "k": 5,
+    "silhouette": 0.176,
+    "bootstrap_ari_mean": 0.874
+   },
+   "top_organs": {
+    "Vision": 0.983,
+    "SpikeOrgan": 0.98,
+    "Armor": 0.744,
+    "HardDigest": 0.709,
+    "Rhythm": 0.456
+   },
+   "smoke_seconds": 10
+  },
+  {
+   "strategy": "greedy",
+   "seed": 20261202,
+   "points": 134,
+   "milestones": 16,
+   "unlocks": 20,
+   "purchases": 19,
+   "first_purchase": 0.1,
+   "last_purchase": 1799.108,
+   "enrichment_time": 37.5,
+   "ponds": {
+    "1": 15.2,
+    "2": 37.5,
+    "3": 599.4,
+    "4": 1499.2,
+    "5": 1799.1
+   },
+   "trajectory": {
+    "600": 325,
+    "1500": 658,
+    "1800": 161,
+    "3600": 264
+   },
+   "peak": {
+    "population": 658,
+    "seconds": 1500.1
+   },
+   "final": {
+    "population": 264,
+    "food": 1297,
+    "founder_share": 0.208,
+    "gene_count": 52.03,
+    "access_sense": 0.693,
+    "access_300": 0.92,
+    "diet_entropy": 0.931,
+    "specialist_share60": 0.057,
+    "predation_share_last_interval": 0.997
+   },
+   "clusters": {
+    "k": 3,
+    "silhouette": 0.171,
+    "bootstrap_ari_mean": 0.958
+   },
+   "top_organs": {
+    "SpikeOrgan": 0.962,
+    "Vision": 0.917,
+    "HardDigest": 0.795,
+    "Armor": 0.765,
+    "Rhythm": 0.576
+   },
+   "smoke_seconds": 10
+  },
+  {
+   "strategy": "greedy",
+   "seed": 20261203,
+   "points": 134,
+   "milestones": 16,
+   "unlocks": 20,
+   "purchases": 19,
+   "first_purchase": 0.1,
+   "last_purchase": 1799.108,
+   "enrichment_time": 37.2,
+   "ponds": {
+    "1": 10.8,
+    "2": 37.2,
+    "3": 599.4,
+    "4": 1499.2,
+    "5": 1799.1
+   },
+   "trajectory": {
+    "600": 394,
+    "1500": 706,
+    "1800": 168,
+    "3600": 326
+   },
+   "peak": {
+    "population": 706,
+    "seconds": 1500.1
+   },
+   "final": {
+    "population": 326,
+    "food": 735,
+    "founder_share": 0.141,
+    "gene_count": 61.92,
+    "access_sense": 0.758,
+    "access_300": 0.801,
+    "diet_entropy": 0.965,
+    "specialist_share60": 0.026,
+    "predation_share_last_interval": 1.052
+   },
+   "clusters": {
+    "k": 8,
+    "silhouette": 0.254,
+    "bootstrap_ari_mean": 0.808
+   },
+   "top_organs": {
+    "Vision": 0.991,
+    "SpikeOrgan": 0.979,
+    "Armor": 0.923,
+    "CarrionSense": 0.736,
+    "FoodTypeVision": 0.66
+   },
+   "smoke_seconds": 2
+  },
+  {
+   "strategy": "greedy",
+   "seed": 20261204,
+   "points": 134,
+   "milestones": 16,
+   "unlocks": 20,
+   "purchases": 19,
+   "first_purchase": 0.1,
+   "last_purchase": 1799.208,
+   "enrichment_time": 47.2,
+   "ponds": {
+    "1": 6.4,
+    "2": 25.0,
+    "3": 599.5,
+    "4": 1499.3,
+    "5": 1799.2
+   },
+   "trajectory": {
+    "600": 325,
+    "1500": 723,
+    "1800": 236,
+    "3600": 382
+   },
+   "peak": {
+    "population": 723,
+    "seconds": 1500.1
+   },
+   "final": {
+    "population": 382,
+    "food": 1334,
+    "founder_share": 0.107,
+    "gene_count": 54.34,
+    "access_sense": 0.442,
+    "access_300": 0.817,
+    "diet_entropy": 0.937,
+    "specialist_share60": 0.058,
+    "predation_share_last_interval": 0.988
+   },
+   "clusters": {
+    "k": 8,
+    "silhouette": 0.204,
+    "bootstrap_ari_mean": 0.763
+   },
+   "top_organs": {
+    "SpikeOrgan": 0.984,
+    "Vision": 0.966,
+    "Armor": 0.806,
+    "FoodTypeVision": 0.688,
+    "HardDigest": 0.652
+   },
+   "smoke_seconds": 2
+  },
+  {
+   "strategy": "greedy",
+   "seed": 20261205,
+   "points": 134,
+   "milestones": 16,
+   "unlocks": 20,
+   "purchases": 19,
+   "first_purchase": 0.1,
+   "last_purchase": 1799.108,
+   "enrichment_time": 38.1,
+   "ponds": {
+    "1": 8.3,
+    "2": 26.6,
+    "3": 599.4,
+    "4": 1499.2,
+    "5": 1799.1
+   },
+   "trajectory": {
+    "600": 390,
+    "1500": 693,
+    "1800": 225,
+    "3600": 474
+   },
+   "peak": {
+    "population": 693,
+    "seconds": 1500.1
+   },
+   "final": {
+    "population": 474,
+    "food": 705,
+    "founder_share": 0.124,
+    "gene_count": 55.74,
+    "access_sense": 0.749,
+    "access_300": 0.914,
+    "diet_entropy": 0.944,
+    "specialist_share60": 0.049,
+    "predation_share_last_interval": 0.977
+   },
+   "clusters": {
+    "k": 4,
+    "silhouette": 0.248,
+    "bootstrap_ari_mean": 0.869
+   },
+   "top_organs": {
+    "Vision": 0.93,
+    "SpikeOrgan": 0.926,
+    "Armor": 0.876,
+    "Rhythm": 0.715,
+    "FoodTypeVision": 0.612
+   },
+   "smoke_seconds": 2
+  },
+  {
+   "strategy": "greedy",
+   "seed": 20261206,
+   "points": 134,
+   "milestones": 16,
+   "unlocks": 20,
+   "purchases": 19,
+   "first_purchase": 0.1,
+   "last_purchase": 1799.108,
+   "enrichment_time": 47.0,
+   "ponds": {
+    "1": 6.3,
+    "2": 29.0,
+    "3": 599.4,
+    "4": 1499.2,
+    "5": 1799.1
+   },
+   "trajectory": {
+    "600": 388,
+    "1500": 680,
+    "1800": 223,
+    "3600": 413
+   },
+   "peak": {
+    "population": 680,
+    "seconds": 1500.1
+   },
+   "final": {
+    "population": 413,
+    "food": 941,
+    "founder_share": 0.145,
+    "gene_count": 55.59,
+    "access_sense": 0.768,
+    "access_300": 0.93,
+    "diet_entropy": 0.953,
+    "specialist_share60": 0.041,
+    "predation_share_last_interval": 1.021
+   },
+   "clusters": {
+    "k": 2,
+    "silhouette": 0.147,
+    "bootstrap_ari_mean": 0.981
+   },
+   "top_organs": {
+    "Vision": 0.976,
+    "SpikeOrgan": 0.961,
+    "Armor": 0.901,
+    "HardDigest": 0.719,
+    "Rhythm": 0.639
+   },
+   "smoke_seconds": 2
+  }
+ ],
+ "game_commit": "77466b55",
+ "analysis_tool_commit": "77466b55",
+ "smoke_note": "2 s smoke; seeds 20261201 and 20261202 were rerun with a 10 s smoke because the 2 s smoke did not reach generation 1. Benchmark progression is reset after smoke, so this changes only test startup time."
+}
