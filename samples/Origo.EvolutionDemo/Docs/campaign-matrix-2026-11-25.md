@@ -79,19 +79,22 @@ real, but it is a rare survivor rather than a representative planned result.
 The earlier "bimodal" wording was directionally correct, but the matrix shows
 that the low mode is strongly preferred over 3,600 s.
 
-### 2. Enrichment timing is the strongest current collapse hypothesis
+### 2. Enrichment is not supported as the collapse trigger
 
-Every matrix planned run bought enrichment late (2,056–3,317 s) and every one
-collapsed. The one high-density planned run in the earlier baseline never
-bought enrichment, kept founder share at 0, and reached 64 gene copies.
+Every matrix planned run bought enrichment late (2,056–3,317 s), and every
+matrix planned run fell from a 1,484–1,599 peak to 262–361. But the enrichment
+purchase is also late: most are after the 1,800 s peak, and the latest is at
+3,317 s. The fall begins after the 1,800 s peak, so this matrix cannot tell
+whether enrichment precedes or follows the first collapse; it provides **no
+temporal evidence that enrichment starts the fall**.
 
-Idle, cheapest, and greedy buy enrichment much earlier (600 s, 211–632 s,
-37–73 s), but they do not show the same planned peak-and-collapse shape. The
-association is therefore not "enrichment always causes collapse"; it is more
-specific: **late enrichment on an already high-density planned run may be the
-event that turns the peak into a crash**. This remains a hypothesis. A
-controlled 2×2 with enrichment disabled and late-enabled on the same planned
-seeds is the next experiment.
+The one high-density planned run in the earlier baseline never bought
+enrichment, kept founder share at 0, and reached 64 gene copies. That is a real
+association worth a controlled test, but it is one survivor out of nine, and
+other differences (seed, founder lineage, predation timing) move with it. Do
+not treat "late enrichment causes the crash" as established. A 2×2 with
+enrichment enabled/disabled on the same planned seeds is still the right next
+experiment.
 
 ### 3. The player model changes the shape more than the final median
 
@@ -158,8 +161,9 @@ dotnet run --project samples/Origo.EvolutionDemo.Analysis -c Release -- \
 - 24 runs is enough to overturn a "representative high survivor" reading, but
   not enough to estimate the rare high outcome precisely. A 20+ seed planned
   matrix should follow before making probability claims.
-- Enrichment timing is observational. Seed, founder count, food, and predation
-  timing all move together; only the controlled 2×2 separates them.
+- Enrichment timing is observational, and most matrix purchases happen after
+  the 1,800 s peak. Seed, founder count, food, and predation timing all move
+  together; only the controlled 2×2 separates them.
 - Predation share is an upper bound whenever enrichment is active (the death
   estimate is a lower bound). Every matrix run bought enrichment; the earlier
   high planned control did not.
