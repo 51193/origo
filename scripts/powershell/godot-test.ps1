@@ -34,8 +34,8 @@ function Invoke-OrigoDemoAcceptanceSmoke {
         $env:HOME = $smokeHome
         $env:ORIGO_DEMO_SMOKE = '1'
         $env:ORIGO_DEMO_SMOKE_SECONDS = '2'
-        $env:ORIGO_DEMO_SMOKE_FAST_FORWARD = '65'
-        $env:ORIGO_DEMO_SMOKE_CHECKPOINT_INTERVAL = '30'
+        $env:ORIGO_DEMO_SMOKE_FAST_FORWARD = '150'
+        $env:ORIGO_DEMO_SMOKE_CHECKPOINT_INTERVAL = '60'
         $env:ORIGO_DEMO_SMOKE_SAVE_SLOT = 'ci_smoke'
         $env:ORIGO_DEMO_CAMPAIGN_AUTOPLAY = '1'
         $smoke = Invoke-OrigoNative -FilePath $GodotBinary -Arguments @(

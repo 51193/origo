@@ -117,7 +117,7 @@ if [[ $EXIT_CODE -eq 0 ]]; then
     echo "Building Evolution Demo for the headless acceptance smoke..."
     dotnet build "$ROOT/samples/Origo.EvolutionDemo/Origo.EvolutionDemo.csproj"         --configuration Debug --nologo --verbosity quiet
     echo "Running Evolution Demo headless acceptance smoke..."
-    EVOLUTION_DEMO_SMOKE_HOME="$DEMO_SMOKE_HOME"     ORIGO_DEMO_CAMPAIGN_AUTOPLAY=1         bash "$ROOT/samples/Origo.EvolutionDemo/run-demo.sh" --no-build --headless         --seconds 2 --fast-forward 65 --checkpoint-interval 30 --save-slot ci_smoke
+    EVOLUTION_DEMO_SMOKE_HOME="$DEMO_SMOKE_HOME"     ORIGO_DEMO_CAMPAIGN_AUTOPLAY=1         bash "$ROOT/samples/Origo.EvolutionDemo/run-demo.sh" --no-build --headless         --seconds 2 --fast-forward 150 --checkpoint-interval 60 --save-slot ci_smoke
 fi
 
 exit $EXIT_CODE

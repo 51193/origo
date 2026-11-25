@@ -117,7 +117,7 @@ public static class GenomeMetricsJson
 
     private static void WriteEcology(Utf8JsonWriter writer, SaveEcology ecology)
     {
-        writer.WriteStartObject("food");
+        writer.WriteStartObject("foodInventory");
         writer.WriteNumber("soft", ecology.Food.Soft);
         writer.WriteNumber("tough", ecology.Food.Tough);
         writer.WriteNumber("toxic", ecology.Food.Toxic);

@@ -86,7 +86,9 @@ composition for time-series questions: a pooled clustering can separate snapshot
 by age/complexity gradient instead of lineage.
 
 The ecology columns are computed from **every parsed creature and food entity**,
-not from the optional `--max` clustering sample:
+not from the optional `--max` clustering sample. In `--metrics-json`, the
+per-save numeric `saves[].food` count remains unchanged; the typed inventory is
+`saves[].foodInventory`:
 
 - `food.soft/tough/toxic/corpse`: food inventory by type; corpse is a soft subset.
 - `patch.count/patch.radius/patch.coverage`: live `world.foodPatchCount` (falling

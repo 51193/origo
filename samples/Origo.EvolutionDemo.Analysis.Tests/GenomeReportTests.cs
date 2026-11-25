@@ -200,7 +200,8 @@ public sealed class GenomeReportTests
         Assert.Equal(1, options.GetProperty("seed").GetInt32());
         Assert.Equal(10, options.GetProperty("minClusterSize").GetInt32());
         var firstSave = json.GetProperty("saves")[0];
-        Assert.Equal(4, firstSave.GetProperty("food").GetProperty("soft").GetInt32());
+        Assert.Equal(JsonValueKind.Number, firstSave.GetProperty("food").ValueKind);
+        Assert.Equal(4, firstSave.GetProperty("foodInventory").GetProperty("soft").GetInt32());
         Assert.Equal(0.5d, firstSave.GetProperty("access").GetProperty("foodInSenseShare").GetDouble(), 6);
         Assert.True(firstSave.GetProperty("controller").GetProperty("numbers").TryGetProperty("evo.tick", out _));
     }

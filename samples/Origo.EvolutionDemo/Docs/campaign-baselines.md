@@ -117,8 +117,9 @@ spent on side grades before capacity.
 | greedy control (1 seed) | 259 | 14.3% | 54.9 | 78% / 93% | 0.934 / 7.7% | 103% | 0.1 s / 1,799 s | 19 |
 
 `predation last interval` is `kills / estimated deaths`. When enrichment is
-active, injected founders are not counted in `evo.births`, so deaths and
-predation share are **upper bounds**. The planned 20261132 run never bought
+active, injected founders are not counted in `evo.births`; estimated deaths are
+therefore a **lower bound**, and predation share an **upper bound**. The planned
+20261132 run never bought
 enrichment (founder share 0) and reports 30%; that one is a clean lower-noise
 reading.
 
@@ -258,8 +259,8 @@ dotnet run --project samples/Origo.EvolutionDemo.Analysis -c Release -- \
 - This is still an automated player: it does not read the UI, change plans
   after a crash, or deliberately under-spend. The values are hypotheses for
   human playtesting.
-- Predation share is an upper bound whenever enrichment is active; use direct
-  game counters when they exist.
+- Predation share is an upper bound whenever enrichment is active (the death
+  estimate is a lower bound); use direct game counters when they exist.
 - Founder share counts injected generation-0 creatures; it is not a lineage
   survival rate.
 - The plan order is a chosen player model. A different goal-oriented order

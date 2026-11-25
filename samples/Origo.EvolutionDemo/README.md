@@ -322,7 +322,7 @@ stable-ID genes, not a fixed codon table:
 The controller stores `evo.genomeVersion = 7`. Older saves are intentionally
 not migrated; the Load panel rejects them with an explicit message. Genome
 serialization is a canonical binary codec stored as prefixed base64 in SND
-entities (about a third smaller than the control hex form), with a hex view for
+entities (about a third smaller than the legacy hex form), with a hex view for
 debugging and the inspector.
 
 Mutations operate on stable gene identities: expression, copy count,

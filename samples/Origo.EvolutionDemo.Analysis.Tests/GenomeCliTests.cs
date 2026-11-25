@@ -387,7 +387,8 @@ public sealed class GenomeCliTests
         Assert.Contains("cluster", featuresHeader, StringComparison.Ordinal);
         using var json = JsonDocument.Parse(File.ReadAllText(metrics));
         var saveJson = json.RootElement.GetProperty("saves")[0];
-        Assert.Equal(3, saveJson.GetProperty("food").GetProperty("soft").GetInt32());
+        Assert.Equal(JsonValueKind.Number, saveJson.GetProperty("food").ValueKind);
+        Assert.Equal(3, saveJson.GetProperty("foodInventory").GetProperty("soft").GetInt32());
         Assert.True(saveJson.GetProperty("access").TryGetProperty("foodInSenseShare", out _));
         Assert.True(saveJson.GetProperty("controller").GetProperty("numbers").TryGetProperty("evo.tick", out _));
         Assert.True(saveJson.GetProperty("diet").TryGetProperty("living", out _));

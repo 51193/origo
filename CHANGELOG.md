@@ -36,7 +36,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   and warnings now expose the same ecology numbers, including a stale
   `world.config` patch-count warning and a genotype-enrichment caveat. Diet
   means remain over all creatures (zero-meal creatures contribute 0), so the
-  new living/experienced/controller columns are the population-diet view.
+  new living/experienced/controller columns are the population-diet view. In
+  metrics JSON, the numeric `saves[].food` count is unchanged; the typed
+  inventory is `saves[].foodInventory`.
 - **Evolution Demo adds a primordial campaign progression** — New Pond
   defaults to a campaign start with 24 founders in a 700-unit pond, basic
   Vision/feeding reflexes, and soft-only food. Account-wide milestone rewards
@@ -226,7 +228,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   byte-identical. The inspector and appearance derivation keep their hex view.
   Version 7 rejects v6 saves, the analysis tool accepts only v7 and decodes
   both storage forms, and the Load Game compatibility check now compares
-  against the current version constant instead of the control value `"2"`.
+  against the current version constant instead of the legacy value `"2"`.
 - **Per-entity recovery logs move to the Debug stream** — `SndDataManager`,
   `SndNodeManager`, and `SndStrategyManager` no longer write a recovery summary
   to Info for every spawned entity, so hosts with the default Info threshold
@@ -424,7 +426,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Console input is bounded and drained fairly** — input lines have a configurable limit, the pending queue drops the oldest command at its bound, and the console executes a bounded number of commands per frame.
 - **Weekly snapshots require the exact fifteen release asset names** — completeness no longer accepts an arbitrary count of unrelated assets.
 - **Snapshot paths are normalized across host separator styles** — `SaveFileHandle.GetRelativePath` now normalizes `\`/`/` and scheme roots, and fails explicitly when a path is outside the save root instead of embedding an absolute path. Staged snapshots must contain the progress pair before the swap, so a broken copy cannot replace a valid slot.
-- **Case-variant control slots cannot be overwritten or deleted** — write/delete/load/snapshot paths and level payload writes reject a directory that differs only by case, with a migration instruction.
+- **Case-variant legacy slots cannot be overwritten or deleted** — write/delete/load/snapshot paths and level payload writes reject a directory that differs only by case, with a migration instruction.
 - **A\* heuristic no longer overflows for large valid coordinates** — the heuristic is computed in `double`; a 46341-cell straight-line path no longer degenerates into a NaN-priority search.
 - **Console input guards** — duplicate spawn names return a command error instead of escaping the frame loop, and an existing float key rejects NaN/Infinity/`1e400` instead of poisoning every later save.
 - **System blackboard startup ordering** — custom persisted types are loaded after the startup registry hook, eliminating the host-construction failure and manual `system.json` deletion.

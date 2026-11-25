@@ -30,7 +30,9 @@ CI workflow shape, local test/coverage gates, package-consumer fixture smoke cov
   a short campaign-autoplay headless smoke with checkpoints and a final save in
   a temporary user-data home. The existing runner assertions now cover
   population/food caps, camera fit, save/load/reset, and checkpoint provenance
-  in CI instead of only in a local developer run. A parity guard pins both
+  in CI instead of only in a local developer run. The smoke horizon is 150 s
+  with 60 s checkpoints so the planned campaign reaches source/corpse food
+  pressure; 65 s did not exercise the cap regression. A parity guard pins both
   wiring paths in `test-dev-suite.sh`.
 
 - **Evolution Demo is part of the root build/format gate** — the Godot demo
