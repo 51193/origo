@@ -20,8 +20,8 @@ Before reading or modifying source, read in full:
 5. **English module docs** for the change plus upstream/downstream/related
    facilities (§1.3): the `docs/<mirror-path>/` manual entry.
 6. **`_origo_local/README.md` when present** — single-book buffer; read the
-   root README (live status/index) and every numbered chapter relevant to the
-   task. Full protocol: `docs/META.en.md` §Local Agent Work Buffer.
+   root README and numbered chapters. Full protocol: `docs/META.en.md`
+   §Local Agent Work Buffer.
 
 `docs/` contains the English manual and module rationale. Read docs first, then
 follow the chain into source; manual rationale is required context.
@@ -79,6 +79,7 @@ collaboration contracts.
 - Keep links pointed at existing English manual entries and root files.
 - Documentation is reviewed and tested through the normal format, test, and CI
   gates; generated docs are committed and docs-gated.
+- Demo docs: read `samples/<Demo>/Docs/` — design/playtest, not API.
 
 ### 1.7 Source Code Comments — English Only, IntelliSense-Ready
 

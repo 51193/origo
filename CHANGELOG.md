@@ -13,6 +13,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 ### Added
 
+- **Evolution Demo campaign tests model different players** — the headless
+  campaign runner can now spend Evolution Points through named player models:
+  `planned` (save for the next capacity/survival goal), `idle` (long-interval
+  batch shopping), `cheapest` (buy the cheapest core ability), and `greedy`
+  (buy-everything control). A fresh benchmark starts at zero
+  points/unlocks, purchases go through the normal cost/prerequisite/milestone
+  gates, one policy decision is logged with points before/after, and the
+  strategy is included in `DEMO_CAMPAIGN`/`DEMO_BENCHMARK_OK`. Campaign
+  design/playtest docs and compact strategy baselines now live under
+  `samples/Origo.EvolutionDemo/Docs/`.
+
+- **Evolution Demo analysis adds food-access, origin, and diet observability** —
+  the genome analysis tool now reports food inventory by type (soft/tough/
+  toxic/corpse), live patch count/radius/coverage, per-creature food access
+  (pickup/sense/300/600 counts and nearest food/source distance), generation-0
+  founder share, and exact living/experienced/controller diet composition. The
+  timeline CSV adds these columns plus interval population/birth/kill/death
+  estimates; `--timeline-percentiles` adds p50/p90/p95 for key features, and
+  `--features-csv` writes one row per analyzed creature with every feature and
+  its cluster. The HTML report, metrics JSON (including controller counters),
+  and warnings now expose the same ecology numbers, including a stale
+  `world.config` patch-count warning and a genotype-enrichment caveat. Diet
+  means remain over all creatures (zero-meal creatures contribute 0), so the
+  new living/experienced/controller columns are the population-diet view. In
+  metrics JSON, the numeric `saves[].food` count is unchanged; the typed
+  inventory is `saves[].foodInventory`.
 - **Evolution Demo adds a primordial campaign progression** — New Pond
   defaults to a campaign start with 24 founders in a 700-unit pond, basic
   Vision/feeding reflexes, and soft-only food. Account-wide milestone rewards
@@ -93,6 +119,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   headless smoke verifies every expected checkpoint.
 
 ### Changed
+
+- **Evolution Demo campaign autoplay defaults to a player model** —
+  `ORIGO_DEMO_CAMPAIGN_AUTOPLAY=1` now maps to the fresh-start `planned`
+  strategy instead of buying every affordable unlock on every tick from a
+  smoke head start. `ORIGO_DEMO_CAMPAIGN_STRATEGY=greedy` keeps the
+  buy-everything control; `ORIGO_DEMO_CAMPAIGN_FRESH=0` keeps smoke-earned
+  points and milestones without buying during the smoke phase.
 
 - **Evolution Demo charges the compiled energy budget** — body tissue, neural
   tissue, and genome complexity now cost a per-second upkeep derived from the
@@ -265,6 +298,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   slot before upgrading. The default atomic-write layout is unchanged.
 
 ### Fixed
+
+- **Evolution Demo food sources respect corpse pending food** — food sources
+  now use the current tick's food count and account for corpse/feed food
+  pending in the same tick, so a source burst plus carcass release can no
+  longer exceed `FoodCap` (the realistic campaign smoke caught 715/700).
 
 - **Evolution Demo content reloads are transactional** — a valid external
   content pack replaces the live snapshot only after the handler registries

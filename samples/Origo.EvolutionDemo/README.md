@@ -1,7 +1,8 @@
 # Origo Evolution Demo
 
 A playable idle artificial-life sandbox built on `Origo.Core` and
-`Origo.GodotAdapter`.
+`Origo.GodotAdapter`. Design/playtest notes and archived player-model baselines
+live in [Docs](Docs/README.md).
 
 ## What you do
 
@@ -247,19 +248,36 @@ cap/rate, and additional food sources to the active pond. Campaign profiles use
 schema version 2; old schema-1 placeholder profiles are quarantined and start
 fresh rather than carrying the old placeholder point balance.
 
-For automated playtesting, set `ORIGO_DEMO_CAMPAIGN_AUTOPLAY=1` on a headless
-run; the smoke runner starts Campaign, buys affordable unlocks in tree order,
-seeds innovators, and reports `DEMO_CAMPAIGN` plus the usual benchmark line:
+For automated playtesting, the smoke runner starts Campaign and uses a named
+**player model** to spend Evolution Points. A fresh benchmark starts from zero
+points/unlocks (the 10 s smoke/load phase no longer buys anything), purchases
+are applied through the normal unlock gates, and every purchase is logged:
 
 ```bash
-ORIGO_DEMO_CAMPAIGN_AUTOPLAY=1 \
+ORIGO_DEMO_CAMPAIGN_STRATEGY=planned \
+ORIGO_DEMO_CAMPAIGN_FRESH=1 \
+ORIGO_DEMO_CAMPAIGN_PURCHASE_LOG="$PWD/planned-purchases.csv" \
 bash samples/Origo.EvolutionDemo/run-demo.sh --no-build --headless \
-  --seconds 5 --fast-forward 3600 --save-slot campaign
+  --seconds 2 --fast-forward 3600 --checkpoint-interval 300 --save-slot campaign
 ```
+
+| Strategy | Player model | Default interval |
+|---|---|---|
+| `planned` | Goal-oriented: save for the next capacity/survival target, one purchase per decision | 10 s |
+| `idle` | Idle/returning: visit the shop at long intervals and buy everything affordable | 300 s |
+| `cheapest` | Casual: buy the cheapest currently available core ability | 15 s |
+| `greedy` | Development control: buy every affordable ability on every tick | every tick |
+
+`ORIGO_DEMO_CAMPAIGN_AUTOPLAY=1` remains a compatibility alias and now maps to
+`planned`. `ORIGO_DEMO_CAMPAIGN_FRESH=0` preserves the old smoke-earned
+points/milestones for comparison. `DEMO_CAMPAIGN_PURCHASE` lines record
+`time,strategy,unlock,cost,points_before,points_after`; `DEMO_CAMPAIGN` adds the
+strategy, purchase count, and first/last purchase time. The plan order and the
+selected baseline data are documented in [Docs/campaign-baselines.md](Docs/campaign-baselines.md).
 
 The interactive windowed run is the normal `run-demo.sh` command; Campaign
 mode is selected by default in the New Pond panel. Use a fresh
-`EVOLUTION_DEMO_SMOKE_HOME` for each autoplay comparison: the account profile
+`EVOLUTION_DEMO_SMOKE_HOME` for each strategy comparison: the account profile
 persists unlocks and points across runs by design.
 
 JSON content packs live under `Content/` and are polled by

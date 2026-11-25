@@ -8,7 +8,9 @@ strategies while Origo owns runtime orchestration and persistence.
 
 The runnable [Evolution Demo](../../samples/README.md) is the consumer-facing
 example built on the local framework projects, with a headless smoke path and
-local analysis tools. The [package-consumer fixture](shell-package-consumer.en.md)
+local analysis tools. Its design/playtest documentation lives separately under
+[demo Docs](../../samples/Origo.EvolutionDemo/Docs/README.md); it is not
+framework API guidance. The [package-consumer fixture](shell-package-consumer.en.md)
 remains the package-adoption reference. Use the capability map and task
 documents below for the framework API.
 

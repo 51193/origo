@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using Origo.EvolutionDemo.Logic;
 
 namespace Origo.EvolutionDemo.Analysis.IO;
 
@@ -160,7 +161,22 @@ public static class SaveSnapshotReader
                     skipped.Add(new CreatureSkip(entity.Name, reason));
             }
 
-            var warnings = BuildWarnings(path, malformedEntities, unknownKindEntities, skipped.Count);
+            var foods = new List<FoodRecord>();
+            var foodWithoutPosition = 0;
+            foreach (var entity in entities.Where(static entity => entity.Kind == "food"))
+            {
+                var food = FoodRecord.From(entity);
+                if (!food.HasPosition)
+                    foodWithoutPosition++;
+                foods.Add(food);
+            }
+
+            var foodSources = new List<FoodSourceRecord>();
+            foreach (var entity in entities.Where(static entity => entity.Kind == "food_source"))
+                foodSources.Add(FoodSourceRecord.From(entity));
+
+            var warnings = BuildWarnings(
+                path, malformedEntities, unknownKindEntities, skipped.Count, foodWithoutPosition);
             return new SaveSnapshot(
                 ResolveId(path),
                 path,
@@ -169,14 +185,16 @@ public static class SaveSnapshotReader
                 creatures,
                 rawCreatureCount,
                 skipped,
-                entities.Count(static entity => entity.Kind == "food"),
+                foods.Count,
                 entities.Count(static entity => entity.Kind == "corpse"),
-                entities.Count(static entity => entity.Kind == "food_source"),
+                foodSources.Count,
                 malformedEntities,
                 unknownKindEntities,
                 controllerNumbers,
                 controllerStrings,
                 controllerBooleans,
+                foods,
+                foodSources,
                 warnings);
         }
     }
@@ -185,7 +203,8 @@ public static class SaveSnapshotReader
         string path,
         int malformedEntities,
         int unknownKindEntities,
-        int skippedCreatures)
+        int skippedCreatures,
+        int foodWithoutPosition)
     {
         var warnings = new List<string>();
         if (malformedEntities > 0)
@@ -200,6 +219,10 @@ public static class SaveSnapshotReader
             warnings.Add(
                 $"Save '{path}' contains {skippedCreatures} creature(s) without a usable evo.bodyGenome; "
                 + "they are reported as skipped and fail the run unless --allow-skips is passed.");
+        if (foodWithoutPosition > 0)
+            warnings.Add(
+                $"Save '{path}' contains {foodWithoutPosition} food entity/entities without finite "
+                + "evo.x/evo.y; they are counted but excluded from spatial food-access metrics.");
         var saveRoot = ResolveSaveRoot(path);
         if (saveRoot is not null)
         {
@@ -300,6 +323,8 @@ public sealed record CreatureSkip(string Name, string Reason);
 /// <param name="ControllerNumbers">Numeric controller values.</param>
 /// <param name="ControllerStrings">String controller values.</param>
 /// <param name="ControllerBooleans">Boolean controller values.</param>
+/// <param name="Foods">Typed food entities with positions.</param>
+/// <param name="FoodSourceEntities">Food-source entities with local production state.</param>
 /// <param name="Warnings">Reader warnings (integrity markers, ignored entities, skipped creatures).</param>
 public sealed record SaveSnapshot(
     string Id,
@@ -317,7 +342,82 @@ public sealed record SaveSnapshot(
     IReadOnlyDictionary<string, double> ControllerNumbers,
     IReadOnlyDictionary<string, string> ControllerStrings,
     IReadOnlyDictionary<string, bool> ControllerBooleans,
+    IReadOnlyList<FoodRecord> Foods,
+    IReadOnlyList<FoodSourceRecord> FoodSourceEntities,
     IReadOnlyList<string> Warnings);
+
+/// <summary>One food entity with its typed and spatial attributes.</summary>
+/// <param name="Name">Entity name.</param>
+/// <param name="X">World X position; NaN when the save has no finite position.</param>
+/// <param name="Y">World Y position; NaN when the save has no finite position.</param>
+/// <param name="Type">Food category (soft, tough, or toxic).</param>
+/// <param name="FromCorpse">True when the food was released by a corpse.</param>
+/// <param name="HasPosition">True when both coordinates are finite and usable for spatial metrics.</param>
+public sealed record FoodRecord(
+    string Name,
+    double X,
+    double Y,
+    FoodType Type,
+    bool FromCorpse,
+    bool HasPosition)
+{
+    internal static FoodRecord From(EntityRecord entity)
+    {
+        var x = entity.Values.TryGetValue("evo.x", out var xValue) && xValue.Number is { } xNumber
+            ? xNumber : double.NaN;
+        var y = entity.Values.TryGetValue("evo.y", out var yValue) && yValue.Number is { } yNumber
+            ? yNumber : double.NaN;
+        var type = entity.Values.TryGetValue("food.type", out var typeValue) && typeValue.Number is { } typeNumber
+            ? (FoodType)System.Math.Clamp((int)typeNumber, 0, 2)
+            : FoodType.Soft;
+        var fromCorpse = entity.Values.TryGetValue("food.fromCorpse", out var corpseValue)
+            && corpseValue.Boolean is true;
+        return new FoodRecord(entity.Name, x, y, type, fromCorpse,
+            double.IsFinite(x) && double.IsFinite(y));
+    }
+}
+
+/// <summary>One adaptive food source and its local production state.</summary>
+/// <param name="Name">Entity name.</param>
+/// <param name="X">World X position; NaN when missing.</param>
+/// <param name="Y">World Y position; NaN when missing.</param>
+/// <param name="LocalFood">Food count near the source at save time.</param>
+/// <param name="LocalCapacity">Configured local food capacity.</param>
+/// <param name="SpawnCount">Successful spawn bursts recorded by the source.</param>
+/// <param name="HasPosition">True when both coordinates are finite.</param>
+public sealed record FoodSourceRecord(
+    string Name,
+    double X,
+    double Y,
+    int LocalFood,
+    int LocalCapacity,
+    int SpawnCount,
+    bool HasPosition)
+{
+    internal static FoodSourceRecord From(EntityRecord entity)
+    {
+        double Number(string key)
+        {
+            return entity.Values.TryGetValue(key, out var value) && value.Number is { } number
+                ? number
+                : double.NaN;
+        }
+
+        var x = Number("evo.x");
+        var y = Number("evo.y");
+        var localFood = Number("source.localFood");
+        var localCapacity = Number("source.localCapacity");
+        var spawnCount = Number("source.spawnCount");
+        return new FoodSourceRecord(
+            entity.Name,
+            x,
+            y,
+            double.IsFinite(localFood) ? (int)localFood : 0,
+            double.IsFinite(localCapacity) ? (int)localCapacity : 0,
+            double.IsFinite(spawnCount) ? (int)spawnCount : 0,
+            double.IsFinite(x) && double.IsFinite(y));
+    }
+}
 
 /// <summary>Flattened creature record from a v7 save.</summary>
 public sealed record CreatureRecord(
@@ -351,7 +451,8 @@ public sealed record CreatureRecord(
     double SpikeRadius,
     double BasalMetabolism,
     double MaxAge,
-    double BodyRadius)
+    double BodyRadius,
+    double FoodPickupRadius)
 {
     internal static bool TryCreate(EntityRecord entity, out CreatureRecord creature, out string reason)
     {
@@ -382,7 +483,7 @@ public sealed record CreatureRecord(
             Integer("evo.organMask"), Integer("evo.spikeCount", 1),
             Number("evo.moveSpeed"), Number("evo.turnSpeed"), Number("evo.senseRange"),
             Number("evo.spikeRadius"), Number("evo.basalMetabolism"), Number("evo.maxAge"),
-            Number("evo.bodyRadius"));
+            Number("evo.bodyRadius"), Number("evo.foodPickupRadius"));
         return true;
     }
 }

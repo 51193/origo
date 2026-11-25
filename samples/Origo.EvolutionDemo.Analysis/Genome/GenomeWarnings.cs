@@ -18,6 +18,21 @@ public static class GenomeWarnings
     {
         ArgumentNullException.ThrowIfNull(input);
         var warnings = new List<string>(input.ReaderWarnings);
+        foreach (var warning in input.Ecology
+            .SelectMany(static ecology => ecology.Warnings)
+            .Distinct(StringComparer.Ordinal))
+            warnings.Add(warning);
+        var founderShare = input.Ecology.Count == 0
+            ? 0d
+            : input.Ecology.Max(static ecology => ecology.FounderShare);
+        if (founderShare >= 0.05d)
+            warnings.Add(string.Create(CultureInfo.InvariantCulture,
+                $"{founderShare:0.0%} of the parsed creatures are generation 0; founder/enrichment injection makes generation, lineage, and cohort-based cluster differences non-evolutionary."));
+        if (input.Enrichment.Count > 0
+            && (string.Equals(input.Options.Mode, "genotype", StringComparison.Ordinal)
+                || string.Equals(input.Options.Mode, "all", StringComparison.Ordinal)))
+            warnings.Add(
+                $"mode '{input.Options.Mode}' clusters on gene/neural/organ features, so gene-signature enrichment describes the features that define the clusters; use the phenotype or behavior mode for an independent gene test.");
         if (input.Sampled)
             warnings.Add(string.Create(CultureInfo.InvariantCulture,
                 $"--max {input.Options.MaxCreatures} sampled {input.ConsideredCreatures} of {input.TotalCreatures} save creatures; the analyzed rows are a sample, not the full population."));

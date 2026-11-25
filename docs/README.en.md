@@ -14,13 +14,16 @@ persistence.
 | Using an AI agent | [Agent Workflow](../AGENTS.md), [Agent Reference](usage/agent-reference.en.md), and the [generated contract API](generated/contract-api.en.md) |
 | Maintaining the framework | [Contributing](../CONTRIBUTING.md), [META](META.en.md), [Release Process](release-process.en.md), and [Review Process](review-process.en.md) |
 | Running the Evolution Demo | [Samples](../samples/README.md) |
+| Reading Evolution Demo design/playtest docs | [Demo docs](../samples/Origo.EvolutionDemo/Docs/README.md) |
 | Looking for a specific module | [Project Module Index](#project-module-index) |
 
 A runnable Evolution Demo and its local analysis tools live in
 [`samples/`](../samples/README.md). The demo is a consumer-facing example built
 on the local framework projects; the capability map, architecture documents, and
 the tested [package-consumer fixture](usage/shell-package-consumer.en.md) remain
-the API references.
+the API references. Demo design, playtest, and balance-baseline documents live
+under [`samples/Origo.EvolutionDemo/Docs/`](../samples/Origo.EvolutionDemo/Docs/README.md);
+they are intentionally separate from this framework manual.
 
 ## What Origo owns
 

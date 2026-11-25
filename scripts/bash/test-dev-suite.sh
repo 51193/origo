@@ -108,9 +108,9 @@ grep -Fq 'samples/Origo.EvolutionDemo/run-demo.sh' scripts/bash/godot-test.sh \
     || FAIL "godot-test.sh does not run the Evolution Demo acceptance smoke"
 grep -Eq 'ORIGO_DEMO_CAMPAIGN_AUTOPLAY=1([[:space:]]|$)' scripts/bash/godot-test.sh \
     || FAIL "godot-test.sh demo smoke does not exercise campaign camera autoplay"
-grep -Eq -- '--fast-forward 65([[:space:]]|$)' scripts/bash/godot-test.sh \
+grep -Eq -- '--fast-forward 150([[:space:]]|$)' scripts/bash/godot-test.sh \
     || FAIL "godot-test.sh demo smoke does not exercise the checkpoint window"
-grep -Eq -- '--checkpoint-interval 30([[:space:]]|$)' scripts/bash/godot-test.sh \
+grep -Eq -- '--checkpoint-interval 60([[:space:]]|$)' scripts/bash/godot-test.sh \
     || FAIL "godot-test.sh demo smoke does not exercise checkpoint provenance"
 grep -Eq -- '--save-slot ci_smoke([[:space:]]|$)' scripts/bash/godot-test.sh \
     || FAIL "godot-test.sh demo smoke does not save the benchmark slot"
@@ -118,9 +118,9 @@ grep -Fq 'Invoke-OrigoDemoAcceptanceSmoke -GodotBinary $godot' scripts/powershel
     || FAIL "godot-test.ps1 does not invoke the Evolution Demo acceptance smoke"
 grep -Fq "ORIGO_DEMO_CAMPAIGN_AUTOPLAY = '1'" scripts/powershell/godot-test.ps1 \
     || FAIL "godot-test.ps1 demo smoke does not exercise campaign camera autoplay"
-grep -Fq "ORIGO_DEMO_SMOKE_FAST_FORWARD = '65'" scripts/powershell/godot-test.ps1 \
+grep -Fq "ORIGO_DEMO_SMOKE_FAST_FORWARD = '150'" scripts/powershell/godot-test.ps1 \
     || FAIL "godot-test.ps1 demo smoke does not exercise the checkpoint window"
-grep -Fq "ORIGO_DEMO_SMOKE_CHECKPOINT_INTERVAL = '30'" scripts/powershell/godot-test.ps1 \
+grep -Fq "ORIGO_DEMO_SMOKE_CHECKPOINT_INTERVAL = '60'" scripts/powershell/godot-test.ps1 \
     || FAIL "godot-test.ps1 demo smoke does not exercise checkpoint provenance"
 grep -Fq "ORIGO_DEMO_SMOKE_SAVE_SLOT = 'ci_smoke'" scripts/powershell/godot-test.ps1 \
     || FAIL "godot-test.ps1 demo smoke does not save the benchmark slot"

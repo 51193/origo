@@ -71,6 +71,7 @@ public static class FeatureExtractor
             foreach (var skip in save.SkippedCreatures)
                 skips.Add(new SkippedCreature(save.Path, skip.Name, skip.Reason));
             var creatures = save.Creatures;
+            var accessIndex = new FoodAccessIndex(save.Foods);
             if (maxCreatures > 0 && creatures.Count > maxCreatures)
             {
                 // The seed uses the save's position in the canonical path-sorted
@@ -85,7 +86,7 @@ public static class FeatureExtractor
             {
                 try
                 {
-                    rows.Add(ExtractOne(save, creature));
+                    rows.Add(ExtractOne(save, creature, accessIndex));
                 }
                 catch (Exception ex) when (ex is InvalidDataException or InvalidOperationException
                     or ArgumentException or FormatException or IOException)
@@ -99,7 +100,8 @@ public static class FeatureExtractor
         return new FeatureExtractionResult(rows, total, considered, skips);
     }
 
-    private static FeatureRow ExtractOne(SaveSnapshot save, CreatureRecord creature)
+    private static FeatureRow ExtractOne(
+        SaveSnapshot save, CreatureRecord creature, FoodAccessIndex accessIndex)
     {
         var genome = GenomeV4Codec.FromSerialized(creature.Genome);
         var phenotype = GenomeV4Compiler.Compile(genome, ExpressionContextV4.Neutral);
@@ -154,6 +156,7 @@ public static class FeatureExtractor
             ["body.basalMetabolism"] = creature.BasalMetabolism,
             ["body.maxAge"] = creature.MaxAge,
             ["body.spikeCount"] = creature.SpikeCount,
+            ["body.foodPickupRadius"] = creature.FoodPickupRadius,
             ["behavior.age"] = creature.Age,
             ["behavior.energyRatio"] = creature.Energy / System.Math.Max(1d, creature.MaxEnergy),
             ["behavior.drive"] = creature.Drive,
@@ -171,9 +174,22 @@ public static class FeatureExtractor
             ["behavior.toughMeals"] = creature.ToughMeals,
             ["behavior.toxicMeals"] = creature.ToxicMeals,
             ["behavior.generation"] = creature.Generation,
+            ["origin.generationZero"] = creature.Generation == 0 ? 1d : 0d,
+            ["origin.generationLe2"] = creature.Generation <= 2 ? 1d : 0d,
+            ["access.foodInPickup"] = accessIndex.CountWithin(
+                creature.X, creature.Y, System.Math.Max(0d, creature.FoodPickupRadius)),
+            ["access.foodInSense"] = accessIndex.CountWithin(
+                creature.X, creature.Y, System.Math.Max(0d, creature.SenseRange)),
+            ["access.foodIn300"] = accessIndex.CountWithin(creature.X, creature.Y, 300d),
+            ["access.foodIn600"] = accessIndex.CountWithin(
+                creature.X, creature.Y, FoodAccessIndex.MaxDistance),
+            ["access.nearestFoodDistance"] = accessIndex.NearestDistance(
+                creature.X, creature.Y, FoodAccessIndex.MaxDistance),
+            ["access.nearestSourceDistance"] = NearestSourceDistance(save, creature),
         };
         var totalMeals = creature.SoftMeals + creature.ToughMeals + creature.ToxicMeals;
         values["diet.totalMeals"] = totalMeals;
+        values["diet.hasMeals"] = totalMeals > 0 ? 1d : 0d;
         var softShare = totalMeals == 0 ? 0d : (double)creature.SoftMeals / totalMeals;
         var toughShare = totalMeals == 0 ? 0d : (double)creature.ToughMeals / totalMeals;
         var toxicShare = totalMeals == 0 ? 0d : (double)creature.ToxicMeals / totalMeals;
@@ -184,6 +200,13 @@ public static class FeatureExtractor
         var dominance = System.Math.Max(softShare, System.Math.Max(toughShare, toxicShare));
         values["diet.dominance"] = dominance;
         values["diet.entropy"] = totalMeals == 0 ? 0d : DietEntropy(softShare, toughShare, toxicShare);
+        values["diet.corpseOfSoftShare"] = creature.SoftMeals == 0
+            ? 0d
+            : System.Math.Clamp(creature.CorpseMeals / (double)creature.SoftMeals, 0d, 1d);
+        var ageSeconds = System.Math.Max(1d, creature.Age);
+        values["behavior.killsPer100s"] = creature.Kills / ageSeconds * 100d;
+        values["behavior.mealsPer100s"] = totalMeals / ageSeconds * 100d;
+        values["behavior.childrenPer100s"] = creature.Children / ageSeconds * 100d;
 
         foreach (var organKind in Enum.GetValues<OrganKindV4>())
             values[$"organ.{organKind}"] =
@@ -199,6 +222,23 @@ public static class FeatureExtractor
             .ToHashSet(StringComparer.Ordinal);
         return new FeatureRow(save.Path, save.Time, creature.Name, creature.Lineage,
             creature.Generation, values, signatures);
+    }
+
+    private static double NearestSourceDistance(SaveSnapshot save, CreatureRecord creature)
+    {
+        var nearest = double.PositiveInfinity;
+        foreach (var source in save.FoodSourceEntities)
+        {
+            if (!source.HasPosition)
+                continue;
+            var dx = source.X - creature.X;
+            var dy = source.Y - creature.Y;
+            var distance = System.Math.Sqrt((dx * dx) + (dy * dy));
+            if (distance < nearest)
+                nearest = distance;
+        }
+
+        return double.IsFinite(nearest) ? nearest : 10_000d;
     }
 
     private static float EffectiveTrait(LifeTraitKindV4 kind, BodyPhenotype body) => kind switch

@@ -33,6 +33,26 @@ public sealed class GenomeReportTests
         Assert.Contains("PC1 (60.00% explained variance)", html, StringComparison.Ordinal);
         Assert.Contains("PC2 (25.00% explained variance)", html, StringComparison.Ordinal);
         Assert.Contains("m=4 tested", html, StringComparison.Ordinal);
+        Assert.Contains("Food, access, and origin", html, StringComparison.Ordinal);
+        Assert.Contains("food in sense", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Build_FounderInjectionAndGenotypeEnrichmentProduceWarnings()
+    {
+        var baseInput = ReportFixture.Create();
+        var ecology = baseInput.Ecology.Select(item => item with
+        {
+            FounderShare = 0.2d,
+            Warnings = ["serialized patch count disagrees"],
+        }).ToArray();
+        var input = baseInput with { Ecology = ecology };
+
+        var warnings = GenomeWarnings.Build(input);
+
+        Assert.Contains(warnings, warning => warning.Contains("generation 0", StringComparison.Ordinal));
+        Assert.Contains(warnings, warning => warning.Contains("enrichment describes", StringComparison.Ordinal));
+        Assert.Contains("serialized patch count disagrees", warnings);
     }
 
     [Fact]
@@ -179,6 +199,11 @@ public sealed class GenomeReportTests
         var options = json.GetProperty("options");
         Assert.Equal(1, options.GetProperty("seed").GetInt32());
         Assert.Equal(10, options.GetProperty("minClusterSize").GetInt32());
+        var firstSave = json.GetProperty("saves")[0];
+        Assert.Equal(JsonValueKind.Number, firstSave.GetProperty("food").ValueKind);
+        Assert.Equal(4, firstSave.GetProperty("foodInventory").GetProperty("soft").GetInt32());
+        Assert.Equal(0.5d, firstSave.GetProperty("access").GetProperty("foodInSenseShare").GetDouble(), 6);
+        Assert.True(firstSave.GetProperty("controller").GetProperty("numbers").TryGetProperty("evo.tick", out _));
     }
 
     [Fact]

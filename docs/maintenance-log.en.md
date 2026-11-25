@@ -10,6 +10,14 @@ Repository-facing maintenance changes that do not change user-visible runtime, p
 
 CI workflow shape, local test/coverage gates, package-consumer fixture smoke coverage, shell-API baseline tooling, PowerShell/Bash parity, and developer-suite commands.
 
+- **Sample demo documentation has an explicit boundary** — AGENTS and the
+  documentation meta-rule now distinguish the framework manual under `docs/`
+  from design/playtest documentation under `samples/<Demo>/Docs/`. The latter
+  uses problem → thinking → decision → result and owns player-model baselines;
+  `docs/` may link to it but must not absorb it. The Evolution Demo's first
+  campaign baselines and the audit finding that no demo design docs were
+  scattered under `docs/` are recorded in the sample docs.
+
 - **Godot export-template downloads are checksum-pinned** — the release
   template installer now refuses an archive that does not match the SHA-512
   entry in `samples/Origo.EvolutionDemo/export-templates.sha512`, before
@@ -22,7 +30,9 @@ CI workflow shape, local test/coverage gates, package-consumer fixture smoke cov
   a short campaign-autoplay headless smoke with checkpoints and a final save in
   a temporary user-data home. The existing runner assertions now cover
   population/food caps, camera fit, save/load/reset, and checkpoint provenance
-  in CI instead of only in a local developer run. A parity guard pins both
+  in CI instead of only in a local developer run. The smoke horizon is 150 s
+  with 60 s checkpoints so the planned campaign reaches source/corpse food
+  pressure; 65 s did not exercise the cap regression. A parity guard pins both
   wiring paths in `test-dev-suite.sh`.
 
 - **Evolution Demo is part of the root build/format gate** — the Godot demo

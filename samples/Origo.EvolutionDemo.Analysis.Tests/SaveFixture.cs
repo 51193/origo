@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using Origo.EvolutionDemo.Logic;
 using Origo.EvolutionDemo.Logic.V4;
 
 namespace Origo.EvolutionDemo.Analysis.Tests;
@@ -49,7 +50,13 @@ internal static class SaveFixture
         bool includeTime = true,
         bool includeVersion = true,
         IReadOnlyDictionary<string, object>? extraControllerPairs = null,
-        bool includeDietCounters = true)
+        bool includeDietCounters = true,
+        IReadOnlyList<FoodSpec>? foodEntities = null,
+        IReadOnlyList<(double X, double Y)>? sourcePositions = null,
+        IReadOnlyList<(double X, double Y)>? creaturePositions = null,
+        double foodPickupRadius = 14d,
+        int generation = 2,
+        IReadOnlyList<int>? generations = null)
     {
         var saveRoot = Path.Combine(directory.Path, slotName);
         var sceneDirectory = Path.Combine(saveRoot, "level_pond");
@@ -78,12 +85,18 @@ internal static class SaveFixture
         for (var index = 0; index < creatures.Count; index++)
         {
             var (name, genome) = creatures[index];
+            var (creatureX, creatureY) = creaturePositions is not null && index < creaturePositions.Count
+                ? creaturePositions[index]
+                : (X: 1d + index, Y: 2d + index);
+            var creatureGeneration = generations is not null && index < generations.Count
+                ? generations[index]
+                : generation;
             var creaturePairs = new Dictionary<string, object>
             {
                 ["evo.kind"] = "creature",
                 ["evo.bodyGenome"] = genome,
-                ["evo.x"] = 1d + index,
-                ["evo.y"] = 2d + index,
+                ["evo.x"] = creatureX,
+                ["evo.y"] = creatureY,
                 ["evo.prevX"] = 1d + index,
                 ["evo.prevY"] = 2d,
                 ["evo.age"] = 30d + index,
@@ -95,7 +108,7 @@ internal static class SaveFixture
                 ["evo.aim"] = 0.3d,
                 ["evo.sprintDrive"] = 0.4d,
                 ["evo.lineage"] = 1d,
-                ["evo.generation"] = 2d,
+                ["evo.generation"] = (double)creatureGeneration,
                 ["evo.children"] = 1d,
                 ["evo.kills"] = 0d,
                 ["evo.organMask"] = 1d,
@@ -107,6 +120,7 @@ internal static class SaveFixture
                 ["evo.basalMetabolism"] = 0.8d,
                 ["evo.maxAge"] = 200d,
                 ["evo.bodyRadius"] = 5d,
+                ["evo.foodPickupRadius"] = foodPickupRadius,
             };
             if (includeDietCounters)
             {
@@ -119,14 +133,51 @@ internal static class SaveFixture
             entities.Add(Entity(name, creaturePairs));
         }
 
-        for (var index = 0; index < food; index++)
-            entities.Add(Entity($"food_{index}", new Dictionary<string, object> { ["evo.kind"] = "food" }));
+        if (foodEntities is null)
+        {
+            for (var index = 0; index < food; index++)
+                entities.Add(Entity($"food_{index}", new Dictionary<string, object> { ["evo.kind"] = "food" }));
+        }
+        else
+        {
+            foreach (var foodItem in foodEntities)
+            {
+                entities.Add(Entity(foodItem.Name, new Dictionary<string, object>
+                {
+                    ["evo.kind"] = "food",
+                    ["evo.x"] = foodItem.X,
+                    ["evo.y"] = foodItem.Y,
+                    ["food.type"] = (int)foodItem.Type,
+                    ["food.fromCorpse"] = foodItem.FromCorpse,
+                }));
+            }
+        }
+
         for (var index = 0; index < corpses; index++)
             entities.Add(Entity($"corpse_{index}", new Dictionary<string, object> { ["evo.kind"] = "corpse" }));
-        for (var index = 1; index < foodSources; index++)
-            entities.Add(Entity($"source_{index}", new Dictionary<string, object> { ["evo.kind"] = "food_source" }));
-        if (foodSources > 0)
-            entities.Add(Entity("source_0", new Dictionary<string, object> { ["evo.kind"] = "food_source" }));
+        if (sourcePositions is not null)
+        {
+            for (var index = 0; index < sourcePositions.Count; index++)
+            {
+                var (sourceX, sourceY) = sourcePositions[index];
+                entities.Add(Entity($"source_{index}", new Dictionary<string, object>
+                {
+                    ["evo.kind"] = "food_source",
+                    ["evo.x"] = sourceX,
+                    ["evo.y"] = sourceY,
+                    ["source.localFood"] = 3d,
+                    ["source.localCapacity"] = 240d,
+                    ["source.spawnCount"] = 7d,
+                }));
+            }
+        }
+        else
+        {
+            for (var index = 1; index < foodSources; index++)
+                entities.Add(Entity($"source_{index}", new Dictionary<string, object> { ["evo.kind"] = "food_source" }));
+            if (foodSources > 0)
+                entities.Add(Entity("source_0", new Dictionary<string, object> { ["evo.kind"] = "food_source" }));
+        }
 
         var scenePath = Path.Combine(sceneDirectory, "snd_scene.json");
         File.WriteAllText(scenePath, JsonSerializer.Serialize(entities, SerializerOptions));
@@ -152,6 +203,8 @@ internal static class SaveFixture
     /// <summary>Builds a list of identical named creatures carrying the same genome.</summary>
     internal static (string Name, string Genome)[] Creatures(GenomeV4 genome, int count) =>
         [.. Enumerable.Range(0, count).Select(index => ($"creature_{index}", Encode(genome)))];
+
+    internal sealed record FoodSpec(string Name, double X, double Y, FoodType Type, bool FromCorpse);
 
     private static Dictionary<string, object> Entity(string name, Dictionary<string, object> pairs)
     {

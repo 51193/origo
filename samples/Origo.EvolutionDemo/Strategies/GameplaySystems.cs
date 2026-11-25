@@ -348,7 +348,8 @@ internal sealed class FoodSourceSimulationSystem : IGameplaySystem
             || world.SensorGrid is null)
             throw new InvalidOperationException("FoodSourceSimulationSystem requires core tick state.");
         FoodSourceStrategy.TickAll(
-            world.Controller, world.SndContext, world.SensorGrid, world.FoodCount, world.Session);
+            world.Controller, world.SndContext, world.SensorGrid, world.FoodCount,
+            world.PendingFood, world.Session);
     }
 }
 

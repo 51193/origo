@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using Origo.EvolutionDemo.Analysis.IO;
+using Origo.EvolutionDemo.Logic;
 using Origo.EvolutionDemo.Logic.V4;
 using Xunit;
 
@@ -38,6 +39,38 @@ public sealed class SaveSnapshotReaderTests
         Assert.Empty(snapshot.ControllerBooleans);
         Assert.All(snapshot.Creatures, creature => Assert.Equal(genome, creature.Genome));
         Assert.Contains(snapshot.Warnings, warning => warning.Contains(".payload.sha", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Read_FoodEntitiesExposeTypePositionAndSourceState()
+    {
+        using var directory = new TemporaryDirectory();
+        var save = SaveFixture.CreateV7Save(
+            directory, "save_food",
+            SaveFixture.Creatures(GenomeV4Factory.CreateSimpleReflex(), 2),
+            foodEntities:
+            [
+                new SaveFixture.FoodSpec("food_soft", 1d, 2d, FoodType.Soft, false),
+                new SaveFixture.FoodSpec("food_tough", 3d, 4d, FoodType.Tough, false),
+                new SaveFixture.FoodSpec("food_toxic", 5d, 6d, FoodType.Toxic, false),
+                new SaveFixture.FoodSpec("food_corpse", 7d, 8d, FoodType.Soft, true),
+            ],
+            sourcePositions: [(9d, 10d)]);
+
+        var snapshot = Assert.Single(SaveSnapshotReader.Read(save));
+
+        Assert.Equal(4, snapshot.Food);
+        Assert.Equal(4, snapshot.Foods.Count);
+        Assert.Equal(2, snapshot.Foods.Count(food => food.Type == FoodType.Soft));
+        Assert.Single(snapshot.Foods, food => food.FromCorpse);
+        Assert.All(snapshot.Foods, food => Assert.True(food.HasPosition));
+        var source = Assert.Single(snapshot.FoodSourceEntities);
+        Assert.True(source.HasPosition);
+        Assert.Equal(3, source.LocalFood);
+        Assert.Equal(240, source.LocalCapacity);
+        Assert.Equal(7, source.SpawnCount);
+        Assert.Equal(14d, snapshot.Creatures[0].FoodPickupRadius);
+        Assert.DoesNotContain(snapshot.Warnings, warning => warning.Contains("without finite", StringComparison.Ordinal));
     }
 
     [Fact]

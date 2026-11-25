@@ -101,10 +101,90 @@ public static class GenomeMetricsJson
             writer.WriteNumber("food", save.Food);
             writer.WriteNumber("corpses", save.Corpses);
             writer.WriteNumber("foodSources", save.FoodSources);
+            var ecology = input.Ecology.FirstOrDefault(item =>
+                string.Equals(item.Path, save.Path, StringComparison.Ordinal));
+            if (ecology is not null)
+            {
+                WriteEcology(writer, ecology);
+                WriteController(writer, save);
+            }
+
             writer.WriteEndObject();
         }
 
         writer.WriteEndArray();
+    }
+
+    private static void WriteEcology(Utf8JsonWriter writer, SaveEcology ecology)
+    {
+        writer.WriteStartObject("foodInventory");
+        writer.WriteNumber("soft", ecology.Food.Soft);
+        writer.WriteNumber("tough", ecology.Food.Tough);
+        writer.WriteNumber("toxic", ecology.Food.Toxic);
+        writer.WriteNumber("corpse", ecology.Food.Corpse);
+        writer.WriteNumber("total", ecology.Food.Total);
+        writer.WriteEndObject();
+        writer.WriteStartObject("patch");
+        WriteNullableNumber(writer, "count", ecology.LivePatchCount);
+        WriteNullableNumber(writer, "radius", ecology.PatchRadius);
+        WriteNullableNumber(writer, "pondRadius", ecology.PondRadius);
+        WriteNullableNumber(writer, "coverage", ecology.PatchCoverage);
+        writer.WriteEndObject();
+        writer.WriteStartObject("origin");
+        writer.WriteNumber("founderShare", ecology.FounderShare);
+        writer.WriteNumber("meanGeneration", ecology.MeanGeneration);
+        writer.WriteNumber("maxGeneration", ecology.MaxGeneration);
+        writer.WriteEndObject();
+        writer.WriteStartObject("access");
+        writer.WriteNumber("creatures", ecology.Access.Creatures);
+        writer.WriteNumber("foodInPickupShare", ecology.Access.FractionInPickup);
+        writer.WriteNumber("foodInSenseShare", ecology.Access.FractionInSense);
+        writer.WriteNumber("foodIn300Share", ecology.Access.FractionIn300);
+        writer.WriteNumber("meanFoodInSense", ecology.Access.MeanFoodInSense);
+        writer.WriteNumber("meanFoodIn300", ecology.Access.MeanFoodIn300);
+        WriteNullableNumber(writer, "nearestFoodP50", ecology.Access.NearestFoodP50);
+        WriteNullableNumber(writer, "nearestSourceP50", ecology.Access.NearestSourceP50);
+        writer.WriteEndObject();
+        writer.WriteStartObject("diet");
+        WriteDiet(writer, "living", ecology.LivingDiet);
+        WriteDiet(writer, "experienced", ecology.ExperiencedDiet);
+        if (ecology.ControllerDiet is { } controller)
+            WriteDiet(writer, "controller", controller);
+        else
+            writer.WriteNull("controller");
+        writer.WriteNumber("experiencedCreatures", ecology.ExperiencedCreatures);
+        writer.WriteNumber("specialistShare60", ecology.SpecialistShare60);
+        WriteNullableNumber(writer, "meanExperiencedEntropy", ecology.MeanExperiencedEntropy);
+        writer.WriteEndObject();
+    }
+
+    private static void WriteDiet(Utf8JsonWriter writer, string name, DietShares diet)
+    {
+        writer.WriteStartObject(name);
+        writer.WriteNumber("soft", diet.Soft);
+        writer.WriteNumber("tough", diet.Tough);
+        writer.WriteNumber("toxic", diet.Toxic);
+        writer.WriteNumber("corpseOfSoft", diet.CorpseOfSoft);
+        writer.WriteNumber("totalMeals", diet.TotalMeals);
+        writer.WriteEndObject();
+    }
+
+    private static void WriteController(Utf8JsonWriter writer, SaveSummary save)
+    {
+        writer.WriteStartObject("controller");
+        writer.WriteStartObject("numbers");
+        foreach (var (key, value) in save.ControllerNumbers.OrderBy(static pair => pair.Key, StringComparer.Ordinal))
+            writer.WriteNumber(key, value);
+        writer.WriteEndObject();
+        writer.WriteStartObject("strings");
+        foreach (var (key, value) in save.ControllerStrings.OrderBy(static pair => pair.Key, StringComparer.Ordinal))
+            writer.WriteString(key, value);
+        writer.WriteEndObject();
+        writer.WriteStartObject("booleans");
+        foreach (var (key, value) in save.ControllerBooleans.OrderBy(static pair => pair.Key, StringComparer.Ordinal))
+            writer.WriteBoolean(key, value);
+        writer.WriteEndObject();
+        writer.WriteEndObject();
     }
 
     private static void WriteFeatures(Utf8JsonWriter writer, GenomeReportInput input)
@@ -244,6 +324,14 @@ public static class GenomeMetricsJson
     private static void WriteNullableNumber(Utf8JsonWriter writer, string property, double? value)
     {
         if (value is { } number && double.IsFinite(number))
+            writer.WriteNumber(property, number);
+        else
+            writer.WriteNull(property);
+    }
+
+    private static void WriteNullableNumber(Utf8JsonWriter writer, string property, int? value)
+    {
+        if (value is { } number)
             writer.WriteNumber(property, number);
         else
             writer.WriteNull(property);
