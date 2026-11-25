@@ -9,6 +9,12 @@ genomes forage, reproduce, mutate, and split into lineages. See the
 [demo README](Origo.EvolutionDemo/README.md) for controls, the genome layout,
 and the save/load behavior.
 
+Demo design, playtest methods, and representative-player baselines live in
+[demo Docs](Origo.EvolutionDemo/Docs/README.md). They are written for game
+design work (problem → thinking → decision → result), not as framework API
+reference; the framework manual under `docs/` intentionally links to them
+instead of duplicating them.
+
 ### Requirements
 
 - .NET SDK pinned by [`global.json`](../global.json); run

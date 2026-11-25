@@ -1,0 +1,2264 @@
+{
+ "schema": 1,
+ "date": "2026-11-25",
+ "analysis_tool_base": "0da4269d",
+ "run": "3600 simulation seconds; 300 s checkpoints; fresh profile; explicit seeds 20261101/20261132/20261133; the 20261101 screening runs used the runner default seed, which is also 20261101",
+ "selected_strategies": [
+  "planned",
+  "idle",
+  "cheapest"
+ ],
+ "control": "greedy",
+ "runs": [
+  {
+   "strategy": "planned",
+   "seed": 20261101,
+   "selected_baseline": true,
+   "purchase_interval_seconds": 10,
+   "points_final": 204,
+   "milestones": 17,
+   "unlocks": 21,
+   "purchases": 20,
+   "first_purchase_seconds": 10.1,
+   "last_purchase_seconds": 2166.0,
+   "pond_purchase_times": {
+    "1": 30.1,
+    "2": 80.6,
+    "3": 110.9,
+    "4": 141.0,
+    "5": 1056.3,
+    "6": 1955.0
+   },
+   "trajectory": {
+    "600": {
+     "population": 900,
+     "food": 1068,
+     "founder_share": 0.0,
+     "gene_count": 33.52,
+     "access_sense": 0.611,
+     "access_300": 0.807
+    },
+    "1500": {
+     "population": 1599,
+     "food": 1123,
+     "founder_share": 0.0,
+     "gene_count": 38.9,
+     "access_sense": 0.43,
+     "access_300": 0.527
+    },
+    "1800": {
+     "population": 1600,
+     "food": 734,
+     "founder_share": 0.0,
+     "gene_count": 41.08,
+     "access_sense": 0.469,
+     "access_300": 0.586
+    },
+    "3600": {
+     "population": 201,
+     "food": 1026,
+     "founder_share": 0.184,
+     "gene_count": 49.47,
+     "access_sense": 0.731,
+     "access_300": 0.896
+    }
+   },
+   "peak": {
+    "population": 1600,
+    "seconds": 1800.0
+   },
+   "final": {
+    "population": 201,
+    "food": 1026,
+    "founder_share": 0.184,
+    "gene_count": 49.47,
+    "patch_radius": 60,
+    "diet_living": [
+     0.3,
+     0.346,
+     0.354
+    ],
+    "diet_entropy": 0.928,
+    "specialist_share60": 0.108,
+    "access_sense": 0.731,
+    "access_300": 0.896,
+    "age_mean_seconds": 45.5,
+    "predation_share_last_interval": 1.009
+   },
+   "clusters": {
+    "k": 3,
+    "silhouette": 0.144,
+    "bootstrap_ari_mean": 0.572
+   },
+   "top_organs": {
+    "Vision": 0.985,
+    "SpikeOrgan": 0.945,
+    "Armor": 0.706,
+    "HardDigest": 0.602,
+    "Sprint": 0.557,
+    "CarrionSense": 0.532
+   },
+   "purchase_timeline": [
+    {
+     "time": 10.1,
+     "unlock": "unlock.forage.tough_food",
+     "cost": 20,
+     "points_before": 70,
+     "points_after": 50
+    },
+    {
+     "time": 20.1,
+     "unlock": "unlock.forage.hard_digest",
+     "cost": 30,
+     "points_before": 100,
+     "points_after": 70
+    },
+    {
+     "time": 30.1,
+     "unlock": "unlock.pond.1",
+     "cost": 30,
+     "points_before": 111,
+     "points_after": 81
+    },
+    {
+     "time": 40.2,
+     "unlock": "unlock.forage.sprint",
+     "cost": 25,
+     "points_before": 81,
+     "points_after": 56
+    },
+    {
+     "time": 50.3,
+     "unlock": "unlock.chem.toxic_food",
+     "cost": 25,
+     "points_before": 156,
+     "points_after": 131
+    },
+    {
+     "time": 60.4,
+     "unlock": "unlock.chem.toxin_resistance",
+     "cost": 30,
+     "points_before": 172,
+     "points_after": 142
+    },
+    {
+     "time": 80.6,
+     "unlock": "unlock.pond.2",
+     "cost": 60,
+     "points_before": 192,
+     "points_after": 132
+    },
+    {
+     "time": 90.7,
+     "unlock": "unlock.death.corpse",
+     "cost": 35,
+     "points_before": 133,
+     "points_after": 98
+    },
+    {
+     "time": 100.8,
+     "unlock": "unlock.carrion.sense",
+     "cost": 25,
+     "points_before": 148,
+     "points_after": 123
+    },
+    {
+     "time": 110.9,
+     "unlock": "unlock.pond.3",
+     "cost": 80,
+     "points_before": 123,
+     "points_after": 43
+    },
+    {
+     "time": 141.0,
+     "unlock": "unlock.pond.4",
+     "cost": 100,
+     "points_before": 194,
+     "points_after": 94
+    },
+    {
+     "time": 261.0,
+     "unlock": "unlock.vision.foodtype",
+     "cost": 120,
+     "points_before": 248,
+     "points_after": 128
+    },
+    {
+     "time": 271.0,
+     "unlock": "unlock.predation.spike",
+     "cost": 70,
+     "points_before": 129,
+     "points_after": 59
+    },
+    {
+     "time": 441.0,
+     "unlock": "unlock.predation.battery",
+     "cost": 35,
+     "points_before": 114,
+     "points_after": 79
+    },
+    {
+     "time": 451.0,
+     "unlock": "unlock.predation.armor",
+     "cost": 40,
+     "points_before": 80,
+     "points_after": 40
+    },
+    {
+     "time": 1056.3,
+     "unlock": "unlock.pond.5",
+     "cost": 140,
+     "points_before": 140,
+     "points_after": 0
+    },
+    {
+     "time": 1955.0,
+     "unlock": "unlock.pond.6",
+     "cost": 180,
+     "points_before": 180,
+     "points_after": 0
+    },
+    {
+     "time": 2145.9,
+     "unlock": "unlock.sense.creature",
+     "cost": 25,
+     "points_before": 256,
+     "points_after": 231
+    },
+    {
+     "time": 2156.0,
+     "unlock": "unlock.sense.rhythm",
+     "cost": 25,
+     "points_before": 231,
+     "points_after": 206
+    },
+    {
+     "time": 2166.0,
+     "unlock": "unlock.spawn.enrichment",
+     "cost": 50,
+     "points_before": 207,
+     "points_after": 157
+    }
+   ]
+  },
+  {
+   "strategy": "planned",
+   "seed": 20261132,
+   "selected_baseline": true,
+   "purchase_interval_seconds": 10,
+   "points_final": 4,
+   "milestones": 16,
+   "unlocks": 20,
+   "purchases": 19,
+   "first_purchase_seconds": 10.1,
+   "last_purchase_seconds": 3457.2,
+   "pond_purchase_times": {
+    "1": 30.1,
+    "2": 141.0,
+    "3": 171.0,
+    "4": 191.0,
+    "5": 1056.3,
+    "6": 1955.0
+   },
+   "trajectory": {
+    "600": {
+     "population": 898,
+     "food": 1085,
+     "founder_share": 0.0,
+     "gene_count": 41.55,
+     "access_sense": 0.351,
+     "access_300": 0.568
+    },
+    "1500": {
+     "population": 1599,
+     "food": 259,
+     "founder_share": 0.0,
+     "gene_count": 47.78,
+     "access_sense": 0.294,
+     "access_300": 0.359
+    },
+    "1800": {
+     "population": 1597,
+     "food": 616,
+     "founder_share": 0.0,
+     "gene_count": 47.54,
+     "access_sense": 0.429,
+     "access_300": 0.517
+    },
+    "3600": {
+     "population": 1663,
+     "food": 695,
+     "founder_share": 0.0,
+     "gene_count": 64.22,
+     "access_sense": 0.446,
+     "access_300": 0.59
+    }
+   },
+   "peak": {
+    "population": 1689,
+    "seconds": 3300.1
+   },
+   "final": {
+    "population": 1663,
+    "food": 695,
+    "founder_share": 0.0,
+    "gene_count": 64.22,
+    "patch_radius": 60,
+    "diet_living": [
+     0.315,
+     0.348,
+     0.338
+    ],
+    "diet_entropy": 0.93,
+    "specialist_share60": 0.078,
+    "access_sense": 0.446,
+    "access_300": 0.59,
+    "age_mean_seconds": 93.3,
+    "predation_share_last_interval": 0.3
+   },
+   "clusters": {
+    "k": 2,
+    "silhouette": 0.292,
+    "bootstrap_ari_mean": 1
+   },
+   "top_organs": {
+    "Vision": 0.999,
+    "HardDigest": 0.542,
+    "Sprint": 0.508,
+    "Armor": 0.49,
+    "ToxinResistance": 0.448,
+    "SpikeBattery": 0.188
+   },
+   "purchase_timeline": [
+    {
+     "time": 10.1,
+     "unlock": "unlock.forage.tough_food",
+     "cost": 20,
+     "points_before": 70,
+     "points_after": 50
+    },
+    {
+     "time": 20.1,
+     "unlock": "unlock.forage.hard_digest",
+     "cost": 30,
+     "points_before": 100,
+     "points_after": 70
+    },
+    {
+     "time": 30.1,
+     "unlock": "unlock.pond.1",
+     "cost": 30,
+     "points_before": 111,
+     "points_after": 81
+    },
+    {
+     "time": 40.2,
+     "unlock": "unlock.forage.sprint",
+     "cost": 25,
+     "points_before": 81,
+     "points_after": 56
+    },
+    {
+     "time": 50.3,
+     "unlock": "unlock.chem.toxic_food",
+     "cost": 25,
+     "points_before": 156,
+     "points_after": 131
+    },
+    {
+     "time": 60.4,
+     "unlock": "unlock.chem.toxin_resistance",
+     "cost": 30,
+     "points_before": 172,
+     "points_after": 142
+    },
+    {
+     "time": 141.0,
+     "unlock": "unlock.pond.2",
+     "cost": 60,
+     "points_before": 194,
+     "points_after": 134
+    },
+    {
+     "time": 151.0,
+     "unlock": "unlock.death.corpse",
+     "cost": 35,
+     "points_before": 135,
+     "points_after": 100
+    },
+    {
+     "time": 161.0,
+     "unlock": "unlock.carrion.sense",
+     "cost": 25,
+     "points_before": 150,
+     "points_after": 125
+    },
+    {
+     "time": 171.0,
+     "unlock": "unlock.pond.3",
+     "cost": 80,
+     "points_before": 125,
+     "points_after": 45
+    },
+    {
+     "time": 191.0,
+     "unlock": "unlock.pond.4",
+     "cost": 100,
+     "points_before": 196,
+     "points_after": 96
+    },
+    {
+     "time": 321.0,
+     "unlock": "unlock.vision.foodtype",
+     "cost": 120,
+     "points_before": 250,
+     "points_after": 130
+    },
+    {
+     "time": 331.0,
+     "unlock": "unlock.predation.spike",
+     "cost": 70,
+     "points_before": 131,
+     "points_after": 61
+    },
+    {
+     "time": 914.9,
+     "unlock": "unlock.predation.battery",
+     "cost": 35,
+     "points_before": 210,
+     "points_after": 175
+    },
+    {
+     "time": 925.0,
+     "unlock": "unlock.predation.armor",
+     "cost": 40,
+     "points_before": 175,
+     "points_after": 135
+    },
+    {
+     "time": 1056.3,
+     "unlock": "unlock.pond.5",
+     "cost": 140,
+     "points_before": 140,
+     "points_after": 0
+    },
+    {
+     "time": 1955.0,
+     "unlock": "unlock.pond.6",
+     "cost": 180,
+     "points_before": 180,
+     "points_after": 0
+    },
+    {
+     "time": 2706.5,
+     "unlock": "unlock.sense.creature",
+     "cost": 25,
+     "points_before": 25,
+     "points_after": 0
+    },
+    {
+     "time": 3457.2,
+     "unlock": "unlock.sense.rhythm",
+     "cost": 25,
+     "points_before": 25,
+     "points_after": 0
+    }
+   ]
+  },
+  {
+   "strategy": "planned",
+   "seed": 20261133,
+   "selected_baseline": true,
+   "purchase_interval_seconds": 10,
+   "points_final": 204,
+   "milestones": 17,
+   "unlocks": 21,
+   "purchases": 20,
+   "first_purchase_seconds": 10.1,
+   "last_purchase_seconds": 2045.8,
+   "pond_purchase_times": {
+    "1": 40.2,
+    "2": 331.0,
+    "3": 361.0,
+    "4": 381.0,
+    "5": 1197.7,
+    "6": 1955.0
+   },
+   "trajectory": {
+    "600": {
+     "population": 899,
+     "food": 772,
+     "founder_share": 0.003,
+     "gene_count": 34.63,
+     "access_sense": 0.538,
+     "access_300": 0.593
+    },
+    "1500": {
+     "population": 1598,
+     "food": 415,
+     "founder_share": 0.0,
+     "gene_count": 38.67,
+     "access_sense": 0.556,
+     "access_300": 0.647
+    },
+    "1800": {
+     "population": 1549,
+     "food": 313,
+     "founder_share": 0.0,
+     "gene_count": 39.13,
+     "access_sense": 0.434,
+     "access_300": 0.498
+    },
+    "3600": {
+     "population": 341,
+     "food": 904,
+     "founder_share": 0.132,
+     "gene_count": 55.44,
+     "access_sense": 0.783,
+     "access_300": 0.865
+    }
+   },
+   "peak": {
+    "population": 1598,
+    "seconds": 1500.1
+   },
+   "final": {
+    "population": 341,
+    "food": 904,
+    "founder_share": 0.132,
+    "gene_count": 55.44,
+    "patch_radius": 60,
+    "diet_living": [
+     0.326,
+     0.338,
+     0.336
+    ],
+    "diet_entropy": 0.92,
+    "specialist_share60": 0.086,
+    "access_sense": 0.783,
+    "access_300": 0.865,
+    "age_mean_seconds": 38.8,
+    "predation_share_last_interval": 1.016
+   },
+   "clusters": {
+    "k": 2,
+    "silhouette": 0.213,
+    "bootstrap_ari_mean": 0.941
+   },
+   "top_organs": {
+    "Vision": 0.982,
+    "Armor": 0.751,
+    "SpikeOrgan": 0.607,
+    "FoodTypeVision": 0.484,
+    "ToxinResistance": 0.484,
+    "HardDigest": 0.455
+   },
+   "purchase_timeline": [
+    {
+     "time": 10.1,
+     "unlock": "unlock.forage.tough_food",
+     "cost": 20,
+     "points_before": 40,
+     "points_after": 20
+    },
+    {
+     "time": 30.1,
+     "unlock": "unlock.forage.hard_digest",
+     "cost": 30,
+     "points_before": 101,
+     "points_after": 71
+    },
+    {
+     "time": 40.2,
+     "unlock": "unlock.pond.1",
+     "cost": 30,
+     "points_before": 111,
+     "points_after": 81
+    },
+    {
+     "time": 50.3,
+     "unlock": "unlock.forage.sprint",
+     "cost": 25,
+     "points_before": 181,
+     "points_after": 156
+    },
+    {
+     "time": 60.4,
+     "unlock": "unlock.chem.toxic_food",
+     "cost": 25,
+     "points_before": 157,
+     "points_after": 132
+    },
+    {
+     "time": 70.5,
+     "unlock": "unlock.chem.toxin_resistance",
+     "cost": 30,
+     "points_before": 172,
+     "points_after": 142
+    },
+    {
+     "time": 331.0,
+     "unlock": "unlock.pond.2",
+     "cost": 60,
+     "points_before": 201,
+     "points_after": 141
+    },
+    {
+     "time": 341.0,
+     "unlock": "unlock.death.corpse",
+     "cost": 35,
+     "points_before": 141,
+     "points_after": 106
+    },
+    {
+     "time": 351.0,
+     "unlock": "unlock.carrion.sense",
+     "cost": 25,
+     "points_before": 156,
+     "points_after": 131
+    },
+    {
+     "time": 361.0,
+     "unlock": "unlock.pond.3",
+     "cost": 80,
+     "points_before": 132,
+     "points_after": 52
+    },
+    {
+     "time": 381.0,
+     "unlock": "unlock.pond.4",
+     "cost": 100,
+     "points_before": 202,
+     "points_after": 102
+    },
+    {
+     "time": 511.0,
+     "unlock": "unlock.vision.foodtype",
+     "cost": 120,
+     "points_before": 257,
+     "points_after": 137
+    },
+    {
+     "time": 521.1,
+     "unlock": "unlock.predation.spike",
+     "cost": 70,
+     "points_before": 137,
+     "points_after": 67
+    },
+    {
+     "time": 1177.5,
+     "unlock": "unlock.predation.battery",
+     "cost": 35,
+     "points_before": 219,
+     "points_after": 184
+    },
+    {
+     "time": 1187.6,
+     "unlock": "unlock.predation.armor",
+     "cost": 40,
+     "points_before": 184,
+     "points_after": 144
+    },
+    {
+     "time": 1197.7,
+     "unlock": "unlock.pond.5",
+     "cost": 140,
+     "points_before": 144,
+     "points_after": 4
+    },
+    {
+     "time": 1955.0,
+     "unlock": "unlock.pond.6",
+     "cost": 180,
+     "points_before": 180,
+     "points_after": 0
+    },
+    {
+     "time": 2025.7,
+     "unlock": "unlock.sense.creature",
+     "cost": 25,
+     "points_before": 252,
+     "points_after": 227
+    },
+    {
+     "time": 2035.8,
+     "unlock": "unlock.sense.rhythm",
+     "cost": 25,
+     "points_before": 227,
+     "points_after": 202
+    },
+    {
+     "time": 2045.8,
+     "unlock": "unlock.spawn.enrichment",
+     "cost": 50,
+     "points_before": 203,
+     "points_after": 153
+    }
+   ]
+  },
+  {
+   "strategy": "idle",
+   "seed": 20261101,
+   "selected_baseline": true,
+   "purchase_interval_seconds": 300,
+   "points_final": 134,
+   "milestones": 16,
+   "unlocks": 20,
+   "purchases": 19,
+   "first_purchase_seconds": 300.1,
+   "last_purchase_seconds": 2400.5,
+   "pond_purchase_times": {
+    "1": 300.1,
+    "2": 1500.3,
+    "3": 1800.3,
+    "4": 1800.3,
+    "5": 2100.4
+   },
+   "trajectory": {
+    "600": {
+     "population": 120,
+     "food": 260,
+     "founder_share": 0.017,
+     "gene_count": 30.01,
+     "access_sense": 0.742,
+     "access_300": 0.833
+    },
+    "1500": {
+     "population": 120,
+     "food": 141,
+     "founder_share": 0.042,
+     "gene_count": 31.0,
+     "access_sense": 0.742,
+     "access_300": 0.742
+    },
+    "1800": {
+     "population": 250,
+     "food": 150,
+     "founder_share": 0.068,
+     "gene_count": 31.8,
+     "access_sense": 0.736,
+     "access_300": 0.876
+    },
+    "3600": {
+     "population": 244,
+     "food": 1227,
+     "founder_share": 0.168,
+     "gene_count": 53.45,
+     "access_sense": 0.586,
+     "access_300": 0.803
+    }
+   },
+   "peak": {
+    "population": 314,
+    "seconds": 3300.1
+   },
+   "final": {
+    "population": 244,
+    "food": 1227,
+    "founder_share": 0.168,
+    "gene_count": 53.45,
+    "patch_radius": 60,
+    "diet_living": [
+     0.309,
+     0.342,
+     0.349
+    ],
+    "diet_entropy": 0.95,
+    "specialist_share60": 0.026,
+    "access_sense": 0.586,
+    "access_300": 0.803,
+    "age_mean_seconds": 52.4,
+    "predation_share_last_interval": 1.024
+   },
+   "clusters": {
+    "k": 7,
+    "silhouette": 0.14,
+    "bootstrap_ari_mean": 0.543
+   },
+   "top_organs": {
+    "SpikeOrgan": 1.0,
+    "Armor": 0.857,
+    "Vision": 0.832,
+    "HardDigest": 0.787,
+    "Rhythm": 0.615,
+    "CarrionSense": 0.611
+   },
+   "purchase_timeline": [
+    {
+     "time": 300.1,
+     "unlock": "unlock.forage.tough_food",
+     "cost": 20,
+     "points_before": 100,
+     "points_after": 80
+    },
+    {
+     "time": 300.1,
+     "unlock": "unlock.pond.1",
+     "cost": 30,
+     "points_before": 80,
+     "points_after": 50
+    },
+    {
+     "time": 300.1,
+     "unlock": "unlock.forage.sprint",
+     "cost": 25,
+     "points_before": 50,
+     "points_after": 25
+    },
+    {
+     "time": 300.1,
+     "unlock": "unlock.sense.creature",
+     "cost": 25,
+     "points_before": 25,
+     "points_after": 0
+    },
+    {
+     "time": 600.2,
+     "unlock": "unlock.forage.hard_digest",
+     "cost": 30,
+     "points_before": 220,
+     "points_after": 190
+    },
+    {
+     "time": 600.2,
+     "unlock": "unlock.sense.rhythm",
+     "cost": 25,
+     "points_before": 190,
+     "points_after": 165
+    },
+    {
+     "time": 600.2,
+     "unlock": "unlock.spawn.enrichment",
+     "cost": 50,
+     "points_before": 165,
+     "points_after": 115
+    },
+    {
+     "time": 900.2,
+     "unlock": "unlock.chem.toxic_food",
+     "cost": 25,
+     "points_before": 165,
+     "points_after": 140
+    },
+    {
+     "time": 1200.3,
+     "unlock": "unlock.chem.toxin_resistance",
+     "cost": 30,
+     "points_before": 190,
+     "points_after": 160
+    },
+    {
+     "time": 1500.3,
+     "unlock": "unlock.pond.2",
+     "cost": 60,
+     "points_before": 220,
+     "points_after": 160
+    },
+    {
+     "time": 1500.3,
+     "unlock": "unlock.death.corpse",
+     "cost": 35,
+     "points_before": 160,
+     "points_after": 125
+    },
+    {
+     "time": 1800.3,
+     "unlock": "unlock.carrion.sense",
+     "cost": 25,
+     "points_before": 335,
+     "points_after": 310
+    },
+    {
+     "time": 1800.3,
+     "unlock": "unlock.pond.3",
+     "cost": 80,
+     "points_before": 310,
+     "points_after": 230
+    },
+    {
+     "time": 1800.3,
+     "unlock": "unlock.pond.4",
+     "cost": 100,
+     "points_before": 230,
+     "points_after": 130
+    },
+    {
+     "time": 2100.4,
+     "unlock": "unlock.vision.foodtype",
+     "cost": 120,
+     "points_before": 440,
+     "points_after": 320
+    },
+    {
+     "time": 2100.4,
+     "unlock": "unlock.predation.spike",
+     "cost": 70,
+     "points_before": 320,
+     "points_after": 250
+    },
+    {
+     "time": 2100.4,
+     "unlock": "unlock.pond.5",
+     "cost": 140,
+     "points_before": 250,
+     "points_after": 110
+    },
+    {
+     "time": 2400.5,
+     "unlock": "unlock.predation.battery",
+     "cost": 35,
+     "points_before": 170,
+     "points_after": 135
+    },
+    {
+     "time": 2400.5,
+     "unlock": "unlock.predation.armor",
+     "cost": 40,
+     "points_before": 135,
+     "points_after": 95
+    }
+   ]
+  },
+  {
+   "strategy": "idle",
+   "seed": 20261132,
+   "selected_baseline": true,
+   "purchase_interval_seconds": 300,
+   "points_final": 134,
+   "milestones": 16,
+   "unlocks": 20,
+   "purchases": 19,
+   "first_purchase_seconds": 300.1,
+   "last_purchase_seconds": 2700.6,
+   "pond_purchase_times": {
+    "1": 300.1,
+    "2": 1800.3,
+    "3": 2100.4,
+    "4": 2100.4,
+    "5": 2100.4
+   },
+   "trajectory": {
+    "600": {
+     "population": 120,
+     "food": 231,
+     "founder_share": 0.0,
+     "gene_count": 35.47,
+     "access_sense": 0.75,
+     "access_300": 0.958
+    },
+    "1500": {
+     "population": 119,
+     "food": 53,
+     "founder_share": 0.05,
+     "gene_count": 38.58,
+     "access_sense": 0.571,
+     "access_300": 0.739
+    },
+    "1800": {
+     "population": 120,
+     "food": 258,
+     "founder_share": 0.042,
+     "gene_count": 38.93,
+     "access_sense": 0.433,
+     "access_300": 0.667
+    },
+    "3600": {
+     "population": 226,
+     "food": 1060,
+     "founder_share": 0.124,
+     "gene_count": 52.33,
+     "access_sense": 0.721,
+     "access_300": 0.96
+    }
+   },
+   "peak": {
+    "population": 264,
+    "seconds": 3300.1
+   },
+   "final": {
+    "population": 226,
+    "food": 1060,
+    "founder_share": 0.124,
+    "gene_count": 52.33,
+    "patch_radius": 60,
+    "diet_living": [
+     0.293,
+     0.353,
+     0.353
+    ],
+    "diet_entropy": 0.935,
+    "specialist_share60": 0.071,
+    "access_sense": 0.721,
+    "access_300": 0.96,
+    "age_mean_seconds": 41.2,
+    "predation_share_last_interval": 1.024
+   },
+   "clusters": {
+    "k": 7,
+    "silhouette": 0.151,
+    "bootstrap_ari_mean": 0.601
+   },
+   "top_organs": {
+    "Vision": 1.0,
+    "SpikeOrgan": 0.973,
+    "Armor": 0.836,
+    "Rhythm": 0.712,
+    "CarrionSense": 0.633,
+    "SpikeBattery": 0.58
+   },
+   "purchase_timeline": [
+    {
+     "time": 300.1,
+     "unlock": "unlock.forage.tough_food",
+     "cost": 20,
+     "points_before": 80,
+     "points_after": 60
+    },
+    {
+     "time": 300.1,
+     "unlock": "unlock.pond.1",
+     "cost": 30,
+     "points_before": 60,
+     "points_after": 30
+    },
+    {
+     "time": 300.1,
+     "unlock": "unlock.sense.creature",
+     "cost": 25,
+     "points_before": 30,
+     "points_after": 5
+    },
+    {
+     "time": 600.2,
+     "unlock": "unlock.forage.hard_digest",
+     "cost": 30,
+     "points_before": 225,
+     "points_after": 195
+    },
+    {
+     "time": 600.2,
+     "unlock": "unlock.sense.rhythm",
+     "cost": 25,
+     "points_before": 195,
+     "points_after": 170
+    },
+    {
+     "time": 600.2,
+     "unlock": "unlock.spawn.enrichment",
+     "cost": 50,
+     "points_before": 170,
+     "points_after": 120
+    },
+    {
+     "time": 900.2,
+     "unlock": "unlock.forage.sprint",
+     "cost": 25,
+     "points_before": 190,
+     "points_after": 165
+    },
+    {
+     "time": 900.2,
+     "unlock": "unlock.chem.toxic_food",
+     "cost": 25,
+     "points_before": 165,
+     "points_after": 140
+    },
+    {
+     "time": 1200.3,
+     "unlock": "unlock.chem.toxin_resistance",
+     "cost": 30,
+     "points_before": 190,
+     "points_after": 160
+    },
+    {
+     "time": 1800.3,
+     "unlock": "unlock.pond.2",
+     "cost": 60,
+     "points_before": 380,
+     "points_after": 320
+    },
+    {
+     "time": 1800.3,
+     "unlock": "unlock.death.corpse",
+     "cost": 35,
+     "points_before": 320,
+     "points_after": 285
+    },
+    {
+     "time": 2100.4,
+     "unlock": "unlock.carrion.sense",
+     "cost": 25,
+     "points_before": 345,
+     "points_after": 320
+    },
+    {
+     "time": 2100.4,
+     "unlock": "unlock.pond.3",
+     "cost": 80,
+     "points_before": 320,
+     "points_after": 240
+    },
+    {
+     "time": 2100.4,
+     "unlock": "unlock.pond.4",
+     "cost": 100,
+     "points_before": 240,
+     "points_after": 140
+    },
+    {
+     "time": 2100.4,
+     "unlock": "unlock.pond.5",
+     "cost": 140,
+     "points_before": 140,
+     "points_after": 0
+    },
+    {
+     "time": 2400.5,
+     "unlock": "unlock.vision.foodtype",
+     "cost": 120,
+     "points_before": 310,
+     "points_after": 190
+    },
+    {
+     "time": 2400.5,
+     "unlock": "unlock.predation.spike",
+     "cost": 70,
+     "points_before": 190,
+     "points_after": 120
+    },
+    {
+     "time": 2700.6,
+     "unlock": "unlock.predation.battery",
+     "cost": 35,
+     "points_before": 180,
+     "points_after": 145
+    },
+    {
+     "time": 2700.6,
+     "unlock": "unlock.predation.armor",
+     "cost": 40,
+     "points_before": 145,
+     "points_after": 105
+    }
+   ]
+  },
+  {
+   "strategy": "idle",
+   "seed": 20261133,
+   "selected_baseline": true,
+   "purchase_interval_seconds": 300,
+   "points_final": 134,
+   "milestones": 16,
+   "unlocks": 20,
+   "purchases": 19,
+   "first_purchase_seconds": 300.1,
+   "last_purchase_seconds": 2400.5,
+   "pond_purchase_times": {
+    "1": 300.1,
+    "2": 1500.3,
+    "3": 1800.3,
+    "4": 1800.3,
+    "5": 2100.4
+   },
+   "trajectory": {
+    "600": {
+     "population": 120,
+     "food": 44,
+     "founder_share": 0.017,
+     "gene_count": 33.28,
+     "access_sense": 0.742,
+     "access_300": 0.842
+    },
+    "1500": {
+     "population": 120,
+     "food": 82,
+     "founder_share": 0.025,
+     "gene_count": 36.63,
+     "access_sense": 0.983,
+     "access_300": 0.992
+    },
+    "1800": {
+     "population": 250,
+     "food": 308,
+     "founder_share": 0.116,
+     "gene_count": 37.55,
+     "access_sense": 0.692,
+     "access_300": 0.74
+    },
+    "3600": {
+     "population": 264,
+     "food": 841,
+     "founder_share": 0.129,
+     "gene_count": 55.82,
+     "access_sense": 0.701,
+     "access_300": 0.837
+    }
+   },
+   "peak": {
+    "population": 348,
+    "seconds": 3300.1
+   },
+   "final": {
+    "population": 264,
+    "food": 841,
+    "founder_share": 0.129,
+    "gene_count": 55.82,
+    "patch_radius": 60,
+    "diet_living": [
+     0.323,
+     0.34,
+     0.337
+    ],
+    "diet_entropy": 0.942,
+    "specialist_share60": 0.055,
+    "access_sense": 0.701,
+    "access_300": 0.837,
+    "age_mean_seconds": 49.6,
+    "predation_share_last_interval": 1.036
+   },
+   "clusters": {
+    "k": 2,
+    "silhouette": 0.155,
+    "bootstrap_ari_mean": 1
+   },
+   "top_organs": {
+    "Vision": 0.996,
+    "SpikeOrgan": 0.981,
+    "Armor": 0.818,
+    "HardDigest": 0.769,
+    "FoodTypeVision": 0.617,
+    "Sprint": 0.447
+   },
+   "purchase_timeline": [
+    {
+     "time": 300.1,
+     "unlock": "unlock.forage.tough_food",
+     "cost": 20,
+     "points_before": 100,
+     "points_after": 80
+    },
+    {
+     "time": 300.1,
+     "unlock": "unlock.pond.1",
+     "cost": 30,
+     "points_before": 80,
+     "points_after": 50
+    },
+    {
+     "time": 300.1,
+     "unlock": "unlock.forage.sprint",
+     "cost": 25,
+     "points_before": 50,
+     "points_after": 25
+    },
+    {
+     "time": 300.1,
+     "unlock": "unlock.sense.creature",
+     "cost": 25,
+     "points_before": 25,
+     "points_after": 0
+    },
+    {
+     "time": 600.2,
+     "unlock": "unlock.forage.hard_digest",
+     "cost": 30,
+     "points_before": 220,
+     "points_after": 190
+    },
+    {
+     "time": 600.2,
+     "unlock": "unlock.sense.rhythm",
+     "cost": 25,
+     "points_before": 190,
+     "points_after": 165
+    },
+    {
+     "time": 600.2,
+     "unlock": "unlock.spawn.enrichment",
+     "cost": 50,
+     "points_before": 165,
+     "points_after": 115
+    },
+    {
+     "time": 900.2,
+     "unlock": "unlock.chem.toxic_food",
+     "cost": 25,
+     "points_before": 165,
+     "points_after": 140
+    },
+    {
+     "time": 1200.3,
+     "unlock": "unlock.chem.toxin_resistance",
+     "cost": 30,
+     "points_before": 190,
+     "points_after": 160
+    },
+    {
+     "time": 1500.3,
+     "unlock": "unlock.pond.2",
+     "cost": 60,
+     "points_before": 220,
+     "points_after": 160
+    },
+    {
+     "time": 1500.3,
+     "unlock": "unlock.death.corpse",
+     "cost": 35,
+     "points_before": 160,
+     "points_after": 125
+    },
+    {
+     "time": 1800.3,
+     "unlock": "unlock.carrion.sense",
+     "cost": 25,
+     "points_before": 335,
+     "points_after": 310
+    },
+    {
+     "time": 1800.3,
+     "unlock": "unlock.pond.3",
+     "cost": 80,
+     "points_before": 310,
+     "points_after": 230
+    },
+    {
+     "time": 1800.3,
+     "unlock": "unlock.pond.4",
+     "cost": 100,
+     "points_before": 230,
+     "points_after": 130
+    },
+    {
+     "time": 2100.4,
+     "unlock": "unlock.vision.foodtype",
+     "cost": 120,
+     "points_before": 440,
+     "points_after": 320
+    },
+    {
+     "time": 2100.4,
+     "unlock": "unlock.predation.spike",
+     "cost": 70,
+     "points_before": 320,
+     "points_after": 250
+    },
+    {
+     "time": 2100.4,
+     "unlock": "unlock.pond.5",
+     "cost": 140,
+     "points_before": 250,
+     "points_after": 110
+    },
+    {
+     "time": 2400.5,
+     "unlock": "unlock.predation.battery",
+     "cost": 35,
+     "points_before": 170,
+     "points_after": 135
+    },
+    {
+     "time": 2400.5,
+     "unlock": "unlock.predation.armor",
+     "cost": 40,
+     "points_before": 135,
+     "points_after": 95
+    }
+   ]
+  },
+  {
+   "strategy": "cheapest",
+   "seed": 20261101,
+   "selected_baseline": true,
+   "purchase_interval_seconds": 15,
+   "points_final": 134,
+   "milestones": 16,
+   "unlocks": 20,
+   "purchases": 19,
+   "first_purchase_seconds": 15.1,
+   "last_purchase_seconds": 1809.0,
+   "pond_purchase_times": {
+    "1": 240.7,
+    "2": 345.7,
+    "3": 601.3,
+    "4": 616.4,
+    "5": 1809.0
+   },
+   "trajectory": {
+    "600": {
+     "population": 250,
+     "food": 399,
+     "founder_share": 0.1,
+     "gene_count": 32.66,
+     "access_sense": 0.168,
+     "access_300": 0.364
+    },
+    "1500": {
+     "population": 298,
+     "food": 428,
+     "founder_share": 0.117,
+     "gene_count": 50.76,
+     "access_sense": 0.678,
+     "access_300": 0.916
+    },
+    "1800": {
+     "population": 147,
+     "food": 715,
+     "founder_share": 0.122,
+     "gene_count": 48.47,
+     "access_sense": 0.66,
+     "access_300": 0.932
+    },
+    "3600": {
+     "population": 267,
+     "food": 819,
+     "founder_share": 0.154,
+     "gene_count": 53.65,
+     "access_sense": 0.712,
+     "access_300": 0.843
+    }
+   },
+   "peak": {
+    "population": 298,
+    "seconds": 1500.1
+   },
+   "final": {
+    "population": 267,
+    "food": 819,
+    "founder_share": 0.154,
+    "gene_count": 53.65,
+    "patch_radius": 60,
+    "diet_living": [
+     0.326,
+     0.347,
+     0.328
+    ],
+    "diet_entropy": 0.951,
+    "specialist_share60": 0.077,
+    "access_sense": 0.712,
+    "access_300": 0.843,
+    "age_mean_seconds": 53.2,
+    "predation_share_last_interval": 1.044
+   },
+   "clusters": {
+    "k": 8,
+    "silhouette": 0.163,
+    "bootstrap_ari_mean": 0.581
+   },
+   "top_organs": {
+    "Vision": 1.0,
+    "SpikeOrgan": 0.985,
+    "Armor": 0.843,
+    "HardDigest": 0.76,
+    "CarrionSense": 0.629,
+    "Rhythm": 0.449
+   },
+   "purchase_timeline": [
+    {
+     "time": 15.1,
+     "unlock": "unlock.forage.tough_food",
+     "cost": 20,
+     "points_before": 70,
+     "points_after": 50
+    },
+    {
+     "time": 30.1,
+     "unlock": "unlock.forage.sprint",
+     "cost": 25,
+     "points_before": 101,
+     "points_after": 76
+    },
+    {
+     "time": 45.2,
+     "unlock": "unlock.sense.creature",
+     "cost": 25,
+     "points_before": 76,
+     "points_after": 51
+    },
+    {
+     "time": 60.3,
+     "unlock": "unlock.sense.rhythm",
+     "cost": 25,
+     "points_before": 52,
+     "points_after": 27
+    },
+    {
+     "time": 150.7,
+     "unlock": "unlock.forage.hard_digest",
+     "cost": 30,
+     "points_before": 30,
+     "points_after": 0
+    },
+    {
+     "time": 225.7,
+     "unlock": "unlock.chem.toxic_food",
+     "cost": 25,
+     "points_before": 42,
+     "points_after": 17
+    },
+    {
+     "time": 240.7,
+     "unlock": "unlock.pond.1",
+     "cost": 30,
+     "points_before": 58,
+     "points_after": 28
+    },
+    {
+     "time": 255.7,
+     "unlock": "unlock.chem.toxin_resistance",
+     "cost": 30,
+     "points_before": 128,
+     "points_after": 98
+    },
+    {
+     "time": 270.7,
+     "unlock": "unlock.spawn.enrichment",
+     "cost": 50,
+     "points_before": 99,
+     "points_after": 49
+    },
+    {
+     "time": 315.7,
+     "unlock": "unlock.death.corpse",
+     "cost": 35,
+     "points_before": 100,
+     "points_after": 65
+    },
+    {
+     "time": 330.7,
+     "unlock": "unlock.carrion.sense",
+     "cost": 25,
+     "points_before": 116,
+     "points_after": 91
+    },
+    {
+     "time": 345.7,
+     "unlock": "unlock.pond.2",
+     "cost": 60,
+     "points_before": 91,
+     "points_after": 31
+    },
+    {
+     "time": 601.3,
+     "unlock": "unlock.pond.3",
+     "cost": 80,
+     "points_before": 120,
+     "points_after": 40
+    },
+    {
+     "time": 616.4,
+     "unlock": "unlock.pond.4",
+     "cost": 100,
+     "points_before": 190,
+     "points_after": 90
+    },
+    {
+     "time": 646.6,
+     "unlock": "unlock.predation.spike",
+     "cost": 70,
+     "points_before": 241,
+     "points_after": 171
+    },
+    {
+     "time": 661.7,
+     "unlock": "unlock.predation.battery",
+     "cost": 35,
+     "points_before": 222,
+     "points_after": 187
+    },
+    {
+     "time": 676.8,
+     "unlock": "unlock.predation.armor",
+     "cost": 40,
+     "points_before": 187,
+     "points_after": 147
+    },
+    {
+     "time": 691.9,
+     "unlock": "unlock.vision.foodtype",
+     "cost": 120,
+     "points_before": 148,
+     "points_after": 28
+    },
+    {
+     "time": 1809.0,
+     "unlock": "unlock.pond.5",
+     "cost": 140,
+     "points_before": 215,
+     "points_after": 75
+    }
+   ]
+  },
+  {
+   "strategy": "cheapest",
+   "seed": 20261132,
+   "selected_baseline": true,
+   "purchase_interval_seconds": 15,
+   "points_final": 134,
+   "milestones": 16,
+   "unlocks": 20,
+   "purchases": 19,
+   "first_purchase_seconds": 15.1,
+   "last_purchase_seconds": 1809.0,
+   "pond_purchase_times": {
+    "1": 285.7,
+    "2": 360.7,
+    "3": 601.3,
+    "4": 616.4,
+    "5": 1809.0
+   },
+   "trajectory": {
+    "600": {
+     "population": 250,
+     "food": 400,
+     "founder_share": 0.112,
+     "gene_count": 38.0,
+     "access_sense": 0.016,
+     "access_300": 0.084
+    },
+    "1500": {
+     "population": 230,
+     "food": 541,
+     "founder_share": 0.165,
+     "gene_count": 51.26,
+     "access_sense": 0.661,
+     "access_300": 0.87
+    },
+    "1800": {
+     "population": 247,
+     "food": 430,
+     "founder_share": 0.19,
+     "gene_count": 53.68,
+     "access_sense": 0.87,
+     "access_300": 0.968
+    },
+    "3600": {
+     "population": 282,
+     "food": 683,
+     "founder_share": 0.138,
+     "gene_count": 68.12,
+     "access_sense": 0.521,
+     "access_300": 0.727
+    }
+   },
+   "peak": {
+    "population": 309,
+    "seconds": 3300.1
+   },
+   "final": {
+    "population": 282,
+    "food": 683,
+    "founder_share": 0.138,
+    "gene_count": 68.12,
+    "patch_radius": 60,
+    "diet_living": [
+     0.323,
+     0.338,
+     0.339
+    ],
+    "diet_entropy": 0.935,
+    "specialist_share60": 0.077,
+    "access_sense": 0.521,
+    "access_300": 0.727,
+    "age_mean_seconds": 49.1,
+    "predation_share_last_interval": 0.996
+   },
+   "clusters": {
+    "k": 2,
+    "silhouette": 0.258,
+    "bootstrap_ari_mean": 1
+   },
+   "top_organs": {
+    "SpikeOrgan": 1.0,
+    "Vision": 1.0,
+    "Armor": 0.894,
+    "Rhythm": 0.738,
+    "FoodTypeVision": 0.72,
+    "ToxinResistance": 0.525
+   },
+   "purchase_timeline": [
+    {
+     "time": 15.1,
+     "unlock": "unlock.forage.tough_food",
+     "cost": 20,
+     "points_before": 70,
+     "points_after": 50
+    },
+    {
+     "time": 30.1,
+     "unlock": "unlock.forage.sprint",
+     "cost": 25,
+     "points_before": 101,
+     "points_after": 76
+    },
+    {
+     "time": 45.2,
+     "unlock": "unlock.sense.creature",
+     "cost": 25,
+     "points_before": 76,
+     "points_after": 51
+    },
+    {
+     "time": 60.3,
+     "unlock": "unlock.sense.rhythm",
+     "cost": 25,
+     "points_before": 52,
+     "points_after": 27
+    },
+    {
+     "time": 150.7,
+     "unlock": "unlock.forage.hard_digest",
+     "cost": 30,
+     "points_before": 30,
+     "points_after": 0
+    },
+    {
+     "time": 270.7,
+     "unlock": "unlock.chem.toxic_food",
+     "cost": 25,
+     "points_before": 44,
+     "points_after": 19
+    },
+    {
+     "time": 285.7,
+     "unlock": "unlock.pond.1",
+     "cost": 30,
+     "points_before": 59,
+     "points_after": 29
+    },
+    {
+     "time": 300.7,
+     "unlock": "unlock.chem.toxin_resistance",
+     "cost": 30,
+     "points_before": 130,
+     "points_after": 100
+    },
+    {
+     "time": 315.7,
+     "unlock": "unlock.spawn.enrichment",
+     "cost": 50,
+     "points_before": 100,
+     "points_after": 50
+    },
+    {
+     "time": 330.7,
+     "unlock": "unlock.death.corpse",
+     "cost": 35,
+     "points_before": 101,
+     "points_after": 66
+    },
+    {
+     "time": 345.7,
+     "unlock": "unlock.carrion.sense",
+     "cost": 25,
+     "points_before": 116,
+     "points_after": 91
+    },
+    {
+     "time": 360.7,
+     "unlock": "unlock.pond.2",
+     "cost": 60,
+     "points_before": 92,
+     "points_after": 32
+    },
+    {
+     "time": 601.3,
+     "unlock": "unlock.pond.3",
+     "cost": 80,
+     "points_before": 120,
+     "points_after": 40
+    },
+    {
+     "time": 616.4,
+     "unlock": "unlock.pond.4",
+     "cost": 100,
+     "points_before": 190,
+     "points_after": 90
+    },
+    {
+     "time": 646.6,
+     "unlock": "unlock.predation.spike",
+     "cost": 70,
+     "points_before": 241,
+     "points_after": 171
+    },
+    {
+     "time": 661.7,
+     "unlock": "unlock.predation.battery",
+     "cost": 35,
+     "points_before": 222,
+     "points_after": 187
+    },
+    {
+     "time": 676.8,
+     "unlock": "unlock.predation.armor",
+     "cost": 40,
+     "points_before": 187,
+     "points_after": 147
+    },
+    {
+     "time": 691.9,
+     "unlock": "unlock.vision.foodtype",
+     "cost": 120,
+     "points_before": 148,
+     "points_after": 28
+    },
+    {
+     "time": 1809.0,
+     "unlock": "unlock.pond.5",
+     "cost": 140,
+     "points_before": 215,
+     "points_after": 75
+    }
+   ]
+  },
+  {
+   "strategy": "cheapest",
+   "seed": 20261133,
+   "selected_baseline": true,
+   "purchase_interval_seconds": 15,
+   "points_final": 134,
+   "milestones": 16,
+   "unlocks": 20,
+   "purchases": 19,
+   "first_purchase_seconds": 15.1,
+   "last_purchase_seconds": 1809.0,
+   "pond_purchase_times": {
+    "1": 375.7,
+    "2": 540.9,
+    "3": 601.3,
+    "4": 616.4,
+    "5": 1809.0
+   },
+   "trajectory": {
+    "600": {
+     "population": 250,
+     "food": 398,
+     "founder_share": 0.088,
+     "gene_count": 35.48,
+     "access_sense": 0.504,
+     "access_300": 0.536
+    },
+    "1500": {
+     "population": 171,
+     "food": 849,
+     "founder_share": 0.199,
+     "gene_count": 51.51,
+     "access_sense": 0.819,
+     "access_300": 0.971
+    },
+    "1800": {
+     "population": 148,
+     "food": 799,
+     "founder_share": 0.189,
+     "gene_count": 51.26,
+     "access_sense": 0.716,
+     "access_300": 0.865
+    },
+    "3600": {
+     "population": 245,
+     "food": 1211,
+     "founder_share": 0.143,
+     "gene_count": 51.76,
+     "access_sense": 0.478,
+     "access_300": 0.649
+    }
+   },
+   "peak": {
+    "population": 250,
+    "seconds": 600.0
+   },
+   "final": {
+    "population": 245,
+    "food": 1211,
+    "founder_share": 0.143,
+    "gene_count": 51.76,
+    "patch_radius": 60,
+    "diet_living": [
+     0.305,
+     0.347,
+     0.348
+    ],
+    "diet_entropy": 0.933,
+    "specialist_share60": 0.111,
+    "access_sense": 0.478,
+    "access_300": 0.649,
+    "age_mean_seconds": 42.5,
+    "predation_share_last_interval": 1.062
+   },
+   "clusters": {
+    "k": 3,
+    "silhouette": 0.212,
+    "bootstrap_ari_mean": 0.983
+   },
+   "top_organs": {
+    "SpikeOrgan": 1.0,
+    "Vision": 0.878,
+    "Armor": 0.653,
+    "HardDigest": 0.653,
+    "Rhythm": 0.616,
+    "SpikeBattery": 0.612
+   },
+   "purchase_timeline": [
+    {
+     "time": 15.1,
+     "unlock": "unlock.forage.tough_food",
+     "cost": 20,
+     "points_before": 70,
+     "points_after": 50
+    },
+    {
+     "time": 30.1,
+     "unlock": "unlock.forage.sprint",
+     "cost": 25,
+     "points_before": 101,
+     "points_after": 76
+    },
+    {
+     "time": 45.2,
+     "unlock": "unlock.sense.creature",
+     "cost": 25,
+     "points_before": 76,
+     "points_after": 51
+    },
+    {
+     "time": 60.3,
+     "unlock": "unlock.sense.rhythm",
+     "cost": 25,
+     "points_before": 52,
+     "points_after": 27
+    },
+    {
+     "time": 150.7,
+     "unlock": "unlock.forage.hard_digest",
+     "cost": 30,
+     "points_before": 30,
+     "points_after": 0
+    },
+    {
+     "time": 360.7,
+     "unlock": "unlock.chem.toxic_food",
+     "cost": 25,
+     "points_before": 47,
+     "points_after": 22
+    },
+    {
+     "time": 375.7,
+     "unlock": "unlock.pond.1",
+     "cost": 30,
+     "points_before": 62,
+     "points_after": 32
+    },
+    {
+     "time": 390.7,
+     "unlock": "unlock.chem.toxin_resistance",
+     "cost": 30,
+     "points_before": 133,
+     "points_after": 103
+    },
+    {
+     "time": 405.7,
+     "unlock": "unlock.spawn.enrichment",
+     "cost": 50,
+     "points_before": 103,
+     "points_after": 53
+    },
+    {
+     "time": 510.7,
+     "unlock": "unlock.death.corpse",
+     "cost": 35,
+     "points_before": 107,
+     "points_after": 72
+    },
+    {
+     "time": 525.8,
+     "unlock": "unlock.carrion.sense",
+     "cost": 25,
+     "points_before": 122,
+     "points_after": 97
+    },
+    {
+     "time": 540.9,
+     "unlock": "unlock.pond.2",
+     "cost": 60,
+     "points_before": 98,
+     "points_after": 38
+    },
+    {
+     "time": 601.3,
+     "unlock": "unlock.pond.3",
+     "cost": 80,
+     "points_before": 120,
+     "points_after": 40
+    },
+    {
+     "time": 616.4,
+     "unlock": "unlock.pond.4",
+     "cost": 100,
+     "points_before": 190,
+     "points_after": 90
+    },
+    {
+     "time": 646.6,
+     "unlock": "unlock.predation.spike",
+     "cost": 70,
+     "points_before": 241,
+     "points_after": 171
+    },
+    {
+     "time": 661.7,
+     "unlock": "unlock.predation.battery",
+     "cost": 35,
+     "points_before": 222,
+     "points_after": 187
+    },
+    {
+     "time": 676.8,
+     "unlock": "unlock.predation.armor",
+     "cost": 40,
+     "points_before": 187,
+     "points_after": 147
+    },
+    {
+     "time": 691.9,
+     "unlock": "unlock.vision.foodtype",
+     "cost": 120,
+     "points_before": 148,
+     "points_after": 28
+    },
+    {
+     "time": 1809.0,
+     "unlock": "unlock.pond.5",
+     "cost": 140,
+     "points_before": 215,
+     "points_after": 75
+    }
+   ]
+  },
+  {
+   "strategy": "greedy",
+   "seed": 20261101,
+   "selected_baseline": false,
+   "purchase_interval_seconds": 0,
+   "points_final": 134,
+   "milestones": 16,
+   "unlocks": 20,
+   "purchases": 19,
+   "first_purchase_seconds": 0.1,
+   "last_purchase_seconds": 1799.3,
+   "pond_purchase_times": {
+    "1": 6.3,
+    "2": 25.4,
+    "3": 599.6,
+    "4": 1499.4,
+    "5": 1799.3
+   },
+   "trajectory": {
+    "600": {
+     "population": 391,
+     "food": 120,
+     "founder_share": 0.09,
+     "gene_count": 31.87,
+     "access_sense": 0.465,
+     "access_300": 0.517
+    },
+    "1500": {
+     "population": 710,
+     "food": 572,
+     "founder_share": 0.128,
+     "gene_count": 34.36,
+     "access_sense": 0.439,
+     "access_300": 0.511
+    },
+    "1800": {
+     "population": 189,
+     "food": 513,
+     "founder_share": 0.18,
+     "gene_count": 50.85,
+     "access_sense": 0.651,
+     "access_300": 0.852
+    },
+    "3600": {
+     "population": 259,
+     "food": 939,
+     "founder_share": 0.143,
+     "gene_count": 54.86,
+     "access_sense": 0.776,
+     "access_300": 0.934
+    }
+   },
+   "peak": {
+    "population": 710,
+    "seconds": 1500.1
+   },
+   "final": {
+    "population": 259,
+    "food": 939,
+    "founder_share": 0.143,
+    "gene_count": 54.86,
+    "patch_radius": 60,
+    "diet_living": [
+     0.303,
+     0.363,
+     0.334
+    ],
+    "diet_entropy": 0.934,
+    "specialist_share60": 0.077,
+    "access_sense": 0.776,
+    "access_300": 0.934,
+    "age_mean_seconds": 49.4,
+    "predation_share_last_interval": 1.029
+   },
+   "clusters": {
+    "k": 2,
+    "silhouette": 0.387,
+    "bootstrap_ari_mean": 0.405
+   },
+   "top_organs": {
+    "SpikeOrgan": 0.996,
+    "Vision": 0.992,
+    "Armor": 0.857,
+    "HardDigest": 0.695,
+    "FoodTypeVision": 0.541,
+    "SpikeBattery": 0.514
+   },
+   "purchase_timeline": [
+    {
+     "time": 0.1,
+     "unlock": "unlock.forage.tough_food",
+     "cost": 20,
+     "points_before": 30,
+     "points_after": 10
+    },
+    {
+     "time": 6.3,
+     "unlock": "unlock.pond.1",
+     "cost": 30,
+     "points_before": 40,
+     "points_after": 10
+    },
+    {
+     "time": 6.8,
+     "unlock": "unlock.forage.hard_digest",
+     "cost": 30,
+     "points_before": 40,
+     "points_after": 10
+    },
+    {
+     "time": 7.0,
+     "unlock": "unlock.chem.toxic_food",
+     "cost": 25,
+     "points_before": 50,
+     "points_after": 25
+    },
+    {
+     "time": 7.0,
+     "unlock": "unlock.sense.creature",
+     "cost": 25,
+     "points_before": 25,
+     "points_after": 0
+    },
+    {
+     "time": 11.3,
+     "unlock": "unlock.chem.toxin_resistance",
+     "cost": 30,
+     "points_before": 50,
+     "points_after": 20
+    },
+    {
+     "time": 11.5,
+     "unlock": "unlock.sense.rhythm",
+     "cost": 25,
+     "points_before": 70,
+     "points_after": 45
+    },
+    {
+     "time": 11.5,
+     "unlock": "unlock.death.corpse",
+     "cost": 35,
+     "points_before": 45,
+     "points_after": 10
+    },
+    {
+     "time": 25.4,
+     "unlock": "unlock.pond.2",
+     "cost": 60,
+     "points_before": 110,
+     "points_after": 50
+    },
+    {
+     "time": 25.4,
+     "unlock": "unlock.spawn.enrichment",
+     "cost": 50,
+     "points_before": 50,
+     "points_after": 0
+    },
+    {
+     "time": 39.2,
+     "unlock": "unlock.forage.sprint",
+     "cost": 25,
+     "points_before": 71,
+     "points_after": 46
+    },
+    {
+     "time": 39.2,
+     "unlock": "unlock.carrion.sense",
+     "cost": 25,
+     "points_before": 46,
+     "points_after": 21
+    },
+    {
+     "time": 599.6,
+     "unlock": "unlock.pond.3",
+     "cost": 80,
+     "points_before": 120,
+     "points_after": 40
+    },
+    {
+     "time": 599.8,
+     "unlock": "unlock.vision.foodtype",
+     "cost": 120,
+     "points_before": 190,
+     "points_after": 70
+    },
+    {
+     "time": 1499.4,
+     "unlock": "unlock.pond.4",
+     "cost": 100,
+     "points_before": 100,
+     "points_after": 0
+    },
+    {
+     "time": 1509.5,
+     "unlock": "unlock.predation.spike",
+     "cost": 70,
+     "points_before": 150,
+     "points_after": 80
+    },
+    {
+     "time": 1515.9,
+     "unlock": "unlock.predation.battery",
+     "cost": 35,
+     "points_before": 130,
+     "points_after": 95
+    },
+    {
+     "time": 1515.9,
+     "unlock": "unlock.predation.armor",
+     "cost": 40,
+     "points_before": 95,
+     "points_after": 55
+    },
+    {
+     "time": 1799.3,
+     "unlock": "unlock.pond.5",
+     "cost": 140,
+     "points_before": 215,
+     "points_after": 75
+    }
+   ]
+  }
+ ],
+ "base_commit": "8bbf7b8c",
+ "branch": "feat/51193/1124/analysis-ecology-metrics",
+ "game_code": "base 8bbf7b8c plus campaign-test player models and the food-source pending-food cap fix in this branch"
+}

@@ -32,6 +32,23 @@ public sealed class GameplayProgression
 
     /// <summary>Unlocks waiting for an innovator injection, if any.</summary>
     public List<string> PendingInnovationUnlocks { get; } = [];
+
+    /// <summary>
+    ///     Clears account progression for a fresh campaign test run. The core
+    ///     unlock remains available so a new game starts in the same content state
+    ///     as a first-time player.
+    /// </summary>
+    public void ResetForNewCampaign()
+    {
+        Points = 0;
+        LifetimeSeconds = 0d;
+        PassivePointProgress = 0d;
+        Mode = GameplayMode.Campaign;
+        UnlockedIds.Clear();
+        UnlockedIds.Add("unlock.core");
+        CompletedMilestones.Clear();
+        PendingInnovationUnlocks.Clear();
+    }
 }
 
 /// <summary>Unlock tree and milestone gate over one immutable content snapshot.</summary>

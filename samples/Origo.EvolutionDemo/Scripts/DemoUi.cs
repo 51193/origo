@@ -765,14 +765,8 @@ public partial class DemoUi : CanvasLayer
     internal static string IterateCheckpointSlot(float mark) =>
         string.Create(CultureInfo.InvariantCulture, $"{DemoEntry.IterateCheckpointSlotPrefix}{mark:0}");
 
-    internal void StartSmokeGame(int seed)
-    {
-        var mode = string.Equals(
-            OS.GetEnvironment("ORIGO_DEMO_CAMPAIGN_AUTOPLAY"), "1", StringComparison.Ordinal)
-            ? GameplayMode.Campaign
-            : GameplayMode.Sandbox;
+    internal void StartSmokeGame(int seed, GameplayMode mode) =>
         StartNewGame(seed, 0.015d, 1, Tuning.CollisionEnabled, Tuning.EarlyFoodBloomEnabled, mode);
-    }
 
     internal void StartFastForwardForSmoke(float seconds) => StartFastForwardInternal(seconds);
 

@@ -42,23 +42,19 @@ public partial class DemoSmokeRunner : Node
     private bool _startInputClicked;
     private bool _diversityShotTaken;
     private bool _cameraTested;
-    private readonly bool _campaignAutoplay = string.Equals(
-        OS.GetEnvironment("ORIGO_DEMO_CAMPAIGN_AUTOPLAY"), "1", StringComparison.Ordinal);
-    private static readonly string[] CampaignPurchaseOrder =
-    [
-        CampaignUnlockIds.ToughFood, CampaignUnlockIds.HardDigest,
-        CampaignUnlockIds.Pond1, CampaignUnlockIds.Sprint,
-        CampaignUnlockIds.ToxicFood, CampaignUnlockIds.ToxinResistance,
-        CampaignUnlockIds.CreatureSense, CampaignUnlockIds.Rhythm,
-        CampaignUnlockIds.CorpseCycle, CampaignUnlockIds.CarrionSense,
-        CampaignUnlockIds.Pond2, CampaignUnlockIds.Predation,
-        CampaignUnlockIds.Battery, CampaignUnlockIds.Armor,
-        CampaignUnlockIds.Pond3, CampaignUnlockIds.FoodTypeVision,
-        CampaignUnlockIds.Enrichment, CampaignUnlockIds.Pond4,
-        CampaignUnlockIds.Pond5, CampaignUnlockIds.Pond6,
-    ];
+    private readonly CampaignPurchaseStrategy? _campaignStrategy;
+    private readonly GameplayMode _smokeMode;
+    private readonly bool _campaignFresh;
+    private readonly float _purchaseInterval;
+    private readonly string? _purchaseLogPath;
+    private int _campaignPurchases;
+    private float _firstPurchaseTime = -1f;
+    private float _lastPurchaseTime = -1f;
+    private float _nextPurchaseTime = -1f;
+    private bool _purchaseLogStarted;
+    private string? _campaignConfigurationError;
     private int _verifiedCheckpoints;
-    private readonly string? _configurationError;
+    private string? _configurationError;
     private readonly DateTime _runStartedUtc = DateTime.UtcNow;
 
     public DemoSmokeRunner(DemoEntry entry)
@@ -101,6 +97,106 @@ public partial class DemoSmokeRunner : Node
                 "ORIGO_DEMO_SMOKE_CHECKPOINT_INTERVAL must be 0 or at least " +
                 $"{IterateCheckpointSchedule.MinimumIntervalSeconds:0} simulation seconds.";
         }
+
+        var strategyText = OS.GetEnvironment("ORIGO_DEMO_CAMPAIGN_STRATEGY").Trim();
+        var autoplayText = OS.GetEnvironment("ORIGO_DEMO_CAMPAIGN_AUTOPLAY").Trim();
+        if (strategyText.Length > 0)
+        {
+            if (!TryParseStrategy(strategyText, out var parsed))
+            {
+                _campaignConfigurationError =
+                    $"Unknown ORIGO_DEMO_CAMPAIGN_STRATEGY '{strategyText}'; expected greedy, planned, cheapest, or idle.";
+            }
+            else
+            {
+                _campaignStrategy = parsed;
+            }
+        }
+        else if (autoplayText is "greedy" or "planned" or "cheapest" or "idle")
+        {
+            _campaignStrategy = ParseStrategy(autoplayText);
+        }
+        else if (string.Equals(autoplayText, "1", StringComparison.Ordinal))
+        {
+            _campaignStrategy = CampaignPurchaseStrategy.Planned;
+        }
+
+        _smokeMode = _campaignStrategy is null ? GameplayMode.Sandbox : GameplayMode.Campaign;
+        _campaignFresh = ParseBoolean(
+            OS.GetEnvironment("ORIGO_DEMO_CAMPAIGN_FRESH"), defaultValue: true,
+            "ORIGO_DEMO_CAMPAIGN_FRESH", ref _configurationError);
+        var defaultInterval = _campaignStrategy switch
+        {
+            CampaignPurchaseStrategy.Greedy => 0f,
+            CampaignPurchaseStrategy.Planned => 10f,
+            CampaignPurchaseStrategy.Cheapest => 15f,
+            CampaignPurchaseStrategy.Idle => 300f,
+            _ => 0f,
+        };
+        _purchaseInterval = float.TryParse(
+            OS.GetEnvironment("ORIGO_DEMO_CAMPAIGN_PURCHASE_INTERVAL"),
+            System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture,
+            out var purchaseInterval)
+            ? purchaseInterval
+            : defaultInterval;
+        if (_campaignStrategy is not null
+            && (!float.IsFinite(_purchaseInterval)
+                || _purchaseInterval < 0f
+                || (_campaignStrategy != CampaignPurchaseStrategy.Greedy && _purchaseInterval <= 0f)))
+        {
+            _campaignConfigurationError =
+                "ORIGO_DEMO_CAMPAIGN_PURCHASE_INTERVAL must be positive for planned/cheapest/idle and non-negative for greedy.";
+        }
+
+        _purchaseLogPath = OS.GetEnvironment("ORIGO_DEMO_CAMPAIGN_PURCHASE_LOG").Trim() is { Length: > 0 } path
+            ? path
+            : null;
+    }
+
+    private static bool TryParseStrategy(string text, out CampaignPurchaseStrategy strategy)
+    {
+        switch (text)
+        {
+            case "greedy":
+                strategy = CampaignPurchaseStrategy.Greedy;
+                return true;
+            case "planned":
+                strategy = CampaignPurchaseStrategy.Planned;
+                return true;
+            case "cheapest":
+                strategy = CampaignPurchaseStrategy.Cheapest;
+                return true;
+            case "idle":
+                strategy = CampaignPurchaseStrategy.Idle;
+                return true;
+            default:
+                strategy = default;
+                return false;
+        }
+    }
+
+    private static CampaignPurchaseStrategy ParseStrategy(string text) =>
+        text switch
+        {
+            "greedy" => CampaignPurchaseStrategy.Greedy,
+            "planned" => CampaignPurchaseStrategy.Planned,
+            "cheapest" => CampaignPurchaseStrategy.Cheapest,
+            "idle" => CampaignPurchaseStrategy.Idle,
+            _ => throw new InvalidOperationException($"Unknown campaign strategy '{text}'."),
+        };
+
+    private static bool ParseBoolean(
+        string text, bool defaultValue, string option, ref string? error)
+    {
+        if (text.Length == 0)
+            return defaultValue;
+        if (string.Equals(text, "1", StringComparison.Ordinal))
+            return true;
+        if (string.Equals(text, "0", StringComparison.Ordinal))
+            return false;
+        error ??= $"{option} must be 0 or 1.";
+        return defaultValue;
     }
 
     public override void _Process(double delta)
@@ -109,6 +205,8 @@ public partial class DemoSmokeRunner : Node
         {
             if (_configurationError is not null)
                 throw new InvalidOperationException(_configurationError);
+            if (_campaignConfigurationError is not null)
+                throw new InvalidOperationException(_campaignConfigurationError);
             Tick();
         }
         catch (Exception ex)
@@ -199,8 +297,11 @@ public partial class DemoSmokeRunner : Node
         if (ui is null)
             return;
 
-        if (_campaignAutoplay && _entry.Session.Runtime.Progression.Mode == GameplayMode.Campaign)
-            TryCampaignAutoplay();
+        if (_campaignStrategy is not null
+            && _state == 6
+            && _entry.Ui.IsFastForwardingForSmoke
+            && _entry.Session.Runtime.Progression.Mode == GameplayMode.Campaign)
+            TryCampaignPurchases();
 
         switch (_state)
         {
@@ -216,7 +317,7 @@ public partial class DemoSmokeRunner : Node
                     Capture("menu.png");
                     if (string.Equals(DisplayServer.GetName(), "headless", StringComparison.Ordinal))
                     {
-                        ui.StartSmokeGame(_smokeSeed);
+                        ui.StartSmokeGame(_smokeSeed, _smokeMode);
                         _state = 1;
                         _frame = 0;
                         break;
@@ -248,7 +349,7 @@ public partial class DemoSmokeRunner : Node
                     _state = 10;
                     break;
                 }
-                ui.StartSmokeGame(_smokeSeed);
+                ui.StartSmokeGame(_smokeSeed, _smokeMode);
                 _state = 1;
                 _frame = 0;
                 break;
@@ -432,8 +533,10 @@ public partial class DemoSmokeRunner : Node
                 _restoredGeneration = restored.generation;
                 _restoredTime = restored.time;
                 _restoredFood = restored.food;
+                if (_campaignStrategy is not null && _campaignFresh)
+                    _entry.Session.Runtime.ResetCampaignProgression();
                 ui.SetSmokeCheckpointInterval(_checkpointInterval);
-                ui.StartSmokeGame(_smokeSeed);
+                ui.StartSmokeGame(_smokeSeed, _smokeMode);
                 _state = 5;
                 _frame = 0;
                 break;
@@ -487,6 +590,7 @@ public partial class DemoSmokeRunner : Node
                 GD.Print($"DEMO_SMOKE_OK population={_restoredCreatures} saved_population={_savedPopulation} " +
                     $"generation={_restoredGeneration} time={_restoredTime:0.0} food={_restoredFood} " +
                     $"reset_population={_resetPopulation} fast_forward_time={fastForwarded.time:0.0} " +
+                    $"purchases={_campaignPurchases} " +
                     $"checkpoints={expectedCheckpoints}");
                 GetTree().Quit(0);
                 break;
@@ -501,8 +605,9 @@ public partial class DemoSmokeRunner : Node
                     throw new InvalidOperationException("Benchmark save is missing.");
                 AssertSaveWrittenByThisRun(_benchmarkSaveSlot);
                 PrintCampaignSummary();
-                GD.Print($"DEMO_BENCHMARK_OK population={_savedPopulation} time={_savedTime:0.0} " +
-                    $"slot={_benchmarkSaveSlot} checkpoints={_verifiedCheckpoints}");
+                GD.Print($"DEMO_BENCHMARK_OK seed={_smokeSeed} population={_savedPopulation} time={_savedTime:0.0} " +
+                    $"slot={_benchmarkSaveSlot} checkpoints={_verifiedCheckpoints} " +
+                    $"purchases={_campaignPurchases}");
                 GetTree().Quit(0);
                 break;
         }
@@ -510,22 +615,76 @@ public partial class DemoSmokeRunner : Node
 
     private void PrintCampaignSummary()
     {
-        if (!_campaignAutoplay)
+        if (_campaignStrategy is not { } strategy)
             return;
         var runtime = _entry.Session.Runtime;
-        GD.Print($"DEMO_CAMPAIGN points={runtime.Progression.Points} " +
+        GD.Print($"DEMO_CAMPAIGN seed={_smokeSeed} strategy={strategy} points={runtime.Progression.Points} " +
             $"milestones={runtime.Progression.CompletedMilestones.Count} " +
             $"unlocks={runtime.Progression.UnlockedIds.Count} " +
+            $"purchases={_campaignPurchases} " +
+            $"firstPurchase={_firstPurchaseTime:0.###} lastPurchase={_lastPurchaseTime:0.###} " +
             $"mode={runtime.Progression.Mode}");
+        AssertCameraFit();
     }
 
-    private void TryCampaignAutoplay()
+    private void TryCampaignPurchases()
     {
+        if (_campaignStrategy is not { } strategy)
+            return;
+        var controller = _entry.Ui.GameplayController;
+        if (controller is null)
+            return;
+        var time = controller.TryGetData<float>(DemoKeys.Time) is { found: true } timeData
+            ? timeData.value
+            : 0f;
+        if (_nextPurchaseTime < 0f)
+            _nextPurchaseTime = time + _purchaseInterval;
+        if (time + 0.0001f < _nextPurchaseTime)
+            return;
         var runtime = _entry.Session.Runtime;
-        foreach (var unlockId in CampaignPurchaseOrder)
-            runtime.TryUnlock(unlockId);
-        _entry.Ui.RefreshCampaignWorld();
-        AssertCameraFit();
+        var purchased = false;
+        while (CampaignPurchasePolicy.Decide(runtime, strategy) is { } decision)
+        {
+            var pointsBefore = runtime.Progression.Points;
+            if (!runtime.TryUnlock(decision.UnlockId))
+                break;
+            RecordPurchase(time, strategy, decision, pointsBefore, runtime.Progression.Points);
+            purchased = true;
+            if (strategy is CampaignPurchaseStrategy.Planned or CampaignPurchaseStrategy.Cheapest)
+                break;
+        }
+
+        if (purchased)
+            _entry.Ui.RefreshCampaignWorld();
+        _nextPurchaseTime = strategy == CampaignPurchaseStrategy.Greedy
+            ? time
+            : time + _purchaseInterval;
+    }
+
+    private void RecordPurchase(
+        float time,
+        CampaignPurchaseStrategy strategy,
+        CampaignPurchaseDecision decision,
+        long pointsBefore,
+        long pointsAfter)
+    {
+        _campaignPurchases++;
+        if (_firstPurchaseTime < 0f)
+            _firstPurchaseTime = time;
+        _lastPurchaseTime = time;
+        var line = string.Create(System.Globalization.CultureInfo.InvariantCulture,
+            $"{time:0.###},{strategy},{decision.UnlockId},{decision.Cost},{pointsBefore},{pointsAfter}");
+        GD.Print($"DEMO_CAMPAIGN_PURCHASE {line}");
+        if (_purchaseLogPath is not { } path)
+            return;
+        if (!_purchaseLogStarted)
+        {
+            File.AppendAllText(path,
+                "time,strategy,unlock,cost,points_before,points_after" + System.Environment.NewLine);
+            _purchaseLogStarted = true;
+        }
+
+        File.AppendAllText(path, line + System.Environment.NewLine);
     }
 
     private void AssertSaveWrittenByThisRun(string slot)

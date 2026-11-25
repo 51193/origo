@@ -13,6 +13,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 ### Added
 
+- **Evolution Demo campaign tests model different players** — the headless
+  campaign runner can now spend Evolution Points through named player models:
+  `planned` (save for the next capacity/survival goal), `idle` (long-interval
+  batch shopping), `cheapest` (buy the cheapest core ability), and `greedy`
+  (buy-everything control). A fresh benchmark starts at zero
+  points/unlocks, purchases go through the normal cost/prerequisite/milestone
+  gates, one policy decision is logged with points before/after, and the
+  strategy is included in `DEMO_CAMPAIGN`/`DEMO_BENCHMARK_OK`. Campaign
+  design/playtest docs and compact strategy baselines now live under
+  `samples/Origo.EvolutionDemo/Docs/`.
+
 - **Evolution Demo analysis adds food-access, origin, and diet observability** —
   the genome analysis tool now reports food inventory by type (soft/tough/
   toxic/corpse), live patch count/radius/coverage, per-creature food access
@@ -106,6 +117,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   headless smoke verifies every expected checkpoint.
 
 ### Changed
+
+- **Evolution Demo campaign autoplay defaults to a player model** —
+  `ORIGO_DEMO_CAMPAIGN_AUTOPLAY=1` now maps to the fresh-start `planned`
+  strategy instead of buying every affordable unlock on every tick from a
+  smoke head start. `ORIGO_DEMO_CAMPAIGN_STRATEGY=greedy` keeps the
+  buy-everything control; `ORIGO_DEMO_CAMPAIGN_FRESH=0` keeps smoke-earned
+  points and milestones without buying during the smoke phase.
 
 - **Evolution Demo charges the compiled energy budget** — body tissue, neural
   tissue, and genome complexity now cost a per-second upkeep derived from the
@@ -208,7 +226,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   byte-identical. The inspector and appearance derivation keep their hex view.
   Version 7 rejects v6 saves, the analysis tool accepts only v7 and decodes
   both storage forms, and the Load Game compatibility check now compares
-  against the current version constant instead of the legacy value `"2"`.
+  against the current version constant instead of the control value `"2"`.
 - **Per-entity recovery logs move to the Debug stream** — `SndDataManager`,
   `SndNodeManager`, and `SndStrategyManager` no longer write a recovery summary
   to Info for every spawned entity, so hosts with the default Info threshold
@@ -278,6 +296,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   slot before upgrading. The default atomic-write layout is unchanged.
 
 ### Fixed
+
+- **Evolution Demo food sources respect corpse pending food** — food sources
+  now use the current tick's food count and account for corpse/feed food
+  pending in the same tick, so a source burst plus carcass release can no
+  longer exceed `FoodCap` (the realistic campaign smoke caught 715/700).
 
 - **Evolution Demo content reloads are transactional** — a valid external
   content pack replaces the live snapshot only after the handler registries
@@ -401,7 +424,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Console input is bounded and drained fairly** — input lines have a configurable limit, the pending queue drops the oldest command at its bound, and the console executes a bounded number of commands per frame.
 - **Weekly snapshots require the exact fifteen release asset names** — completeness no longer accepts an arbitrary count of unrelated assets.
 - **Snapshot paths are normalized across host separator styles** — `SaveFileHandle.GetRelativePath` now normalizes `\`/`/` and scheme roots, and fails explicitly when a path is outside the save root instead of embedding an absolute path. Staged snapshots must contain the progress pair before the swap, so a broken copy cannot replace a valid slot.
-- **Case-variant legacy slots cannot be overwritten or deleted** — write/delete/load/snapshot paths and level payload writes reject a directory that differs only by case, with a migration instruction.
+- **Case-variant control slots cannot be overwritten or deleted** — write/delete/load/snapshot paths and level payload writes reject a directory that differs only by case, with a migration instruction.
 - **A\* heuristic no longer overflows for large valid coordinates** — the heuristic is computed in `double`; a 46341-cell straight-line path no longer degenerates into a NaN-priority search.
 - **Console input guards** — duplicate spawn names return a command error instead of escaping the frame loop, and an existing float key rejects NaN/Infinity/`1e400` instead of poisoning every later save.
 - **System blackboard startup ordering** — custom persisted types are loaded after the startup registry hook, eliminating the host-construction failure and manual `system.json` deletion.

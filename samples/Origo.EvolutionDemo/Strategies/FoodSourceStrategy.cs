@@ -43,6 +43,7 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
         ISndContext ctx,
         SensorGrid grid,
         int foodCount,
+        int pendingFood,
         EvolutionGameSession gameplaySession)
     {
         ArgumentNullException.ThrowIfNull(controller);
@@ -56,7 +57,7 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
             var (found, kind) = source.TryGetData<string>(DemoKeys.Kind);
             if (!found || !string.Equals(kind, SourceKind, StringComparison.Ordinal))
                 continue;
-            TickSource(source, controller, ctx, grid, foodCount, gameplaySession);
+            TickSource(source, controller, ctx, grid, foodCount, pendingFood, gameplaySession);
         }
     }
 
@@ -66,6 +67,7 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
         ISndContext ctx,
         SensorGrid grid,
         int foodCount,
+        int pendingFood,
         EvolutionGameSession gameplaySession)
     {
         var session = entity.OwningSession;
@@ -106,10 +108,13 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
         entity.SetData(DemoKeys.NextSpawnAt, nextSpawn);
 
         var localFood = ReadInt(entity, DemoKeys.LocalFood, 0);
-        var globalFood = ReadInt(entity, DemoKeys.GlobalFood, 0);
+        // foodCount is the current tick snapshot; the serialized source field is
+        // only a periodic scan cache and can lag behind corpse releases.
+        var globalFood = foodCount;
         var pendingFoodSpawns = ReadInt(controller, DemoKeys.PendingFoodSpawns, 0);
         var capacity = Math.Max(1, ReadInt(entity, DemoKeys.LocalCapacity, Tuning.FoodPatchLocalCapacity));
-        if (localFood >= capacity || globalFood + pendingFoodSpawns >= Tuning.FoodCap)
+        if (localFood >= capacity
+            || globalFood + pendingFood + pendingFoodSpawns >= Tuning.FoodCap)
             return;
 
         var period = Math.Max(1f, ReadFloat(entity, DemoKeys.CyclePeriod, 90f));
@@ -129,7 +134,7 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
         for (var i = 0; i < Tuning.FoodSourceSpawnBurst; i++)
         {
             if (localFood + metas.Count >= capacity
-                || globalFood + pendingFoodSpawns + metas.Count >= Tuning.FoodCap)
+                || globalFood + pendingFood + pendingFoodSpawns + metas.Count >= Tuning.FoodCap)
                 break;
             if (rng.NextDouble() >= density)
                 continue;

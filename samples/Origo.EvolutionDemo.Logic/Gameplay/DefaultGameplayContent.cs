@@ -198,6 +198,13 @@ public sealed class GameplayRuntime
     public GameplayModuleHost Modules { get; }
     public GameplayPipeline Pipeline { get; }
 
+    /// <summary>Resets progression for a fresh campaign test and refreshes content gates.</summary>
+    public void ResetCampaignProgression()
+    {
+        Progression.ResetForNewCampaign();
+        RefreshContentGates();
+    }
+
     /// <summary>Sets campaign/sandbox behavior and refreshes the content gates.</summary>
     public void SetMode(GameplayMode mode)
     {
