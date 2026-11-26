@@ -17,6 +17,7 @@ public partial class DemoSmokeRunner : Node
 {
     private const int StartupFrameLimit = 600;
     private const int RunningFrameLimit = 6000;
+    private const float MinimumSmokeGenerationSeconds = 30f;
     private const string SmokeSlot = "smoke_slot";
 
     private readonly DemoEntry _entry;
@@ -45,6 +46,8 @@ public partial class DemoSmokeRunner : Node
     private readonly CampaignPurchaseStrategy? _campaignStrategy;
     private readonly GameplayMode _smokeMode;
     private readonly bool _campaignFresh;
+    private readonly bool _allowEnrichment;
+    private readonly bool _allowPredation;
     private readonly float _purchaseInterval;
     private readonly string? _purchaseLogPath;
     private int _campaignPurchases;
@@ -125,6 +128,12 @@ public partial class DemoSmokeRunner : Node
         _campaignFresh = ParseBoolean(
             OS.GetEnvironment("ORIGO_DEMO_CAMPAIGN_FRESH"), defaultValue: true,
             "ORIGO_DEMO_CAMPAIGN_FRESH", ref _configurationError);
+        _allowEnrichment = ParseBoolean(
+            OS.GetEnvironment("ORIGO_DEMO_CAMPAIGN_ENRICHMENT"), defaultValue: true,
+            "ORIGO_DEMO_CAMPAIGN_ENRICHMENT", ref _configurationError);
+        _allowPredation = ParseBoolean(
+            OS.GetEnvironment("ORIGO_DEMO_CAMPAIGN_PREDATION"), defaultValue: true,
+            "ORIGO_DEMO_CAMPAIGN_PREDATION", ref _configurationError);
         var defaultInterval = _campaignStrategy switch
         {
             CampaignPurchaseStrategy.Greedy => 0f,
@@ -441,7 +450,10 @@ public partial class DemoSmokeRunner : Node
                     throw new InvalidOperationException("The pond did not accumulate simulation time.");
                 var running = ui.SmokeStats();
                 AssertWithinCaps(running);
-                if (_spedUp && running.time < _targetSeconds && running.creatures > 0)
+                var generationDeadline = MathF.Max(_targetSeconds, MinimumSmokeGenerationSeconds);
+                if (_spedUp && CampaignSmokeGate.ShouldWaitForGeneration(
+                    running.time, _targetSeconds, generationDeadline,
+                    running.generation, running.creatures))
                 {
                     if (_frame % 30 == 0 && HasFoodOutsidePond())
                         throw new InvalidOperationException("A food entity left the pond boundary during the smoke run.");
@@ -525,7 +537,7 @@ public partial class DemoSmokeRunner : Node
                 if (restored.creatures == 0)
                     throw new InvalidOperationException("Loaded pond has no creatures.");
                 if (restored.generation < 1)
-                    throw new InvalidOperationException("The smoke run did not reach a second generation.");
+                    throw new InvalidOperationException("The smoke run did not reach generation 1 (the second generation).");
                 if (restored.time + 0.01f < _savedTime)
                     throw new InvalidOperationException(
                         $"Loaded time regressed: saved={_savedTime:0.0}, restored={restored.time:0.0}.");
@@ -618,7 +630,9 @@ public partial class DemoSmokeRunner : Node
         if (_campaignStrategy is not { } strategy)
             return;
         var runtime = _entry.Session.Runtime;
-        GD.Print($"DEMO_CAMPAIGN seed={_smokeSeed} strategy={strategy} points={runtime.Progression.Points} " +
+        GD.Print($"DEMO_CAMPAIGN seed={_smokeSeed} strategy={strategy} " +
+            $"enrichment={_allowEnrichment} predation={_allowPredation} " +
+            $"points={runtime.Progression.Points} " +
             $"milestones={runtime.Progression.CompletedMilestones.Count} " +
             $"unlocks={runtime.Progression.UnlockedIds.Count} " +
             $"purchases={_campaignPurchases} " +
@@ -642,8 +656,9 @@ public partial class DemoSmokeRunner : Node
         if (time + 0.0001f < _nextPurchaseTime)
             return;
         var runtime = _entry.Session.Runtime;
+        var options = new CampaignPurchaseOptions(_allowEnrichment, _allowPredation);
         var purchased = false;
-        while (CampaignPurchasePolicy.Decide(runtime, strategy) is { } decision)
+        while (CampaignPurchasePolicy.Decide(runtime, strategy, options) is { } decision)
         {
             var pointsBefore = runtime.Progression.Points;
             if (!runtime.TryUnlock(decision.UnlockId))

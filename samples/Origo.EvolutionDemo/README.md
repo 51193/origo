@@ -270,7 +270,12 @@ bash samples/Origo.EvolutionDemo/run-demo.sh --no-build --headless \
 
 `ORIGO_DEMO_CAMPAIGN_AUTOPLAY=1` remains a compatibility alias and now maps to
 `planned`. `ORIGO_DEMO_CAMPAIGN_FRESH=0` preserves the old smoke-earned
-points/milestones for comparison. `DEMO_CAMPAIGN_PURCHASE` lines record
+points/milestones for comparison. Controlled experiments can set
+`ORIGO_DEMO_CAMPAIGN_ENRICHMENT=0` and/or
+`ORIGO_DEMO_CAMPAIGN_PREDATION=0`; the policy then skips that mechanic's
+unlocks while leaving the rest of the plan intact. The normal smoke waits up
+to 30 simulation seconds for generation 1 (the second generation) before declaring the seed unusable.
+`DEMO_CAMPAIGN_PURCHASE` lines record
 `time,strategy,unlock,cost,points_before,points_after`; `DEMO_CAMPAIGN` adds the
 strategy, purchase count, and first/last purchase time. The plan order and the
 selected baseline data are documented in [Docs/campaign-baselines.md](Docs/campaign-baselines.md).

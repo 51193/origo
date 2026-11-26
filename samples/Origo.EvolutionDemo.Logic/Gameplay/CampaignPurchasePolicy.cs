@@ -23,6 +23,13 @@ public enum CampaignPurchaseStrategy
     Idle,
 }
 
+/// <summary>Optional content controls for controlled campaign test runs.</summary>
+/// <param name="AllowEnrichment">When false, skip the enrichment unlock.</param>
+/// <param name="AllowPredation">When false, skip predation, battery, and armor.</param>
+public sealed record CampaignPurchaseOptions(
+    bool AllowEnrichment = true,
+    bool AllowPredation = true);
+
 /// <summary>One unlock the policy would buy at the current points total.</summary>
 /// <param name="UnlockId">Unlock id.</param>
 /// <param name="Cost">Definition cost in Evolution Points.</param>
@@ -100,24 +107,30 @@ public static class CampaignPurchasePolicy
     /// <exception cref="ArgumentNullException"><paramref name="runtime" /> is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException">The strategy value is not defined.</exception>
     public static CampaignPurchaseDecision? Decide(
-        GameplayRuntime runtime, CampaignPurchaseStrategy strategy)
+        GameplayRuntime runtime,
+        CampaignPurchaseStrategy strategy,
+        CampaignPurchaseOptions? options = null)
     {
         ArgumentNullException.ThrowIfNull(runtime);
+        options ??= new CampaignPurchaseOptions();
         return strategy switch
         {
-            CampaignPurchaseStrategy.Greedy => FirstUnlockable(runtime, ControlOrder),
-            CampaignPurchaseStrategy.Planned => NextPlanned(runtime),
-            CampaignPurchaseStrategy.Cheapest => CheapestUnlockable(runtime),
-            CampaignPurchaseStrategy.Idle => FirstUnlockable(runtime, PlannedOrder),
+            CampaignPurchaseStrategy.Greedy => FirstUnlockable(runtime, ControlOrder, options),
+            CampaignPurchaseStrategy.Planned => NextPlanned(runtime, options),
+            CampaignPurchaseStrategy.Cheapest => CheapestUnlockable(runtime, options),
+            CampaignPurchaseStrategy.Idle => FirstUnlockable(runtime, PlannedOrder, options),
             _ => throw new ArgumentOutOfRangeException(nameof(strategy), strategy, "Unknown purchase strategy."),
         };
     }
 
-    private static CampaignPurchaseDecision? NextPlanned(GameplayRuntime runtime)
+    private static CampaignPurchaseDecision? NextPlanned(
+        GameplayRuntime runtime, CampaignPurchaseOptions options)
     {
         foreach (var unlockId in PlannedOrder)
         {
             if (runtime.Unlocks.IsUnlocked(unlockId))
+                continue;
+            if (!IsAllowed(unlockId, options))
                 continue;
             // The planned player saves for this target. If it is milestone-locked,
             // the test waits instead of spending the points on a side grade.
@@ -129,11 +142,13 @@ public static class CampaignPurchasePolicy
         return null;
     }
 
-    private static CampaignPurchaseDecision? CheapestUnlockable(GameplayRuntime runtime)
+    private static CampaignPurchaseDecision? CheapestUnlockable(
+        GameplayRuntime runtime, CampaignPurchaseOptions options)
     {
         var coreUnlocks = PlannedOrder.ToHashSet(StringComparer.Ordinal);
         var candidates = runtime.Content.Unlocks.Values
             .Where(unlock => coreUnlocks.Contains(unlock.Id)
+                && IsAllowed(unlock.Id, options)
                 && !runtime.Unlocks.IsUnlocked(unlock.Id)
                 && runtime.Unlocks.CanUnlock(unlock.Id))
             .OrderBy(static unlock => unlock.Cost)
@@ -144,11 +159,13 @@ public static class CampaignPurchasePolicy
     }
 
     private static CampaignPurchaseDecision? FirstUnlockable(
-        GameplayRuntime runtime, IReadOnlyList<string> order)
+        GameplayRuntime runtime, IReadOnlyList<string> order, CampaignPurchaseOptions options)
     {
         foreach (var unlockId in order)
         {
             if (runtime.Unlocks.IsUnlocked(unlockId))
+                continue;
+            if (!IsAllowed(unlockId, options))
                 continue;
             if (runtime.Unlocks.CanUnlock(unlockId))
                 return Decision(runtime, unlockId);
@@ -156,6 +173,12 @@ public static class CampaignPurchasePolicy
 
         return null;
     }
+
+    private static bool IsAllowed(string unlockId, CampaignPurchaseOptions options) =>
+        (options.AllowEnrichment || !string.Equals(
+            unlockId, CampaignUnlockIds.Enrichment, StringComparison.Ordinal))
+        && (options.AllowPredation || unlockId is not (
+            CampaignUnlockIds.Predation or CampaignUnlockIds.Battery or CampaignUnlockIds.Armor));
 
     private static CampaignPurchaseDecision Decision(GameplayRuntime runtime, string unlockId)
     {
