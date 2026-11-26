@@ -10,6 +10,13 @@ Repository-facing maintenance changes that do not change user-visible runtime, p
 
 CI workflow shape, local test/coverage gates, package-consumer fixture smoke coverage, shell-API baseline tooling, PowerShell/Bash parity, and developer-suite commands.
 
+- **Save snapshot benchmark times both directions** — the snapshot benchmark
+  times `WriteSavePayloadToCurrentThenSnapshot` and
+  `ReadSavePayloadFromSnapshot` separately and reports each direction's
+  allocation, instead of starting the timer after the snapshot write. The
+  `SnapshotIO` baseline rows remain the read measurement; the separate
+  `SnapshotWrite` rows are reported and have no baseline entry.
+
 - **Sample demo documentation has an explicit boundary** — AGENTS and the
   documentation meta-rule now distinguish the framework manual under `docs/`
   from design/playtest documentation under `samples/<Demo>/Docs/`. The latter
