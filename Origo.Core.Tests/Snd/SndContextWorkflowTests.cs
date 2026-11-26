@@ -98,8 +98,9 @@ public class SndContextWorkflowTests
     {
         // The main-menu ProgressRun uses SndDefaults.InitialSaveId as its
         // working id, but it has not loaded or created a real save slot. A
-        // real snapshot with the same id must therefore be deletable; only
-        // active SaveId / running / pending persistence requests protect.
+        // real snapshot with the same id must therefore be deletable; only the
+        // active SaveId, a real run's backing save, and running or pending
+        // persistence requests protect.
         var ctx = CreateContext(out var fs, out _);
         SetupProgressRun(ctx, fs);
         SeedSaveSnapshot(fs, "root", "000", "default");
@@ -145,6 +146,57 @@ public class SndContextWorkflowTests
 
         Assert.Contains("active", ex.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("active_slot", ctx.Save.ListSaves());
+    }
+
+    [Fact]
+    public void DeleteSave_LoadedSaveAfterContinueTargetChange_Throws()
+    {
+        // Changing the continue target must not make the save backing the
+        // running progress run deletable.
+        var ctx = CreateContext(out var fs, out _);
+        SeedSaveSnapshot(fs, "root", "slot_a", "default");
+        SeedSaveSnapshot(fs, "root", "slot_b", "default");
+        ctx.Save.RequestLoadGame("slot_a");
+        ctx.FlushFrame();
+        ctx.Save.SetContinueTarget("slot_b");
+
+        var ex = Assert.Throws<InvalidOperationException>(() => ctx.Save.DeleteSave("slot_a"));
+
+        Assert.Contains("progress run", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("slot_a", ctx.Save.ListSaves());
+    }
+
+    [Fact]
+    public void DeleteSave_SyntheticRunSavedSlotAfterContinueTargetChange_Throws()
+    {
+        // A synthetic initial/main-menu run that saves to a real slot now has
+        // a real backing snapshot; changing the continue target must not make
+        // that slot deletable.
+        var ctx = CreateContext(out var fs, out _);
+        SetupProgressRun(ctx, fs);
+        ctx.Save.RequestSaveGame("created");
+        ctx.FlushFrame();
+        ctx.Save.SetContinueTarget("other");
+
+        var ex = Assert.Throws<InvalidOperationException>(() => ctx.Save.DeleteSave("created"));
+
+        Assert.Contains("progress run", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("created", ctx.Save.ListSaves());
+    }
+
+    [Fact]
+    public void DeleteSave_InactiveSlotAfterLoad_Removes()
+    {
+        var ctx = CreateContext(out var fs, out _);
+        SeedSaveSnapshot(fs, "root", "slot_a", "default");
+        SeedSaveSnapshot(fs, "root", "slot_c", "default");
+        ctx.Save.RequestLoadGame("slot_a");
+        ctx.FlushFrame();
+
+        ctx.Save.DeleteSave("slot_c");
+
+        Assert.DoesNotContain("slot_c", ctx.Save.ListSaves());
+        Assert.Contains("slot_a", ctx.Save.ListSaves());
     }
 
     [Fact]

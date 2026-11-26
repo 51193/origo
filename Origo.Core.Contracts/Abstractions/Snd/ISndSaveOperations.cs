@@ -20,13 +20,15 @@ public interface ISndSaveOperations
     IReadOnlyList<SaveMetaDataEntry> ListSavesWithMetaData();
 
     /// <summary>
-    ///     Deletes an inactive save slot. The active save slot, the continue
-    ///     target, and a running or pending persistence workflow are protected.
+    ///     Deletes an inactive save slot. The save currently backing the
+    ///     current progress run, the continue target, and a running or pending
+    ///     persistence workflow are protected.
     /// </summary>
     /// <exception cref="System.ArgumentException">Thrown when <paramref name="saveId" /> is not a valid save ID token.</exception>
     /// <exception cref="System.InvalidOperationException">
-    ///     Thrown when the slot is missing, is the active save, or a persistence
-    ///     workflow is running or pending.
+    ///     Thrown when the slot is missing, is the save backing the current
+    ///     progress run, is the continue target, or a persistence workflow is
+    ///     running or pending.
     /// </exception>
     void DeleteSave(string saveId);
 
@@ -43,7 +45,11 @@ public interface ISndSaveOperations
     /// </summary>
     string RequestSaveGameAuto(string? newSaveId = null);
 
-    /// <summary>Set the continue target save.</summary>
+    /// <summary>
+    ///     Set the continue target save. This changes the save loaded by the
+    ///     next continue request; it does not change the save currently backing
+    ///     the progress run.
+    /// </summary>
     void SetContinueTarget(string saveId);
 
     /// <summary>Request to switch the foreground level.</summary>

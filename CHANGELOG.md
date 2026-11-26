@@ -317,6 +317,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   fails fast instead of letting a recursive spawner grow the loop
   indefinitely, and an entity spawned during processing is not processed in
   that frame. Both the in-memory and Godot scene hosts follow the same rule.
+- **Deleting a save backing the running progress run is rejected** — changing
+  the continue target to another slot left that save deletable even though it
+  still backed the running progress run. Deletion now rejects the save
+  currently backing the current progress run, including a slot written by a
+  synthetic initial/main-menu run after it saves; the continue target remains
+  protected as before.
 - **Evolution Demo food sources respect corpse pending food** — food sources
   now use the current tick's food count and account for corpse/feed food
   pending in the same tick, so a source burst plus carcass release can no
