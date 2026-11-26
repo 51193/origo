@@ -339,6 +339,72 @@ public class SndEntityCollectionTests
     }
 
     [Fact]
+    public void ProcessAll_NestedSpawn_ThrowsBeforeProcessingSpawnedEntity()
+    {
+        // A spawn inside Process must fail the frame, and the spawned entity
+        // must not be processed by the same ProcessAll call. The child stops
+        // after one generation: on the pre-fix host it is processed in the
+        // same frame, which is the regression. A fully recursive spawner
+        // would keep the old live-count loop alive forever.
+        var collection = CreateCollection(out _);
+        var parent = (FakeSndEntity)collection.CreateEntity(Meta("parent"));
+        var childProcessed = false;
+        parent.OnProcess = () =>
+        {
+            if (parent.ProcessCount != 1)
+                return;
+
+            var child = (FakeSndEntity)collection.CreateEntity(Meta("child"));
+            child.OnProcess = () => childProcessed = true;
+        };
+
+        var ex = Assert.Throws<InvalidOperationException>(() => collection.ProcessAll(0.5));
+
+        Assert.Contains("modified during ProcessAll", ex.Message, StringComparison.Ordinal);
+        Assert.False(childProcessed,
+            "an entity spawned during ProcessAll must not be processed in the same frame");
+    }
+
+    [Fact]
+    public void ProcessAll_AddAndRemoveBalanced_Throws()
+    {
+        // A count-only guard misses a mutation that keeps the entity count
+        // unchanged: one removal plus one spawn must still fail the frame.
+        var collection = CreateCollection(out _);
+        var a = (FakeSndEntity)collection.CreateEntity(Meta("a"));
+        collection.CreateEntity(Meta("b"));
+        var cProcessed = false;
+        a.OnProcess = () =>
+        {
+            collection.RemoveEntity("b");
+            var c = (FakeSndEntity)collection.CreateEntity(Meta("c"));
+            c.OnProcess = () => cProcessed = true;
+        };
+
+        var ex = Assert.Throws<InvalidOperationException>(() => collection.ProcessAll(0.5));
+
+        Assert.Contains("modified during ProcessAll", ex.Message, StringComparison.Ordinal);
+        Assert.False(cProcessed,
+            "the mutation must be detected before a later or spawned entity is processed");
+    }
+
+    [Fact]
+    public void ProcessAll_RemoveOnly_Throws()
+    {
+        // With only a post-loop count/version check, removing an entity shifts
+        // the list and the next index would read out of range. The per-iteration
+        // guard must throw InvalidOperationException before indexing.
+        var collection = CreateCollection(out _);
+        var a = (FakeSndEntity)collection.CreateEntity(Meta("a"));
+        collection.CreateEntity(Meta("b"));
+        a.OnProcess = () => collection.RemoveEntity("b");
+
+        var ex = Assert.Throws<InvalidOperationException>(() => collection.ProcessAll(0.5));
+
+        Assert.Contains("modified during ProcessAll", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void RemoveAllEntities_ClearsCollection()
     {
         var collection = CreateCollection(out var detached);

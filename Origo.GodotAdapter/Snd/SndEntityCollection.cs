@@ -45,6 +45,7 @@ internal sealed class SndEntityCollection<T>
     private readonly List<T> _entities = [];
     private readonly Func<T> _entityFactory;
     private readonly Action<T>? _detachCallback;
+    private int _mutationVersion;
 
     public SndEntityCollection(Func<T> entityFactory, Action<T>? detachCallback = null)
     {
@@ -101,6 +102,7 @@ internal sealed class SndEntityCollection<T>
             _detachCallback?.Invoke(entity);
         }
         _entities.Clear();
+        _mutationVersion++;
     }
 
     public ISndEntity CreateEntity(SndMetaData metaData)
@@ -145,13 +147,14 @@ internal sealed class SndEntityCollection<T>
         // entities mid-frame would otherwise make the index loop skip or
         // double-process entities silently.
         var initialCount = _entities.Count;
-        for (var i = 0; i < _entities.Count; i++)
+        var mutationVersion = _mutationVersion;
+        for (var i = 0; i < initialCount; i++)
+        {
+            ThrowIfMutatedDuringProcess(mutationVersion);
             _entities[i].ProcessSnd(delta);
+        }
 
-        if (_entities.Count != initialCount)
-            throw new InvalidOperationException(
-                $"Scene container modified during ProcessAll: entity count changed from {initialCount} to {_entities.Count}. " +
-                "The host must not be mutated while entities process.");
+        ThrowIfMutatedDuringProcess(mutationVersion);
     }
 
     public void RemoveEntity(string name)
@@ -163,6 +166,7 @@ internal sealed class SndEntityCollection<T>
                 continue;
 
             _entities.RemoveAt(i);
+            _mutationVersion++;
             entity.DetachFromManager();
             _detachCallback?.Invoke(entity);
             return;
@@ -183,11 +187,22 @@ internal sealed class SndEntityCollection<T>
     {
         var entity = _entityFactory();
         _entities.Add(entity);
+        _mutationVersion++;
         staged.Add(entity);
         entity.RecoverForLifecycle(meta);
         if (OwningSession is not null)
             entity.BindSession(OwningSession);
         return entity;
+    }
+
+    private void ThrowIfMutatedDuringProcess(int mutationVersion)
+    {
+        if (_mutationVersion == mutationVersion)
+            return;
+
+        throw new InvalidOperationException(
+            "Scene container modified during ProcessAll: an entity was added or removed while entities process. " +
+            "The host must not be mutated while entities process.");
     }
 
     private T FindAsT(string name)
@@ -213,7 +228,13 @@ internal sealed class SndEntityCollection<T>
         {
             var entity = staged[i];
             RunCleanupStep(entity.RollbackAcquiredResources, cleanupFailures);
-            RunCleanupStep(() => _entities.Remove(entity), cleanupFailures);
+            RunCleanupStep(
+                () =>
+                {
+                    _entities.Remove(entity);
+                    _mutationVersion++;
+                },
+                cleanupFailures);
             RunCleanupStep(entity.DetachFromManager, cleanupFailures);
             RunCleanupStep(() => _detachCallback?.Invoke(entity), cleanupFailures);
         }

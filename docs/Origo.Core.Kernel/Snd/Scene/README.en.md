@@ -49,7 +49,7 @@ The default scene host for background sessions. Key characteristics:
 - **RecoverFromMetaList**: only recovers entity data/strategies/nodes (does not trigger AfterLoad hooks), used for save loading scenarios. First sets entity name via `entity.Name = metaData.Name`, then registers entity in the internal collection, and finally calls `RecoverForLifecycle(meta)`. Therefore, before hooks execute, `FindByName` can find all registered entities.
 - **RemoveEntity**: only removes the entity from the collection; does not release strategy references, does not release engine resources, and does not trigger hooks (strategy release and resource reclamation are completed by `SessionRun.KillPending` before this method is called)
 - **RemoveAllEntities**: only clears the internal collection
-- **ProcessAll**: iterates all alive entities with an index loop (the host container must not be modified during iteration)
+- **ProcessAll**: iterates the entities alive at frame start with a fixed loop bound and detects any container mutation (including a count-neutral add/remove); a mutation throws `InvalidOperationException` and an entity added during processing is not processed in that frame
 
 ### NullNodeFactory / NullNodeHandle
 

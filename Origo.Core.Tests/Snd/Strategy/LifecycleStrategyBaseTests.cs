@@ -299,6 +299,50 @@ public class LifecycleStrategyBaseTests
             });
     }
 
+    private const string _nestedSpawnOnceIdx = "test.nested_spawn_once";
+    private const string _balancedMutationIdx = "test.balanced_mutation";
+    private const string _markerIdx = "test.marker";
+
+    private static Action? _processMutation;
+
+    [StrategyIndex(_nestedSpawnOnceIdx)]
+    private sealed class NestedSpawnOnceStrategy : LifecycleStrategyBase
+    {
+        public static bool ChildProcessed { get; set; }
+
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx)
+        {
+            // The child stops after one generation: on the pre-fix host it is
+            // processed in the same frame, which is the regression. A fully
+            // recursive spawner would keep the old live-count loop alive
+            // forever, so the regression is asserted through the child's
+            // Process result instead.
+            if (entity.Name == "child")
+            {
+                ChildProcessed = true;
+                return;
+            }
+
+            entity.OwningSession.Spawn(CreateMeta("child", [_nestedSpawnOnceIdx]));
+        }
+    }
+
+    [StrategyIndex(_markerIdx)]
+    private sealed class MarkerStrategy : LifecycleStrategyBase
+    {
+        public static bool Processed { get; set; }
+
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx)
+            => Processed = true;
+    }
+
+    [StrategyIndex(_balancedMutationIdx)]
+    private sealed class BalancedMutationStrategy : LifecycleStrategyBase
+    {
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx)
+            => _processMutation?.Invoke();
+    }
+
     [Fact]
     public void ProcessAll_ContainerModifiedDuringProcess_ThrowsInvalidOperation()
     {
@@ -310,6 +354,81 @@ public class LifecycleStrategyBaseTests
 
         var ex = Assert.Throws<InvalidOperationException>(() => host.ProcessAll(0.016));
         Assert.Contains("modified during ProcessAll", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ProcessAll_NestedSpawn_ThrowsBeforeProcessingSpawnedEntity()
+    {
+        // A spawn inside Process must fail the frame, and the spawned entity
+        // must not be processed by the same ProcessAll call. With the live
+        // count as the loop bound, a nested spawner would keep the loop alive
+        // until the spawned entity itself stopped spawning.
+        NestedSpawnOnceStrategy.ChildProcessed = false;
+        var (host, ctx) = CreateHost(w => w.RegisterStrategy(() => new NestedSpawnOnceStrategy()));
+        var session = ctx.Runtime.SessionManager.ForegroundSession!;
+        session.Spawn(CreateMeta("parent", [_nestedSpawnOnceIdx]));
+
+        var ex = Assert.Throws<InvalidOperationException>(() => host.ProcessAll(0.016));
+
+        Assert.Contains("modified during ProcessAll", ex.Message, StringComparison.Ordinal);
+        Assert.False(NestedSpawnOnceStrategy.ChildProcessed,
+            "an entity spawned during ProcessAll must not be processed in the same frame");
+    }
+
+    [Fact]
+    public void ProcessAll_AddAndRemoveBalanced_ThrowsInvalidOperation()
+    {
+        // A count-only guard misses a mutation that keeps the entity count
+        // unchanged: one removal plus one spawn must still fail the frame.
+        var (host, ctx) = CreateHost(w =>
+        {
+            w.RegisterStrategy(() => new BalancedMutationStrategy());
+            w.RegisterStrategy(() => new MarkerStrategy());
+        });
+        var session = ctx.Runtime.SessionManager.ForegroundSession!;
+        session.Spawn(CreateMeta("A", [_balancedMutationIdx]));
+        session.Spawn(CreateMeta("B"));
+        MarkerStrategy.Processed = false;
+        _processMutation = () =>
+        {
+            host.RemoveEntity("B");
+            session.Spawn(CreateMeta("C", [_markerIdx]));
+        };
+
+        try
+        {
+            var ex = Assert.Throws<InvalidOperationException>(() => host.ProcessAll(0.016));
+            Assert.Contains("modified during ProcessAll", ex.Message, StringComparison.Ordinal);
+            Assert.False(MarkerStrategy.Processed,
+                "the mutation must be detected before a later or spawned entity is processed");
+        }
+        finally
+        {
+            _processMutation = null;
+        }
+    }
+
+    [Fact]
+    public void ProcessAll_RemoveOnly_ThrowsInvalidOperation()
+    {
+        // With only a post-loop count/version check, removing an entity shifts
+        // the list and the next index would read out of range. The per-iteration
+        // guard must throw InvalidOperationException before indexing.
+        var (host, ctx) = CreateHost(w => w.RegisterStrategy(() => new BalancedMutationStrategy()));
+        var session = ctx.Runtime.SessionManager.ForegroundSession!;
+        session.Spawn(CreateMeta("A", [_balancedMutationIdx]));
+        session.Spawn(CreateMeta("B"));
+        _processMutation = () => host.RemoveEntity("B");
+
+        try
+        {
+            var ex = Assert.Throws<InvalidOperationException>(() => host.ProcessAll(0.016));
+            Assert.Contains("modified during ProcessAll", ex.Message, StringComparison.Ordinal);
+        }
+        finally
+        {
+            _processMutation = null;
+        }
     }
 }
 

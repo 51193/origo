@@ -103,6 +103,9 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 | `AddStrategy_SameIndexTwice_Throws` | Calling AddStrategy again on an already-mounted strategy index | InvalidOperationException ("already mounted") |
 | `AddStrategy_WhenAfterAddRemovesItselfThenThrows_PropagatesOriginalFailure` | AfterAdd removes the strategy itself and then throws | Original InvalidOperationException propagates unmasked |
 | `ProcessAll_ContainerModifiedDuringProcess_ThrowsInvalidOperation` | An entity spawns another entity during ProcessAll | InvalidOperationException (contains "modified during ProcessAll") |
+| `ProcessAll_NestedSpawn_ThrowsBeforeProcessingSpawnedEntity` | An entity spawns a child carrying the same lifecycle strategy during ProcessAll | The frame fails; the spawned child is not processed in that frame |
+| `ProcessAll_AddAndRemoveBalanced_ThrowsInvalidOperation` | A strategy removes one entity and spawns another, leaving the entity count unchanged | InvalidOperationException before the spawned entity is processed |
+| `ProcessAll_RemoveOnly_ThrowsInvalidOperation` | A strategy removes an entity without adding one | InvalidOperationException before the shifted index is read |
 
 ### Boundary Paths
 

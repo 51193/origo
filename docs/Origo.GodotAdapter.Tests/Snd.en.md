@@ -55,6 +55,9 @@ Verifies the parts of the adapter-layer SND entity system that **do not require 
 | `RemoveEntity_Unknown_Throws` | Removing a missing entity throws `InvalidOperationException` | Origo.GodotAdapter/Snd |
 | `RequestKillEntity_AlreadyPending_Throws` | Duplicate kill on an already-marked entity throws `InvalidOperationException` | Origo.GodotAdapter/Snd |
 | `ProcessAll_ContainerModifiedDuringProcess_Throws` | Collection mutated during frame processing (entity spawned inside ProcessSnd) | Throws `InvalidOperationException` (contains "modified during ProcessAll"; consistent with FullMemorySndSceneHost) |
+| `ProcessAll_NestedSpawn_ThrowsBeforeProcessingSpawnedEntity` | A parent entity spawns a child that records whether it was processed | The frame fails; the spawned child is not processed in that frame |
+| `ProcessAll_AddAndRemoveBalanced_Throws` | One entity is removed and one is added during ProcessSnd, leaving the count unchanged | Throws `InvalidOperationException` before the added entity is processed |
+| `ProcessAll_RemoveOnly_Throws` | One entity is removed during ProcessSnd without adding one | Throws `InvalidOperationException` before the shifted index is read |
 | `RequestKillEntity_Unknown_Throws` | Killing a missing entity throws `InvalidOperationException` | Origo.GodotAdapter/Snd |
 
 ## TypedDataAssemblyLoadTests Details

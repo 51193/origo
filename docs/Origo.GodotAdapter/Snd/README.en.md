@@ -32,7 +32,7 @@ The adapter layer's internal scene-host node, mounted in the Godot scene tree by
 - **Rollback mechanism**: In `RecoverFromMetaList`, if an entity fails to load, the collection rolls back and releases all already-created entities (via the staged list in `SndEntityCollection`)
 - **GetEntities()**: Returns a **snapshot** (not a live view) — consistent with the Core hosts' contract: iterating while the host is mutated does not throw "collection was modified", and the snapshot cannot be downcast to the mutable backing list (no manual mutations bypassing collection management)
 - **BuildMetaList()**: Calls entities' `BuildSndMetaData()` to collect metadata
-- **ProcessAll(delta)**: Implements the unified entry for `ISndSceneHost.ProcessAll`, called by Core's `SessionManager.ProcessAllSessions`, driving frame processing for every entity in the collection. Like `FullMemorySndSceneHost`, a container mutation during processing (e.g. a strategy calling `Spawn` inside `Process`) throws `InvalidOperationException` instead of silently skipping or double-processing entities
+- **ProcessAll(delta)**: Implements the unified entry for `ISndSceneHost.ProcessAll`, called by Core's `SessionManager.ProcessAllSessions`, driving frame processing for every entity in the collection. Like `FullMemorySndSceneHost`, any container mutation during processing (e.g. a strategy calling `Spawn` inside `Process`, including an add paired with a remove that leaves the count unchanged) throws `InvalidOperationException` instead of silently skipping or double-processing entities; an entity added during processing is not processed in that frame
 
 ### GodotSndEntity
 
