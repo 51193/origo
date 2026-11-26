@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Origo.EvolutionDemo.Logic.Gameplay;
 using Origo.EvolutionDemo.Logic.V4;
 using Xunit;
@@ -116,12 +117,62 @@ public sealed class CampaignPurchasePolicyTests : IDisposable
         Assert.False(GenomeContentGate.IsOrganAllowed(OrganKindV4.HardDigest));
     }
 
+
+    [Fact]
+    public void Planned_HonorsEnrichmentDisable()
+    {
+        var runtime = GameplayRuntime.CreateDefault(null, GameplayMode.Campaign);
+        AddEarlyMilestones(runtime.Progression);
+        runtime.Progression.CompletedMilestones.Add("milestone.population100");
+        runtime.Progression.Points = 1_000;
+        MarkPlannedUnlockedExcept(runtime, CampaignUnlockIds.Enrichment);
+
+        Assert.Null(CampaignPurchasePolicy.Decide(
+            runtime, CampaignPurchaseStrategy.Planned,
+            new CampaignPurchaseOptions(AllowEnrichment: false)));
+        var enabled = CampaignPurchasePolicy.Decide(
+            runtime, CampaignPurchaseStrategy.Planned,
+            new CampaignPurchaseOptions(AllowEnrichment: true));
+        Assert.NotNull(enabled);
+        Assert.Equal(CampaignUnlockIds.Enrichment, enabled!.UnlockId);
+    }
+
+    [Fact]
+    public void Planned_HonorsPredationDisable()
+    {
+        var runtime = GameplayRuntime.CreateDefault(null, GameplayMode.Campaign);
+        AddEarlyMilestones(runtime.Progression);
+        runtime.Progression.CompletedMilestones.Add("milestone.population800");
+        runtime.Progression.CompletedMilestones.Add("milestone.firstBlood");
+        runtime.Progression.Points = 1_000;
+        MarkPlannedUnlockedExcept(
+            runtime, CampaignUnlockIds.Predation, CampaignUnlockIds.Battery, CampaignUnlockIds.Armor);
+
+        Assert.Null(CampaignPurchasePolicy.Decide(
+            runtime, CampaignPurchaseStrategy.Planned,
+            new CampaignPurchaseOptions(AllowPredation: false)));
+        var enabled = CampaignPurchasePolicy.Decide(
+            runtime, CampaignPurchaseStrategy.Planned,
+            new CampaignPurchaseOptions(AllowPredation: true));
+        Assert.NotNull(enabled);
+        Assert.Equal(CampaignUnlockIds.Predation, enabled!.UnlockId);
+    }
+
     private static void AddEarlyMilestones(GameplayProgression progression)
     {
         progression.CompletedMilestones.Add("milestone.firstBirth");
         progression.CompletedMilestones.Add("milestone.toughDiscovered");
         progression.CompletedMilestones.Add("milestone.generation5");
         progression.CompletedMilestones.Add("milestone.population32");
+    }
+
+    private static void MarkPlannedUnlockedExcept(
+        GameplayRuntime runtime, params string[] except)
+    {
+        var excluded = except.ToHashSet(StringComparer.Ordinal);
+        foreach (var unlockId in CampaignPurchasePolicy.PlannedOrder)
+            if (!excluded.Contains(unlockId))
+                runtime.Progression.UnlockedIds.Add(unlockId);
     }
 
     public void Dispose()

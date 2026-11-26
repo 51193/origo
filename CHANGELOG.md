@@ -13,6 +13,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 ### Added
 
+- **Evolution Demo campaign tests can isolate content controls** — planned,
+  idle, cheapest, and greedy policies honor
+  `ORIGO_DEMO_CAMPAIGN_ENRICHMENT=0` and
+  `ORIGO_DEMO_CAMPAIGN_PREDATION=0` while leaving the rest of the plan
+  intact. This supports controlled 2x2 experiments without bypassing the
+  real unlock gates.
 - **Evolution Demo campaign tests model different players** — the headless
   campaign runner can now spend Evolution Points through named player models:
   `planned` (save for the next capacity/survival goal), `idle` (long-interval
@@ -119,6 +125,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   headless smoke verifies every expected checkpoint.
 
 ### Changed
+
+- **Evolution Demo smoke waits for a second generation** — the smoke phase
+  now keeps running for up to 30 simulation seconds when generation 1 has not
+  appeared, instead of failing a valid seed at the 2 s smoke target. The
+  benchmark still resets progression after the smoke.
 
 - **Evolution Demo campaign autoplay defaults to a player model** —
   `ORIGO_DEMO_CAMPAIGN_AUTOPLAY=1` now maps to the fresh-start `planned`
