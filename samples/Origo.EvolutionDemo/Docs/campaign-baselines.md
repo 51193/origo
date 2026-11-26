@@ -216,7 +216,9 @@ The [six-seed matrix](campaign-matrix-2026-11-25.md) extends the planned
 envelope to nine runs. Only one of nine planned runs held the high-density
 state; the matrix clarifies that the 1,663 case is a rare survivor, not the
 expected planned outcome. Use the matrix path envelope for planned and retain
-this page as the first-baseline record.
+this page as the first-baseline record. The
+[controls follow-up](campaign-controls-2026-11-26.md) shows that enrichment
+and predation are jointly necessary for the planned collapse.
 
 ## How to use and refresh the baseline
 

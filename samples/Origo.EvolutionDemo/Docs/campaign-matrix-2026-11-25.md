@@ -79,7 +79,11 @@ real, but it is a rare survivor rather than a representative planned result.
 The earlier "bimodal" wording was directionally correct, but the matrix shows
 that the low mode is strongly preferred over 3,600 s.
 
-### 2. Enrichment timing is the strongest current collapse hypothesis
+A later 20-seed survival run found three more high survivors; combining all
+29 planned runs gives four high outcomes. The controlled follow-up is
+[campaign-controls-2026-11-26](campaign-controls-2026-11-26.md).
+
+### 2. The matrix alone could not identify the enrichment trigger
 
 Every matrix planned run bought enrichment late (2,056–3,317 s) and every one
 collapsed. The one high-density planned run in the earlier baseline never
@@ -87,11 +91,15 @@ bought enrichment, kept founder share at 0, and reached 64 gene copies.
 
 Idle, cheapest, and greedy buy enrichment much earlier (600 s, 211–632 s,
 37–73 s), but they do not show the same planned peak-and-collapse shape. The
-association is therefore not "enrichment always causes collapse"; it is more
-specific: **late enrichment on an already high-density planned run may be the
-event that turns the peak into a crash**. This remains a hypothesis. A
-controlled 2×2 with enrichment disabled and late-enabled on the same planned
-seeds is the next experiment.
+matrix is observational: the enrichment purchase is often after the 1,800 s
+peak, and seed, founder lineage, point income, and predation move together.
+It cannot separate the causes.
+
+The controlled follow-up does: removing enrichment **or** removing the
+predation family lifts the same four seeds from 294–458 to 1,916–2,498 at
+3,600 s. Enrichment and predation are both necessary; the interaction is the
+collapse condition. See
+[campaign-controls-2026-11-26](campaign-controls-2026-11-26.md).
 
 ### 3. The player model changes the shape more than the final median
 
