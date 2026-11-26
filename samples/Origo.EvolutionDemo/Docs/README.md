@@ -44,6 +44,8 @@ separate from the framework manual under `docs/`.
 | Topic | Entry |
 |---|---|
 | Campaign player-model baselines | [campaign-baselines](campaign-baselines.md) |
+| Six-seed strategy matrix | [campaign-matrix-2026-11-25](campaign-matrix-2026-11-25.md) |
+| Enrichment × predation controls | [campaign-controls-2026-11-26](campaign-controls-2026-11-26.md) |
 | Genome v4 design baseline | [GENOME_V4_DESIGN](../GENOME_V4_DESIGN.md) |
 | Content pack notes | [Content](../Content/README.md) |
 | Genome v4 implementation reference | [Logic/V4](../../Origo.EvolutionDemo.Logic/V4/README.md) |

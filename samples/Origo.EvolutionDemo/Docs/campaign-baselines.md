@@ -210,6 +210,16 @@ The three selected models cover the meaningful spread: **high growth then
 bimodal end state**, **slow low growth**, and **frequent side-grade spending**.
 They should be compared as envelopes, not exact golden numbers.
 
+## Follow-up: six-seed strategy matrix
+
+The [six-seed matrix](campaign-matrix-2026-11-25.md) extends the planned
+envelope to nine runs. Only one of nine planned runs held the high-density
+state; the matrix clarifies that the 1,663 case is a rare survivor, not the
+expected planned outcome. Use the matrix path envelope for planned and retain
+this page as the first-baseline record. The
+[controls follow-up](campaign-controls-2026-11-26.md) shows that enrichment
+and predation are jointly necessary for the planned collapse.
+
 ## How to use and refresh the baseline
 
 - Use the same seeds, 3,600 s horizon, 300 s checkpoints, fresh profile, and
