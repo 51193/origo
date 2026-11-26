@@ -310,6 +310,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **Scene host frame processing fails before a spawned entity is processed** —
+  `ProcessAll` uses the entity count captured at frame start as its loop bound
+  and detects any container add/remove, including a balanced add/remove that
+  leaves the count unchanged. A strategy that spawns during processing now
+  fails fast instead of letting a recursive spawner grow the loop
+  indefinitely, and an entity spawned during processing is not processed in
+  that frame. Both the in-memory and Godot scene hosts follow the same rule.
 - **Evolution Demo food sources respect corpse pending food** — food sources
   now use the current tick's food count and account for corpse/feed food
   pending in the same tick, so a source burst plus carcass release can no

@@ -24,6 +24,7 @@ internal sealed class FullMemorySndSceneHost
     private readonly List<MemoryEntityEntry> _entries = [];
     private readonly ILogger _logger;
     private readonly NullNodeFactory _nodeFactory = new();
+    private int _mutationVersion;
     private ISndContext? _context;
     private ObserverTopology? _observerTopology;
     private ISessionRun? _owningSession;
@@ -96,6 +97,7 @@ internal sealed class FullMemorySndSceneHost
             foreach (var entity in staged)
             {
                 _entries.RemoveAll(e => ReferenceEquals(e.Entity, entity));
+                _mutationVersion++;
                 ((IEntityLifecycle)entity).ReleaseStrategiesOnly();
                 ((IEntityLifecycle)entity).TeardownOnly();
             }
@@ -104,7 +106,11 @@ internal sealed class FullMemorySndSceneHost
         }
     }
 
-    public void RemoveAllEntities() => _entries.Clear();
+    public void RemoveAllEntities()
+    {
+        _entries.Clear();
+        _mutationVersion++;
+    }
 
     public void RemoveEntity(string name)
     {
@@ -114,6 +120,7 @@ internal sealed class FullMemorySndSceneHost
             throw new InvalidOperationException($"No entity with name '{name}'.");
 
         _entries.RemoveAt(index);
+        _mutationVersion++;
     }
 
     public void RequestKillEntity(string name)
@@ -137,13 +144,24 @@ internal sealed class FullMemorySndSceneHost
         // would otherwise silently skip entities. Detect the violation
         // instead of failing silently.
         var initialCount = _entries.Count;
-        for (var i = 0; i < _entries.Count; i++)
+        var mutationVersion = _mutationVersion;
+        for (var i = 0; i < initialCount; i++)
+        {
+            ThrowIfMutatedDuringProcess(mutationVersion);
             _entries[i].Entity.Process(delta);
+        }
 
-        if (_entries.Count != initialCount)
-            throw new InvalidOperationException(
-                $"Scene container modified during ProcessAll: entity count changed from {initialCount} to {_entries.Count}. " +
-                "The host must not be mutated while entities process.");
+        ThrowIfMutatedDuringProcess(mutationVersion);
+    }
+
+    private void ThrowIfMutatedDuringProcess(int mutationVersion)
+    {
+        if (_mutationVersion == mutationVersion)
+            return;
+
+        throw new InvalidOperationException(
+            "Scene container modified during ProcessAll: an entity was added or removed while entities process. " +
+            "The host must not be mutated while entities process.");
     }
 
     internal void BindWorld(SndWorld world)
@@ -160,6 +178,7 @@ internal sealed class FullMemorySndSceneHost
         var entity = _world!.CreateEntity(_nodeFactory, _context!, _logger, _observerTopology!);
         entity.Name = metaData.Name;
         _entries.Add(new MemoryEntityEntry(entity));
+        _mutationVersion++;
         try
         {
             ((IEntityLifecycle)entity).RecoverForLifecycle(metaData);
@@ -170,6 +189,7 @@ internal sealed class FullMemorySndSceneHost
             // half-initialized entity behind (FindByName would surface it and
             // its strategy references would leak). Roll back before rethrowing.
             _entries.RemoveAt(_entries.Count - 1);
+            _mutationVersion++;
             ((IEntityLifecycle)entity).ReleaseStrategiesOnly();
             ((IEntityLifecycle)entity).TeardownOnly();
             throw;
