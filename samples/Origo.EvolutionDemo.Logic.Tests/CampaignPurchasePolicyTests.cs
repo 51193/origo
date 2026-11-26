@@ -158,12 +158,96 @@ public sealed class CampaignPurchasePolicyTests : IDisposable
         Assert.Equal(CampaignUnlockIds.Predation, enabled!.UnlockId);
     }
 
+
+    [Theory]
+    [InlineData(CampaignPurchaseStrategy.Planned)]
+    [InlineData(CampaignPurchaseStrategy.Idle)]
+    [InlineData(CampaignPurchaseStrategy.Cheapest)]
+    [InlineData(CampaignPurchaseStrategy.Greedy)]
+    public void DisabledEnrichment_AppliesToEveryStrategy(CampaignPurchaseStrategy strategy)
+    {
+        var runtime = GameplayRuntime.CreateDefault(null, GameplayMode.Campaign);
+        AddEarlyMilestones(runtime.Progression);
+        runtime.Progression.CompletedMilestones.Add("milestone.population100");
+        runtime.Progression.Points = 1_000;
+        MarkPlannedUnlockedExcept(runtime, CampaignUnlockIds.Enrichment);
+
+        Assert.Null(CampaignPurchasePolicy.Decide(
+            runtime, strategy, new CampaignPurchaseOptions(AllowEnrichment: false)));
+        var enabled = CampaignPurchasePolicy.Decide(
+            runtime, strategy, new CampaignPurchaseOptions(AllowEnrichment: true));
+        Assert.NotNull(enabled);
+        Assert.Equal(CampaignUnlockIds.Enrichment, enabled!.UnlockId);
+    }
+
+    [Theory]
+    [InlineData(CampaignPurchaseStrategy.Planned)]
+    [InlineData(CampaignPurchaseStrategy.Idle)]
+    [InlineData(CampaignPurchaseStrategy.Cheapest)]
+    [InlineData(CampaignPurchaseStrategy.Greedy)]
+    public void DisabledPredationFamily_AppliesToEveryStrategy(CampaignPurchaseStrategy strategy)
+    {
+        var runtime = GameplayRuntime.CreateDefault(null, GameplayMode.Campaign);
+        AddEarlyMilestones(runtime.Progression);
+        runtime.Progression.CompletedMilestones.Add("milestone.population800");
+        runtime.Progression.CompletedMilestones.Add("milestone.firstBlood");
+        runtime.Progression.Points = 1_000;
+        MarkPlannedUnlockedExcept(
+            runtime, CampaignUnlockIds.Predation, CampaignUnlockIds.Battery, CampaignUnlockIds.Armor);
+        // Unlock Predation itself so Battery and Armor are genuinely available;
+        // this catches the family filter rather than only the missing prerequisite.
+        runtime.Progression.UnlockedIds.Add(CampaignUnlockIds.Predation);
+
+        Assert.Null(CampaignPurchasePolicy.Decide(
+            runtime, strategy, new CampaignPurchaseOptions(AllowPredation: false)));
+        var enabled = CampaignPurchasePolicy.Decide(
+            runtime, strategy, new CampaignPurchaseOptions(AllowPredation: true));
+        Assert.NotNull(enabled);
+        Assert.Equal(CampaignUnlockIds.Battery, enabled!.UnlockId);
+    }
+
+    [Fact]
+    public void Planned_ContinuesPastDisabledPredationFamily()
+    {
+        var runtime = GameplayRuntime.CreateDefault(null, GameplayMode.Campaign);
+        AddEarlyMilestones(runtime.Progression);
+        runtime.Progression.CompletedMilestones.Add("milestone.population800");
+        runtime.Progression.CompletedMilestones.Add("milestone.firstBlood");
+        runtime.Progression.CompletedMilestones.Add("milestone.longDrift");
+        runtime.Progression.Points = 1_000;
+        UnlockPlannedThrough(runtime, CampaignUnlockIds.FoodTypeVision);
+
+        var skipped = CampaignPurchasePolicy.Decide(
+            runtime, CampaignPurchaseStrategy.Planned,
+            new CampaignPurchaseOptions(AllowPredation: false));
+        Assert.NotNull(skipped);
+        Assert.Equal(CampaignUnlockIds.Pond5, skipped!.UnlockId);
+
+        var control = CampaignPurchasePolicy.Decide(
+            runtime, CampaignPurchaseStrategy.Planned,
+            new CampaignPurchaseOptions(AllowPredation: true));
+        Assert.NotNull(control);
+        Assert.Equal(CampaignUnlockIds.Predation, control!.UnlockId);
+    }
+
     private static void AddEarlyMilestones(GameplayProgression progression)
     {
         progression.CompletedMilestones.Add("milestone.firstBirth");
         progression.CompletedMilestones.Add("milestone.toughDiscovered");
         progression.CompletedMilestones.Add("milestone.generation5");
         progression.CompletedMilestones.Add("milestone.population32");
+    }
+
+    private static void UnlockPlannedThrough(GameplayRuntime runtime, string target)
+    {
+        foreach (var unlockId in CampaignPurchasePolicy.PlannedOrder)
+        {
+            runtime.Progression.UnlockedIds.Add(unlockId);
+            if (string.Equals(unlockId, target, StringComparison.Ordinal))
+                return;
+        }
+
+        throw new InvalidOperationException($"Planned target '{target}' was not found.");
     }
 
     private static void MarkPlannedUnlockedExcept(

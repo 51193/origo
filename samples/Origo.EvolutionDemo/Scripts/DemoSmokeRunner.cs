@@ -451,10 +451,9 @@ public partial class DemoSmokeRunner : Node
                 var running = ui.SmokeStats();
                 AssertWithinCaps(running);
                 var generationDeadline = MathF.Max(_targetSeconds, MinimumSmokeGenerationSeconds);
-                var waitingForGeneration = running.generation < 1;
-                if (_spedUp && running.creatures > 0
-                    && (running.time < _targetSeconds
-                        || (waitingForGeneration && running.time < generationDeadline)))
+                if (_spedUp && CampaignSmokeGate.ShouldWaitForGeneration(
+                    running.time, _targetSeconds, generationDeadline,
+                    running.generation, running.creatures))
                 {
                     if (_frame % 30 == 0 && HasFoodOutsidePond())
                         throw new InvalidOperationException("A food entity left the pond boundary during the smoke run.");
@@ -538,7 +537,7 @@ public partial class DemoSmokeRunner : Node
                 if (restored.creatures == 0)
                     throw new InvalidOperationException("Loaded pond has no creatures.");
                 if (restored.generation < 1)
-                    throw new InvalidOperationException("The smoke run did not reach a second generation.");
+                    throw new InvalidOperationException("The smoke run did not reach generation 1 (the second generation).");
                 if (restored.time + 0.01f < _savedTime)
                     throw new InvalidOperationException(
                         $"Loaded time regressed: saved={_savedTime:0.0}, restored={restored.time:0.0}.");
