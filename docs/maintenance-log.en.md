@@ -29,6 +29,12 @@ CI workflow shape, local test/coverage gates, package-consumer fixture smoke cov
   fails before the cross-machine comparison skip, matching the Bash gate. A
   removed or renamed benchmark can no longer silently shrink the monitored
   surface on Windows; `test-dev-suite.sh` guards the parity structure.
+- **Weekly snapshots tag the last first-parent commit inside the window** —
+  the scheduled weekly workflow now records the last mainline commit in the
+  completed week and checks it out before stamping and tagging, so commits
+  made after Monday 00:00 UTC and unmerged branch commits cannot replace the
+  snapshot commit. The workflow guard pins the `--first-parent` selection,
+  the `snapshot_sha` output, and the checkout step.
 
 - **Save snapshot benchmark times both directions** — the snapshot benchmark
   times `WriteSavePayloadToCurrentThenSnapshot` and

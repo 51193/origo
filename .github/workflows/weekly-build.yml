@@ -72,12 +72,18 @@ jobs:
             echo "Manual dispatch window includes commits up to now."
           fi
 
-          if ! WINDOW_COMMITS="$(git rev-list "${REVISION_ARGS[@]}" HEAD)"; then
+          if ! WINDOW_COMMITS="$(git rev-list --first-parent "${REVISION_ARGS[@]}" HEAD)"; then
             echo "ERROR: git rev-list failed while evaluating the weekly window." >&2
             exit 1
           fi
           if [[ -n "$WINDOW_COMMITS" ]]; then
             echo "Commits in the weekly window: $(printf '%s\n' "$WINDOW_COMMITS" | wc -l)"
+            # git rev-list lists newest first. Stamp and tag the last commit
+            # inside the window, not the current HEAD, so commits made after
+            # the cutoff cannot leak into the "last complete week" snapshot.
+            SNAPSHOT_SHA="$(printf '%s\n' "$WINDOW_COMMITS" | head -1)"
+            echo "Weekly snapshot commit: $SNAPSHOT_SHA"
+            echo "snapshot_sha=$SNAPSHOT_SHA" >> "$GITHUB_OUTPUT"
           fi
 
           # Reuse only the numeric base of the current stamp, so 0.0.11,
@@ -195,6 +201,7 @@ jobs:
         if: steps.check.outputs.new_version != ''
         shell: bash
         run: |
+          git checkout --detach "${{ steps.check.outputs.snapshot_sha }}"
           python3 scripts/python/write-version-stamp.py "${{ steps.check.outputs.new_version }}"
 
           git config user.name "github-actions[bot]"

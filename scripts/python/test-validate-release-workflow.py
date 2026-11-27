@@ -111,6 +111,39 @@ class ReleaseWorkflowGuardTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("not an allowed command", stderr)
 
+    def test_weekly_window_without_first_parent_is_rejected(self):
+        weekly = self.mutated_weekly(
+            'git rev-list --first-parent "${REVISION_ARGS[@]}" HEAD',
+            'git rev-list "${REVISION_ARGS[@]}" HEAD',
+        )
+        code, _, stderr = self.run_guard(
+            WORKFLOW.read_text(encoding="utf-8"), weekly
+        )
+        self.assertEqual(code, 1)
+        self.assertIn("--first-parent", stderr)
+
+    def test_weekly_missing_snapshot_sha_output_is_rejected(self):
+        weekly = self.mutated_weekly(
+            '            echo "snapshot_sha=$SNAPSHOT_SHA" >> "$GITHUB_OUTPUT"\n',
+            "",
+        )
+        code, _, stderr = self.run_guard(
+            WORKFLOW.read_text(encoding="utf-8"), weekly
+        )
+        self.assertEqual(code, 1)
+        self.assertIn("snapshot_sha", stderr)
+
+    def test_weekly_missing_snapshot_checkout_is_rejected(self):
+        weekly = self.mutated_weekly(
+            '          git checkout --detach "${{ steps.check.outputs.snapshot_sha }}"\n',
+            "",
+        )
+        code, _, stderr = self.run_guard(
+            WORKFLOW.read_text(encoding="utf-8"), weekly
+        )
+        self.assertEqual(code, 1)
+        self.assertIn("check out the window snapshot_sha", stderr)
+
     def test_weekly_missing_tag_push_is_rejected(self):
         weekly = self.mutated_weekly(
             '          git push origin "refs/tags/${TAG}"',
