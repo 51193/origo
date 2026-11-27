@@ -110,6 +110,30 @@ predation keeps **335** new gen0 lineages alive; adding predation leaves only
 are mutation clusters, so the new/lost counts are not family survival; the
 gen0 counts are the useful founder-pressure proxy.
 
+### Root lineage and death-cause follow-up
+
+A second run of the same seed/2x2 after adding `evo.rootLineage`,
+`evo.spawnOrigin`, and the three death counters gives the stable ancestry and
+cause view (1,500 / 1,800 / final saves):
+
+| Cell | Final pop | Root lineages | Root gen0 lineages | Predation share | Starvation share |
+|---|---:|---:|---:|---:|---:|
+| enrichment off, predation off | 2,496 | 3 | 0 | 0% | 92% |
+| enrichment off, predation on | 2,192 | 2 | 0 | 21% | 74% |
+| enrichment on, predation off | 2,497 | 407 | 335 | 0% | 92% |
+| enrichment on, predation on | 425 | 91 | 48 | 55% | 42% |
+
+This is the cleanest mechanism evidence so far:
+
+- predation-only leaves two root lineages and no founder injection;
+- enrichment-only keeps **407** root lineages and fills the cap;
+- both leaves only 48 injected root lineages and raises predation to **55%**
+  of tracked deaths; the population collapses.
+
+The root lineage view also shows why mutation-lineage counts were misleading:
+the same e1p0 snapshot has 1,842 mutation lineages but only **407** roots, and
+e1p1 has 321 mutation lineages but **91** roots.
+
 ### What this changes from the matrix page
 
 The [matrix page](campaign-matrix-2026-11-25.md) correctly said the six-seed

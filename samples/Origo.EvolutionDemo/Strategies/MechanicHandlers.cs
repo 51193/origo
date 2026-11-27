@@ -126,6 +126,7 @@ internal sealed class FoodEnrichmentSpawnHandler : IGameplayHandler<SpawnPolicyC
         var position = new NumericsVector2(
             ReadFloat(context.Source, DemoKeys.X, 0f),
             ReadFloat(context.Source, DemoKeys.Y, 0f));
+        var lineage = context.NextLineageId++;
         context.Metas.Add(EvolutionEntityFactory.Creature(
             EvolutionEntityFactory.CreatureName(context.NextCreatureId++),
             founder,
@@ -135,7 +136,9 @@ internal sealed class FoodEnrichmentSpawnHandler : IGameplayHandler<SpawnPolicyC
             (float)(context.Rng.NextDouble() * MathF.Tau),
             MathF.Min(Tuning.InitialEnergy, founder.Phenotype.MaxEnergy),
             0,
-            context.NextLineageId++,
+            lineage,
+            lineage,
+            "enrichment",
             0f));
         context.SpawnedCreatures++;
     }

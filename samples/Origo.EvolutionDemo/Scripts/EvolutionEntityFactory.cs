@@ -34,6 +34,8 @@ internal static class EvolutionEntityFactory
         float energy,
         int generation,
         int lineage,
+        int rootLineage,
+        string spawnOrigin,
         float cooldown) =>
         new SndMetaFluentBuilder(name)
             .SetNode("main", CreatureScene)
@@ -72,6 +74,8 @@ internal static class EvolutionEntityFactory
             .SetFloat(DemoKeys.Age, 0f)
             .SetInt(DemoKeys.Generation, generation)
             .SetInt(DemoKeys.Lineage, lineage)
+            .SetInt(DemoKeys.RootLineage, rootLineage)
+            .SetString(DemoKeys.SpawnOrigin, spawnOrigin)
             .SetInt(DemoKeys.Children, 0)
             .SetInt(DemoKeys.Kills, 0)
             .SetInt(DemoKeys.CreatureCorpseMeals, 0)

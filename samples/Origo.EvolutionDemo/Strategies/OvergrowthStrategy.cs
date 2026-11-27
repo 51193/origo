@@ -145,6 +145,7 @@ public sealed class OvergrowthStrategy : LifecycleStrategyBase
 
         var generation = Math.Max(0, ReadInt(parent, DemoKeys.Generation, 0)) + 1;
         var lineage = Math.Max(0, ReadInt(parent, DemoKeys.Lineage, 1));
+        var rootLineage = ReadInt(parent, DemoKeys.RootLineage, lineage);
         if (changes >= Tuning.LineageMutationThreshold)
         {
             lineage = ReadInt(entity, DemoKeys.NextLineageId, 1);
@@ -169,6 +170,8 @@ public sealed class OvergrowthStrategy : LifecycleStrategyBase
             MathF.Min(Tuning.OvergrowthChildEnergy, childPhenotype.MaxEnergy),
             generation,
             lineage,
+            rootLineage,
+            "overgrowth",
             0f);
 
         for (var i = 0; i < foodCost; i++)

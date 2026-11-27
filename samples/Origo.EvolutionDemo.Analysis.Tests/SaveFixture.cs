@@ -57,7 +57,12 @@ internal static class SaveFixture
         double foodPickupRadius = 14d,
         int generation = 2,
         IReadOnlyList<int>? generations = null,
-        IReadOnlyList<int>? lineages = null)
+        IReadOnlyList<int>? lineages = null,
+        IReadOnlyList<int>? rootLineages = null,
+        string spawnOrigin = "child",
+        IReadOnlyList<string>? spawnOrigins = null,
+        bool includeRootLineage = true,
+        bool includeSpawnOrigin = true)
     {
         var saveRoot = Path.Combine(directory.Path, slotName);
         var sceneDirectory = Path.Combine(saveRoot, "level_pond");
@@ -95,6 +100,12 @@ internal static class SaveFixture
             var creatureLineage = lineages is not null && index < lineages.Count
                 ? lineages[index]
                 : 1;
+            var creatureRootLineage = rootLineages is not null && index < rootLineages.Count
+                ? rootLineages[index]
+                : creatureLineage;
+            var creatureOrigin = spawnOrigins is not null && index < spawnOrigins.Count
+                ? spawnOrigins[index]
+                : spawnOrigin;
             var creaturePairs = new Dictionary<string, object>
             {
                 ["evo.kind"] = "creature",
@@ -112,6 +123,8 @@ internal static class SaveFixture
                 ["evo.aim"] = 0.3d,
                 ["evo.sprintDrive"] = 0.4d,
                 ["evo.lineage"] = (double)creatureLineage,
+                ["evo.rootLineage"] = (double)creatureRootLineage,
+                ["evo.spawnOrigin"] = creatureOrigin,
                 ["evo.generation"] = (double)creatureGeneration,
                 ["evo.children"] = 1d,
                 ["evo.kills"] = 0d,
@@ -134,6 +147,10 @@ internal static class SaveFixture
                 creaturePairs["evo.creatureToxicMeals"] = 1d;
             }
 
+            if (!includeRootLineage)
+                creaturePairs.Remove("evo.rootLineage");
+            if (!includeSpawnOrigin)
+                creaturePairs.Remove("evo.spawnOrigin");
             entities.Add(Entity(name, creaturePairs));
         }
 

@@ -156,6 +156,7 @@ internal static class Program
         var snapshots = SaveSnapshotReader.Read([.. saves], pool);
         var ecology = SaveEcologyAnalyzer.Analyze(snapshots);
         var lineage = SaveLineageAnalyzer.Analyze(snapshots);
+        var mortality = SaveMortalityAnalyzer.Analyze(snapshots);
         var extraction = FeatureExtractor.Extract(snapshots, maxCreatures, seed);
         if (extraction.SkippedCreatures.Count > 0 && !allowSkips)
         {
@@ -210,6 +211,7 @@ internal static class Program
             saveSummaries,
             ecology,
             lineage,
+            mortality,
             rows,
             extraction.TotalCreatures,
             extraction.ConsideredCreatures,
@@ -231,7 +233,9 @@ internal static class Program
             sampled);
         WriteFile(output, GenomeHtmlReport.Build(reportInput));
         if (!string.IsNullOrWhiteSpace(timelineCsv))
-            WriteTimelineCsv(timelineCsv, saveSummaries, ecology, lineage.Saves, rows, columns, timelinePercentiles);
+            WriteTimelineCsv(
+                timelineCsv, saveSummaries, ecology, lineage.Saves, mortality.Saves,
+                rows, columns, timelinePercentiles);
         if (!string.IsNullOrWhiteSpace(featuresCsv))
             WriteFeaturesCsv(featuresCsv, rows, clustering);
         if (!string.IsNullOrWhiteSpace(lineagesCsv))
@@ -490,6 +494,7 @@ internal static class Program
         IReadOnlyList<SaveSummary> saves,
         IReadOnlyList<SaveEcology> ecology,
         IReadOnlyList<SaveLineage> lineage,
+        IReadOnlyList<SaveMortality> mortality,
         IReadOnlyList<FeatureRow> rows,
         string[] columns,
         bool includePercentiles)
@@ -506,6 +511,7 @@ internal static class Program
         EnsureDirectory(path);
         var ecologyByPath = ecology.ToDictionary(static item => item.Path, StringComparer.Ordinal);
         var lineageByPath = lineage.ToDictionary(static item => item.Path, StringComparer.Ordinal);
+        var mortalityByPath = mortality.ToDictionary(static item => item.Path, StringComparer.Ordinal);
         var percentileColumns = includePercentiles
             ? columns.Where(column => TimelinePercentileColumns.Contains(column, StringComparer.Ordinal)).ToArray()
             : [];
@@ -522,6 +528,12 @@ internal static class Program
         writer.Write(",lineage.count,lineage.founderLineages,lineage.founderLineageShare,lineage.gen0Share");
         writer.Write(",lineage.largestShare,lineage.entropy,lineage.new,lineage.lost,lineage.newGen0");
         writer.Write(",lineage.priorSurvival,lineage.turnover");
+        writer.Write(",rootLineage.count,rootLineage.founderLineages,rootLineage.largestShare");
+        writer.Write(",rootLineage.entropy,rootLineage.new,rootLineage.lost,rootLineage.newGen0");
+        writer.Write(",rootLineage.priorSurvival,rootLineage.turnover");
+        writer.Write(",origin.founders,origin.children,origin.enrichment,origin.innovation");
+        writer.Write(",origin.overgrowth,origin.unknown");
+        writer.Write(",death.starvation,death.predation,death.aging,death.total");
         writer.Write(",delta.population,delta.births,delta.kills,delta.enrichmentSpawns");
         writer.Write(",delta.deathsEstimated,delta.predationShareEstimated");
         foreach (var key in controllerKeys)
@@ -536,7 +548,11 @@ internal static class Program
         {
             var save = saves[index];
             var saveEcology = ecologyByPath[save.Path];
-            var saveLineage = lineageByPath[save.Path].Summary;
+            var saveLineageRecord = lineageByPath[save.Path];
+            var saveLineage = saveLineageRecord.Summary;
+            var saveRootLineage = saveLineageRecord.RootSummary;
+            var saveOrigins = saveLineageRecord.Origins;
+            var saveMortality = mortalityByPath[save.Path].Counts;
             var saveRows = bySave.GetValueOrDefault(save.Path, []);
             writer.Write(Csv(save.Id));
             writer.Write(',');
@@ -591,6 +607,25 @@ internal static class Program
             WriteCsvNumber(writer, saveLineage.NewGen0Lineages);
             WriteCsvNumber(writer, saveLineage.PriorLineageSurvival);
             WriteCsvNumber(writer, saveLineage.LineageTurnover);
+            WriteCsvNumber(writer, saveRootLineage.Lineages);
+            WriteCsvNumber(writer, saveRootLineage.FounderLineages);
+            WriteCsvNumber(writer, saveRootLineage.LargestLineageShare);
+            WriteCsvNumber(writer, saveRootLineage.LineageEntropy);
+            WriteCsvNumber(writer, saveRootLineage.NewLineages);
+            WriteCsvNumber(writer, saveRootLineage.LostLineages);
+            WriteCsvNumber(writer, saveRootLineage.NewGen0Lineages);
+            WriteCsvNumber(writer, saveRootLineage.PriorLineageSurvival);
+            WriteCsvNumber(writer, saveRootLineage.LineageTurnover);
+            WriteCsvNumber(writer, saveOrigins.Founders);
+            WriteCsvNumber(writer, saveOrigins.Children);
+            WriteCsvNumber(writer, saveOrigins.Enrichment);
+            WriteCsvNumber(writer, saveOrigins.Innovation);
+            WriteCsvNumber(writer, saveOrigins.Overgrowth);
+            WriteCsvNumber(writer, saveOrigins.Unknown);
+            WriteCsvNumber(writer, saveMortality?.Starvation);
+            WriteCsvNumber(writer, saveMortality?.Predation);
+            WriteCsvNumber(writer, saveMortality?.Aging);
+            WriteCsvNumber(writer, saveMortality?.Total);
             WriteDeltaColumns(writer, saves, index);
             foreach (var key in controllerKeys)
             {

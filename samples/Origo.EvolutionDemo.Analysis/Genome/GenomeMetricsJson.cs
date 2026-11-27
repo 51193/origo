@@ -29,6 +29,7 @@ public static class GenomeMetricsJson
         ArgumentNullException.ThrowIfNull(input.Options);
         ArgumentNullException.ThrowIfNull(input.Saves);
         ArgumentNullException.ThrowIfNull(input.Lineage);
+        ArgumentNullException.ThrowIfNull(input.Mortality);
         ArgumentNullException.ThrowIfNull(input.Rows);
         ArgumentNullException.ThrowIfNull(input.RawColumns);
         ArgumentNullException.ThrowIfNull(input.DroppedColumns);
@@ -46,7 +47,10 @@ public static class GenomeMetricsJson
             writer.WriteString("commandLine", input.CommandLine);
             WriteOptions(writer, input);
             WritePopulation(writer, input);
-            WriteLineageSequence(writer, input.Lineage.Sequence);
+            WriteLineageSequence(writer, "lineageSequence", input.Lineage.Sequence);
+            WriteLineageSequence(writer, "rootLineageSequence", input.Lineage.RootSequence);
+            WriteOrigins(writer, input.Lineage.Origins);
+            WriteMortalitySequence(writer, input.Mortality.Sequence);
             WriteSaves(writer, input);
             WriteFeatures(writer, input);
             WriteClustering(writer, input);
@@ -110,7 +114,15 @@ public static class GenomeMetricsJson
             var lineage = input.Lineage.Saves.FirstOrDefault(item =>
                 string.Equals(item.Path, save.Path, StringComparison.Ordinal));
             if (lineage is not null)
-                WriteLineage(writer, lineage.Summary);
+            {
+                WriteLineage(writer, "lineage", lineage.Summary);
+                WriteLineage(writer, "rootLineage", lineage.RootSummary);
+                WriteOrigins(writer, lineage.Origins);
+            }
+            var mortality = input.Mortality.Saves.FirstOrDefault(item =>
+                string.Equals(item.Path, save.Path, StringComparison.Ordinal));
+            if (mortality?.Counts is { } deaths)
+                WriteDeaths(writer, deaths);
             if (ecology is not null)
                 WriteController(writer, save);
 
@@ -174,9 +186,10 @@ public static class GenomeMetricsJson
         writer.WriteEndObject();
     }
 
-    private static void WriteLineageSequence(Utf8JsonWriter writer, LineageSequenceSummary sequence)
+    private static void WriteLineageSequence(
+        Utf8JsonWriter writer, string name, LineageSequenceSummary sequence)
     {
-        writer.WriteStartObject("lineageSequence");
+        writer.WriteStartObject(name);
         writer.WriteNumber("distinctLineages", sequence.DistinctLineages);
         writer.WriteNumber("peakLivingLineages", sequence.PeakLivingLineages);
         writer.WriteNumber("finalLivingLineages", sequence.FinalLivingLineages);
@@ -188,9 +201,9 @@ public static class GenomeMetricsJson
         writer.WriteEndObject();
     }
 
-    private static void WriteLineage(Utf8JsonWriter writer, LineageSummary lineage)
+    private static void WriteLineage(Utf8JsonWriter writer, string name, LineageSummary lineage)
     {
-        writer.WriteStartObject("lineage");
+        writer.WriteStartObject(name);
         writer.WriteNumber("count", lineage.Lineages);
         writer.WriteNumber("founderLineages", lineage.FounderLineages);
         writer.WriteNumber("founderLineageShare", lineage.FounderLineageShare);
@@ -204,6 +217,53 @@ public static class GenomeMetricsJson
         WriteNullableNumber(writer, "priorSurvival", lineage.PriorLineageSurvival);
         writer.WriteNumber("turnover", lineage.LineageTurnover);
         writer.WriteEndObject();
+    }
+
+    private static void WriteOrigins(Utf8JsonWriter writer, SpawnOriginCounts origins)
+    {
+        writer.WriteStartObject("spawnOrigins");
+        writer.WriteNumber("founders", origins.Founders);
+        writer.WriteNumber("children", origins.Children);
+        writer.WriteNumber("enrichment", origins.Enrichment);
+        writer.WriteNumber("innovation", origins.Innovation);
+        writer.WriteNumber("overgrowth", origins.Overgrowth);
+        writer.WriteNumber("unknown", origins.Unknown);
+        writer.WriteEndObject();
+    }
+
+    private static void WriteMortalitySequence(Utf8JsonWriter writer, MortalitySequenceSummary sequence)
+    {
+        writer.WriteStartObject("mortalitySequence");
+        if (sequence.Counts is { } counts)
+        {
+            writer.WriteStartObject("counts");
+            WriteDeathCounts(writer, counts);
+            writer.WriteEndObject();
+            WriteNullableNumber(writer, "predationShare", sequence.PredationShare);
+            WriteNullableNumber(writer, "starvationShare", sequence.StarvationShare);
+            WriteNullableNumber(writer, "agingShare", sequence.AgingShare);
+        }
+        else
+        {
+            writer.WriteNull("counts");
+        }
+
+        writer.WriteEndObject();
+    }
+
+    private static void WriteDeaths(Utf8JsonWriter writer, DeathCounts counts)
+    {
+        writer.WriteStartObject("deaths");
+        WriteDeathCounts(writer, counts);
+        writer.WriteEndObject();
+    }
+
+    private static void WriteDeathCounts(Utf8JsonWriter writer, DeathCounts counts)
+    {
+        writer.WriteNumber("starvation", counts.Starvation);
+        writer.WriteNumber("predation", counts.Predation);
+        writer.WriteNumber("aging", counts.Aging);
+        writer.WriteNumber("total", counts.Total);
     }
 
     private static void WriteController(Utf8JsonWriter writer, SaveSummary save)

@@ -134,6 +134,12 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             entity.SetData(DemoKeys.Time, 0f);
         if (!entity.TryGetData<int>(DemoKeys.Tick).found)
             entity.SetData(DemoKeys.Tick, 0);
+        if (!entity.TryGetData<int>(DemoKeys.StarvationDeaths).found)
+            entity.SetData(DemoKeys.StarvationDeaths, 0);
+        if (!entity.TryGetData<int>(DemoKeys.PredationDeaths).found)
+            entity.SetData(DemoKeys.PredationDeaths, 0);
+        if (!entity.TryGetData<int>(DemoKeys.AgeDeaths).found)
+            entity.SetData(DemoKeys.AgeDeaths, 0);
         if (!entity.TryGetData<float>(DemoKeys.Accumulator).found)
             entity.SetData(DemoKeys.Accumulator, 0f);
         if (!entity.TryGetData<float>(DemoKeys.FoodAccumulator).found)
@@ -232,6 +238,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 MathF.Min(Tuning.InitialEnergy, phenotype.MaxEnergy),
                 0,
                 (i % founderLineages) + 1,
+                (i % founderLineages) + 1,
+                "founder",
                 0f));
 
             // A few guaranteed starter nutrients near each founder prevent a
@@ -278,6 +286,9 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         controller.SetData(DemoKeys.FeedRequest, 0);
         controller.SetData(DemoKeys.SpikeAttacks, 0);
         controller.SetData(DemoKeys.SpikeKills, 0);
+        controller.SetData(DemoKeys.StarvationDeaths, 0);
+        controller.SetData(DemoKeys.PredationDeaths, 0);
+        controller.SetData(DemoKeys.AgeDeaths, 0);
         controller.SetData(DemoKeys.SpikeHits, 0);
         controller.SetData(DemoKeys.SpikeDrained, 0f);
         controller.SetData(DemoKeys.CorpsesCreated, 0);
@@ -396,6 +407,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                         if ((candidate.Phenotype.OrganMask & mask) == 0)
                             continue;
                         var position = RandomPosition(rng);
+                        var injectedLineage = nextLineageId++;
                         mutations.Add(CreateCreatureMeta(
                             CreatureName(nextCreatureId++),
                             candidate,
@@ -405,7 +417,9 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                             NextHeading(rng),
                             MathF.Min(Tuning.InitialEnergy, candidate.Phenotype.MaxEnergy),
                             0,
-                            nextLineageId++,
+                            injectedLineage,
+                            injectedLineage,
+                            "innovation",
                             0f));
                         pendingChildren++;
                         break;
@@ -752,6 +766,9 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
 
                     session.RequestKillEntity(target.Entity.Name);
                     spikeKills++;
+                    controller.SetData(
+                        DemoKeys.PredationDeaths,
+                        ReadInt(controller, DemoKeys.PredationDeaths, 0) + 1);
                     entity.SetData(DemoKeys.Kills, ReadInt(entity, DemoKeys.Kills, 0) + 1);
 
                     var corpsePosition = ClampToPond(
@@ -806,6 +823,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 var childPosition = ClampToPond(
                     position + RandomOffset(rng),
                     childPhenotype.BodyRadius);
+                var rootLineage = ReadInt(entity, DemoKeys.RootLineage, lineage);
                 mutations.Add(CreateCreatureMeta(
                     CreatureName(nextCreatureId++),
                     childGenome,
@@ -816,6 +834,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     MathF.Min(Tuning.ReproductionChildEnergy, childPhenotype.MaxEnergy),
                     generation,
                     lineage,
+                    rootLineage,
+                    "child",
                     0f));
                 entity.SetData(DemoKeys.Children, children);
                 controller.SetData(DemoKeys.Births, ReadInt(controller, DemoKeys.Births, 0) + 1);
@@ -867,6 +887,9 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 nextCorpseId = deathContext.NextCorpseId;
                 corpsesCreated = deathContext.CorpsesCreated;
 
+                controller.SetData(
+                    energy <= 0f ? DemoKeys.StarvationDeaths : DemoKeys.AgeDeaths,
+                    ReadInt(controller, energy <= 0f ? DemoKeys.StarvationDeaths : DemoKeys.AgeDeaths, 0) + 1);
                 session.RequestKillEntity(entity.Name);
                 continue;
             }
@@ -979,6 +1002,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         float energy,
         int generation,
         int lineage,
+        int rootLineage,
+        string spawnOrigin,
         float cooldown) =>
         EvolutionEntityFactory.Creature(
             name,
@@ -990,6 +1015,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             energy,
             generation,
             lineage,
+            rootLineage,
+            spawnOrigin,
             cooldown);
 
     private static SndMetaData CreateFoodMeta(
