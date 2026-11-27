@@ -130,6 +130,48 @@ public class SaveStorageContractTests
             ctx.StorageService.TryReadLevelPayloadFromCurrent("broken_level"));
     }
 
+    [Fact]
+    public void WriteProgressOnlyToCurrent_WhenMarkerExists_ThrowsAndPreservesMarker()
+    {
+        var (ctx, fs) = CreateForegroundContext();
+        var markerAbs = "root/current/.write_in_progress";
+        fs.SeedFile(markerAbs, "sentinel");
+        var progressExistedBefore = fs.Exists("root/current/progress.json");
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            ctx.StorageService.WriteProgressOnlyToCurrent(
+                BuildNode("""{"origo.session_topology":{"type":"String","data":"__foreground__=test_level=false"}}"""),
+                BuildNode("""{"machines":[]}""")));
+
+        Assert.Contains("write-in-progress", ex.Message, StringComparison.Ordinal);
+        Assert.Equal("sentinel", fs.ReadAllText(markerAbs));
+        Assert.Equal(progressExistedBefore, fs.Exists("root/current/progress.json"));
+    }
+
+    [Fact]
+    public void WriteLevelPayloadOnlyToCurrent_WhenOtherCheckpointFailed_ThrowsAndPreservesMarker()
+    {
+        // A failed checkpoint of level_b leaves the shared current/ marker.
+        // A later successful checkpoint of level_a must not erase that marker
+        // and declare the whole directory healthy.
+        var fs = new FailOnSecondWriteFileSystem(new TestMemoryFileSystem());
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
+        var markerAbs = "root/current/.write_in_progress";
+
+        Assert.Throws<IOException>(() =>
+            storage.WriteLevelPayloadOnlyToCurrent(BuildLevelPayload("level_b")));
+        Assert.True(fs.Exists(markerAbs));
+        var markerAfterFailure = fs.ReadAllText(markerAbs);
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            storage.WriteLevelPayloadOnlyToCurrent(BuildLevelPayload("level_a")));
+
+        Assert.Contains("write-in-progress", ex.Message, StringComparison.Ordinal);
+        Assert.Equal(markerAfterFailure, fs.ReadAllText(markerAbs));
+        Assert.False(fs.Exists("root/current/level_a/snd_scene.json"));
+    }
+
     // ── 关卡三件套完整性契约 ──────────────────────────────────────────
 
     [Fact]

@@ -332,6 +332,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   content hashes. Two distinct extra-file sets can no longer hash-equal by
   moving bytes across a name/content boundary, so a save whose extra files
   changed writes the new set instead of being skipped as an unchanged retry.
+- **Partial save checkpoints preserve another write's interruption marker** —
+  a successful level checkpoint no longer deletes the shared
+  `current/.write_in_progress` marker left by a different failed level or
+  progress write. The next load can no longer accept a mixed current/ (new
+  scene plus old session) as healthy; partial checkpoints fail fast until a
+  full payload write or an explicit recovery clears the interrupted state.
 - **Scene host frame processing fails before a spawned entity is processed** —
   `ProcessAll` uses the entity count captured at frame start as its loop bound
   and detects any container add/remove, including a balanced add/remove that
