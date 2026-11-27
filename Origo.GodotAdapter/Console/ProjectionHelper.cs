@@ -28,7 +28,7 @@ internal static class ProjectionHelper
         var ndcY = clip.Y / clip.W;
         var ndcZ = clip.Z / clip.W;
 
-        if (ndcX < -1f || ndcX > 1f || ndcY < -1f || ndcY > 1f || ndcZ < 0f || ndcZ > 1f)
+        if (ndcX < -1f || ndcX > 1f || ndcY < -1f || ndcY > 1f || ndcZ < -1f || ndcZ > 1f)
             return null;
 
         var screenX = (ndcX * 0.5f + 0.5f) * viewportSize.X;

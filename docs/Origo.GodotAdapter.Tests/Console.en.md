@@ -19,7 +19,7 @@ and execution orchestration; plus the `ProjectionHelper` world→screen coordina
 | `PressButtonCommandHandlerTests.cs` | press_button command: property contract, insufficient arguments, entity not found, entity is not Godot entity |
 | `CameraViewCommandHandlerTests.cs` | camera_view command: property contract (Name / HelpText / argument bounds) |
 | `TreeDebugCommandHandlerTests.cs` | tree_debug command: property contract, no-foreground-session error path, too-many-arguments error path |
-| `ProjectionHelperTests.cs` | ProjectionHelper.ProjectWorldToScreen: center / four boundaries / behind camera / outside frustum / depth increase / symmetry / camera not at origin |
+| `ProjectionHelperTests.cs` | ProjectionHelper.ProjectWorldToScreen: center / four boundaries / behind camera / outside frustum / perspective near half / orthogonal interior / beyond-far rejection / depth increase / symmetry / camera not at origin |
 
 ## CommandHandlerBaseTests Test Details
 
@@ -86,6 +86,8 @@ and execution orchestration; plus the `ProjectionHelper` world→screen coordina
 | `ProjectWorldToScreen_BottomEdge_ReturnsBottomBoundary` | Point below projects to bottom boundary Y=600 | console-commands |
 | `ProjectWorldToScreen_DepthIncreasesWithDistance` | Farther points return larger depth values | console-commands |
 | `ProjectWorldToScreen_SymmetricPositions_HaveSymmetricScreenX` | Points symmetric about center have symmetric screen X offsets | console-commands |
+| `ProjectWorldToScreen_NearPlane_ReturnsVisiblePoint` | A perspective point at z=-0.15 (inside the near half, NDC Z negative) projects to screen center with depth 0.15 instead of being discarded | console-commands: camera_view |
+| `ProjectWorldToScreen_OrthogonalInterior_ReturnsVisiblePoint` | An orthogonal point at z=-5 (NDC Z negative) projects to screen center with depth 5 instead of being discarded | console-commands: camera_view |
 | `ProjectWorldToScreen_CameraNotAtOrigin_ProjectsCorrectly` | Correct projection when camera is not at origin | console-commands |
 
 ### Boundary Path
@@ -94,6 +96,8 @@ and execution orchestration; plus the `ProjectionHelper` world→screen coordina
 |------------|-------------------|-------------------|
 | `ProjectWorldToScreen_BehindCamera_ReturnsNull` | Point is behind the camera | Returns null |
 | `ProjectWorldToScreen_OutsideFrustum_ReturnsNull` | Point is outside the frustum | Returns null |
+| `ProjectWorldToScreen_PerspectiveBeyondFarPlane_ReturnsNull` | Perspective point beyond the far plane (z=-101) has NDC Z > 1 | Returns null |
+| `ProjectWorldToScreen_OrthogonalBeyondFarPlane_ReturnsNull` | Orthogonal point beyond the far plane (z=-101) has NDC Z > 1 | Returns null |
 
 ## Test Support Strategy
 
