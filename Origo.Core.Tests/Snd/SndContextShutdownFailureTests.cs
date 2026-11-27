@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.DataSource;
 using Origo.Core.Abstractions.Entity;
@@ -145,6 +146,53 @@ public class SndContextShutdownFailureTests
         // No deferred action survives to throw from the next frame.
         Assert.Null(Record.Exception(() => ctx.FlushFrame()));
         Assert.Throws<InvalidOperationException>(() => ctx.Save.RequestSaveGame("after_terminated"));
+    }
+
+    [Fact]
+    public async Task WorkflowNestedShutdown_RacingEnqueue_RejectsLateRequest()
+    {
+        // The workflow teardown path also clears the deferred queue and
+        // commits terminal state. Pause its final clear in a discard callback,
+        // let a worker pass RequestSaveGame's pre-check, and verify the worker
+        // cannot enqueue after the clear and leave pending work on the
+        // terminal context.
+        BlockDiscardThenShutdownOnQuitStrategy.DiscardEntered.Reset();
+        var fs = new TestMemoryFileSystem();
+        var ctx = CreateEntryContext(fs);
+        ctx.Runtime.SndWorld.RegisterStrategy(() => new BlockDiscardThenShutdownOnQuitStrategy());
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.FlushFrame();
+
+        var foreground = ctx.Runtime.SessionManager.ForegroundSession
+            ?? throw new InvalidOperationException("Test setup failed: no foreground session after entry load.");
+        foreground.Spawn(new SndMetaFluentBuilder("block_discard_probe")
+            .AddLifecycleStrategy(BlockDiscardThenShutdownOnQuitStrategy.Index)
+            .Build());
+
+        Exception? workerFailure = null;
+        var worker = Task.Run(() =>
+        {
+            if (!BlockDiscardThenShutdownOnQuitStrategy.DiscardEntered.Wait(
+                    TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken))
+                throw new InvalidOperationException("Test setup failed: discard callback did not run.");
+            try
+            {
+                ctx.Save.RequestSaveGame("late_slot");
+            }
+            catch (Exception ex)
+            {
+                workerFailure = ex;
+            }
+        }, TestContext.Current.CancellationToken);
+
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        _ = Record.Exception(() => ctx.FlushFrame());
+
+        await worker.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+
+        Assert.IsType<InvalidOperationException>(workerFailure);
+        Assert.Equal(0, ctx.Deferred.GetPendingPersistenceRequestCount());
+        Assert.True(ctx.Deferred.IsPersistenceIdle);
     }
 
     [Fact]
@@ -471,6 +519,26 @@ public class SndContextShutdownFailureTests
         {
             _ = ctx.Save.RequestSaveGameAuto("queued_after_quit");
             ctx.Shutdown();
+        }
+    }
+
+    [StrategyIndex("shutdown.block_discard_then_shutdown")]
+    private sealed class BlockDiscardThenShutdownOnQuitStrategy : LifecycleStrategyBase
+    {
+        public const string Index = "shutdown.block_discard_then_shutdown";
+
+        public static ManualResetEventSlim DiscardEntered { get; } = new(false);
+
+        public override void BeforeQuit(ISndEntity entity, ISndContext ctx)
+        {
+            ctx.Shutdown();
+            ((SndContext)ctx).Runtime.EnqueueSystemDeferred(
+                static () => { },
+                onDiscard: static () =>
+                {
+                    DiscardEntered.Set();
+                    Thread.Sleep(400);
+                });
         }
     }
 
