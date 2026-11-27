@@ -1,4 +1,5 @@
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -234,16 +235,29 @@ internal static class SaveAtomicWriter
         files.Sort(StringComparer.Ordinal);
 
         using var sha = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+
+        // Frame the side-directory digest so distinct file sets cannot share a
+        // hash by moving bytes across a name/content boundary. The format tag
+        // separates this feed from the payload feed, the file count fixes the
+        // record count, and every variable-length name and content hash is
+        // length-prefixed. Appending raw bytes (name + hash + name + hash)
+        // made {a.json=X, b.json=Y} collide with one file named
+        // "a.json" + H(X) + "b.json" holding Y.
+        sha.AppendData(Encoding.UTF8.GetBytes("extra-v2"));
+        Span<byte> fileCountBytes = stackalloc byte[4];
+        BinaryPrimitives.WriteInt32LittleEndian(fileCountBytes, files.Count);
+        sha.AppendData(fileCountBytes);
+
         foreach (var fileAbs in files)
         {
             var relFromRoot = handle.GetRelativePath(fileAbs);
             var relFromDir = SavePathLayout.StripPathPrefix(relFromRoot, dirRel);
 
-            sha.AppendData(Encoding.UTF8.GetBytes(relFromDir));
+            AppendLengthPrefixed(sha, Encoding.UTF8.GetBytes(relFromDir));
             try
             {
                 using var node = handle.IoGateway.ReadTree(fileAbs);
-                sha.AppendData(Encoding.UTF8.GetBytes(node.ComputeSha256Hash()));
+                AppendLengthPrefixed(sha, Encoding.UTF8.GetBytes(node.ComputeSha256Hash()));
             }
             catch (Exception ex)
             {
@@ -253,6 +267,14 @@ internal static class SaveAtomicWriter
         }
 
         return Convert.ToHexString(sha.GetHashAndReset()).ToLowerInvariant();
+    }
+
+    private static void AppendLengthPrefixed(IncrementalHash sha, ReadOnlySpan<byte> value)
+    {
+        Span<byte> lengthBytes = stackalloc byte[4];
+        BinaryPrimitives.WriteInt32LittleEndian(lengthBytes, value.Length);
+        sha.AppendData(lengthBytes);
+        sha.AppendData(value);
     }
 
     internal static void WritePayloadSha(SaveFileHandle handle, string currentRel, string hash)

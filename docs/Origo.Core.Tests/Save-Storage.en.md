@@ -454,6 +454,7 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | `ExtraFiles_SaveLoadRoundTrip_TypeDataRoundTrip_PreservesNumbers` | TypedData write/read (int/bool/string) round-trip preserves values | persistence-flow: extra |
 | `ExtraFiles_DeleteFileThenSave_FileNotInSnapshot` | Deleted file is not in snapshot after save | persistence-flow: extra |
 | `ExtraFiles_DifferentContent_DifferentCombinedHash` | Extra content change changes .payload.sha hash | persistence-flow: Idempotent |
+| `ExtraFiles_DistinctFileSetsWithFramingCollision_AreNotDeduplicated` | A file name containing another file's hash cannot make distinct extra sets hash-equal; the second save writes and reloads the new set | persistence-flow: Idempotent |
 | `ExtraFiles_LoadWithoutExtra_DoesNotThrowAndPreviousStateCleared` | Loading a save without extra directory does not throw | persistence-flow: extra |
 | `IdempotentSkip_UnchangedPayloadAndExtra_SkipHappens` | Second save skipped idempotently with log when payload and extra hashes unchanged | persistence-flow: Idempotent |
 | `CombineHashes_EmptySide_ProducesConsistentFormat` | Combining with an empty side still yields 64-char hex | SaveAtomicWriter |

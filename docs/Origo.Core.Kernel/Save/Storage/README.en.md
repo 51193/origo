@@ -138,6 +138,7 @@ When the same game state is written to the same save slot multiple times, SHA-25
 - Progress blackboard change → hash differs → rewrite
 - Any level data change → hash differs → rewrite
 - CustomMeta key-value change → hash differs → rewrite (map and level segments are length-prefixed, so values/keys containing `=` cannot make two distinct maps collide)
+- Any extra/ file added, removed, renamed, or changed → hash differs → rewrite. The side-directory feed is canonical: it starts with a format tag, includes the file count, and length-prefixes every relative file name and content hash. Raw name+hash concatenation made two distinct sets hash-equal when one file name contained another file's content hash; the framing keeps the feed injective.
 - Node text change → hash differs → rewrite; text that is not well-formed UTF-16 (an unpaired surrogate) is rejected while hashing, because a replacement-fallback encoder would collapse it into U+FFFD and could make two distinct trees hash-equal
 - Only the target slot differs and the payload states no `SaveId` → always write (new slot has no .sha to compare). A non-empty payload `SaveId` that disagrees with the target (including an empty target) fails fast instead of silently writing another slot.
 
