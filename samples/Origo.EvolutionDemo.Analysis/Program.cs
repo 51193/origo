@@ -67,6 +67,7 @@ internal static class Program
         string? metricsJson = null;
         string? enrichmentCsv = null;
         string? featuresCsv = null;
+        string? lineagesCsv = null;
         var timelinePercentiles = false;
         var explicitK = false;
         var explicitStability = false;
@@ -136,6 +137,9 @@ internal static class Program
                 case "--features-csv" when i + 1 < args.Length:
                     featuresCsv = args[++i];
                     break;
+                case "--lineages-csv" when i + 1 < args.Length:
+                    lineagesCsv = args[++i];
+                    break;
                 case "--timeline-percentiles":
                     timelinePercentiles = true;
                     break;
@@ -151,6 +155,7 @@ internal static class Program
             explicitMinPoints, explicitMinClusterSize));
         var snapshots = SaveSnapshotReader.Read([.. saves], pool);
         var ecology = SaveEcologyAnalyzer.Analyze(snapshots);
+        var lineage = SaveLineageAnalyzer.Analyze(snapshots);
         var extraction = FeatureExtractor.Extract(snapshots, maxCreatures, seed);
         if (extraction.SkippedCreatures.Count > 0 && !allowSkips)
         {
@@ -204,6 +209,7 @@ internal static class Program
                 dbscanMinPoints, floor, allowSkips),
             saveSummaries,
             ecology,
+            lineage,
             rows,
             extraction.TotalCreatures,
             extraction.ConsideredCreatures,
@@ -225,9 +231,11 @@ internal static class Program
             sampled);
         WriteFile(output, GenomeHtmlReport.Build(reportInput));
         if (!string.IsNullOrWhiteSpace(timelineCsv))
-            WriteTimelineCsv(timelineCsv, saveSummaries, ecology, rows, columns, timelinePercentiles);
+            WriteTimelineCsv(timelineCsv, saveSummaries, ecology, lineage.Saves, rows, columns, timelinePercentiles);
         if (!string.IsNullOrWhiteSpace(featuresCsv))
             WriteFeaturesCsv(featuresCsv, rows, clustering);
+        if (!string.IsNullOrWhiteSpace(lineagesCsv))
+            WriteLineageCsv(lineagesCsv, lineage, saveSummaries);
         if (!string.IsNullOrWhiteSpace(metricsJson))
             WriteFile(metricsJson, GenomeMetricsJson.Build(reportInput));
         if (!string.IsNullOrWhiteSpace(enrichmentCsv))
@@ -481,6 +489,7 @@ internal static class Program
         string path,
         IReadOnlyList<SaveSummary> saves,
         IReadOnlyList<SaveEcology> ecology,
+        IReadOnlyList<SaveLineage> lineage,
         IReadOnlyList<FeatureRow> rows,
         string[] columns,
         bool includePercentiles)
@@ -496,6 +505,7 @@ internal static class Program
             .ToDictionary(static group => group.Key, static group => group.ToArray(), StringComparer.Ordinal);
         EnsureDirectory(path);
         var ecologyByPath = ecology.ToDictionary(static item => item.Path, StringComparer.Ordinal);
+        var lineageByPath = lineage.ToDictionary(static item => item.Path, StringComparer.Ordinal);
         var percentileColumns = includePercentiles
             ? columns.Where(column => TimelinePercentileColumns.Contains(column, StringComparer.Ordinal)).ToArray()
             : [];
@@ -509,6 +519,9 @@ internal static class Program
         writer.Write(",diet.living.soft,diet.living.tough,diet.living.toxic,diet.living.corpseOfSoft");
         writer.Write(",diet.experienced.specialistShare60,diet.experienced.entropy");
         writer.Write(",diet.controller.soft,diet.controller.tough,diet.controller.toxic,diet.controller.corpseOfSoft");
+        writer.Write(",lineage.count,lineage.founderLineages,lineage.founderLineageShare,lineage.gen0Share");
+        writer.Write(",lineage.largestShare,lineage.entropy,lineage.new,lineage.lost,lineage.newGen0");
+        writer.Write(",lineage.priorSurvival,lineage.turnover");
         writer.Write(",delta.population,delta.births,delta.kills,delta.enrichmentSpawns");
         writer.Write(",delta.deathsEstimated,delta.predationShareEstimated");
         foreach (var key in controllerKeys)
@@ -523,6 +536,7 @@ internal static class Program
         {
             var save = saves[index];
             var saveEcology = ecologyByPath[save.Path];
+            var saveLineage = lineageByPath[save.Path].Summary;
             var saveRows = bySave.GetValueOrDefault(save.Path, []);
             writer.Write(Csv(save.Id));
             writer.Write(',');
@@ -566,6 +580,17 @@ internal static class Program
             WriteCsvNumber(writer, saveEcology.ControllerDiet?.Tough);
             WriteCsvNumber(writer, saveEcology.ControllerDiet?.Toxic);
             WriteCsvNumber(writer, saveEcology.ControllerDiet?.CorpseOfSoft);
+            WriteCsvNumber(writer, saveLineage.Lineages);
+            WriteCsvNumber(writer, saveLineage.FounderLineages);
+            WriteCsvNumber(writer, saveLineage.FounderLineageShare);
+            WriteCsvNumber(writer, saveLineage.Gen0Share);
+            WriteCsvNumber(writer, saveLineage.LargestLineageShare);
+            WriteCsvNumber(writer, saveLineage.LineageEntropy);
+            WriteCsvNumber(writer, saveLineage.NewLineages);
+            WriteCsvNumber(writer, saveLineage.LostLineages);
+            WriteCsvNumber(writer, saveLineage.NewGen0Lineages);
+            WriteCsvNumber(writer, saveLineage.PriorLineageSurvival);
+            WriteCsvNumber(writer, saveLineage.LineageTurnover);
             WriteDeltaColumns(writer, saves, index);
             foreach (var key in controllerKeys)
             {
@@ -656,6 +681,41 @@ internal static class Program
         current.TryGetValue(key, out var now)
             ? now - (previous.TryGetValue(key, out var before) ? before : 0d)
             : null;
+
+    private static void WriteLineageCsv(
+        string path, LineageAnalysis analysis, IReadOnlyList<SaveSummary> saves)
+    {
+        EnsureDirectory(path);
+        var displayIds = saves.ToDictionary(static save => save.Path, static save => save.Id, StringComparer.Ordinal);
+        using var writer = new StreamWriter(path);
+        writer.WriteLine("save,time,lineage,creatures,share,founderCreatures,minGeneration,maxGeneration,isNew,isNewGen0");
+        foreach (var detail in analysis.Details
+            .OrderBy(static item => item.Time)
+            .ThenBy(static item => item.SaveId, StringComparer.Ordinal)
+            .ThenByDescending(static item => item.Creatures)
+            .ThenBy(static item => item.Lineage))
+        {
+            writer.Write(Csv(displayIds.GetValueOrDefault(detail.Path, detail.SaveId)));
+            writer.Write(',');
+            writer.Write(detail.Time.ToString("0.###", CultureInfo.InvariantCulture));
+            writer.Write(',');
+            writer.Write(detail.Lineage.ToString(CultureInfo.InvariantCulture));
+            writer.Write(',');
+            writer.Write(detail.Creatures.ToString(CultureInfo.InvariantCulture));
+            writer.Write(',');
+            writer.Write(detail.Share.ToString("0.######", CultureInfo.InvariantCulture));
+            writer.Write(',');
+            writer.Write(detail.FounderCreatures.ToString(CultureInfo.InvariantCulture));
+            writer.Write(',');
+            writer.Write(detail.MinGeneration.ToString(CultureInfo.InvariantCulture));
+            writer.Write(',');
+            writer.Write(detail.MaxGeneration.ToString(CultureInfo.InvariantCulture));
+            writer.Write(',');
+            writer.Write(detail.IsNew ? "1" : "0");
+            writer.Write(',');
+            writer.WriteLine(detail.IsNewGen0 ? "1" : "0");
+        }
+    }
 
     private static void WriteCsvNumber(TextWriter writer, int? value) =>
         WriteCsvValue(writer, value?.ToString(CultureInfo.InvariantCulture));
@@ -893,6 +953,7 @@ internal static class Program
         Console.WriteLine("  --metrics-json <path>    Machine-readable metrics (same numbers as the HTML report).");
         Console.WriteLine("  --enrichment-csv <path>  All tested signatures with p/q values for FDR auditing.");
         Console.WriteLine("  --features-csv <path>    One row per analyzed creature with every feature value and cluster.");
+        Console.WriteLine("  --lineages-csv <path>    One row per living lineage per save with turnover flags.");
         Console.WriteLine("  --timeline-percentiles   Add p50/p90/p95 columns for key features to the timeline CSV.");
         Console.WriteLine("  -h, --help               Show this help.");
     }

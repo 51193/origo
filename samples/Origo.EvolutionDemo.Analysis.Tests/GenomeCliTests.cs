@@ -40,6 +40,7 @@ public sealed class GenomeCliTests
         Assert.Equal(0, genome.ExitCode);
         Assert.Contains("--metrics-json", genome.Output, StringComparison.Ordinal);
         Assert.Contains("--allow-skips", genome.Output, StringComparison.Ordinal);
+        Assert.Contains("--lineages-csv", genome.Output, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -137,6 +138,7 @@ public sealed class GenomeCliTests
             "--timeline-csv", Path.Combine(outputRoot, "timeline.csv"),
             "--metrics-json", Path.Combine(outputRoot, "metrics.json"),
             "--enrichment-csv", Path.Combine(outputRoot, "enrichment.csv"),
+            "--lineages-csv", Path.Combine(outputRoot, "lineages.csv"),
             "--seed", "1");
 
         Assert.Equal(0, ExitCode);
@@ -145,10 +147,17 @@ public sealed class GenomeCliTests
         Assert.True(File.Exists(Path.Combine(outputRoot, "timeline.csv")));
         Assert.True(File.Exists(Path.Combine(outputRoot, "metrics.json")));
         Assert.True(File.Exists(Path.Combine(outputRoot, "enrichment.csv")));
+        Assert.True(File.Exists(Path.Combine(outputRoot, "lineages.csv")));
         Assert.Contains("wrote ", Output, StringComparison.Ordinal);
         using var metrics = JsonDocument.Parse(File.ReadAllText(Path.Combine(outputRoot, "metrics.json")));
         Assert.Equal(JsonValueKind.Object, metrics.RootElement.ValueKind);
         Assert.True(metrics.RootElement.GetProperty("clustering").GetProperty("k").GetInt32() >= 1);
+        Assert.True(metrics.RootElement.GetProperty("lineageSequence").TryGetProperty("distinctLineages", out _));
+        Assert.True(metrics.RootElement.GetProperty("saves")[0].TryGetProperty("lineage", out _));
+        Assert.Contains("Lineages and founder cohorts", File.ReadAllText(Path.Combine(outputRoot, "report.html")), StringComparison.Ordinal);
+        Assert.Contains("lineage.count", File.ReadLines(Path.Combine(outputRoot, "timeline.csv")).First(), StringComparison.Ordinal);
+        Assert.Contains("save,time,lineage,creatures,share,founderCreatures",
+            File.ReadLines(Path.Combine(outputRoot, "lineages.csv")).First(), StringComparison.Ordinal);
         Assert.Contains("save,time,tick,creatures,analyzed,food,corpses,food_sources",
             File.ReadLines(Path.Combine(outputRoot, "timeline.csv")).First(), StringComparison.Ordinal);
     }
@@ -171,6 +180,52 @@ public sealed class GenomeCliTests
         Assert.Equal(0, ExitCode);
         Assert.True(File.Exists(timeline), Error);
         Assert.True(File.Exists(enrichment), Error);
+    }
+
+    [Fact]
+    public void Genome_LineageCsvRowsAndDuplicateSaveIdsAreDisambiguated()
+    {
+        using var first = new TemporaryDirectory();
+        using var second = new TemporaryDirectory();
+        var save1 = SaveFixture.CreateV7Save(
+            first, "save_final",
+            SaveFixture.Creatures(SaveFixture.DefaultGenome(), 3),
+            time: 10d,
+            lineages: [1, 1, 2],
+            generations: [0, 1, 2]);
+        var save2 = SaveFixture.CreateV7Save(
+            second, "save_final",
+            SaveFixture.Creatures(SaveFixture.DefaultGenome(), 2),
+            time: 20d,
+            lineages: [2, 3],
+            generations: [1, 0]);
+        var lineagesCsv = Path.Combine(first.Path, "lineages.csv");
+        var timelineCsv = Path.Combine(first.Path, "timeline.csv");
+
+        var (exitCode, _, error) = Run(
+            "genome",
+            "--save", save1,
+            "--save", save2,
+            "--out", Path.Combine(first.Path, "report.html"),
+            "--timeline-csv", timelineCsv,
+            "--lineages-csv", lineagesCsv);
+
+        Assert.Equal(0, exitCode);
+        var rows = File.ReadLines(lineagesCsv).Skip(1)
+            .Select(line => line.Split(','))
+            .ToArray();
+        Assert.Equal(4, rows.Length);
+        Assert.Equal(2, rows.Select(row => row[0]).Distinct(StringComparer.Ordinal).Count());
+        Assert.Equal(2, rows.Count(row => row[0] == "save_final#1"));
+        Assert.Equal(2, rows.Count(row => row[0] == "save_final#2"));
+        Assert.Contains(rows, row => row[0] == "save_final#2" && row[8] == "1" && row[9] == "1");
+
+        var header = File.ReadLines(timelineCsv).First().Split(',');
+        var data = File.ReadLines(timelineCsv).Skip(1).First().Split(',');
+        Assert.Equal(header.Length, data.Length);
+        Assert.Contains("lineage.count", header);
+        Assert.Contains("lineage.newGen0", header);
+        Assert.Contains("save_final#2", File.ReadAllText(Path.Combine(first.Path, "report.html")), StringComparison.Ordinal);
     }
 
     [Fact]

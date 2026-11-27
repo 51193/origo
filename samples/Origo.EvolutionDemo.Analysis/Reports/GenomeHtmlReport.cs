@@ -31,6 +31,7 @@ public static class GenomeHtmlReport
         ArgumentNullException.ThrowIfNull(input.DroppedColumns);
         ArgumentNullException.ThrowIfNull(input.SkippedCreatures);
         ArgumentNullException.ThrowIfNull(input.Enrichment);
+        ArgumentNullException.ThrowIfNull(input.Lineage);
         ArgumentNullException.ThrowIfNull(input.Options);
         var rows = input.Rows;
         var clustering = input.Clustering;
@@ -54,6 +55,7 @@ th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.warn{color:#fca5a5}.no
         AppendCards(html, input, noiseCount, testedCount);
         AppendWarnings(html, input);
         AppendEcology(html, input);
+        AppendLineage(html, input);
         if (input.Candidates.Count > 0)
             AppendCandidates(html, input);
         html.Append("<h2>PCA scatter</h2>");
@@ -166,6 +168,34 @@ th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.warn{color:#fca5a5}.no
                 + $"<td>{ecology.FounderShare:0.0%}</td><td>{ecology.MeanGeneration:0.0}</td>"
                 + $"<td>{diet.Soft:0.00}/{diet.Tough:0.00}/{diet.Toxic:0.00}</td>"
                 + $"<td>{ecology.SpecialistShare60:0.0%}</td></tr>");
+        }
+
+        html.Append("</table>");
+    }
+
+    private static void AppendLineage(StringBuilder html, GenomeReportInput input)
+    {
+        if (input.Lineage.Saves.Count == 0)
+            return;
+        html.Append("<h2>Lineages and founder cohorts</h2>");
+        html.Append("<p class=\"muted\">Living lineage structure per save. New gen0 lineages are a proxy for injected founders: they include enrichment and organ-innovation founders, but not ordinary births. Prior survival, lost, and turnover compare consecutive saves.</p>");
+        html.Append("<table><tr><th>save</th><th>time</th><th>lineages</th><th>founder lineages</th>"
+            + "<th>largest</th><th>entropy</th><th>new / lost</th><th>new gen0</th>"
+            + "<th>prior survival</th><th>turnover</th></tr>");
+        foreach (var lineage in input.Lineage.Saves
+            .OrderBy(static item => item.Time)
+            .ThenBy(static item => item.SaveId, StringComparer.Ordinal))
+        {
+            var summary = lineage.Summary;
+            var displayId = input.Saves.FirstOrDefault(save =>
+                string.Equals(save.Path, lineage.Path, StringComparison.Ordinal))?.Id ?? lineage.SaveId;
+            html.Append(CultureInfo.InvariantCulture,
+                $"<tr><td><code>{Escape(displayId)}</code></td><td>{lineage.Time:0.###}</td>"
+                + $"<td>{summary.Lineages}</td><td>{summary.FounderLineages} ({summary.FounderLineageShare:0%})</td>"
+                + $"<td>{summary.LargestLineageShare:0%}</td><td>{summary.LineageEntropy:0.000}</td>"
+                + $"<td>{summary.NewLineages} / {summary.LostLineages}</td><td>{summary.NewGen0Lineages}</td>"
+                + $"<td>{(summary.PriorLineageSurvival is { } survival ? $"{survival:0%}" : "n/a")}</td>"
+                + $"<td>{summary.LineageTurnover:0.000}</td></tr>");
         }
 
         html.Append("</table>");
@@ -523,6 +553,12 @@ th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.warn{color:#fca5a5}.no
             AppendDefinition(html,
                 "Jaccard k-medoids: no inertia is defined. Auto-k evaluates every k in 2..min(6, n-1) and selects the maximum-silhouette "
                 + $"candidate whose clusters are all at least the minimum cluster size ({input.Options.MinClusterSize}).");
+        AppendDefinition(html,
+            "Living lineage metrics: lineage entropy is normalized Shannon entropy over living lineage sizes; largest share is the largest "
+            + "lineage divided by all living creatures. New/lost compare lineage ids with the previous save; new gen0 counts new ids containing "
+            + "a generation-0 creature and is a founder-injection proxy (enrichment or organ innovation), not an enrichment-only marker. "
+            + "Lineage ids are mutation clusters, not stable family ids, so new/lost/turnover mostly measure mutation-lineage churn. "
+            + "Prior survival is the share of previous ids still present; turnover = (new + lost) / (previous + current).");
         AppendDefinition(html,
             "Bootstrap ARI (k-means only): each round resamples n rows with replacement, fits k-means centers on the resample, assigns every "
             + "original row to its nearest resampled center, and compares that labeling with the reference labeling by adjusted Rand index; "
