@@ -134,6 +134,12 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             entity.SetData(DemoKeys.Time, 0f);
         if (!entity.TryGetData<int>(DemoKeys.Tick).found)
             entity.SetData(DemoKeys.Tick, 0);
+        if (!entity.TryGetData<int>(DemoKeys.StarvationDeaths).found)
+            entity.SetData(DemoKeys.StarvationDeaths, 0);
+        if (!entity.TryGetData<int>(DemoKeys.PredationDeaths).found)
+            entity.SetData(DemoKeys.PredationDeaths, 0);
+        if (!entity.TryGetData<int>(DemoKeys.AgeDeaths).found)
+            entity.SetData(DemoKeys.AgeDeaths, 0);
         if (!entity.TryGetData<float>(DemoKeys.Accumulator).found)
             entity.SetData(DemoKeys.Accumulator, 0f);
         if (!entity.TryGetData<float>(DemoKeys.FoodAccumulator).found)

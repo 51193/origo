@@ -187,6 +187,33 @@ public sealed class GenomeCliTests
     }
 
     [Fact]
+    public void Genome_OldSaveWithoutDeathCountersLeavesMortalityBlank()
+    {
+        using var directory = new TemporaryDirectory();
+        var save = SaveFixture.CreateV7Save(
+            directory, "old_save",
+            SaveFixture.Creatures(SaveFixture.DefaultGenome(), 4));
+        var timeline = Path.Combine(directory.Path, "timeline.csv");
+        var metrics = Path.Combine(directory.Path, "metrics.json");
+        var report = Path.Combine(directory.Path, "report.html");
+
+        var (exitCode, output, error) = Run(
+            "genome", "--save", save, "--out", report,
+            "--timeline-csv", timeline, "--metrics-json", metrics);
+
+        Assert.True(exitCode == 0, output + error);
+        var header = File.ReadLines(timeline).First().Split(',');
+        var data = File.ReadLines(timeline).Skip(1).First().Split(',');
+        var starvation = Array.IndexOf(header, "death.starvation");
+        Assert.True(starvation >= 0);
+        Assert.Equal(string.Empty, data[starvation]);
+        using var json = JsonDocument.Parse(File.ReadAllText(metrics));
+        Assert.Equal(JsonValueKind.Null, json.RootElement.GetProperty("mortalitySequence").GetProperty("counts").ValueKind);
+        Assert.False(json.RootElement.GetProperty("saves")[0].TryGetProperty("deaths", out _));
+        Assert.DoesNotContain("Death causes", File.ReadAllText(report), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Genome_LineageCsvRowsAndDuplicateSaveIdsAreDisambiguated()
     {
         using var first = new TemporaryDirectory();

@@ -49,4 +49,25 @@ public sealed class MortalityTests
         Assert.Null(analysis.Sequence.Counts);
         Assert.Null(analysis.Sequence.PredationShare);
     }
+
+    [Fact]
+    public void Analyze_PartialCountersTreatMissingCausesAsZero()
+    {
+        using var directory = new TemporaryDirectory();
+        var save = SaveFixture.CreateV7Save(
+            directory, "mortality_partial",
+            SaveFixture.Creatures(SaveFixture.DefaultGenome(), 1),
+            extraControllerPairs: new Dictionary<string, object>
+            {
+                ["evo.starvationDeaths"] = 4d,
+            });
+
+        var analysis = SaveMortalityAnalyzer.Analyze(SaveSnapshotReader.Read([save]));
+        var counts = Assert.Single(analysis.Saves).Counts;
+
+        Assert.NotNull(counts);
+        Assert.Equal(4, counts!.Starvation);
+        Assert.Equal(0, counts.Predation);
+        Assert.Equal(0, counts.Aging);
+    }
 }

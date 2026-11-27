@@ -136,7 +136,9 @@ per-save numeric `saves[].food` count remains unchanged; the typed inventory is
   creatures by `evo.spawnOrigin`. Older saves report all `unknown`.
 - `death.starvation/predation/aging/total`: cumulative controller counters for
   zero-energy death, lethal spike death, and maximum-age death. Older saves
-  leave these columns blank.
+  with none of the counters leave these columns blank; if only part of the
+  counter set exists, the missing causes are treated as zero so partial data is
+  still visible.
 
 `--lineages-csv` writes one row per living lineage per save:
 `save,time,lineage,creatures,share,founderCreatures,minGeneration,maxGeneration,isNew,isNewGen0`.

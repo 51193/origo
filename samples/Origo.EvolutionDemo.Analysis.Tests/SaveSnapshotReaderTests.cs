@@ -283,4 +283,22 @@ public sealed class SaveSnapshotReaderTests
         Assert.Contains(snapshot.Warnings, warning => warning.Contains("malformed", StringComparison.Ordinal));
         Assert.Contains(snapshot.Warnings, warning => warning.Contains("unknown evo.kind", StringComparison.Ordinal));
     }
+
+    [Fact]
+    public void Read_CreatureFallsBackToMutationLineageAndUnknownOrigin()
+    {
+        using var directory = new TemporaryDirectory();
+        var save = SaveFixture.CreateV7Save(
+            directory, "fallback",
+            SaveFixture.Creatures(SaveFixture.DefaultGenome(), 1),
+            lineages: [7],
+            generations: [2],
+            includeRootLineage: false,
+            includeSpawnOrigin: false);
+
+        var creature = Assert.Single(Assert.Single(SaveSnapshotReader.Read([save])).Creatures);
+
+        Assert.Equal(7, creature.RootLineage);
+        Assert.Equal("unknown", creature.SpawnOrigin);
+    }
 }

@@ -87,16 +87,18 @@ public static class SaveMortalityAnalyzer
 
     private static DeathCounts? TryRead(SaveSnapshot save)
     {
-        if (!TryNumber(save, StarvationKey, out var starvation)
-            || !TryNumber(save, PredationKey, out var predation)
-            || !TryNumber(save, AgingKey, out var aging))
+        var hasAny = save.ControllerNumbers.ContainsKey(StarvationKey)
+            || save.ControllerNumbers.ContainsKey(PredationKey)
+            || save.ControllerNumbers.ContainsKey(AgingKey);
+        if (!hasAny)
             return null;
         return new DeathCounts(
-            (int)System.Math.Max(0d, starvation),
-            (int)System.Math.Max(0d, predation),
-            (int)System.Math.Max(0d, aging));
+            (int)System.Math.Max(0d, ReadOrZero(save, StarvationKey)),
+            (int)System.Math.Max(0d, ReadOrZero(save, PredationKey)),
+            (int)System.Math.Max(0d, ReadOrZero(save, AgingKey)));
     }
 
-    private static bool TryNumber(SaveSnapshot save, string key, out double value) =>
-        save.ControllerNumbers.TryGetValue(key, out value) && double.IsFinite(value);
+    private static double ReadOrZero(SaveSnapshot save, string key) =>
+        save.ControllerNumbers.TryGetValue(key, out var value) && double.IsFinite(value) ? value : 0d;
+
 }

@@ -60,7 +60,9 @@ internal static class SaveFixture
         IReadOnlyList<int>? lineages = null,
         IReadOnlyList<int>? rootLineages = null,
         string spawnOrigin = "child",
-        IReadOnlyList<string>? spawnOrigins = null)
+        IReadOnlyList<string>? spawnOrigins = null,
+        bool includeRootLineage = true,
+        bool includeSpawnOrigin = true)
     {
         var saveRoot = Path.Combine(directory.Path, slotName);
         var sceneDirectory = Path.Combine(saveRoot, "level_pond");
@@ -145,6 +147,10 @@ internal static class SaveFixture
                 creaturePairs["evo.creatureToxicMeals"] = 1d;
             }
 
+            if (!includeRootLineage)
+                creaturePairs.Remove("evo.rootLineage");
+            if (!includeSpawnOrigin)
+                creaturePairs.Remove("evo.spawnOrigin");
             entities.Add(Entity(name, creaturePairs));
         }
 
