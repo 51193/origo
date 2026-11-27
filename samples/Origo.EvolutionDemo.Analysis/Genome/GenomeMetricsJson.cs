@@ -28,6 +28,7 @@ public static class GenomeMetricsJson
         ArgumentNullException.ThrowIfNull(input);
         ArgumentNullException.ThrowIfNull(input.Options);
         ArgumentNullException.ThrowIfNull(input.Saves);
+        ArgumentNullException.ThrowIfNull(input.Lineage);
         ArgumentNullException.ThrowIfNull(input.Rows);
         ArgumentNullException.ThrowIfNull(input.RawColumns);
         ArgumentNullException.ThrowIfNull(input.DroppedColumns);
@@ -45,6 +46,7 @@ public static class GenomeMetricsJson
             writer.WriteString("commandLine", input.CommandLine);
             WriteOptions(writer, input);
             WritePopulation(writer, input);
+            WriteLineageSequence(writer, input.Lineage.Sequence);
             WriteSaves(writer, input);
             WriteFeatures(writer, input);
             WriteClustering(writer, input);
@@ -104,10 +106,13 @@ public static class GenomeMetricsJson
             var ecology = input.Ecology.FirstOrDefault(item =>
                 string.Equals(item.Path, save.Path, StringComparison.Ordinal));
             if (ecology is not null)
-            {
                 WriteEcology(writer, ecology);
+            var lineage = input.Lineage.Saves.FirstOrDefault(item =>
+                string.Equals(item.Path, save.Path, StringComparison.Ordinal));
+            if (lineage is not null)
+                WriteLineage(writer, lineage.Summary);
+            if (ecology is not null)
                 WriteController(writer, save);
-            }
 
             writer.WriteEndObject();
         }
@@ -166,6 +171,38 @@ public static class GenomeMetricsJson
         writer.WriteNumber("toxic", diet.Toxic);
         writer.WriteNumber("corpseOfSoft", diet.CorpseOfSoft);
         writer.WriteNumber("totalMeals", diet.TotalMeals);
+        writer.WriteEndObject();
+    }
+
+    private static void WriteLineageSequence(Utf8JsonWriter writer, LineageSequenceSummary sequence)
+    {
+        writer.WriteStartObject("lineageSequence");
+        writer.WriteNumber("distinctLineages", sequence.DistinctLineages);
+        writer.WriteNumber("peakLivingLineages", sequence.PeakLivingLineages);
+        writer.WriteNumber("finalLivingLineages", sequence.FinalLivingLineages);
+        writer.WriteNumber("totalNewLineages", sequence.TotalNewLineages);
+        writer.WriteNumber("totalNewGen0Lineages", sequence.TotalNewGen0Lineages);
+        writer.WriteNumber("lostLineages", sequence.LostLineages);
+        WriteNullableNumber(writer, "meanPriorLineageSurvival", sequence.MeanPriorLineageSurvival);
+        WriteNullableNumber(writer, "meanLineageTurnover", sequence.MeanLineageTurnover);
+        writer.WriteEndObject();
+    }
+
+    private static void WriteLineage(Utf8JsonWriter writer, LineageSummary lineage)
+    {
+        writer.WriteStartObject("lineage");
+        writer.WriteNumber("count", lineage.Lineages);
+        writer.WriteNumber("founderLineages", lineage.FounderLineages);
+        writer.WriteNumber("founderLineageShare", lineage.FounderLineageShare);
+        writer.WriteNumber("gen0Individuals", lineage.Gen0Individuals);
+        writer.WriteNumber("gen0Share", lineage.Gen0Share);
+        writer.WriteNumber("largestShare", lineage.LargestLineageShare);
+        writer.WriteNumber("entropy", lineage.LineageEntropy);
+        writer.WriteNumber("new", lineage.NewLineages);
+        writer.WriteNumber("newGen0", lineage.NewGen0Lineages);
+        writer.WriteNumber("lost", lineage.LostLineages);
+        WriteNullableNumber(writer, "priorSurvival", lineage.PriorLineageSurvival);
+        writer.WriteNumber("turnover", lineage.LineageTurnover);
         writer.WriteEndObject();
     }
 

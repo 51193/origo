@@ -53,6 +53,7 @@ dotnet run --project samples/Origo.EvolutionDemo.Analysis -c Release -- \
 --timeline-csv <path>    one row per save: time, tick, counts, ecology/access/diet deltas, controller counters, feature means
 --timeline-percentiles   add p50/p90/p95 columns for key features to the timeline CSV
 --features-csv <path>    one row per analyzed creature with every feature value and its cluster
+--lineages-csv <path>    one row per living lineage per save with founder/turnover flags
 --metrics-json <path>    machine-readable metrics, same numbers as the HTML report
 --enrichment-csv <path>  every tested signature with counts, odds, p, and BH q values
 ```
@@ -71,16 +72,18 @@ genome-report.html
 genome-report.clusters.csv   name,save,lineage,generation,cluster (DBSCAN noise = -1)
 timeline.csv                 only with --timeline-csv
 features.csv                 only with --features-csv
+lineages.csv                 only with --lineages-csv
 metrics.json                 only with --metrics-json
 enrichment.csv               only with --enrichment-csv
 ```
 
 The optional timeline CSV has one row per save (sorted by simulation time) with
 the save id, time, tick, full creature population, analyzed rows, food, corpses,
-food sources, the ecology/access/diet columns listed below, every controller
-counter as `controller.<key>` (numeric, string, and boolean values), the mean of
-every extracted feature column, and (with `--timeline-percentiles`) p50/p90/p95
-for the key age/energy/kill/generation/diet/body columns. A save that contributed
+food sources, the ecology/access/diet columns listed below, the 11 `lineage.*`
+columns listed below, every controller counter as `controller.<key>` (numeric,
+string, and boolean values), the mean of every extracted feature column, and
+(with `--timeline-percentiles`) p50/p90/p95 for the key
+age/energy/kill/generation/diet/body columns. A save that contributed
 no analyzable rows keeps its row with a blank feature mean. Prefer it over cluster
 composition for time-series questions: a pooled clustering can separate snapshots
 by age/complexity gradient instead of lineage.
@@ -112,6 +115,28 @@ per-save numeric `saves[].food` count remains unchanged; the typed inventory is
   = killsDelta / deathsEstimated` when positive. These are estimates: a game build
   without `evo.enrichmentSpawns` makes the death estimate a lower bound and the
   predation share an upper bound.
+- `lineage.count/founderLineages/founderLineageShare/gen0Share`: living lineage
+  structure in the save. `largestShare` is the largest living lineage's share;
+  `entropy` is normalized Shannon entropy over lineage sizes (0 with fewer than
+  two lineages). `new` and `lost` compare lineage ids with the previous save;
+  `newGen0` counts new ids that contain a generation-0 creature; `priorSurvival`
+  is the share of previous ids still present; `turnover = (new + lost) /
+  (previous + current)`. The first save has no prior comparison, so
+  `priorSurvival` is blank and new/lost/turnover are 0.
+  `newGen0` is a founder-injection proxy, not an enrichment-only marker: organ
+  innovation also creates generation-0 messengers with new lineages.
+  **Lineage ids are mutation clusters, not stable family ids.** The game assigns
+  a new id when a child accumulates enough mutations, so `new`, `lost`,
+  `priorSurvival`, and `turnover` mostly describe mutation-lineage churn. Use
+  `newGen0` for founder injection; true root ancestry is not persisted yet.
+
+`--lineages-csv` writes one row per living lineage per save:
+`save,time,lineage,creatures,share,founderCreatures,minGeneration,maxGeneration,isNew,isNewGen0`.
+`metrics-json` carries the same per-save values under `saves[].lineage` and the
+sequence summary under `lineageSequence` (`distinctLineages`,
+`peakLivingLineages`, `finalLivingLineages`, `totalNewLineages`,
+`totalNewGen0Lineages`, `lostLineages`, `meanPriorLineageSurvival`,
+`meanLineageTurnover`).
 
 The report contains:
 
@@ -124,6 +149,8 @@ The report contains:
 - a food/access/origin table with food-type inventory, live patch count/radius/
   coverage, food-in-sense and food-in-300 shares, nearest-food/source medians,
   founder share, mean generation, and living/experienced diet composition;
+- a living-lineage table with lineage/founder counts, largest share, entropy,
+  new/lost ids, prior survival, turnover, and the new-gen0 founder proxy;
 - PCA scatter with the explained-variance percentages on the axes, plus the
   per-component explained-variance table;
 - cluster feature profile and top differentiating structural/body/neural/

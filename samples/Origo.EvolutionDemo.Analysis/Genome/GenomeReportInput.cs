@@ -61,6 +61,7 @@ public sealed record GenomeReportOptions(
 /// <param name="Options">Resolved command options.</param>
 /// <param name="Saves">Save summaries ordered by simulation time, then save id.</param>
 /// <param name="Ecology">Per-save food, access, origin, and diet metrics.</param>
+/// <param name="Lineage">Per-save lineage structure and cross-save turnover.</param>
 /// <param name="Rows">Analyzed creature rows (after sampling).</param>
 /// <param name="TotalCreatures">Creatures present in the saves before sampling/skips.</param>
 /// <param name="ConsideredCreatures">Parsed creatures attempted after sampling; excludes reader-level skips.</param>
@@ -84,6 +85,7 @@ public sealed record GenomeReportInput(
     GenomeReportOptions Options,
     IReadOnlyList<SaveSummary> Saves,
     IReadOnlyList<SaveEcology> Ecology,
+    LineageAnalysis Lineage,
     IReadOnlyList<FeatureRow> Rows,
     int TotalCreatures,
     int ConsideredCreatures,

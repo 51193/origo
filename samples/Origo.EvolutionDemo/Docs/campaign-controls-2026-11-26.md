@@ -86,6 +86,30 @@ This also explains the earlier automatic-run high survivors: their point income
 kept them in the off/on or off/off region, so they never entered the
 enrichment-plus-predation regime.
 
+### Lineage follow-up from the same saves
+
+The analysis tool's new living-lineage metrics add a first lineage view. These
+are surviving founders/injected lineages at the final save, not cumulative
+births:
+
+| Cell | Final living lineages | New gen0 lineages at final transition | Final gen0 share | Final population |
+|---|---:|---:|---:|---:|
+| enrichment off, predation on | 1,535 | 0 | 0% | 2,192 |
+| enrichment on, predation off | 1,842 | 335 | 13.4% | 2,497 |
+| enrichment on, predation on | 321 | 48 | 11.3% | 425 |
+
+These values use seed 20261301 and the 1,500 s, 1,800 s, and final saves. The
+`newGen0` column is the 1,800 s → final transition, not a cumulative count or a
+final-save-only count. Running all 13 checkpoints gives 318 for the
+enrichment-on/predation-off cell; running only the final save reports 0 because
+the first save has no previous comparison.
+
+The founder-injection signal is real but conditional: enrichment without
+predation keeps **335** new gen0 lineages alive; adding predation leaves only
+**48** and collapses the population/lineage pool. The lineage ids themselves
+are mutation clusters, so the new/lost counts are not family survival; the
+gen0 counts are the useful founder-pressure proxy.
+
 ### What this changes from the matrix page
 
 The [matrix page](campaign-matrix-2026-11-25.md) correctly said the six-seed
@@ -140,4 +164,15 @@ ORIGO_DEMO_CAMPAIGN_PURCHASE_LOG=/tmp/controls-$SEED.csv \
   --seconds 2 --fast-forward 3600 --checkpoint-interval 300 --save-slot final
 ```
 
-Use `ENRICHMENT=1` and/or `PREDATION=0` for the other cells.
+Use `ENRICHMENT=1` and/or `PREDATION=0` for the other cells. To reproduce the
+lineage table, analyze 1,500 s, 1,800 s, and the final save together:
+
+```bash
+dotnet run --project samples/Origo.EvolutionDemo.Analysis -c Release -- \
+  genome \
+  --save <saves>/save_iterate_1500 \
+  --save <saves>/save_iterate_1800 \
+  --save <saves>/save_final \
+  --lineages-csv /tmp/lineages.csv \
+  --metrics-json /tmp/metrics.json
+```

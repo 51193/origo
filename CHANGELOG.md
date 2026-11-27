@@ -13,6 +13,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 ### Added
 
+- **Evolution Demo analysis reports living lineage structure** — the genome
+  analysis tool now derives per-save living lineage counts, founder lineages,
+  gen0 share, largest-lineage share, normalized lineage entropy, new/lost
+  lineages, prior-lineage survival, and turnover from the saved lineage ids.
+  The timeline and metrics JSON carry the sequence, `--lineages-csv` writes one
+  row per living lineage per save with founder/gen0 flags, and the HTML report
+  includes a lineage/cohort table. New generation-0 lineage ids are a
+  founder-injection proxy; they cover enrichment and organ innovation, and the
+  docs call out that game lineage ids are mutation clusters rather than stable
+  family ancestry.
 - **Evolution Demo campaign tests can isolate content controls** — planned,
   idle, cheapest, and greedy policies honor
   `ORIGO_DEMO_CAMPAIGN_ENRICHMENT=0` and

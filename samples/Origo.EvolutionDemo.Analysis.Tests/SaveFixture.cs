@@ -56,7 +56,8 @@ internal static class SaveFixture
         IReadOnlyList<(double X, double Y)>? creaturePositions = null,
         double foodPickupRadius = 14d,
         int generation = 2,
-        IReadOnlyList<int>? generations = null)
+        IReadOnlyList<int>? generations = null,
+        IReadOnlyList<int>? lineages = null)
     {
         var saveRoot = Path.Combine(directory.Path, slotName);
         var sceneDirectory = Path.Combine(saveRoot, "level_pond");
@@ -91,6 +92,9 @@ internal static class SaveFixture
             var creatureGeneration = generations is not null && index < generations.Count
                 ? generations[index]
                 : generation;
+            var creatureLineage = lineages is not null && index < lineages.Count
+                ? lineages[index]
+                : 1;
             var creaturePairs = new Dictionary<string, object>
             {
                 ["evo.kind"] = "creature",
@@ -107,7 +111,7 @@ internal static class SaveFixture
                 ["evo.spikeDrive"] = 0.2d,
                 ["evo.aim"] = 0.3d,
                 ["evo.sprintDrive"] = 0.4d,
-                ["evo.lineage"] = 1d,
+                ["evo.lineage"] = (double)creatureLineage,
                 ["evo.generation"] = (double)creatureGeneration,
                 ["evo.children"] = 1d,
                 ["evo.kills"] = 0d,
