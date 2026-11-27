@@ -56,6 +56,7 @@ dotnet run --project samples/Origo.EvolutionDemo.Analysis -c Release -- \
 --lineages-csv <path>    one row per living mutation lineage per save
 --root-lineages-csv <path> one row per living root lineage per save
 --root-mortality-csv <path> one row per root death total per save
+--root-survival-csv <path> one row per root per save, living/extinct plus deltas
 --metrics-json <path>    machine-readable metrics, same numbers as the HTML report
 --enrichment-csv <path>  every tested signature with counts, odds, p, and BH q values
 ```
@@ -77,6 +78,7 @@ features.csv                 only with --features-csv
 lineages.csv                 only with --lineages-csv
 root-lineages.csv            only with --root-lineages-csv
 root-mortality.csv           only with --root-mortality-csv
+root-survival.csv            only with --root-survival-csv
 metrics.json                 only with --metrics-json
 enrichment.csv               only with --enrichment-csv
 ```
@@ -148,8 +150,11 @@ per-save numeric `saves[].food` count remains unchanged; the typed inventory is
 `save,time,lineage,creatures,share,founderCreatures,minGeneration,maxGeneration,isNew,isNewGen0`.
 `--root-lineages-csv` writes the same shape with `rootLineage` for stable ancestry.
 `--root-mortality-csv` writes one row per root with cumulative starvation,
-predation, aging, total, whether the root is still living in that save, and its
-living creature count.
+predation, aging, total, interval deltas, whether the root is still living in
+that save, and its living creature count. `--root-survival-csv` joins living
+root details and death counters: one row per root per save, with living,
+extinct, cumulative causes, and interval deltas. The interval columns compare
+consecutive saves; the first save's interval is its cumulative total.
 `metrics-json` carries the same per-save values under `saves[].lineage`,
 `saves[].rootLineage`, `saves[].spawnOrigins`, and `saves[].deaths`. Sequence
 summaries are `lineageSequence` and `rootLineageSequence` (`distinctLineages`,

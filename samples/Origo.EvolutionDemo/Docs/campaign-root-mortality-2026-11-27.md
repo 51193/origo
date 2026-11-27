@@ -40,6 +40,27 @@ Run the same 2×2 control seed with this instrumentation:
 The aggregate counts match the root × cause sums exactly in both cells:
 73,771 and 60,832 tracked deaths.
 
+### Interval deltas
+
+The first interval is run start to 1,500 s; the second and third are consecutive
+checkpoints. These come from the `interval*` columns in `--root-mortality-csv`
+and the joined `--root-survival-csv`.
+
+| Cell | Root | 0–1,500 s | 1,500–3,000 s | 3,000–3,600 s | Living at final |
+|---|---:|---:|---:|---:|---:|
+| e1p0 | 4 | 8,590 (0 pred) | 20,437 (0 pred) | 4,662 (0 pred) | yes |
+| e1p0 | 6 | 936 | 405 | 0 | no |
+| e1p1 | 4 | 8,315 (1,758 pred) | 17,378 (8,557 pred) | 3,063 (2,253 pred) | yes |
+| e1p1 | 6 | 2,387 | 4,265 | 0 | no |
+
+Predation on root 4 accelerates sharply in the middle interval (8,557 deaths),
+then remains the largest cause in the final interval (2,253 of 3,063). Root 6 is
+already extinct by 3,000 s in e1p1 while root 4 survives.
+
+At final, the survival CSV reports 407 living and 4,257 extinct roots in e1p0;
+91 living and 3,923 extinct roots in e1p1. Root 4's first interval is the run
+start to 1,500 s, so it is larger than a normal checkpoint delta.
+
 ### What this adds
 
 - The same dominant root (`4`) absorbs roughly **46–47%** of all tracked deaths
@@ -53,6 +74,24 @@ The aggregate counts match the root × cause sums exactly in both cells:
 - The root × cause view supports the founder-pressure loop from the 2×2:
   enrichment supplies roots, predation removes their descendants, and a small
   set of roots dominates the surviving population.
+
+## Five additional planned seeds
+
+Five fresh seeds (20261411–20261415) with per-root death capture, 3,600 s:
+
+| Seed | Final pop | Living roots | Enrichment founders | Predation | Roots with deaths | Extinct roots | Top-root share |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 20261411 | 505 | 117 | 71 | 51% | 4,201 | 4,114 | 14.3% |
+| 20261412 | 342 | 96 | 52 | 50% | 4,029 | 3,952 | 16.8% |
+| 20261413 | 278 | 86 | 46 | 44% | 3,481 | 3,412 | 9.3% |
+| 20261414 | 411 | 89 | 54 | 49% | 4,077 | 4,008 | 12.1% |
+| 20261415 | 237 | 80 | 42 | 36% | 2,302 | 2,231 | 15.9% |
+
+All five were low-density, all five bought enrichment, and in every run the
+largest root was still alive at final. Unlike the seed-20261301 e1p1 run where
+root 4 absorbed 47% of deaths, the top-root share here is only **9–17%**. Root
+dominance is therefore variable, not a universal constant; the common result is
+a large pool of extinct short-lived roots with a surviving dominant root.
 
 ## Caveats
 

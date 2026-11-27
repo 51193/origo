@@ -64,7 +64,133 @@
      "aging": 290,
      "total": 1341
     }
-   ]
+   ],
+   "top_root_intervals": {
+    "3": [
+     {
+      "time": "1500.081",
+      "starvation": 2075,
+      "predation": 0,
+      "aging": 223,
+      "total": 2298,
+      "living": true
+     },
+     {
+      "time": "3000.076",
+      "starvation": 529,
+      "predation": 0,
+      "aging": 84,
+      "total": 613,
+      "living": false
+     },
+     {
+      "time": "3600.061",
+      "starvation": 0,
+      "predation": 0,
+      "aging": 0,
+      "total": 0,
+      "living": false
+     }
+    ],
+    "4": [
+     {
+      "time": "1500.081",
+      "starvation": 7809,
+      "predation": 0,
+      "aging": 781,
+      "total": 8590,
+      "living": true
+     },
+     {
+      "time": "3000.076",
+      "starvation": 18522,
+      "predation": 0,
+      "aging": 1915,
+      "total": 20437,
+      "living": true
+     },
+     {
+      "time": "3600.061",
+      "starvation": 4375,
+      "predation": 0,
+      "aging": 287,
+      "total": 4662,
+      "living": true
+     }
+    ],
+    "6": [
+     {
+      "time": "1500.081",
+      "starvation": 733,
+      "predation": 0,
+      "aging": 203,
+      "total": 936,
+      "living": true
+     },
+     {
+      "time": "3000.076",
+      "starvation": 318,
+      "predation": 0,
+      "aging": 87,
+      "total": 405,
+      "living": false
+     },
+     {
+      "time": "3600.061",
+      "starvation": 0,
+      "predation": 0,
+      "aging": 0,
+      "total": 0,
+      "living": false
+     }
+    ],
+    "26": [
+     {
+      "time": "1500.081",
+      "starvation": 2444,
+      "predation": 0,
+      "aging": 68,
+      "total": 2512,
+      "living": true
+     },
+     {
+      "time": "3000.076",
+      "starvation": 2955,
+      "predation": 0,
+      "aging": 149,
+      "total": 3104,
+      "living": true
+     },
+     {
+      "time": "3600.061",
+      "starvation": 186,
+      "predation": 0,
+      "aging": 11,
+      "total": 197,
+      "living": true
+     }
+    ],
+    "18119": [
+     {
+      "time": "3000.076",
+      "starvation": 420,
+      "predation": 0,
+      "aging": 18,
+      "total": 438,
+      "living": true
+     },
+     {
+      "time": "3600.061",
+      "starvation": 1076,
+      "predation": 0,
+      "aging": 65,
+      "total": 1141,
+      "living": true
+     }
+    ]
+   },
+   "final_living_roots": 407,
+   "final_extinct_roots": 4257
   },
   {
    "cell": "e1p1",
@@ -125,7 +251,239 @@
      "aging": 81,
      "total": 1038
     }
-   ]
+   ],
+   "top_root_intervals": {
+    "3": [
+     {
+      "time": "1500.081",
+      "starvation": 1610,
+      "predation": 76,
+      "aging": 165,
+      "total": 1851,
+      "living": true
+     },
+     {
+      "time": "3000.076",
+      "starvation": 112,
+      "predation": 138,
+      "aging": 12,
+      "total": 262,
+      "living": false
+     },
+     {
+      "time": "3600.061",
+      "starvation": 0,
+      "predation": 0,
+      "aging": 0,
+      "total": 0,
+      "living": false
+     }
+    ],
+    "4": [
+     {
+      "time": "1500.081",
+      "starvation": 6155,
+      "predation": 1758,
+      "aging": 402,
+      "total": 8315,
+      "living": true
+     },
+     {
+      "time": "3000.076",
+      "starvation": 8399,
+      "predation": 8557,
+      "aging": 422,
+      "total": 17378,
+      "living": true
+     },
+     {
+      "time": "3600.061",
+      "starvation": 797,
+      "predation": 2253,
+      "aging": 13,
+      "total": 3063,
+      "living": true
+     }
+    ],
+    "5": [
+     {
+      "time": "1500.081",
+      "starvation": 318,
+      "predation": 40,
+      "aging": 52,
+      "total": 410,
+      "living": true
+     },
+     {
+      "time": "3000.076",
+      "starvation": 509,
+      "predation": 90,
+      "aging": 29,
+      "total": 628,
+      "living": false
+     },
+     {
+      "time": "3600.061",
+      "starvation": 0,
+      "predation": 0,
+      "aging": 0,
+      "total": 0,
+      "living": false
+     }
+    ],
+    "6": [
+     {
+      "time": "1500.081",
+      "starvation": 1507,
+      "predation": 555,
+      "aging": 325,
+      "total": 2387,
+      "living": true
+     },
+     {
+      "time": "3000.076",
+      "starvation": 2189,
+      "predation": 1766,
+      "aging": 310,
+      "total": 4265,
+      "living": false
+     },
+     {
+      "time": "3600.061",
+      "starvation": 0,
+      "predation": 0,
+      "aging": 0,
+      "total": 0,
+      "living": false
+     }
+    ],
+    "26": [
+     {
+      "time": "1500.081",
+      "starvation": 1224,
+      "predation": 426,
+      "aging": 26,
+      "total": 1676,
+      "living": true
+     },
+     {
+      "time": "3000.076",
+      "starvation": 230,
+      "predation": 255,
+      "aging": 6,
+      "total": 491,
+      "living": false
+     },
+     {
+      "time": "3600.061",
+      "starvation": 0,
+      "predation": 0,
+      "aging": 0,
+      "total": 0,
+      "living": false
+     }
+    ]
+   },
+   "final_living_roots": 91,
+   "final_extinct_roots": 3923
   }
- ]
+ ],
+ "additional_planned_runs_20261411_15": [
+  {
+   "seed": 20261411,
+   "final_population": 505,
+   "living_roots": 117,
+   "enrichment_founders": 71,
+   "deaths": {
+    "starvation": 26240,
+    "predation": 28947,
+    "aging": 1200,
+    "total": 56387
+   },
+   "predation_share": 0.5133630092042492,
+   "roots_with_deaths": 4201,
+   "extinct_roots": 4114,
+   "top_root": 2,
+   "top_root_deaths": 8059,
+   "top_root_share": 0.14292301416993278,
+   "top_root_living": true
+  },
+  {
+   "seed": 20261412,
+   "final_population": 342,
+   "living_roots": 96,
+   "enrichment_founders": 52,
+   "deaths": {
+    "starvation": 26968,
+    "predation": 29455,
+    "aging": 2375,
+    "total": 58798
+   },
+   "predation_share": 0.5009524133473928,
+   "roots_with_deaths": 4029,
+   "extinct_roots": 3952,
+   "top_root": 4,
+   "top_root_deaths": 9860,
+   "top_root_share": 0.167692778665941,
+   "top_root_living": true
+  },
+  {
+   "seed": 20261413,
+   "final_population": 278,
+   "living_roots": 86,
+   "enrichment_founders": 46,
+   "deaths": {
+    "starvation": 29992,
+    "predation": 25051,
+    "aging": 2544,
+    "total": 57587
+   },
+   "predation_share": 0.4350113740948478,
+   "roots_with_deaths": 3481,
+   "extinct_roots": 3412,
+   "top_root": 1,
+   "top_root_deaths": 5375,
+   "top_root_share": 0.09333703787313109,
+   "top_root_living": true
+  },
+  {
+   "seed": 20261414,
+   "final_population": 411,
+   "living_roots": 89,
+   "enrichment_founders": 54,
+   "deaths": {
+    "starvation": 25896,
+    "predation": 26554,
+    "aging": 2143,
+    "total": 54593
+   },
+   "predation_share": 0.4863993552286923,
+   "roots_with_deaths": 4077,
+   "extinct_roots": 4008,
+   "top_root": 5,
+   "top_root_deaths": 6617,
+   "top_root_share": 0.12120601542322276,
+   "top_root_living": true
+  },
+  {
+   "seed": 20261415,
+   "final_population": 237,
+   "living_roots": 80,
+   "enrichment_founders": 42,
+   "deaths": {
+    "starvation": 36745,
+    "predation": 21873,
+    "aging": 2273,
+    "total": 60891
+   },
+   "predation_share": 0.35921564763265507,
+   "roots_with_deaths": 2302,
+   "extinct_roots": 2231,
+   "top_root": 3,
+   "top_root_deaths": 9672,
+   "top_root_share": 0.15884120806030447,
+   "top_root_living": true
+  }
+ ],
+ "additional_protocol": "5 fresh planned seeds, 3600 s, 300 s checkpoints, no forced enrichment/predation"
 }
