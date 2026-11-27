@@ -87,6 +87,7 @@ Rules:
 | `validate-release-source.sh` | Validate the release source archive |
 | `work-identity.sh` | Branch/worktree identity validation |
 | `package-consumer-smoke-lib.sh` | Source-only helpers for the package smoke |
+| `demo-acceptance-gate-lib.sh` | Source-only Evolution Demo acceptance-marker gate |
 | `test-api-inventory-parent.sh` | Bash API-inventory parent/metadata-commit regression tests |
 | `test-docs.sh` | Generated-document, local-link, and local-anchor validation |
 | `test-check-weekly-base.sh` | Weekly snapshot base/version validation |
@@ -94,6 +95,7 @@ Rules:
 | `test-demo-export-templates.sh` | Pinned SHA-512 and tamper-rejection tests for Godot export templates |
 | `test-dev-suite.sh` | Bash/PowerShell gate parity, test-project parity, self-test wiring, and script-map guard |
 | `test-dotnet-env.sh` | SDK bootstrap, selection, and installer regression tests |
+| `test-demo-acceptance-gate.sh` | Evolution Demo acceptance-marker gate regression tests |
 | `test-download-godot-deps.sh` | Godot downloader dependency/cache tests |
 | `test-find-previous-api-baseline.sh` | Previous release baseline selection tests |
 | `test-lint-pr-body.sh` | PR title/body linter regression tests |

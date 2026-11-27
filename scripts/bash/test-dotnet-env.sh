@@ -418,6 +418,7 @@ repo="$FIXTURE/repo-caller-home-sdk"
 mkdir -p "$repo/scripts/bash" "$repo/home/.dotnet"
 cp "$ROOT/scripts/bash/godot-test.sh" "$repo/scripts/bash/godot-test.sh"
 cp "$ROOT/scripts/bash/dotnet-env.sh" "$repo/scripts/bash/dotnet-env.sh"
+cp "$ROOT/scripts/bash/demo-acceptance-gate-lib.sh" "$repo/scripts/bash/demo-acceptance-gate-lib.sh"
 printf '{\n  "sdk": {\n    "version": "10.0.403",\n    "rollForward": "latestMinor",\n    "allowPrerelease": false\n  }\n}\n' \
     > "$repo/global.json"
 write_stub_dotnet "$repo/home/.dotnet/dotnet" "10.0.403" 0

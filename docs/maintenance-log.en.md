@@ -17,6 +17,13 @@ CI workflow shape, local test/coverage gates, package-consumer fixture smoke cov
   missing or unwritable, and the caller's NuGet cache remains pinned for the
   redirected run. `test-dotnet-env.sh` covers the redirect with a stub SDK and
   guards the source-before-HOME ordering in both POSIX entry points.
+- **POSIX demo gate requires acceptance markers** — `godot-test.sh` captures
+  the Evolution Demo smoke output and requires `DEMO_BENCHMARK_OK`,
+  `DEMO_CAMERA_OK`, and the `DEMO_ITERATE_CHECKPOINTS` marker reporting two
+  checkpoints, matching
+  the PowerShell gate. A demo that exits zero before the acceptance runner
+  attaches no longer turns the gate green. `test-demo-acceptance-gate.sh`
+  covers complete/incomplete outputs and the non-zero exit.
 
 - **Save snapshot benchmark times both directions** — the snapshot benchmark
   times `WriteSavePayloadToCurrentThenSnapshot` and

@@ -53,7 +53,7 @@ function Invoke-OrigoDemoAcceptanceSmoke {
             Write-Host $smoke.Output
             throw 'Evolution Demo acceptance smoke did not report DEMO_CAMERA_OK.'
         }
-        if ($smoke.Output -notmatch 'DEMO_ITERATE_CHECKPOINTS count=2([^0-9]|$)') {
+        if ($smoke.Output -notmatch 'DEMO_ITERATE_CHECKPOINTS count=2(\s|$)') {
             Write-Host $smoke.Output
             throw 'Evolution Demo acceptance smoke did not produce the two expected checkpoints.'
         }
