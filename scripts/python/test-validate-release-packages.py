@@ -89,25 +89,25 @@ def write_valid_packages(directory: Path) -> None:
     write_package(
         directory,
         "Origo.Core.Kernel",
-        dependencies=(("Origo.Core.Contracts", VERSION),),
+        dependencies=(("Origo.Core.Contracts", f"[{VERSION}]"),),
     )
     write_package(
         directory,
         "Origo.Core",
         dependencies=(
-            ("Origo.Core.Contracts", VERSION),
-            ("Origo.Core.Kernel", VERSION),
+            ("Origo.Core.Contracts", f"[{VERSION}]"),
+            ("Origo.Core.Kernel", f"[{VERSION}]"),
         ),
     )
     write_package(
         directory,
         "Origo.GodotAdapter",
-        dependencies=(("Origo.Core", VERSION), ("GodotSharp", GODOT_SDK_VERSION)),
+        dependencies=(("Origo.Core", f"[{VERSION}]"), ("GodotSharp", GODOT_SDK_VERSION)),
     )
     write_package(
         directory,
         "Origo.ConsoleBridge",
-        dependencies=(("Origo.Core.Contracts", VERSION),),
+        dependencies=(("Origo.Core.Contracts", f"[{VERSION}]"),),
     )
 
 
@@ -148,8 +148,8 @@ def main() -> int:
                 lambda case: (
                     (case / f"Origo.Core.{VERSION}.nupkg").unlink(),
                     write_package(case, "Origo.Core", version="9.9.9", dependencies=(
-                        ("Origo.Core.Contracts", VERSION),
-                        ("Origo.Core.Kernel", VERSION),
+                        ("Origo.Core.Contracts", f"[{VERSION}]"),
+                        ("Origo.Core.Kernel", f"[{VERSION}]"),
                     )),
                 ),
             ),
@@ -210,6 +210,16 @@ def main() -> int:
                         "Origo.GodotAdapter",
                         dependencies=(("Origo.Core", VERSION), ("GodotSharp", "0.0.1")),
                     ),
+                ),
+            ),
+            (
+                "bare Origo dependency",
+                f"Origo.Core.Kernel: dependency Origo.Core.Contracts version {VERSION} != [{VERSION}]",
+                lambda case: (
+                    (case / f"Origo.Core.Kernel.{VERSION}.nupkg").unlink(),
+                    write_package(case, "Origo.Core.Kernel", dependencies=(
+                        ("Origo.Core.Contracts", VERSION),
+                    )),
                 ),
             ),
             (

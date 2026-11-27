@@ -23,7 +23,10 @@ behavior suite and do not use the integration suite to validate packaging.
 
 `scripts/bash/package-consumer-smoke.sh` is the Linux/CI implementation.
 `scripts/powershell/package-consumer-smoke.ps1` mirrors the same three
-consumers (Core-only, Core+Adapter/Godot, ConsoleBridge) for Windows.
+consumers (Core-only, Core+Adapter/Godot, ConsoleBridge) for Windows. Both
+paths run `scripts/python/normalize_package_dependencies.py` after packing and
+before validation/restore, so the Windows gate also exercises exact Origo
+dependency ranges.
 
 ## Version Pins
 
@@ -43,7 +46,7 @@ The consumer fixtures are not part of `Origo.sln` and contain no `ProjectReferen
 `bash scripts/bash/package-consumer-smoke.sh`:
 
 1. Packs `Origo.Core.Contracts`, `Origo.Core.Kernel`, `Origo.Core`, `Origo.GodotAdapter`, and `Origo.ConsoleBridge` into a fresh temporary local feed.
-2. Runs `scripts/bash/validate-release-packages.sh` against the same temporary feed; the checks that validator owns are listed under [release pipeline artifacts](../release-process.en.md#release-pipeline-artifacts).
+2. Normalizes the packed `Origo.*` dependency ranges to exact `[x.y.z]` values with `scripts/python/normalize_package_dependencies.py`, then runs `scripts/bash/validate-release-packages.sh` against the same temporary feed; the checks that validator owns are listed under [release pipeline artifacts](../release-process.en.md#release-pipeline-artifacts).
 3. Copies the Core/Adapter fixture to a temporary directory outside the repository, switches consumer restore/build to a run-owned temporary `NUGET_PACKAGES` cache, writes a `nuget.config` with only the local feed and NuGet.org, and runs `dotnet restore`.
 4. Verifies that `project.assets.json` resolves Core, Adapter, Contracts, and Kernel packages, and that the consumer sources contain no `<ProjectReference>`.
 5. Builds the Core/Adapter consumer with `-warnaserror`; the kernel runtime assembly must appear in the build output.

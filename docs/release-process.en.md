@@ -180,11 +180,15 @@ first; every step below then applies to that tag:
   negative compile probe, and startup);
 - Pack `Origo.Core.Contracts`, `Origo.Core.Kernel`, `Origo.Core`,
   `Origo.GodotAdapter`, and `Origo.ConsoleBridge` as NuGet packages;
+- Run `scripts/python/normalize_package_dependencies.py` on the packed set to
+  rewrite every `Origo.*` dependency to the exact `[x.y.z]` range; NuGet's
+  project-to-project packing otherwise emits bare minimum versions;
 - Run `scripts/bash/validate-release-packages.sh` to validate the five package
-  identities and versions, exact shell/kernel pairing, dependency direction
-  (including the adapter's `GodotSharp` dependency matching the repository's
-  Godot.NET.Sdk pin), analyzer assets, and kernel isolation; any missing,
-  unexpected, or mismatched package aborts the release;
+  identities and versions, exact shell/kernel pairing (including the exact
+  dependency ranges), dependency direction (including the adapter's
+  `GodotSharp` dependency matching the repository's Godot.NET.Sdk pin),
+  analyzer assets, and kernel isolation; any missing, unexpected, or
+  mismatched package aborts the release;
 - Build `origo-source-<version>.tar.gz` and `origo-source-<version>.zip` with
   `git archive` from the release commit and validate the tar archive with
   `scripts/bash/validate-release-source.sh`. Both archives must carry the
