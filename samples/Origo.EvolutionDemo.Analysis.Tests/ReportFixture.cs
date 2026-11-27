@@ -112,6 +112,7 @@ internal static class ReportFixture
                 new LineageSummary(2, 1, 0.5d, 10, 0.5d, 0.6d, 0.9d, 0, 0, 0, null, 0d),
                 new SpawnOriginCounts(0, 20, 0, 0, 0, 0)))],
             [],
+            [],
             new LineageSequenceSummary(2, 2, 2, 0, 0, 0, null, null),
             new LineageSequenceSummary(2, 2, 2, 0, 0, 0, null, null),
             new SpawnOriginCounts(0, 60, 0, 0, 0, 0));

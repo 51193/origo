@@ -93,6 +93,31 @@ public sealed record LineageDetail(
     bool IsNew,
     bool IsNewGen0);
 
+/// <summary>One living root lineage in one save.</summary>
+/// <param name="SaveId">Short save identifier.</param>
+/// <param name="Path">Scene file path.</param>
+/// <param name="Time">Simulation time.</param>
+/// <param name="RootLineage">Stable root lineage id.</param>
+/// <param name="Creatures">Living creatures carrying the root.</param>
+/// <param name="Share">Share of the save's living creatures.</param>
+/// <param name="FounderCreatures">Generation-0 creatures in the root.</param>
+/// <param name="MinGeneration">Minimum living generation.</param>
+/// <param name="MaxGeneration">Maximum living generation.</param>
+/// <param name="IsNew">True when the root was absent from the previous save.</param>
+/// <param name="IsNewGen0">True when the root is new and contains a generation-0 creature.</param>
+public sealed record RootLineageDetail(
+    string SaveId,
+    string Path,
+    double Time,
+    int RootLineage,
+    int Creatures,
+    double Share,
+    int FounderCreatures,
+    int MinGeneration,
+    int MaxGeneration,
+    bool IsNew,
+    bool IsNewGen0);
+
 /// <summary>Sequence-level lineage turnover and founder-injection proxy.</summary>
 /// <param name="DistinctLineages">Distinct lineage ids observed across all saves.</param>
 /// <param name="PeakLivingLineages">Largest number of living lineages in one save.</param>
@@ -115,12 +140,14 @@ public sealed record LineageSequenceSummary(
 /// <summary>Per-save lineage summaries, per-lineage details, and sequence turnover.</summary>
 /// <param name="Saves">Save summaries in simulation order.</param>
 /// <param name="Details">One row per living mutation lineage per save.</param>
+/// <param name="RootDetails">One row per living root lineage per save.</param>
 /// <param name="Sequence">Cross-save mutation-lineage turnover.</param>
 /// <param name="RootSequence">Cross-save root-lineage turnover.</param>
 /// <param name="Origins">Living creatures by spawn origin across all saves.</param>
 public sealed record LineageAnalysis(
     IReadOnlyList<SaveLineage> Saves,
     IReadOnlyList<LineageDetail> Details,
+    IReadOnlyList<RootLineageDetail> RootDetails,
     LineageSequenceSummary Sequence,
     LineageSequenceSummary RootSequence,
     SpawnOriginCounts Origins);
@@ -140,6 +167,7 @@ public static class SaveLineageAnalyzer
             .ToArray();
         var results = new List<SaveLineage>(ordered.Length);
         var details = new List<LineageDetail>();
+        var rootDetails = new List<RootLineageDetail>();
         HashSet<int>? previousMutation = null;
         HashSet<int>? previousRoot = null;
         var mutationSummaries = new List<LineageSummary>(ordered.Length);
@@ -161,6 +189,23 @@ public static class SaveLineageAnalyzer
                 mutation.Summary, root.Summary, saveOrigins));
             mutationSummaries.Add(mutation.Summary);
             rootSummaries.Add(root.Summary);
+            foreach (var group in rootGroups)
+            {
+                var count = group.Count();
+                rootDetails.Add(new RootLineageDetail(
+                    save.Id,
+                    save.Path,
+                    save.Time,
+                    group.Key,
+                    count,
+                    total == 0 ? 0d : count / (double)total,
+                    group.Count(static creature => creature.Generation == 0),
+                    group.Min(static creature => creature.Generation),
+                    group.Max(static creature => creature.Generation),
+                    root.NewKeys.Contains(group.Key),
+                    root.NewGen0Keys.Contains(group.Key)));
+            }
+
             foreach (var group in mutationGroups)
             {
                 var count = group.Count();
@@ -189,6 +234,7 @@ public static class SaveLineageAnalyzer
         return new LineageAnalysis(
             results,
             details,
+            rootDetails,
             Sequence(mutationSummaries, everMutation, finalMutation),
             Sequence(rootSummaries, everRoot, finalRoot),
             origins);

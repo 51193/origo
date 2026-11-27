@@ -23,9 +23,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   inherited unchanged through mutation-lineage changes, and
   `evo.spawnOrigin` (founder, child, enrichment, innovation, overgrowth); the
   tool reports stable root-lineage structure and spawn-origin counts alongside
-  the mutation-lineage view. New generation-0 lineage ids are a
-  founder-injection proxy; the docs call out that ordinary lineage ids are
-  mutation clusters, while root lineage is the stable ancestry view.
+  the mutation-lineage view, and `--root-lineages-csv` writes one row per
+  living root. New generation-0 lineage ids are a founder-injection proxy; the
+  docs call out that ordinary lineage ids are mutation clusters, while root
+  lineage is the stable ancestry view.
 - **Evolution Demo records death causes** — starvation, lethal spike predation,
   and maximum-age deaths are persisted as cumulative controller counters. The
   analysis timeline, metrics JSON, and HTML report expose the counts and shares;

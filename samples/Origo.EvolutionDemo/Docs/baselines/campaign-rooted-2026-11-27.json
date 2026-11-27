@@ -1,0 +1,249 @@
+{
+ "schema": 1,
+ "date": "2026-11-27",
+ "game_commit": "1706034d",
+ "analysis_tool_commit": "aed5d5cb",
+ "protocol": "10 fresh planned seeds 20261401-20261410, 3600 s, 300 s checkpoints, auto planned policy; analysis uses 1500/1800/final saves for root/death counters",
+ "runs": [
+  {
+   "seed": 20261401,
+   "final_population": 289,
+   "root_lineages": 101,
+   "root_new_gen0": 55,
+   "mutation_lineages": 226,
+   "spawn_origins": {
+    "founders": 0,
+    "children": 228,
+    "enrichment": 55,
+    "innovation": 0,
+    "overgrowth": 6,
+    "unknown": 0
+   },
+   "deaths": {
+    "starvation": 25063,
+    "predation": 26680,
+    "aging": 2408,
+    "total": 54151
+   },
+   "predation_share": 0.49269634909789295,
+   "starvation_share": 0.46283540470166756,
+   "aging_share": 0.044468246200439515
+  },
+  {
+   "seed": 20261402,
+   "final_population": 355,
+   "root_lineages": 84,
+   "root_new_gen0": 42,
+   "mutation_lineages": 265,
+   "spawn_origins": {
+    "founders": 0,
+    "children": 307,
+    "enrichment": 42,
+    "innovation": 0,
+    "overgrowth": 6,
+    "unknown": 0
+   },
+   "deaths": {
+    "starvation": 37216,
+    "predation": 23054,
+    "aging": 2172,
+    "total": 62442
+   },
+   "predation_share": 0.36920662374683705,
+   "starvation_share": 0.5960090964414977,
+   "aging_share": 0.03478427981166522
+  },
+  {
+   "seed": 20261403,
+   "final_population": 335,
+   "root_lineages": 122,
+   "root_new_gen0": 70,
+   "mutation_lineages": 283,
+   "spawn_origins": {
+    "founders": 0,
+    "children": 259,
+    "enrichment": 70,
+    "innovation": 0,
+    "overgrowth": 6,
+    "unknown": 0
+   },
+   "deaths": {
+    "starvation": 28042,
+    "predation": 31536,
+    "aging": 1007,
+    "total": 60585
+   },
+   "predation_share": 0.5205248823966329,
+   "starvation_share": 0.4628538417099942,
+   "aging_share": 0.016621275893372946
+  },
+  {
+   "seed": 20261404,
+   "final_population": 1546,
+   "root_lineages": 3,
+   "root_new_gen0": 0,
+   "mutation_lineages": 1061,
+   "spawn_origins": {
+    "founders": 0,
+    "children": 1532,
+    "enrichment": 0,
+    "innovation": 0,
+    "overgrowth": 14,
+    "unknown": 0
+   },
+   "deaths": {
+    "starvation": 51913,
+    "predation": 10651,
+    "aging": 2565,
+    "total": 65129
+   },
+   "predation_share": 0.16353698045417556,
+   "starvation_share": 0.7970796419413779,
+   "aging_share": 0.03938337760444656
+  },
+  {
+   "seed": 20261405,
+   "final_population": 1603,
+   "root_lineages": 5,
+   "root_new_gen0": 0,
+   "mutation_lineages": 1086,
+   "spawn_origins": {
+    "founders": 0,
+    "children": 1599,
+    "enrichment": 0,
+    "innovation": 0,
+    "overgrowth": 4,
+    "unknown": 0
+   },
+   "deaths": {
+    "starvation": 50726,
+    "predation": 16841,
+    "aging": 6442,
+    "total": 74009
+   },
+   "predation_share": 0.22755340566687834,
+   "starvation_share": 0.6854031266467592,
+   "aging_share": 0.08704346768636247
+  },
+  {
+   "seed": 20261406,
+   "final_population": 447,
+   "root_lineages": 113,
+   "root_new_gen0": 71,
+   "mutation_lineages": 341,
+   "spawn_origins": {
+    "founders": 0,
+    "children": 368,
+    "enrichment": 71,
+    "innovation": 0,
+    "overgrowth": 8,
+    "unknown": 0
+   },
+   "deaths": {
+    "starvation": 35731,
+    "predation": 24542,
+    "aging": 1895,
+    "total": 62168
+   },
+   "predation_share": 0.39476901299704026,
+   "starvation_share": 0.5747490670441384,
+   "aging_share": 0.030481919958821258
+  },
+  {
+   "seed": 20261407,
+   "final_population": 372,
+   "root_lineages": 88,
+   "root_new_gen0": 55,
+   "mutation_lineages": 293,
+   "spawn_origins": {
+    "founders": 0,
+    "children": 310,
+    "enrichment": 55,
+    "innovation": 0,
+    "overgrowth": 7,
+    "unknown": 0
+   },
+   "deaths": {
+    "starvation": 26839,
+    "predation": 27834,
+    "aging": 2451,
+    "total": 57124
+   },
+   "predation_share": 0.487255794412156,
+   "starvation_share": 0.4698375463903088,
+   "aging_share": 0.04290665919753519
+  },
+  {
+   "seed": 20261408,
+   "final_population": 446,
+   "root_lineages": 95,
+   "root_new_gen0": 59,
+   "mutation_lineages": 346,
+   "spawn_origins": {
+    "founders": 0,
+    "children": 382,
+    "enrichment": 59,
+    "innovation": 0,
+    "overgrowth": 5,
+    "unknown": 0
+   },
+   "deaths": {
+    "starvation": 26652,
+    "predation": 27290,
+    "aging": 2931,
+    "total": 56873
+   },
+   "predation_share": 0.47984104935558175,
+   "starvation_share": 0.46862307245969087,
+   "aging_share": 0.05153587818472737
+  },
+  {
+   "seed": 20261409,
+   "final_population": 283,
+   "root_lineages": 81,
+   "root_new_gen0": 45,
+   "mutation_lineages": 228,
+   "spawn_origins": {
+    "founders": 0,
+    "children": 233,
+    "enrichment": 45,
+    "innovation": 0,
+    "overgrowth": 5,
+    "unknown": 0
+   },
+   "deaths": {
+    "starvation": 25754,
+    "predation": 27715,
+    "aging": 3052,
+    "total": 56521
+   },
+   "predation_share": 0.4903487199447993,
+   "starvation_share": 0.45565365085543424,
+   "aging_share": 0.05399762919976646
+  },
+  {
+   "seed": 20261410,
+   "final_population": 267,
+   "root_lineages": 81,
+   "root_new_gen0": 40,
+   "mutation_lineages": 207,
+   "spawn_origins": {
+    "founders": 0,
+    "children": 218,
+    "enrichment": 40,
+    "innovation": 0,
+    "overgrowth": 9,
+    "unknown": 0
+   },
+   "deaths": {
+    "starvation": 17290,
+    "predation": 27186,
+    "aging": 1640,
+    "total": 46116
+   },
+   "predation_share": 0.5895134009888108,
+   "starvation_share": 0.3749241044323012,
+   "aging_share": 0.03556249457888802
+  }
+ ]
+}

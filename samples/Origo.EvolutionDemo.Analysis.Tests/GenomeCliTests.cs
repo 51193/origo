@@ -41,6 +41,7 @@ public sealed class GenomeCliTests
         Assert.Contains("--metrics-json", genome.Output, StringComparison.Ordinal);
         Assert.Contains("--allow-skips", genome.Output, StringComparison.Ordinal);
         Assert.Contains("--lineages-csv", genome.Output, StringComparison.Ordinal);
+        Assert.Contains("--root-lineages-csv", genome.Output, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -231,6 +232,7 @@ public sealed class GenomeCliTests
             lineages: [2, 3],
             generations: [1, 0]);
         var lineagesCsv = Path.Combine(first.Path, "lineages.csv");
+        var rootLineagesCsv = Path.Combine(first.Path, "root-lineages.csv");
         var timelineCsv = Path.Combine(first.Path, "timeline.csv");
         var metricsJson = Path.Combine(first.Path, "metrics.json");
 
@@ -241,6 +243,7 @@ public sealed class GenomeCliTests
             "--out", Path.Combine(first.Path, "report.html"),
             "--timeline-csv", timelineCsv,
             "--lineages-csv", lineagesCsv,
+            "--root-lineages-csv", rootLineagesCsv,
             "--metrics-json", metricsJson);
 
         Assert.Equal(0, exitCode);
@@ -252,6 +255,10 @@ public sealed class GenomeCliTests
         Assert.Equal(2, rows.Count(row => row[0] == "save_final#1"));
         Assert.Equal(2, rows.Count(row => row[0] == "save_final#2"));
         Assert.Contains(rows, row => row[0] == "save_final#2" && row[8] == "1" && row[9] == "1");
+        var rootRows = File.ReadLines(rootLineagesCsv).Skip(1).Select(line => line.Split(',')).ToArray();
+        Assert.Equal(4, rootRows.Length);
+        Assert.Contains("save,time,rootLineage,creatures,share,founderCreatures",
+            File.ReadLines(rootLineagesCsv).First(), StringComparison.Ordinal);
 
         var header = File.ReadLines(timelineCsv).First().Split(',');
         var data = File.ReadLines(timelineCsv).Skip(1).First().Split(',');
