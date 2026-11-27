@@ -14,7 +14,7 @@ Console command extensions for the Godot adapter layer. An adapter-layer command
 | `PressButtonCommandHandler.cs` | Godot-specific command: finds and emits Button.Pressed signal by entity + path |
 | `TreeDebugCommandHandler.cs` | Godot-specific command: prints the complete Godot node tree of an entity (including dynamically created child nodes) |
 | `CameraViewCommandHandler.cs` | Godot-specific command: displays screen coordinates and depth of all visible entity nodes from the active camera's perspective (engine visibility flag + camera frustum) |
-| `ProjectionHelper.cs` | Camera projection math utility: world coordinates → screen pixel coordinates (frustum clipping) |
+| `ProjectionHelper.cs` | Camera projection math utility: world coordinates → screen pixel coordinates (clips X/Y/Z against the Godot CPU projection's NDC ranges, with depth in [-1, 1]) |
 
 ## Module Details
 
@@ -66,6 +66,18 @@ Flow:
 ### Why the adapter layer needs its own CommandHandlerBase
 
 Core `ConsoleCommandHandlerBase` and adapter commands both need stable runtime access for sessions, entities, and the world. The adapter layer base class provides a consistent `Runtime` property access pattern, avoiding repeated injection boilerplate in every Godot command handler, and registration goes through `IOrigoRuntime.RegisterConsoleCommandHandler`.
+
+### Why the projection helper clips NDC Z against [-1, 1]
+
+`Camera3D.GetCameraProjection()` returns the CPU-side projection built by
+`Projection.CreatePerspective`/`CreateOrthogonal`; that matrix maps the near
+plane to NDC Z -1 and the far plane to +1. The renderer may apply a separate
+depth correction for its clip-space convention, but `ProjectionHelper` consumes
+the CPU matrix directly, so its visible range is [-1, 1]. Clipping at [0, 1]
+silently dropped every point in the near half of the frustum, including
+orthogonal points nearer than the depth midpoint. `ProjectionHelperTests`
+covers a perspective near-half point, an orthogonal interior point, and
+beyond-far rejection for both projections.
 
 ### Why entity lookup and Godot type checking are shared
 

@@ -74,6 +74,55 @@ public class ProjectionHelperTests
     }
 
     [Fact]
+    public void ProjectWorldToScreen_NearPlane_ReturnsVisiblePoint()
+    {
+        // Godot's CPU camera projection maps near to NDC Z -1 and far to +1.
+        // A point between the near plane and the far plane can therefore have
+        // negative NDC Z; it must not be discarded as behind the camera.
+        var proj = CreatePerspective90();
+        var result = ProjectionHelper.ProjectWorldToScreen(
+            _identityCamera, proj, new Vector3(0f, 0f, -0.15f), _viewport800x600);
+
+        Assert.NotNull(result);
+        Assert.Equal(400f, result!.Value.X, 0.5f);
+        Assert.Equal(300f, result.Value.Y, 0.5f);
+        Assert.Equal(0.15f, result.Value.Z, 0.01f);
+    }
+
+    [Fact]
+    public void ProjectWorldToScreen_OrthogonalInterior_ReturnsVisiblePoint()
+    {
+        var proj = Projection.CreateOrthogonal(-4f, 4f, -3f, 3f, 0.1f, 100f);
+        var result = ProjectionHelper.ProjectWorldToScreen(
+            _identityCamera, proj, new Vector3(0f, 0f, -5f), _viewport800x600);
+
+        Assert.NotNull(result);
+        Assert.Equal(400f, result!.Value.X, 0.5f);
+        Assert.Equal(300f, result.Value.Y, 0.5f);
+        Assert.Equal(5f, result.Value.Z, 0.01f);
+    }
+
+    [Fact]
+    public void ProjectWorldToScreen_PerspectiveBeyondFarPlane_ReturnsNull()
+    {
+        var proj = CreatePerspective90();
+        var result = ProjectionHelper.ProjectWorldToScreen(
+            _identityCamera, proj, new Vector3(0f, 0f, -101f), _viewport800x600);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void ProjectWorldToScreen_OrthogonalBeyondFarPlane_ReturnsNull()
+    {
+        var proj = Projection.CreateOrthogonal(-4f, 4f, -3f, 3f, 0.1f, 100f);
+        var result = ProjectionHelper.ProjectWorldToScreen(
+            _identityCamera, proj, new Vector3(0f, 0f, -101f), _viewport800x600);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
     public void ProjectWorldToScreen_BehindCamera_ReturnsNull()
     {
         var proj = CreatePerspective90();
