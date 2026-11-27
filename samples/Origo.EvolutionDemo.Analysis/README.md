@@ -53,7 +53,8 @@ dotnet run --project samples/Origo.EvolutionDemo.Analysis -c Release -- \
 --timeline-csv <path>    one row per save: time, tick, counts, ecology/access/diet deltas, controller counters, feature means
 --timeline-percentiles   add p50/p90/p95 columns for key features to the timeline CSV
 --features-csv <path>    one row per analyzed creature with every feature value and its cluster
---lineages-csv <path>    one row per living lineage per save with founder/turnover flags
+--lineages-csv <path>    one row per living mutation lineage per save
+--root-lineages-csv <path> one row per living root lineage per save
 --metrics-json <path>    machine-readable metrics, same numbers as the HTML report
 --enrichment-csv <path>  every tested signature with counts, odds, p, and BH q values
 ```
@@ -73,6 +74,7 @@ genome-report.clusters.csv   name,save,lineage,generation,cluster (DBSCAN noise 
 timeline.csv                 only with --timeline-csv
 features.csv                 only with --features-csv
 lineages.csv                 only with --lineages-csv
+root-lineages.csv            only with --root-lineages-csv
 metrics.json                 only with --metrics-json
 enrichment.csv               only with --enrichment-csv
 ```
@@ -140,8 +142,9 @@ per-save numeric `saves[].food` count remains unchanged; the typed inventory is
   counter set exists, the missing causes are treated as zero so partial data is
   still visible.
 
-`--lineages-csv` writes one row per living lineage per save:
+`--lineages-csv` writes one row per living mutation lineage per save:
 `save,time,lineage,creatures,share,founderCreatures,minGeneration,maxGeneration,isNew,isNewGen0`.
+`--root-lineages-csv` writes the same shape with `rootLineage` for stable ancestry.
 `metrics-json` carries the same per-save values under `saves[].lineage`,
 `saves[].rootLineage`, `saves[].spawnOrigins`, and `saves[].deaths`. Sequence
 summaries are `lineageSequence` and `rootLineageSequence` (`distinctLineages`,

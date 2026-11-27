@@ -68,6 +68,7 @@ internal static class Program
         string? enrichmentCsv = null;
         string? featuresCsv = null;
         string? lineagesCsv = null;
+        string? rootLineagesCsv = null;
         var timelinePercentiles = false;
         var explicitK = false;
         var explicitStability = false;
@@ -139,6 +140,9 @@ internal static class Program
                     break;
                 case "--lineages-csv" when i + 1 < args.Length:
                     lineagesCsv = args[++i];
+                    break;
+                case "--root-lineages-csv" when i + 1 < args.Length:
+                    rootLineagesCsv = args[++i];
                     break;
                 case "--timeline-percentiles":
                     timelinePercentiles = true;
@@ -240,6 +244,8 @@ internal static class Program
             WriteFeaturesCsv(featuresCsv, rows, clustering);
         if (!string.IsNullOrWhiteSpace(lineagesCsv))
             WriteLineageCsv(lineagesCsv, lineage, saveSummaries);
+        if (!string.IsNullOrWhiteSpace(rootLineagesCsv))
+            WriteRootLineageCsv(rootLineagesCsv, lineage, saveSummaries);
         if (!string.IsNullOrWhiteSpace(metricsJson))
             WriteFile(metricsJson, GenomeMetricsJson.Build(reportInput));
         if (!string.IsNullOrWhiteSpace(enrichmentCsv))
@@ -774,6 +780,41 @@ internal static class Program
         return sorted[lower] + (position - lower) * (sorted[upper] - sorted[lower]);
     }
 
+    private static void WriteRootLineageCsv(
+        string path, LineageAnalysis analysis, IReadOnlyList<SaveSummary> saves)
+    {
+        EnsureDirectory(path);
+        var displayIds = saves.ToDictionary(static save => save.Path, static save => save.Id, StringComparer.Ordinal);
+        using var writer = new StreamWriter(path);
+        writer.WriteLine("save,time,rootLineage,creatures,share,founderCreatures,minGeneration,maxGeneration,isNew,isNewGen0");
+        foreach (var detail in analysis.RootDetails
+            .OrderBy(static item => item.Time)
+            .ThenBy(static item => item.SaveId, StringComparer.Ordinal)
+            .ThenByDescending(static item => item.Creatures)
+            .ThenBy(static item => item.RootLineage))
+        {
+            writer.Write(Csv(displayIds.GetValueOrDefault(detail.Path, detail.SaveId)));
+            writer.Write(',');
+            writer.Write(detail.Time.ToString("0.###", CultureInfo.InvariantCulture));
+            writer.Write(',');
+            writer.Write(detail.RootLineage.ToString(CultureInfo.InvariantCulture));
+            writer.Write(',');
+            writer.Write(detail.Creatures.ToString(CultureInfo.InvariantCulture));
+            writer.Write(',');
+            writer.Write(detail.Share.ToString("0.######", CultureInfo.InvariantCulture));
+            writer.Write(',');
+            writer.Write(detail.FounderCreatures.ToString(CultureInfo.InvariantCulture));
+            writer.Write(',');
+            writer.Write(detail.MinGeneration.ToString(CultureInfo.InvariantCulture));
+            writer.Write(',');
+            writer.Write(detail.MaxGeneration.ToString(CultureInfo.InvariantCulture));
+            writer.Write(',');
+            writer.Write(detail.IsNew ? "1" : "0");
+            writer.Write(',');
+            writer.WriteLine(detail.IsNewGen0 ? "1" : "0");
+        }
+    }
+
     private static void WriteFeaturesCsv(string path, IReadOnlyList<FeatureRow> rows, KMeans.Result clustering)
     {
         EnsureDirectory(path);
@@ -988,7 +1029,8 @@ internal static class Program
         Console.WriteLine("  --metrics-json <path>    Machine-readable metrics (same numbers as the HTML report).");
         Console.WriteLine("  --enrichment-csv <path>  All tested signatures with p/q values for FDR auditing.");
         Console.WriteLine("  --features-csv <path>    One row per analyzed creature with every feature value and cluster.");
-        Console.WriteLine("  --lineages-csv <path>    One row per living lineage per save with turnover flags.");
+        Console.WriteLine("  --lineages-csv <path>    One row per living mutation lineage per save with turnover flags.");
+        Console.WriteLine("  --root-lineages-csv <path> One row per living root lineage per save.");
         Console.WriteLine("  --timeline-percentiles   Add p50/p90/p95 columns for key features to the timeline CSV.");
         Console.WriteLine("  -h, --help               Show this help.");
     }

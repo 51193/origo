@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Origo.EvolutionDemo.Analysis.Genome;
 using Origo.EvolutionDemo.Analysis.IO;
 using Origo.EvolutionDemo.Logic.V4;
@@ -155,5 +156,7 @@ public sealed class LineageTests
         Assert.Equal(1, second.Origins.Overgrowth);
         Assert.Equal(2, analysis.RootSequence.DistinctLineages);
         Assert.Equal(2, analysis.RootSequence.FinalLivingLineages);
+        Assert.Equal(2, Assert.Single(analysis.RootDetails, detail => detail.SaveId == "root_1" && detail.RootLineage == 1).Creatures);
+        Assert.Equal(2, analysis.RootDetails.Count(detail => detail.SaveId == "root_1"));
     }
 }
