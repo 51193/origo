@@ -93,7 +93,7 @@ public class SavePayloadBenchmarkTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public void PayloadSnapshotWriteAndRead_Roundtrip()
+    public void PayloadSnapshotWriteAndRead_Scaling()
     {
         var entityCounts = new[] { 10, 100, 300 };
 
@@ -119,24 +119,37 @@ public class SavePayloadBenchmarkTests(ITestOutputHelper output)
             var handle = new SaveFileHandle(metaAccess, io, pathResolver, "root");
 
             var logger = new TestLogger();
-            SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, payload, "save_2", logger);
 
             GC.Collect();
             GC.WaitForPendingFinalizers();
             GC.Collect();
 
-            var allocBefore = GC.GetAllocatedBytesForCurrentThread();
-            var sw = Stopwatch.StartNew();
+            var writeAllocBefore = GC.GetAllocatedBytesForCurrentThread();
+            var writeSw = Stopwatch.StartNew();
+            SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, payload, "save_2", logger);
+            writeSw.Stop();
+            var writeAlloc = GC.GetAllocatedBytesForCurrentThread() - writeAllocBefore;
+
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+
+            var readAllocBefore = GC.GetAllocatedBytesForCurrentThread();
+            var readSw = Stopwatch.StartNew();
             var loaded = SaveStorageFacade.ReadSavePayloadFromSnapshot(handle, "save_2", "level_1");
-            sw.Stop();
-            var totalAlloc = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
+            readSw.Stop();
+            var readAlloc = GC.GetAllocatedBytesForCurrentThread() - readAllocBefore;
 
             Assert.Equal(payload.SaveId, loaded.SaveId);
 
-            rows.Add(($"SnapshotIO {count} entities", count, sw.Elapsed, totalAlloc));
+            rows.Add(($"SnapshotWrite {count} entities", count, writeSw.Elapsed, writeAlloc));
+            rows.Add(($"SnapshotIO {count} entities", count, readSw.Elapsed, readAlloc));
         }
 
-        _perf.ReportTable("SaveStorageFacade WriteThenSnapshot + ReadFromSnapshot roundtrip", rows);
+        Assert.Contains(rows, row => row.Item1.StartsWith("SnapshotWrite ", StringComparison.Ordinal));
+        Assert.Contains(rows, row => row.Item1.StartsWith("SnapshotIO ", StringComparison.Ordinal));
+        Assert.Equal(entityCounts.Length * 2, rows.Count);
+        _perf.ReportTable("SaveStorageFacade snapshot write and read timings", rows);
     }
 
     private static SaveGamePayload BuildPayload(int entityCount, string saveId, string levelId)

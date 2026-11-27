@@ -30,7 +30,7 @@ and [Godot adapter benchmarks](../Origo.GodotAdapter.Tests/Serialization.en.md) 
 | `Benchmarks/ObserverTopologyBenchmarkTests.cs` | ObserverTopology Mount/Unmount binding count scaling |
 | `Benchmarks/DataSourceNodeBenchmarkTests.cs` | DataSourceNode tree construction, SHA-256 hash computation, As\<T\> type dispatch throughput |
 | `Benchmarks/BlackboardBenchmarkTests.cs` | In-memory Blackboard SetValue/TryGet bulk throughput, SerializeAll+DeserializeAll round-trip |
-| `Benchmarks/SavePayloadBenchmarkTests.cs` | SavePayload hash computation, WriteToCurrent+ReadFromCurrent round-trip, Snapshot round-trip |
+| `Benchmarks/SavePayloadBenchmarkTests.cs` | SavePayload hash computation, WriteToCurrent+ReadFromCurrent round-trip, snapshot write and read timings |
 | `Benchmarks/ConcurrentActionQueueBenchmarkTests.cs` | ConcurrentActionQueue Enqueue+ExecuteAll scaling, Enqueue throughput |
 | `Benchmarks/RandomGeneratorBenchmarkTests.cs` | XorShift128+ NextUInt64/NextInt64/NextInt32 throughput |
 | `Snd/Strategy/SndStrategyPerformanceTests.cs` | Strategy pool Get/Release round-trip, Process frame handling scaling, TriggerAll allocation |
@@ -92,7 +92,7 @@ and [Godot adapter benchmarks](../Origo.GodotAdapter.Tests/Serialization.en.md) 
 |-----------------|-------------|
 | `PayloadHashCompute_ScalingByEntityCount` | 10/100/500 entity `ComputePayloadHash` throughput |
 | `PayloadWriteAndRead_Roundtrip` | `WriteToCurrent` + `ReadFromCurrent` round-trip |
-| `PayloadSnapshotWriteAndRead_Roundtrip` | `WriteSavePayloadToCurrentThenSnapshot` + `ReadSavePayloadFromSnapshot` round-trip |
+| `PayloadSnapshotWriteAndRead_Scaling` | `WriteSavePayloadToCurrentThenSnapshot` write timing and `ReadSavePayloadFromSnapshot` read timing, reported as separate `SnapshotWrite` and `SnapshotIO` rows |
 
 ### ConcurrentActionQueueBenchmarkTests
 

@@ -248,6 +248,9 @@ Documents why the current state is as it is, what trade-offs were made, and dire
 
 ### Save Persistence
 
+The table records the `SnapshotIO` read measurements; the benchmark also
+reports separate `SnapshotWrite` rows, which have no baseline entry.
+
 | Scenario | Entities | Elapsed | Throughput | Allocation |
 |------|--------|------|------|------|
 | ComputePayloadHash 10e | 10 | 59.00 us | 169.49 Kops/s | 53.10 KB |
@@ -256,9 +259,9 @@ Documents why the current state is as it is, what trade-offs were made, and dire
 | Write+Read 10e | 10 | 129.40 us | 77.28 Kops/s | 27.30 KB |
 | Write+Read 100e | 100 | 143.10 us | 698.81 Kops/s | 135.49 KB |
 | Write+Read 300e | 300 | 383.10 us | 783.09 Kops/s | 347.25 KB |
-| Snapshot Write+Read 10e | 10 | 11.70 us | 854.70 Kops/s | 6.27 KB |
-| Snapshot Write+Read 100e | 100 | 7.20 us | 13.89 Mops/s | 6.27 KB |
-| Snapshot Write+Read 300e | 300 | 7.40 us | 40.54 Mops/s | 6.27 KB |
+| Snapshot Read 10e | 10 | 11.70 us | 854.70 Kops/s | 6.27 KB |
+| Snapshot Read 100e | 100 | 7.20 us | 13.89 Mops/s | 6.27 KB |
+| Snapshot Read 300e | 300 | 7.40 us | 40.54 Mops/s | 6.27 KB |
 
 ### Concurrent Queue
 

@@ -24,7 +24,7 @@ Performance baseline data and design trade-off analysis for the Origo framework,
 | `Origo.Core.Tests/Benchmarks/ObserverTopologyBenchmarkTests.cs` | Observer Topology | Mount/Unmount binding count scaling |
 | `Origo.Core.Tests/Benchmarks/DataSourceNodeBenchmarkTests.cs` | DataSourceNode | Tree construction, SHA-256 hashing, As\<T\> type dispatch |
 | `Origo.Core.Tests/Benchmarks/BlackboardBenchmarkTests.cs` | Blackboard | Batch SetValue/TryGet, serialization round-trip |
-| `Origo.Core.Tests/Benchmarks/SavePayloadBenchmarkTests.cs` | Save Persistence | Payload hash computation, Write/Read round-trip, Snapshot round-trip |
+| `Origo.Core.Tests/Benchmarks/SavePayloadBenchmarkTests.cs` | Save Persistence | Payload hash computation, Write/Read round-trip, snapshot write and read timings |
 | `Origo.Core.Tests/Benchmarks/ConcurrentActionQueueBenchmarkTests.cs` | Concurrent Queue | Enqueue+ExecuteAll scaling, Enqueue throughput |
 | `Origo.Core.Tests/Benchmarks/RandomGeneratorBenchmarkTests.cs` | Random | XorShift128+ NextUInt64/NextInt64/NextInt32 throughput |
 | `Origo.Core.Tests/Snd/Strategy/SndStrategyPerformanceTests.cs` | Strategy | Strategy pool Get/Release, Process frame processing scaling, TriggerAll allocation |
