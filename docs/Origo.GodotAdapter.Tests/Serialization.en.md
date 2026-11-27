@@ -27,6 +27,7 @@ run only by `scripts/bash/benchmark.sh`; `test.sh` full test run excludes them v
 | `GodotTypedDataLayeredTests.cs` | Multi-layer TypedData: Kind resolution, FromObject round-trip, TryGet / AsXxx extensions, DataType / Data, ObjectConverter fallback, cross-layer Kind isolation |
 | `GodotTypedDataGeneratedCoverageTests.cs` | Generated accessor per-type coverage: AsXxx / TryGetXxx / KindMap / Converter round-trips, unregistered-Kind fallback and failure paths |
 | `GodotTypedDataPerformanceTests.cs` | (Benchmark) Multi-layer dispatch performance: registered vs unregistered write / read throughput, ObjectConverter switch vs fallback, Factory path, entity frame simulation |
+| `TypedDataAllocationTests.cs` | Steady-state public `Blackboard.TryGet<Vector3>` allocation: adapter registration loaded, cached fallback chain, zero bytes per read |
 
 ## GodotDataSourceConvertersTests Test Details
 
@@ -63,6 +64,14 @@ run only by `scripts/bash/benchmark.sh`; `test.sh` full test run excludes them v
 | `RegisterDataSourceConverters_Vector4AndQuaternionRoundTrip` | Vector4 matches, Quaternion components match within ε | GodotAdapter Serialization |
 | `RegisterDataSourceConverters_Rect2AndRect2IRoundTrip` | Rect2 / Rect2I round-trip correctly | GodotAdapter Serialization |
 | `RegisterDataSourceConverters_AabbRoundTrip` | Aabb round-trips correctly | GodotAdapter Serialization |
+
+## TypedDataAllocationTests Details
+
+### Happy Path
+
+| Test Method | Verified Behavior | Doc Reference |
+|-------------|-------------------|---------------|
+| `BlackboardTryGetVector3_SteadyState_DoesNotAllocate` | After loading the adapter registration and warming up, 1000 public `Blackboard.TryGet<Vector3>` reads allocate zero bytes; the adapter fallback chain is cached instead of building a delegate array per read | GodotAdapter Snd / Core Contracts TypedData |
 
 ## GodotTypedDataLayeredTests Test Details
 

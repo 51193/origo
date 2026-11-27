@@ -151,6 +151,16 @@ Entity Data values may be complex reference types (strings, arrays, nested objec
 
 `static TypedData()` static constructor can only exist in the defining assembly, whereas in a multi-adapter architecture, downstream assemblies like GodotAdapter need to register their own types into the same `KindTypeMap` array. `ModuleInitializer` allows multiple assemblies to each call `TypedData.RegisterKind()` at load time, executing in dependency order (Core before Adapter), enabling composition of global type registrations.
 
+### Why layered fallback chains are cached
+
+`TypedDataLayeredRegistry` registers adapter callbacks as multicast delegates.
+Reading a non-inline adapter value (for example Godot `Vector3`) calls
+`Delegate.GetInvocationList()`, which allocates a new delegate array on every
+read. The registry therefore caches the invocation array at registration time
+and resolves from the cached array; the public `Blackboard.TryGet<Vector3>`
+steady-state path no longer allocates 32 bytes per read. Registration happens
+in module initializers before normal use, so the cache is built once.
+
 ### Why TypedData does not expose an `object?` boxing accessor
 
 Returning value types like `int`/`float` as `object?` on the CLR **inevitably triggers a boxing allocation**. If TypedData exposed such a property, regardless of its name (`Data` or otherwise), it would become the most natural way for secondary developers to extract values from TypedData — because it "works for all types" without needing to learn generics or `TryGetXxx`. This is precisely the **backdoor** prohibited by §1.4: a fully-featured, simpler access path that obscures the existence of zero-boxing `TryGetXxx`.

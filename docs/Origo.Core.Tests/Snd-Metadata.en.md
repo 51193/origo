@@ -46,6 +46,7 @@ The test infrastructure uses the `TypedDataTestContext` collection fixture to re
 | `WithReferenceType_PreservesIdentity` | Reference type preserves same object reference | snd-entity-model: TypedData |
 | `WithNullValueForReferenceType_PreservesTypeInfo` | null value preserves type information | snd-entity-model: TypedData |
 | `RegisterKind_SameTypeTwice_IsIdempotent` | Registering the same kind with the same type twice is idempotent | snd-entity-model: TypedData |
+| `ResetKindRegistry_ClearsCachedLayeredHandlers` | Test reset clears the delegate chains and their cached invocation arrays; ResolveKind/ResolveFromObject/ResolveToObject no longer see stale handlers | TypedData layered registry |
 
 ### Error Paths
 

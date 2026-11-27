@@ -461,12 +461,13 @@ Program start
 ```csharp
 internal static class TypedDataLayeredRegistry
 {
-    // Multi-layer delegate chain, each layer registers one callback
+    // Multi-layer delegate chain, each layer registers one callback.
     private static Func<Type, byte>? _kindResolverChain;
     private static Func<byte, object, (long, object?)?>? _fromObjectChain;
     private static Func<TypedData, object?>? _toObjectChain;
 
-    // ResolveXxx iterates GetInvocationList() calling chain, returns first non-null/0 result
+    // Registration also caches the multicast invocation array; ResolveXxx reads
+    // that cache and returns the first non-null/0 result without allocating.
 }
 ```
 
