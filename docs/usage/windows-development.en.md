@@ -107,5 +107,7 @@ this suite's explicit test-project list with the solution's xUnit test projects,
 so a new test project cannot silently run only on the Linux gate.
 
 The Windows benchmark comparison follows the same machine-capture rule as the
-POSIX gate: thresholds apply only when `docs/benchmarks/baseline.json` was
-captured on the current machine; otherwise the benchmark run is a smoke test.
+POSIX gate: numeric thresholds apply only when `docs/benchmarks/baseline.json`
+was captured on the current machine; otherwise those comparisons are a smoke
+test. A baseline metric absent from the current run (a removed or renamed
+benchmark) fails on every machine, matching the POSIX gate.
