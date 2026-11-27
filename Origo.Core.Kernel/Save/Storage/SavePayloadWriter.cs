@@ -34,6 +34,7 @@ internal static class SavePayloadWriter
         var currentRel = handle.PathPolicy.GetCurrentDirectory();
         var currentAbs = handle.GetAbsolutePath(currentRel);
         handle.MetaAccess.CreateDirectory(currentAbs);
+        ThrowIfInterruptedWriteMarkerExists(handle, currentRel);
 
         var markerAbs = WriteCheckpointMarker(handle, currentRel);
         // If the write throws, the marker is intentionally left on disk so
@@ -68,6 +69,24 @@ internal static class SavePayloadWriter
         handle.MetaAccess.CreateDirectory(handle.GetAbsolutePath(currentRel));
         handle.IoGateway.WriteTree(markerAbs, DataSourceNode.CreateString(""));
         return markerAbs;
+    }
+
+    /// <summary>
+    ///     Rejects a partial checkpoint while an interrupted write's marker
+    ///     still protects current/. The marker is the transaction boundary for
+    ///     the whole directory; a successful checkpoint of one level must not
+    ///     erase another component's failed-write evidence. Only a full payload
+    ///     write (which rewrites every component) may clear that state.
+    /// </summary>
+    internal static void ThrowIfInterruptedWriteMarkerExists(
+        SaveFileHandle handle, string currentRel)
+    {
+        var markerAbs = handle.GetAbsolutePath(
+            handle.PathPolicy.GetWriteInProgressMarker(currentRel));
+        if (handle.MetaAccess.FileExists(markerAbs))
+            throw new InvalidOperationException(
+                "Cannot write a partial checkpoint while current/ has a write-in-progress marker from an " +
+                "interrupted write. Complete a full save or recover current/ before writing a partial checkpoint.");
     }
 
     public static void WriteToCurrent(

@@ -81,14 +81,22 @@ public interface ISaveStorageService
     /// <remarks>
     ///     The implementation must fully consume the payload's
     ///     <see cref="DataSourceNode" /> trees during the call; callers may
-    ///     dispose them as soon as the method returns.
+    ///     dispose them as soon as the method returns. An existing
+    ///     <c>.write_in_progress</c> marker means another write was
+    ///     interrupted; the call fails before writing and leaves that marker
+    ///     in place. Only the full payload write or an explicit recovery may
+    ///     clear interrupted state.
     /// </remarks>
     void WriteLevelPayloadOnlyToCurrent(LevelPayload levelPayload);
 
     /// <summary>Writes only Progress-related files to the current/ directory.</summary>
     /// <remarks>
     ///     The implementation must fully consume both node trees during the
-    ///     call; callers may dispose them as soon as the method returns.
+    ///     call; callers may dispose them as soon as the method returns. An
+    ///     existing <c>.write_in_progress</c> marker means another write was
+    ///     interrupted; the call fails before writing and leaves that marker
+    ///     in place. Only the full payload write or an explicit recovery may
+    ///     clear interrupted state.
     /// </remarks>
     void WriteProgressOnlyToCurrent(
         DataSourceNode progressNode,

@@ -55,6 +55,17 @@ Complete implementation of the save storage layer. Responsible for file I/O (rea
 9. **Validate staged copy**: require `progress.json` and `progress_state_machines.json` at the root of `save_{id}.tmp/`; on failure delete the temp copy and keep the existing slot (the marker remains)
 10. **Clear marker**: delete the marker (the one recreated for the snapshot phase)
 
+### Partial checkpoints and interrupted writes
+
+A partial checkpoint (`WriteLevelPayloadOnlyToCurrent` or
+`WriteProgressOnlyToCurrent`) writes only one component. It refuses to start
+when `current/.write_in_progress` already exists: that marker belongs to an
+interrupted write of some other component, and deleting it after a successful
+partial write would declare the whole directory healthy while the other
+component remained half-written. The call fails before writing and leaves the
+marker in place; a full payload write (which rewrites every component) or an
+explicit recovery is required before partial checkpoints are accepted again.
+
 ## Strict Read Rules
 
 - **`.write_in_progress` exists under `current/`** → refuse to read, throw exception (previous write was interrupted)
@@ -106,6 +117,18 @@ Recovery uses the path policy rather than assuming the default `save_`/`level_` 
 ### Why enumeration goes through ISavePathPolicy
 
 `ISavePathPolicy.EnumerateSaveIds` gives every layout policy a single place to expose its slot IDs. `EnumerateInterruptedSnapshots` does the same for recovery candidates (ID plus actual backup path), and `TryGetLevelIdFromDirectory` supplies the inverse mapping used when discovering level payloads, pruning stale levels, and checking snapshot completeness, so write, list, metadata, delete, load, and recovery paths agree on the layout; an unreadable or invalid directory is skipped rather than breaking metadata listing for every valid slot; a legacy case-variant slot is not silently merged and is rejected by write/delete/load entry points with a rename instruction. Extra data restore and the idempotency side hash use `GetExtraDirectory` for the same reason.
+
+### Why partial checkpoints refuse an existing marker
+
+`current/.write_in_progress` is the transaction marker for the entire save
+directory, not for one level file or the progress pair. A partial checkpoint
+writes one component and then deletes the marker, so allowing it to start while
+another component's marker exists would let a successful menu checkpoint erase a
+failed background-level write's evidence. The next load would then accept a
+mixed current/ (new scene plus old session) instead of failing fast. The
+checkpoint therefore rejects the call before writing and preserves the marker;
+only a full payload write, which rewrites every component and can be validated
+as a whole, or an explicit recovery may clear the interrupted state.
 
 ### Why two-phase write
 

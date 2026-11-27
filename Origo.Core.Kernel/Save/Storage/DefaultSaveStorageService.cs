@@ -96,6 +96,7 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService, ICaseVari
     {
         var currentRel = _handle.PathPolicy.GetCurrentDirectory();
         SavePayloadWriter.EnsureNoCaseVariantLevelDirectory(_handle, currentRel, levelPayload.LevelId);
+        SavePayloadWriter.ThrowIfInterruptedWriteMarkerExists(_handle, currentRel);
         var markerAbs = SavePayloadWriter.WriteCheckpointMarker(_handle, currentRel);
 
         // If the write throws, the marker is intentionally left on disk so

@@ -91,6 +91,15 @@ an empty target), and an empty `SaveId` means the target id names the slot.
    snapshot fails, leave the marker in place so the next read of `current/` is
    rejected; the failure is logged and rethrown.
 
+A partial checkpoint (`WriteLevelPayloadOnlyToCurrent` or
+`WriteProgressOnlyToCurrent`) writes only one component. It refuses to start
+when `current/.write_in_progress` already exists, because that marker belongs to
+an interrupted write of another component; deleting it after the partial write
+would declare the whole directory healthy while the other component remained
+half-written. The call fails before writing, leaves the marker in place, and
+requires a full payload write or an explicit recovery before partial
+checkpoints are accepted again.
+
 The backup is never deleted before the new snapshot is installed. A crash
 between the two renames leaves a complete `.bak` that the next list or direct
 snapshot read restores as the real slot; `.tmp` is never listed as a save.

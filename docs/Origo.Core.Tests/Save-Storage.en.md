@@ -72,6 +72,8 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | `ReadSavePayloadFromSnapshot_WhenSaveNotExist_Throws` | Non-existent save snapshot | InvalidOperationException |
 | `WriteProgressOnlyToCurrent_Failure_LeavesMarkerSoReadersReject` | I/O failure mid checkpoint write (simulated second write throws) | IOException propagates, marker left so readers reject |
 | `WriteLevelPayloadOnlyToCurrent_Failure_LeavesMarkerSoReadersReject` | Level-only write validation fails (Null nodes) | InvalidOperationException, marker left so readers reject |
+| `WriteProgressOnlyToCurrent_WhenMarkerExists_ThrowsAndPreservesMarker` | An existing .write_in_progress marker protects current/ | InvalidOperationException, marker content preserved, no progress files written |
+| `WriteLevelPayloadOnlyToCurrent_WhenOtherCheckpointFailed_ThrowsAndPreservesMarker` | A failed level_b checkpoint left the marker, then level_a checkpoint is attempted | InvalidOperationException, marker preserved, no level_a files written |
 
 ### Boundary Path
 
