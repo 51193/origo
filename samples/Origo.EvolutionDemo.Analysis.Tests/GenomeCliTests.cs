@@ -215,6 +215,37 @@ public sealed class GenomeCliTests
     }
 
     [Fact]
+    public void Genome_RootMortalityCsvAndJsonAreWritten()
+    {
+        using var directory = new TemporaryDirectory();
+        var save = SaveFixture.CreateV7Save(
+            directory, "root_deaths",
+            SaveFixture.Creatures(SaveFixture.DefaultGenome(), 4),
+            extraControllerPairs: new Dictionary<string, object> { ["evo.deathByRoot"] = "1:7,11,2" });
+        var rootCsv = Path.Combine(directory.Path, "root-mortality.csv");
+        var metrics = Path.Combine(directory.Path, "metrics.json");
+        var report = Path.Combine(directory.Path, "report.html");
+
+        var (exitCode, _, error) = Run(
+            "genome", "--save", save, "--out", report,
+            "--root-mortality-csv", rootCsv, "--metrics-json", metrics);
+
+        Assert.True(exitCode == 0, error);
+        var header = File.ReadLines(rootCsv).First().Split(',');
+        var row = File.ReadLines(rootCsv).Skip(1).First().Split(',');
+        Assert.Equal(header.Length, row.Length);
+        Assert.Equal("1", row[2]);
+        Assert.Equal("20", row[6]);
+        Assert.Equal("1", row[7]);
+        using var json = JsonDocument.Parse(File.ReadAllText(metrics));
+        Assert.True(json.RootElement.TryGetProperty("rootMortalitySequence", out var rootSequence), json.RootElement.ToString());
+        Assert.True(rootSequence.TryGetProperty("counts", out var rootCounts), json.RootElement.ToString());
+        Assert.Equal(20, rootCounts.GetProperty("total").GetInt32());
+        Assert.Equal(1, json.RootElement.GetProperty("rootMortality")[0].GetProperty("rootLineage").GetInt32());
+        Assert.Contains("Deaths by root lineage", File.ReadAllText(report), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Genome_LineageCsvRowsAndDuplicateSaveIdsAreDisambiguated()
     {
         using var first = new TemporaryDirectory();
@@ -540,6 +571,7 @@ public sealed class GenomeCliTests
                 ["evo.starvationDeaths"] = 7d,
                 ["evo.predationDeaths"] = 11d,
                 ["evo.ageDeaths"] = 2d,
+                ["evo.deathByRoot"] = "1:7,11,2",
             });
     }
 

@@ -20,6 +20,7 @@ public sealed class MortalityTests
                 ["evo.starvationDeaths"] = 10d,
                 ["evo.predationDeaths"] = 5d,
                 ["evo.ageDeaths"] = 5d,
+                ["evo.deathByRoot"] = "7:10,5,5",
             });
 
         var analysis = SaveMortalityAnalyzer.Analyze(SaveSnapshotReader.Read([save]));
@@ -33,6 +34,11 @@ public sealed class MortalityTests
         Assert.Equal(0.25d, analysis.Sequence.PredationShare!.Value, 9);
         Assert.Equal(0.5d, analysis.Sequence.StarvationShare!.Value, 9);
         Assert.Equal(0.25d, analysis.Sequence.AgingShare!.Value, 9);
+        var root = Assert.Single(analysis.RootDeaths!);
+        Assert.Equal(7, root.Key);
+        Assert.Equal(20, root.Value.Total);
+        Assert.Equal(1, analysis.RootSummary!.Roots);
+        Assert.Equal(0.25d, analysis.RootSummary.PredationShare!.Value, 9);
     }
 
     [Fact]

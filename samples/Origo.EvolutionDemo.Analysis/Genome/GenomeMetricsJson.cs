@@ -51,6 +51,7 @@ public static class GenomeMetricsJson
             WriteLineageSequence(writer, "rootLineageSequence", input.Lineage.RootSequence);
             WriteOrigins(writer, input.Lineage.Origins);
             WriteMortalitySequence(writer, input.Mortality.Sequence);
+            WriteRootMortality(writer, input.Mortality);
             WriteSaves(writer, input);
             WriteFeatures(writer, input);
             WriteClustering(writer, input);
@@ -249,6 +250,42 @@ public static class GenomeMetricsJson
         }
 
         writer.WriteEndObject();
+    }
+
+    private static void WriteRootMortality(Utf8JsonWriter writer, MortalityAnalysis mortality)
+    {
+        writer.WriteStartObject("rootMortalitySequence");
+        if (mortality.RootSummary is { } summary)
+        {
+            writer.WriteNumber("roots", summary.Roots);
+            writer.WriteStartObject("counts");
+            WriteDeathCounts(writer, summary.Counts);
+            writer.WriteEndObject();
+            WriteNullableNumber(writer, "predationShare", summary.PredationShare);
+            WriteNullableNumber(writer, "starvationShare", summary.StarvationShare);
+            WriteNullableNumber(writer, "agingShare", summary.AgingShare);
+        }
+        else
+        {
+            writer.WriteNull("summary");
+        }
+
+        writer.WriteEndObject();
+        writer.WriteStartArray("rootMortality");
+        if (mortality.RootDeaths is not null)
+            foreach (var (root, tally) in mortality.RootDeaths.OrderByDescending(static pair => pair.Value.Total)
+                .ThenBy(static pair => pair.Key))
+            {
+                writer.WriteStartObject();
+                writer.WriteNumber("rootLineage", root);
+                writer.WriteNumber("starvation", tally.Starvation);
+                writer.WriteNumber("predation", tally.Predation);
+                writer.WriteNumber("aging", tally.Aging);
+                writer.WriteNumber("total", tally.Total);
+                writer.WriteEndObject();
+            }
+
+        writer.WriteEndArray();
     }
 
     private static void WriteDeaths(Utf8JsonWriter writer, DeathCounts counts)

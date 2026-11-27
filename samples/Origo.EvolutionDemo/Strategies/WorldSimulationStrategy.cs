@@ -140,6 +140,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             entity.SetData(DemoKeys.PredationDeaths, 0);
         if (!entity.TryGetData<int>(DemoKeys.AgeDeaths).found)
             entity.SetData(DemoKeys.AgeDeaths, 0);
+        if (!entity.TryGetData<string>(DemoKeys.DeathByRoot).found)
+            entity.SetData(DemoKeys.DeathByRoot, string.Empty);
         if (!entity.TryGetData<float>(DemoKeys.Accumulator).found)
             entity.SetData(DemoKeys.Accumulator, 0f);
         if (!entity.TryGetData<float>(DemoKeys.FoodAccumulator).found)
@@ -289,6 +291,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         controller.SetData(DemoKeys.StarvationDeaths, 0);
         controller.SetData(DemoKeys.PredationDeaths, 0);
         controller.SetData(DemoKeys.AgeDeaths, 0);
+        controller.SetData(DemoKeys.DeathByRoot, string.Empty);
         controller.SetData(DemoKeys.SpikeHits, 0);
         controller.SetData(DemoKeys.SpikeDrained, 0f);
         controller.SetData(DemoKeys.CorpsesCreated, 0);
@@ -313,6 +316,26 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         });
     }
 
+    private enum RootDeathCause
+    {
+        Starvation,
+        Predation,
+        Aging,
+    }
+
+    private static void RecordRootDeath(EvolutionTickContext world, int root, RootDeathCause cause)
+    {
+        var tally = world.DeathByRoot.GetValueOrDefault(root);
+        world.DeathByRoot[root] = cause switch
+        {
+            RootDeathCause.Starvation => tally with { Starvation = tally.Starvation + 1 },
+            RootDeathCause.Predation => tally with { Predation = tally.Predation + 1 },
+            RootDeathCause.Aging => tally with { Aging = tally.Aging + 1 },
+            _ => throw new ArgumentOutOfRangeException(nameof(cause), cause, "Unknown root death cause."),
+        };
+        world.DeathByRootDirty = true;
+    }
+
     private static void SimulateTick(ISndEntity controller, ISndContext ctx)
     {
         var session = EvolutionGameSession.For(ctx);
@@ -324,6 +347,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     session.Profiler.RecordSystem(system.Id, milliseconds, allocated)
                 : null);
         session.Profiler.End(world);
+        if (world.DeathByRootDirty)
+            controller.SetData(DemoKeys.DeathByRoot, RootDeathCodec.Serialize(world.DeathByRoot));
     }
 
     /// <summary>Runs the core simulation system for one fixed tick.</summary>
@@ -769,6 +794,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     controller.SetData(
                         DemoKeys.PredationDeaths,
                         ReadInt(controller, DemoKeys.PredationDeaths, 0) + 1);
+                    RecordRootDeath(world, target.RootLineage, RootDeathCause.Predation);
                     entity.SetData(DemoKeys.Kills, ReadInt(entity, DemoKeys.Kills, 0) + 1);
 
                     var corpsePosition = ClampToPond(
@@ -887,9 +913,11 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 nextCorpseId = deathContext.NextCorpseId;
                 corpsesCreated = deathContext.CorpsesCreated;
 
+                var cause = energy <= 0f ? RootDeathCause.Starvation : RootDeathCause.Aging;
                 controller.SetData(
                     energy <= 0f ? DemoKeys.StarvationDeaths : DemoKeys.AgeDeaths,
                     ReadInt(controller, energy <= 0f ? DemoKeys.StarvationDeaths : DemoKeys.AgeDeaths, 0) + 1);
+                RecordRootDeath(world, creature.RootLineage, cause);
                 session.RequestKillEntity(entity.Name);
                 continue;
             }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Origo.EvolutionDemo.Analysis.Genome;
 using Origo.EvolutionDemo.Analysis.Math;
+using Origo.EvolutionDemo.Logic.Gameplay;
 
 namespace Origo.EvolutionDemo.Analysis.Tests;
 
@@ -116,10 +117,16 @@ internal static class ReportFixture
             new LineageSequenceSummary(2, 2, 2, 0, 0, 0, null, null),
             new LineageSequenceSummary(2, 2, 2, 0, 0, 0, null, null),
             new SpawnOriginCounts(0, 60, 0, 0, 0, 0));
+        IReadOnlyDictionary<int, RootDeathTally> rootDeaths = new Dictionary<int, RootDeathTally>
+        {
+            [1] = new(2, 3, 1),
+        };
         var mortality = new MortalityAnalysis(
             [.. saves.Select(save => new SaveMortality(
-                save.Id, save.Path, save.Time, save.Tick, new DeathCounts(2, 3, 1)))],
-            new MortalitySequenceSummary(new DeathCounts(6, 9, 3), 0.5d, 1 / 3d, 1 / 6d));
+                save.Id, save.Path, save.Time, save.Tick, new DeathCounts(2, 3, 1), rootDeaths))],
+            new MortalitySequenceSummary(new DeathCounts(6, 9, 3), 0.5d, 1 / 3d, 1 / 6d),
+            rootDeaths,
+            new RootMortalitySummary(1, new DeathCounts(6, 9, 3), 0.5d, 1 / 3d, 1 / 6d));
         var finalLabels = labels.ToArray();
         var clustering = new KMeans.Result(
             finalLabels,

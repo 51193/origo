@@ -55,6 +55,7 @@ dotnet run --project samples/Origo.EvolutionDemo.Analysis -c Release -- \
 --features-csv <path>    one row per analyzed creature with every feature value and its cluster
 --lineages-csv <path>    one row per living mutation lineage per save
 --root-lineages-csv <path> one row per living root lineage per save
+--root-mortality-csv <path> one row per root death total per save
 --metrics-json <path>    machine-readable metrics, same numbers as the HTML report
 --enrichment-csv <path>  every tested signature with counts, odds, p, and BH q values
 ```
@@ -75,6 +76,7 @@ timeline.csv                 only with --timeline-csv
 features.csv                 only with --features-csv
 lineages.csv                 only with --lineages-csv
 root-lineages.csv            only with --root-lineages-csv
+root-mortality.csv           only with --root-mortality-csv
 metrics.json                 only with --metrics-json
 enrichment.csv               only with --enrichment-csv
 ```
@@ -145,13 +147,17 @@ per-save numeric `saves[].food` count remains unchanged; the typed inventory is
 `--lineages-csv` writes one row per living mutation lineage per save:
 `save,time,lineage,creatures,share,founderCreatures,minGeneration,maxGeneration,isNew,isNewGen0`.
 `--root-lineages-csv` writes the same shape with `rootLineage` for stable ancestry.
+`--root-mortality-csv` writes one row per root with cumulative starvation,
+predation, aging, total, whether the root is still living in that save, and its
+living creature count.
 `metrics-json` carries the same per-save values under `saves[].lineage`,
 `saves[].rootLineage`, `saves[].spawnOrigins`, and `saves[].deaths`. Sequence
 summaries are `lineageSequence` and `rootLineageSequence` (`distinctLineages`,
 `peakLivingLineages`, `finalLivingLineages`, `totalNewLineages`,
 `totalNewGen0Lineages`, `lostLineages`, `meanPriorLineageSurvival`,
 `meanLineageTurnover`), `spawnOrigins`, and `mortalitySequence` (latest
-cumulative counts and cause shares).
+cumulative counts and cause shares), `rootMortalitySequence` (latest
+per-root totals and shares), and `rootMortality` (latest root × cause rows).
 
 The report contains:
 
