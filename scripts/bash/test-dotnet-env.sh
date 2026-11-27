@@ -411,4 +411,53 @@ make_repo "$repo" "10.0.402"
 [[ "$( env -u DOTNET_ROOT PATH="$sysbin:$PATH" bash -c 'cd "$1" && ./dotnet --version' _ "$repo" )" == "10.0.402" ]] \
     || FAIL "F: the wrapper did not fall back to the system dotnet"
 
+# --- G: caller scripts resolve the SDK before redirecting HOME -----------
+
+echo "=== G: caller scripts keep the caller SDK across HOME redirection ==="
+repo="$FIXTURE/repo-caller-home-sdk"
+mkdir -p "$repo/scripts/bash" "$repo/home/.dotnet"
+cp "$ROOT/scripts/bash/godot-test.sh" "$repo/scripts/bash/godot-test.sh"
+cp "$ROOT/scripts/bash/dotnet-env.sh" "$repo/scripts/bash/dotnet-env.sh"
+printf '{\n  "sdk": {\n    "version": "10.0.403",\n    "rollForward": "latestMinor",\n    "allowPrerelease": false\n  }\n}\n' \
+    > "$repo/global.json"
+write_stub_dotnet "$repo/home/.dotnet/dotnet" "10.0.403" 0
+cat > "$repo/scripts/bash/download-godot.sh" <<'STUB'
+#!/usr/bin/env bash
+echo "STUB_DOWNLOAD_GODOT_REACHED ORIGO_DOTNET_EXE=${ORIGO_DOTNET_EXE:-} DOTNET_ROOT=${DOTNET_ROOT:-} NUGET_PACKAGES=${NUGET_PACKAGES:-}" >&2
+"${ORIGO_DOTNET_EXE:-false}" --version >&2 || true
+exit 42
+STUB
+chmod +x "$repo/scripts/bash/download-godot.sh"
+set +e
+output=$( env -u DOTNET_INSTALL_DIR -u DOTNET_ROOT -u DOTNET_CLI_HOME -u NUGET_PACKAGES \
+    HOME="$repo/home" \
+    XDG_DATA_HOME="$repo/home/.local/share" \
+    XDG_CONFIG_HOME="$repo/home/.config" \
+    XDG_CACHE_HOME="$repo/home/.cache" \
+    PATH="/usr/bin:/bin" \
+    bash "$repo/scripts/bash/godot-test.sh" 2>&1 )
+status=$?
+set -e
+[[ $status -ne 0 ]] || FAIL "G: the caller script unexpectedly succeeded"
+[[ "$output" == *STUB_DOWNLOAD_GODOT_REACHED* ]] \
+    || FAIL "G: godot-test.sh did not resolve the caller's \$HOME/.dotnet SDK after the XDG redirect: $output"
+[[ "$output" != *"no dotnet executable"* ]] \
+    || FAIL "G: the HOME redirect hid the caller's SDK from dotnet-env.sh"
+[[ "$output" == *"ORIGO_DOTNET_EXE=$repo/home/.dotnet/dotnet"* ]] \
+    || FAIL "G: the caller script did not select the fixture HOME SDK: $output"
+[[ "$output" == *"DOTNET_ROOT=$repo/home/.dotnet"* ]] \
+    || FAIL "G: the selected SDK root was not preserved across the HOME redirect: $output"
+[[ "$output" == *"NUGET_PACKAGES=$repo/home/.nuget/packages"* ]] \
+    || FAIL "G: the caller NuGet cache was not pinned across the HOME redirect: $output"
+[[ "$output" == *"10.0.403"* ]] \
+    || FAIL "G: the selected SDK could not be executed after the redirect: $output"
+
+# Both POSIX Godot entry points must resolve the SDK before the HOME redirect.
+for caller in godot-test.sh package-consumer-smoke.sh; do
+    env_line=$(grep -n 'source "$ROOT/scripts/bash/dotnet-env.sh"' "$ROOT/scripts/bash/$caller" | head -1 | cut -d: -f1)
+    home_line=$(grep -n 'export HOME=' "$ROOT/scripts/bash/$caller" | head -1 | cut -d: -f1)
+    [[ -n "$env_line" && -n "$home_line" && "$env_line" -lt "$home_line" ]] \
+        || FAIL "G: $caller must source dotnet-env.sh before redirecting HOME"
+done
+
 echo "SDK bootstrap regression tests: OK"
