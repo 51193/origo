@@ -333,6 +333,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   frustum midpoint and orthogonal points in their near half were silently
   reported as not visible; the helper now uses the projection's actual [-1, 1]
   range.
+- **Late persistence enqueue cannot survive shutdown** — a save or load
+  request from another thread could pass its shutdown pre-check, then enqueue
+  after the final queue clear and leave `pending=1`/`IsPersistenceIdle=false`
+  on a terminal context. The terminal check, pending counter, and queue insert
+  now share the cancel/commit gate on both direct `Shutdown()` and the
+  workflow-teardown nested-shutdown path; such a request fails explicitly
+  instead of leaving pending work after shutdown.
 - **Scene host frame processing fails before a spawned entity is processed** —
   `ProcessAll` uses the entity count captured at frame start as its loop bound
   and detects any container add/remove, including a balanced add/remove that

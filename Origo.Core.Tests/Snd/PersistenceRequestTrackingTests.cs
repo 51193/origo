@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
+using Origo.Core.DataSource;
 using Origo.Core.Snd;
 using Xunit;
 
@@ -210,6 +212,50 @@ public class PersistenceRequestTrackingTests
     }
 
     [Fact]
+    public async Task Shutdown_RacingEnqueue_RejectsLateRequestAndLeavesNoPending()
+    {
+        // The worker pauses in the case-variant slot probe after
+        // RequestSaveGame's pre-check but before it enqueues. Shutdown then
+        // completes. The late enqueue must fail instead of leaving a pending
+        // request on a terminal context.
+        var fs = new TestMemoryFileSystem();
+        var io = TestFactory.CreateIoGateway(fs);
+        var blockingMeta = new BlockingDirectoryMetaAccess(TestFactory.CreateFileMetaAccess(fs));
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(new TestLogger(), new TestSndSceneHost());
+        var ctx = new SndContext(new SndContextParameters(
+            runtime, io, blockingMeta, pathResolver, "root", "res://initial", "entry.json")
+        {
+            AutoDiscoverStrategies = false
+        });
+        fs.CreateDirectory("root");
+
+        Exception? workerFailure = null;
+        var worker = Task.Run(() =>
+        {
+            try
+            {
+                ctx.Save.RequestSaveGame("late_slot");
+            }
+            catch (Exception ex)
+            {
+                workerFailure = ex;
+            }
+        }, TestContext.Current.CancellationToken);
+
+        Assert.True(blockingMeta.Entered.Wait(TimeSpan.FromSeconds(10),
+            TestContext.Current.CancellationToken));
+        ctx.Shutdown();
+        blockingMeta.Release.Set();
+        await worker.WaitAsync(TimeSpan.FromSeconds(10),
+            TestContext.Current.CancellationToken);
+
+        Assert.IsType<InvalidOperationException>(workerFailure);
+        Assert.Equal(0, ctx.Deferred.GetPendingPersistenceRequestCount());
+        Assert.True(ctx.Deferred.IsPersistenceIdle);
+    }
+
+    [Fact]
     public void Shutdown_CancelsQueuedPersistenceRequests_AndRunsDiscardCallbacks()
     {
         var fs = new TestMemoryFileSystem();
@@ -269,5 +315,42 @@ public class PersistenceRequestTrackingTests
         ctx.Shutdown();
         Assert.Throws<InvalidOperationException>(() => ctx.Save.RequestSaveGame("after_retry_shutdown"));
         Assert.Null(Record.Exception(() => ctx.FlushFrame()));
+    }
+
+    private sealed class BlockingDirectoryMetaAccess(IFileMetaAccess inner) : IFileMetaAccess
+    {
+        public ManualResetEventSlim Entered { get; } = new(false);
+        public ManualResetEventSlim Release { get; } = new(false);
+        private int _blocked;
+
+        public IEnumerable<string> EnumerateDirectories(string directoryPath)
+        {
+            if (Interlocked.Exchange(ref _blocked, 1) == 0)
+            {
+                Entered.Set();
+                Release.Wait();
+            }
+
+            return inner.EnumerateDirectories(directoryPath);
+        }
+
+        public bool FileExists(string path) => inner.FileExists(path);
+
+        public bool DirectoryExists(string path) => inner.DirectoryExists(path);
+
+        public IEnumerable<string> EnumerateFiles(string directoryPath, string searchPattern, bool recursive) =>
+            inner.EnumerateFiles(directoryPath, searchPattern, recursive);
+
+        public void CreateDirectory(string directoryPath) => inner.CreateDirectory(directoryPath);
+
+        public void Delete(string path) => inner.Delete(path);
+
+        public void DeleteDirectory(string directoryPath) => inner.DeleteDirectory(directoryPath);
+
+        public void Copy(string sourcePath, string destinationPath, bool overwrite) =>
+            inner.Copy(sourcePath, destinationPath, overwrite);
+
+        public void Rename(string sourcePath, string destinationPath) =>
+            inner.Rename(sourcePath, destinationPath);
     }
 }

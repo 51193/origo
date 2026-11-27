@@ -45,6 +45,7 @@ public sealed class SndContext : ISndContext
     private bool _bootstrapCompleted;
     private readonly SndContextParameters _parameters;
     private readonly SndShutdownState _shutdownState = new();
+    private readonly Lock _persistenceGate = new();
     internal int _pendingPersistenceRequests;
     internal ProgressRun? _progressRun;
     private bool _workflowInProgress;
@@ -255,16 +256,24 @@ public sealed class SndContext : ISndContext
 
                 // A retried console reset (or a consumer input source's Clear
                 // implementation) can enqueue fresh deferred work; cancel it
-                // before committing the terminal flag.
-                CancelPendingDeferredRequests(ref retryFailure);
-
-                if (retryFailure is not null)
+                // before committing the terminal flag. The gate makes the
+                // final cancel and the terminal commit atomic with respect to
+                // EnqueueTrackedSystemDeferred: a request that passed its
+                // pre-check on another thread either lands before the cancel
+                // (and is discarded) or sees the terminal state and fails.
+                lock (_persistenceGate)
                 {
-                    _shutdownState.ClearNestedRequest();
-                    ExceptionDispatchInfo.Capture(retryFailure).Throw();
+                    CancelPendingDeferredRequests(ref retryFailure);
+
+                    if (retryFailure is not null)
+                    {
+                        _shutdownState.ClearNestedRequest();
+                        ExceptionDispatchInfo.Capture(retryFailure).Throw();
+                    }
+
+                    _shutdownState.CommitTerminalState();
                 }
 
-                _shutdownState.CommitTerminalState();
                 return;
             }
 
@@ -302,10 +311,16 @@ public sealed class SndContext : ISndContext
             // Quit hooks run during progress teardown and may enqueue new
             // deferred work (persistence requests are only rejected once the
             // terminal flag is committed). Drop that work too, so no queued
-            // action can run on a frame after shutdown.
-            CancelPendingDeferredRequests(ref firstFailure);
+            // action can run on a frame after shutdown. The gate makes this
+            // final cancel and the terminal commit atomic with respect to
+            // EnqueueTrackedSystemDeferred, so a request cannot slip in after
+            // the queue is cleared and before shutdown becomes terminal.
+            lock (_persistenceGate)
+            {
+                CancelPendingDeferredRequests(ref firstFailure);
+                ApplyShutdownTeardownOutcome(firstFailure, hadProgressRun);
+            }
 
-            ApplyShutdownTeardownOutcome(firstFailure, hadProgressRun);
             if (firstFailure is not null)
             {
                 // The nested request belonged to this failed attempt; keep the
@@ -492,18 +507,28 @@ public sealed class SndContext : ISndContext
     internal void EnqueueTrackedSystemDeferred(Action action)
     {
         ArgumentNullException.ThrowIfNull(action);
-        Interlocked.Increment(ref _pendingPersistenceRequests);
-        Runtime.EnqueueSystemDeferred(() =>
+
+        // Keep the terminal check, the pending counter, and the queue insert
+        // in one critical section with Shutdown's final cancel/commit. A
+        // caller that passed ThrowIfShutdown before shutdown started must not
+        // be able to enqueue after the queue was cleared and leave a pending
+        // request on a terminal context.
+        lock (_persistenceGate)
         {
-            try
+            ThrowIfShutdown();
+            Interlocked.Increment(ref _pendingPersistenceRequests);
+            Runtime.EnqueueSystemDeferred(() =>
             {
-                action();
-            }
-            finally
-            {
-                Interlocked.Decrement(ref _pendingPersistenceRequests);
-            }
-        }, onDiscard: () => Interlocked.Decrement(ref _pendingPersistenceRequests));
+                try
+                {
+                    action();
+                }
+                finally
+                {
+                    Interlocked.Decrement(ref _pendingPersistenceRequests);
+                }
+            }, onDiscard: () => Interlocked.Decrement(ref _pendingPersistenceRequests));
+        }
     }
 
     /// <summary>
@@ -742,12 +767,17 @@ public sealed class SndContext : ISndContext
                 // before committing shutdown, otherwise it would run on a later
                 // frame against the terminal context and keep the persistence
                 // counter non-zero. Cancellation failures join the teardown
-                // failure and keep the cleanup retryable.
-                CancelPendingDeferredRequests(ref progressTeardownFailure);
+                // failure and keep the cleanup retryable. The gate makes this
+                // final cancel and the terminal commit atomic with respect to
+                // EnqueueTrackedSystemDeferred, matching Shutdown's own paths.
+                lock (_persistenceGate)
+                {
+                    CancelPendingDeferredRequests(ref progressTeardownFailure);
 
-                // Success commits terminal state; failure keeps the cleanup
-                // retry record because the progress run is already gone.
-                ApplyShutdownTeardownOutcome(progressTeardownFailure, retryCurrentDelete: true);
+                    // Success commits terminal state; failure keeps the
+                    // cleanup retry record because the progress run is gone.
+                    ApplyShutdownTeardownOutcome(progressTeardownFailure, retryCurrentDelete: true);
+                }
             }
 
             if (progressTeardownFailure is not null)
