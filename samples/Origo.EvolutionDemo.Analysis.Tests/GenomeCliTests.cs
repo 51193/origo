@@ -154,8 +154,12 @@ public sealed class GenomeCliTests
         Assert.True(metrics.RootElement.GetProperty("clustering").GetProperty("k").GetInt32() >= 1);
         Assert.True(metrics.RootElement.GetProperty("lineageSequence").TryGetProperty("distinctLineages", out _));
         Assert.True(metrics.RootElement.GetProperty("saves")[0].TryGetProperty("lineage", out _));
+        Assert.Equal(11, metrics.RootElement.GetProperty("saves")[0].GetProperty("deaths").GetProperty("predation").GetInt32());
         Assert.Contains("Lineages and founder cohorts", File.ReadAllText(Path.Combine(outputRoot, "report.html")), StringComparison.Ordinal);
-        Assert.Contains("lineage.count", File.ReadLines(Path.Combine(outputRoot, "timeline.csv")).First(), StringComparison.Ordinal);
+        Assert.Equal(11, metrics.RootElement.GetProperty("mortalitySequence").GetProperty("counts").GetProperty("predation").GetInt32());
+        var timelineHeader = File.ReadLines(Path.Combine(outputRoot, "timeline.csv")).First();
+        Assert.Contains("lineage.count", timelineHeader, StringComparison.Ordinal);
+        Assert.Contains("death.predation", timelineHeader, StringComparison.Ordinal);
         Assert.Contains("save,time,lineage,creatures,share,founderCreatures",
             File.ReadLines(Path.Combine(outputRoot, "lineages.csv")).First(), StringComparison.Ordinal);
         Assert.Contains("save,time,tick,creatures,analyzed,food,corpses,food_sources",
@@ -201,6 +205,7 @@ public sealed class GenomeCliTests
             generations: [1, 0]);
         var lineagesCsv = Path.Combine(first.Path, "lineages.csv");
         var timelineCsv = Path.Combine(first.Path, "timeline.csv");
+        var metricsJson = Path.Combine(first.Path, "metrics.json");
 
         var (exitCode, _, error) = Run(
             "genome",
@@ -208,7 +213,8 @@ public sealed class GenomeCliTests
             "--save", save2,
             "--out", Path.Combine(first.Path, "report.html"),
             "--timeline-csv", timelineCsv,
-            "--lineages-csv", lineagesCsv);
+            "--lineages-csv", lineagesCsv,
+            "--metrics-json", metricsJson);
 
         Assert.Equal(0, exitCode);
         var rows = File.ReadLines(lineagesCsv).Skip(1)
@@ -225,7 +231,15 @@ public sealed class GenomeCliTests
         Assert.Equal(header.Length, data.Length);
         Assert.Contains("lineage.count", header);
         Assert.Contains("lineage.newGen0", header);
-        Assert.Contains("save_final#2", File.ReadAllText(Path.Combine(first.Path, "report.html")), StringComparison.Ordinal);
+        Assert.Contains("rootLineage.newGen0", header);
+        Assert.Contains("origin.enrichment", header);
+        var report = File.ReadAllText(Path.Combine(first.Path, "report.html"));
+        Assert.Contains("Root lineages", report, StringComparison.Ordinal);
+        Assert.Contains("Spawn origins", report, StringComparison.Ordinal);
+        var metrics = JsonDocument.Parse(File.ReadAllText(metricsJson));
+        Assert.True(metrics.RootElement.GetProperty("rootLineageSequence").TryGetProperty("distinctLineages", out _));
+        Assert.True(metrics.RootElement.GetProperty("saves")[0].TryGetProperty("rootLineage", out _));
+        Assert.True(metrics.RootElement.GetProperty("saves")[0].GetProperty("spawnOrigins").TryGetProperty("children", out _));
     }
 
     [Fact]
@@ -485,7 +499,14 @@ public sealed class GenomeCliTests
         var creatures = Enumerable.Range(0, 8)
             .Select(index => ($"creature_{index}", SaveFixture.Encode(GenomeV4Factory.CreateDemoFounder(new Random(index)))))
             .ToArray();
-        return SaveFixture.CreateV7Save(directory, "save_cli", creatures, time: 10d, food: 3, corpses: 1, foodSources: 2);
+        return SaveFixture.CreateV7Save(
+            directory, "save_cli", creatures, time: 10d, food: 3, corpses: 1, foodSources: 2,
+            extraControllerPairs: new Dictionary<string, object>
+            {
+                ["evo.starvationDeaths"] = 7d,
+                ["evo.predationDeaths"] = 11d,
+                ["evo.ageDeaths"] = 2d,
+            });
     }
 
     private static string CreateSaveWithCorruptGenome(TemporaryDirectory directory)

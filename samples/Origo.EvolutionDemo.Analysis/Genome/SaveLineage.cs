@@ -32,24 +32,47 @@ public sealed record LineageSummary(
     double? PriorLineageSurvival,
     double LineageTurnover);
 
-/// <summary>Living lineage summary for one save.</summary>
+/// <summary>Living creatures grouped by spawn origin.</summary>
+/// <param name="Founders">Original generation-0 founders.</param>
+/// <param name="Children">Ordinary reproduction children.</param>
+/// <param name="Enrichment">Founders inserted by enrichment spawning.</param>
+/// <param name="Innovation">Generation-0 carriers inserted by organ innovation.</param>
+/// <param name="Overgrowth">Children created by global overgrowth.</param>
+/// <param name="Unknown">Saves without a spawn-origin marker.</param>
+public sealed record SpawnOriginCounts(
+    int Founders,
+    int Children,
+    int Enrichment,
+    int Innovation,
+    int Overgrowth,
+    int Unknown)
+{
+    /// <summary>Total living creatures carrying an origin.</summary>
+    public int Total => Founders + Children + Enrichment + Innovation + Overgrowth + Unknown;
+}
+
+/// <summary>Living lineage and spawn-origin summary for one save.</summary>
 /// <param name="SaveId">Short save identifier.</param>
 /// <param name="Path">Scene file path.</param>
 /// <param name="Time">Simulation time.</param>
 /// <param name="Tick">Simulation tick.</param>
-/// <param name="Summary">Lineage structure and turnover.</param>
+/// <param name="Summary">Mutation-lineage structure and turnover.</param>
+/// <param name="RootSummary">Root-lineage structure and turnover; root ids survive mutation lineage changes.</param>
+/// <param name="Origins">Living creatures by spawn origin.</param>
 public sealed record SaveLineage(
     string SaveId,
     string Path,
     double Time,
     double Tick,
-    LineageSummary Summary);
+    LineageSummary Summary,
+    LineageSummary RootSummary,
+    SpawnOriginCounts Origins);
 
-/// <summary>One living lineage in one save.</summary>
+/// <summary>One living mutation lineage in one save.</summary>
 /// <param name="SaveId">Short save identifier.</param>
 /// <param name="Path">Scene file path.</param>
 /// <param name="Time">Simulation time.</param>
-/// <param name="Lineage">Lineage id.</param>
+/// <param name="Lineage">Mutation-lineage id.</param>
 /// <param name="Creatures">Living creatures carrying the id.</param>
 /// <param name="Share">Share of the save's living creatures.</param>
 /// <param name="FounderCreatures">Generation-0 creatures in the lineage.</param>
@@ -91,12 +114,16 @@ public sealed record LineageSequenceSummary(
 
 /// <summary>Per-save lineage summaries, per-lineage details, and sequence turnover.</summary>
 /// <param name="Saves">Save summaries in simulation order.</param>
-/// <param name="Details">One row per living lineage per save.</param>
-/// <param name="Sequence">Cross-save lineage turnover and founder-injection proxy.</param>
+/// <param name="Details">One row per living mutation lineage per save.</param>
+/// <param name="Sequence">Cross-save mutation-lineage turnover.</param>
+/// <param name="RootSequence">Cross-save root-lineage turnover.</param>
+/// <param name="Origins">Living creatures by spawn origin across all saves.</param>
 public sealed record LineageAnalysis(
     IReadOnlyList<SaveLineage> Saves,
     IReadOnlyList<LineageDetail> Details,
-    LineageSequenceSummary Sequence);
+    LineageSequenceSummary Sequence,
+    LineageSequenceSummary RootSequence,
+    SpawnOriginCounts Origins);
 
 /// <summary>Derives living lineage structure and founder-injection proxies from v7 saves.</summary>
 public static class SaveLineageAnalyzer
@@ -113,53 +140,30 @@ public static class SaveLineageAnalyzer
             .ToArray();
         var results = new List<SaveLineage>(ordered.Length);
         var details = new List<LineageDetail>();
-        HashSet<int>? previous = null;
-        var ever = new HashSet<int>();
+        HashSet<int>? previousMutation = null;
+        HashSet<int>? previousRoot = null;
+        var mutationSummaries = new List<LineageSummary>(ordered.Length);
+        var rootSummaries = new List<LineageSummary>(ordered.Length);
+        var everMutation = new HashSet<int>();
+        var everRoot = new HashSet<int>();
+        var origins = new SpawnOriginCounts(0, 0, 0, 0, 0, 0);
         foreach (var save in ordered)
         {
-            var groups = save.Creatures
-                .GroupBy(static creature => creature.Lineage)
-                .OrderByDescending(static group => group.Count())
-                .ThenBy(static group => group.Key)
-                .ToArray();
+            var mutationGroups = Group(save.Creatures, static creature => creature.Lineage);
+            var rootGroups = Group(save.Creatures, static creature => creature.RootLineage);
             var total = save.Creatures.Count;
-            var current = groups.Select(static group => group.Key).ToHashSet();
-            var founderLineages = groups
-                .Where(static group => group.Any(static creature => creature.Generation == 0))
-                .Select(static group => group.Key)
-                .ToHashSet();
-            var gen0 = save.Creatures.Count(static creature => creature.Generation == 0);
-            var newLineages = previous is null ? [] : current.Except(previous).ToArray();
-            var lostLineages = previous is null ? [] : previous.Except(current).ToArray();
-            var newGen0 = newLineages
-                .Where(founderLineages.Contains)
-                .ToHashSet();
-            var survival = previous is null || previous.Count == 0
-                ? (double?)null
-                : previous.Count(current.Contains) / (double)previous.Count;
-            var turnover = previous is null || previous.Count + current.Count == 0
-                ? 0d
-                : (newLineages.Length + lostLineages.Length) / (double)(previous.Count + current.Count);
-            var entropy = Entropy([.. groups.Select(static group => group.Count())], total);
-            var largest = groups.Length == 0 ? 0d : groups[0].Count() / (double)total;
-            var summary = new LineageSummary(
-                groups.Length,
-                founderLineages.Count,
-                groups.Length == 0 ? 0d : founderLineages.Count / (double)groups.Length,
-                gen0,
-                total == 0 ? 0d : gen0 / (double)total,
-                largest,
-                entropy,
-                newLineages.Length,
-                newGen0.Count,
-                lostLineages.Length,
-                survival,
-                turnover);
-            results.Add(new SaveLineage(save.Id, save.Path, save.Time, save.Tick, summary));
-            foreach (var group in groups)
+            var mutation = Summarize(mutationGroups, total, previousMutation);
+            var root = Summarize(rootGroups, total, previousRoot);
+            var saveOrigins = CountOrigins(save.Creatures);
+            origins = Add(origins, saveOrigins);
+            results.Add(new SaveLineage(
+                save.Id, save.Path, save.Time, save.Tick,
+                mutation.Summary, root.Summary, saveOrigins));
+            mutationSummaries.Add(mutation.Summary);
+            rootSummaries.Add(root.Summary);
+            foreach (var group in mutationGroups)
             {
                 var count = group.Count();
-                var founderCreatures = group.Count(static creature => creature.Generation == 0);
                 details.Add(new LineageDetail(
                     save.Id,
                     save.Path,
@@ -167,36 +171,121 @@ public static class SaveLineageAnalyzer
                     group.Key,
                     count,
                     total == 0 ? 0d : count / (double)total,
-                    founderCreatures,
+                    group.Count(static creature => creature.Generation == 0),
                     group.Min(static creature => creature.Generation),
                     group.Max(static creature => creature.Generation),
-                    newLineages.Contains(group.Key),
-                    newGen0.Contains(group.Key)));
+                    mutation.NewKeys.Contains(group.Key),
+                    mutation.NewGen0Keys.Contains(group.Key)));
             }
 
-            ever.UnionWith(current);
-            previous = current;
+            everMutation.UnionWith(mutation.Current);
+            everRoot.UnionWith(root.Current);
+            previousMutation = mutation.Current;
+            previousRoot = root.Current;
         }
 
-        var finalSet = previous ?? [];
-        var transitions = results
-            .Where(static result => result.Summary.PriorLineageSurvival is not null)
-            .ToArray();
-        var sequence = new LineageSequenceSummary(
-            ever.Count,
-            results.Count == 0 ? 0 : results.Max(static result => result.Summary.Lineages),
-            finalSet.Count,
-            results.Sum(static result => result.Summary.NewLineages),
-            results.Sum(static result => result.Summary.NewGen0Lineages),
-            ever.Count(id => !finalSet.Contains(id)),
-            transitions.Length == 0
-                ? null
-                : transitions.Average(static result => result.Summary.PriorLineageSurvival!.Value),
-            transitions.Length == 0
-                ? null
-                : transitions.Average(static result => result.Summary.LineageTurnover));
-        return new LineageAnalysis(results, details, sequence);
+        var finalMutation = previousMutation ?? [];
+        var finalRoot = previousRoot ?? [];
+        return new LineageAnalysis(
+            results,
+            details,
+            Sequence(mutationSummaries, everMutation, finalMutation),
+            Sequence(rootSummaries, everRoot, finalRoot),
+            origins);
     }
+
+    private static IGrouping<int, CreatureRecord>[] Group(
+        IReadOnlyList<CreatureRecord> creatures, Func<CreatureRecord, int> key) =>
+        [.. creatures.GroupBy(key).OrderByDescending(static group => group.Count()).ThenBy(static group => group.Key)];
+
+    private static MutationSummary Summarize(
+        IGrouping<int, CreatureRecord>[] groups, int total, HashSet<int>? previous)
+    {
+        var current = groups.Select(static group => group.Key).ToHashSet();
+        var founderLineages = groups
+            .Where(static group => group.Any(static creature => creature.Generation == 0))
+            .Select(static group => group.Key)
+            .ToHashSet();
+        var gen0 = groups.Sum(static group => group.Count(static creature => creature.Generation == 0));
+        var newKeys = previous is null ? [] : current.Except(previous).ToHashSet();
+        var lostKeys = previous is null ? [] : previous.Except(current).ToHashSet();
+        var newGen0 = newKeys.Where(founderLineages.Contains).ToHashSet();
+        var survival = previous is null || previous.Count == 0
+            ? (double?)null
+            : previous.Count(current.Contains) / (double)previous.Count;
+        var turnover = previous is null || previous.Count + current.Count == 0
+            ? 0d
+            : (newKeys.Count + lostKeys.Count) / (double)(previous.Count + current.Count);
+        var counts = new int[groups.Length];
+        for (var i = 0; i < groups.Length; i++)
+            counts[i] = groups[i].Count();
+        var summary = new LineageSummary(
+            groups.Length,
+            founderLineages.Count,
+            groups.Length == 0 ? 0d : founderLineages.Count / (double)groups.Length,
+            gen0,
+            total == 0 ? 0d : gen0 / (double)total,
+            groups.Length == 0 ? 0d : groups[0].Count() / (double)total,
+            Entropy(counts, total),
+            newKeys.Count,
+            newGen0.Count,
+            lostKeys.Count,
+            survival,
+            turnover);
+        return new MutationSummary(summary, current, newKeys, newGen0);
+    }
+
+    private static LineageSequenceSummary Sequence(
+        List<LineageSummary> summaries, HashSet<int> ever, HashSet<int> final)
+    {
+        var transitions = summaries
+            .Where(static summary => summary.PriorLineageSurvival is not null)
+            .ToArray();
+        return new LineageSequenceSummary(
+            ever.Count,
+            summaries.Count == 0 ? 0 : summaries.Max(static summary => summary.Lineages),
+            final.Count,
+            summaries.Sum(static summary => summary.NewLineages),
+            summaries.Sum(static summary => summary.NewGen0Lineages),
+            ever.Count(id => !final.Contains(id)),
+            transitions.Length == 0
+                ? null
+                : transitions.Average(static summary => summary.PriorLineageSurvival!.Value),
+            transitions.Length == 0
+                ? null
+                : transitions.Average(static summary => summary.LineageTurnover));
+    }
+
+    private static SpawnOriginCounts CountOrigins(IReadOnlyList<CreatureRecord> creatures)
+    {
+        var founders = 0;
+        var children = 0;
+        var enrichment = 0;
+        var innovation = 0;
+        var overgrowth = 0;
+        var unknown = 0;
+        foreach (var creature in creatures)
+            switch (creature.SpawnOrigin)
+            {
+                case "founder": founders++; break;
+                case "child": children++; break;
+                case "enrichment": enrichment++; break;
+                case "innovation": innovation++; break;
+                case "overgrowth": overgrowth++; break;
+                default: unknown++; break;
+            }
+
+        return new SpawnOriginCounts(founders, children, enrichment, innovation, overgrowth, unknown);
+    }
+
+    private static SpawnOriginCounts Add(SpawnOriginCounts left, SpawnOriginCounts right) =>
+        new(
+            left.Founders + right.Founders,
+            left.Children + right.Children,
+            left.Enrichment + right.Enrichment,
+            left.Innovation + right.Innovation,
+            left.Overgrowth + right.Overgrowth,
+            left.Unknown + right.Unknown);
 
     private static double Entropy(int[] counts, int total)
     {
@@ -213,4 +302,10 @@ public static class SaveLineageAnalyzer
 
         return entropy / System.Math.Log(counts.Length);
     }
+
+    private sealed record MutationSummary(
+        LineageSummary Summary,
+        HashSet<int> Current,
+        HashSet<int> NewKeys,
+        HashSet<int> NewGen0Keys);
 }

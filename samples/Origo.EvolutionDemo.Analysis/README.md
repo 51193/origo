@@ -79,10 +79,11 @@ enrichment.csv               only with --enrichment-csv
 
 The optional timeline CSV has one row per save (sorted by simulation time) with
 the save id, time, tick, full creature population, analyzed rows, food, corpses,
-food sources, the ecology/access/diet columns listed below, the 11 `lineage.*`
-columns listed below, every controller counter as `controller.<key>` (numeric,
-string, and boolean values), the mean of every extracted feature column, and
-(with `--timeline-percentiles`) p50/p90/p95 for the key
+food sources, the ecology/access/diet columns listed below, the mutation
+`lineage.*` and stable `rootLineage.*` columns, spawn-origin counts, death-cause
+counters, every controller counter as `controller.<key>` (numeric, string, and
+boolean values), the mean of every extracted feature column, and (with
+`--timeline-percentiles`) p50/p90/p95 for the key
 age/energy/kill/generation/diet/body columns. A save that contributed
 no analyzable rows keeps its row with a blank feature mean. Prefer it over cluster
 composition for time-series questions: a pooled clustering can separate snapshots
@@ -115,8 +116,8 @@ per-save numeric `saves[].food` count remains unchanged; the typed inventory is
   = killsDelta / deathsEstimated` when positive. These are estimates: a game build
   without `evo.enrichmentSpawns` makes the death estimate a lower bound and the
   predation share an upper bound.
-- `lineage.count/founderLineages/founderLineageShare/gen0Share`: living lineage
-  structure in the save. `largestShare` is the largest living lineage's share;
+- `lineage.count/founderLineages/founderLineageShare/gen0Share`: living
+  mutation-lineage structure in the save. `largestShare` is the largest living lineage's share;
   `entropy` is normalized Shannon entropy over lineage sizes (0 with fewer than
   two lineages). `new` and `lost` compare lineage ids with the previous save;
   `newGen0` counts new ids that contain a generation-0 creature; `priorSurvival`
@@ -127,16 +128,25 @@ per-save numeric `saves[].food` count remains unchanged; the typed inventory is
   innovation also creates generation-0 messengers with new lineages.
   **Lineage ids are mutation clusters, not stable family ids.** The game assigns
   a new id when a child accumulates enough mutations, so `new`, `lost`,
-  `priorSurvival`, and `turnover` mostly describe mutation-lineage churn. Use
-  `newGen0` for founder injection; true root ancestry is not persisted yet.
+  `priorSurvival`, and `turnover` mostly describe mutation-lineage churn.
+  `rootLineage.*` uses `evo.rootLineage`, inherited unchanged through mutation
+  lineage changes; it is the stable ancestry view. For saves written before the
+  field existed, root lineage falls back to the mutation lineage.
+- `origin.founders/children/enrichment/innovation/overgrowth/unknown`: living
+  creatures by `evo.spawnOrigin`. Older saves report all `unknown`.
+- `death.starvation/predation/aging/total`: cumulative controller counters for
+  zero-energy death, lethal spike death, and maximum-age death. Older saves
+  leave these columns blank.
 
 `--lineages-csv` writes one row per living lineage per save:
 `save,time,lineage,creatures,share,founderCreatures,minGeneration,maxGeneration,isNew,isNewGen0`.
-`metrics-json` carries the same per-save values under `saves[].lineage` and the
-sequence summary under `lineageSequence` (`distinctLineages`,
+`metrics-json` carries the same per-save values under `saves[].lineage`,
+`saves[].rootLineage`, `saves[].spawnOrigins`, and `saves[].deaths`. Sequence
+summaries are `lineageSequence` and `rootLineageSequence` (`distinctLineages`,
 `peakLivingLineages`, `finalLivingLineages`, `totalNewLineages`,
 `totalNewGen0Lineages`, `lostLineages`, `meanPriorLineageSurvival`,
-`meanLineageTurnover`).
+`meanLineageTurnover`), `spawnOrigins`, and `mortalitySequence` (latest
+cumulative counts and cause shares).
 
 The report contains:
 
@@ -149,8 +159,9 @@ The report contains:
 - a food/access/origin table with food-type inventory, live patch count/radius/
   coverage, food-in-sense and food-in-300 shares, nearest-food/source medians,
   founder share, mean generation, and living/experienced diet composition;
-- a living-lineage table with lineage/founder counts, largest share, entropy,
-  new/lost ids, prior survival, turnover, and the new-gen0 founder proxy;
+- living lineage tables for mutation lineages and stable root lineages, plus a
+  spawn-origin table (founder, child, enrichment, innovation, overgrowth,
+  unknown) and a cumulative death-cause table;
 - PCA scatter with the explained-variance percentages on the axes, plus the
   per-component explained-variance table;
 - cluster feature profile and top differentiating structural/body/neural/

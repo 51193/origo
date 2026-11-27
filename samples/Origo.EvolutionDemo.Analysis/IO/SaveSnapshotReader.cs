@@ -436,6 +436,8 @@ public sealed record CreatureRecord(
     double Aim,
     double SprintDrive,
     int Lineage,
+    int RootLineage,
+    string SpawnOrigin,
     int Generation,
     int Children,
     int Kills,
@@ -469,6 +471,12 @@ public sealed record CreatureRecord(
             v.TryGetValue(key, out var value) && value.Number is { } number ? number : fallback;
         int Integer(string key, int fallback = 0) =>
             v.TryGetValue(key, out var value) && value.Number is { } number ? (int)number : fallback;
+        var lineage = Integer("evo.lineage");
+        var rootLineage = Integer("evo.rootLineage", lineage);
+        var spawnOrigin = v.TryGetValue("evo.spawnOrigin", out var originValue)
+            && !string.IsNullOrWhiteSpace(originValue.String)
+                ? originValue.String!
+                : "unknown";
         reason = string.Empty;
         creature = new CreatureRecord(
             entity.Name, genome,
@@ -476,7 +484,7 @@ public sealed record CreatureRecord(
             Number("evo.age"), Number("evo.energy"), Number("evo.maxEnergy", 1),
             Number("evo.drive"), Number("evo.turn"), Number("evo.spikeDrive"),
             Number("evo.aim"), Number("evo.sprintDrive"),
-            Integer("evo.lineage"), Integer("evo.generation"), Integer("evo.children"),
+            lineage, rootLineage, spawnOrigin, Integer("evo.generation"), Integer("evo.children"),
             Integer("evo.kills"), Integer("evo.creatureCorpseMeals"),
             Integer("evo.creatureSoftMeals"), Integer("evo.creatureToughMeals"),
             Integer("evo.creatureToxicMeals"),

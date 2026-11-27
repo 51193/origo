@@ -70,6 +70,8 @@ public sealed class SaveSnapshotReaderTests
         Assert.Equal(240, source.LocalCapacity);
         Assert.Equal(7, source.SpawnCount);
         Assert.Equal(14d, snapshot.Creatures[0].FoodPickupRadius);
+        Assert.Equal(snapshot.Creatures[0].Lineage, snapshot.Creatures[0].RootLineage);
+        Assert.Equal("child", snapshot.Creatures[0].SpawnOrigin);
         Assert.DoesNotContain(snapshot.Warnings, warning => warning.Contains("without finite", StringComparison.Ordinal));
     }
 

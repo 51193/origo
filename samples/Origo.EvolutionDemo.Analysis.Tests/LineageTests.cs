@@ -72,6 +72,10 @@ public sealed class LineageTests
         Assert.Equal(0.2d, third.LineageTurnover, 9);
         Assert.Equal(1d, third.LineageEntropy, 9);
 
+        Assert.Equal(first, analysis.Saves[0].RootSummary);
+        Assert.Equal(4, analysis.Saves[0].Origins.Children);
+        Assert.Equal(0, analysis.Saves[0].Origins.Unknown);
+
         var sequence = analysis.Sequence;
         Assert.Equal(3, sequence.DistinctLineages);
         Assert.Equal(3, sequence.PeakLivingLineages);
@@ -108,5 +112,48 @@ public sealed class LineageTests
         Assert.Null(summary.PriorLineageSurvival);
         Assert.Equal(0, analysis.Sequence.DistinctLineages);
         Assert.Null(analysis.Sequence.MeanPriorLineageSurvival);
+    }
+
+    [Fact]
+    public void Analyze_RootLineageSurvivesMutationLineageChangesAndOriginsCount()
+    {
+        using var directory = new TemporaryDirectory();
+        var save1 = SaveFixture.CreateV7Save(
+            directory, "root_1",
+            SaveFixture.Creatures(SaveFixture.DefaultGenome(), 4),
+            time: 10d,
+            lineages: [1, 2, 3, 3],
+            rootLineages: [1, 1, 2, 2],
+            generations: [0, 1, 0, 2],
+            spawnOrigins: ["founder", "child", "enrichment", "child"]);
+        var save2 = SaveFixture.CreateV7Save(
+            directory, "root_2",
+            SaveFixture.Creatures(SaveFixture.DefaultGenome(), 4),
+            time: 20d,
+            lineages: [4, 4, 5, 5],
+            rootLineages: [1, 1, 2, 2],
+            generations: [2, 3, 1, 2],
+            spawnOrigins: ["child", "child", "child", "overgrowth"]);
+
+        var analysis = SaveLineageAnalyzer.Analyze(SaveSnapshotReader.Read([save1, save2]));
+        var first = analysis.Saves[0];
+        var second = analysis.Saves[1];
+
+        Assert.Equal(3, first.Summary.Lineages);
+        Assert.Equal(2, first.RootSummary.Lineages);
+        Assert.Equal(2, first.RootSummary.FounderLineages);
+        Assert.Equal(1, first.Origins.Founders);
+        Assert.Equal(2, first.Origins.Children);
+        Assert.Equal(1, first.Origins.Enrichment);
+        Assert.Equal(0, first.Origins.Unknown);
+
+        Assert.Equal(2, second.Summary.NewLineages);
+        Assert.Equal(0, second.RootSummary.NewLineages);
+        Assert.Equal(0, second.RootSummary.NewGen0Lineages);
+        Assert.Equal(1d, second.RootSummary.PriorLineageSurvival!.Value, 9);
+        Assert.Equal(3, second.Origins.Children);
+        Assert.Equal(1, second.Origins.Overgrowth);
+        Assert.Equal(2, analysis.RootSequence.DistinctLineages);
+        Assert.Equal(2, analysis.RootSequence.FinalLivingLineages);
     }
 }

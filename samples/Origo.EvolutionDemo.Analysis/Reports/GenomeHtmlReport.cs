@@ -32,6 +32,7 @@ public static class GenomeHtmlReport
         ArgumentNullException.ThrowIfNull(input.SkippedCreatures);
         ArgumentNullException.ThrowIfNull(input.Enrichment);
         ArgumentNullException.ThrowIfNull(input.Lineage);
+        ArgumentNullException.ThrowIfNull(input.Mortality);
         ArgumentNullException.ThrowIfNull(input.Options);
         var rows = input.Rows;
         var clustering = input.Clustering;
@@ -56,6 +57,7 @@ th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.warn{color:#fca5a5}.no
         AppendWarnings(html, input);
         AppendEcology(html, input);
         AppendLineage(html, input);
+        AppendMortality(html, input);
         if (input.Candidates.Count > 0)
             AppendCandidates(html, input);
         html.Append("<h2>PCA scatter</h2>");
@@ -196,6 +198,71 @@ th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.warn{color:#fca5a5}.no
                 + $"<td>{summary.NewLineages} / {summary.LostLineages}</td><td>{summary.NewGen0Lineages}</td>"
                 + $"<td>{(summary.PriorLineageSurvival is { } survival ? $"{survival:0%}" : "n/a")}</td>"
                 + $"<td>{summary.LineageTurnover:0.000}</td></tr>");
+        }
+
+        html.Append("</table>");
+        html.Append("<h3>Root lineages</h3>");
+        html.Append("<p class=\"muted\">Root ids are inherited through mutation-lineage changes, so this table is the stable ancestry view. New root gen0 ids are injected founders.</p>");
+        html.Append("<table><tr><th>save</th><th>time</th><th>roots</th><th>founder roots</th>"
+            + "<th>largest</th><th>entropy</th><th>new / lost</th><th>new root gen0</th>"
+            + "<th>prior survival</th><th>turnover</th></tr>");
+        foreach (var lineage in input.Lineage.Saves
+            .OrderBy(static item => item.Time)
+            .ThenBy(static item => item.SaveId, StringComparer.Ordinal))
+        {
+            var root = lineage.RootSummary;
+            var displayId = input.Saves.FirstOrDefault(save =>
+                string.Equals(save.Path, lineage.Path, StringComparison.Ordinal))?.Id ?? lineage.SaveId;
+            html.Append(CultureInfo.InvariantCulture,
+                $"<tr><td><code>{Escape(displayId)}</code></td><td>{lineage.Time:0.###}</td>"
+                + $"<td>{root.Lineages}</td><td>{root.FounderLineages} ({root.FounderLineageShare:0%})</td>"
+                + $"<td>{root.LargestLineageShare:0%}</td><td>{root.LineageEntropy:0.000}</td>"
+                + $"<td>{root.NewLineages} / {root.LostLineages}</td><td>{root.NewGen0Lineages}</td>"
+                + $"<td>{(root.PriorLineageSurvival is { } survival ? $"{survival:0%}" : "n/a")}</td>"
+                + $"<td>{root.LineageTurnover:0.000}</td></tr>");
+        }
+
+        html.Append("</table><h3>Spawn origins</h3>");
+        html.Append("<table><tr><th>save</th><th>time</th><th>founder</th><th>child</th>"
+            + "<th>enrichment</th><th>innovation</th><th>overgrowth</th><th>unknown</th></tr>");
+        foreach (var lineage in input.Lineage.Saves
+            .OrderBy(static item => item.Time)
+            .ThenBy(static item => item.SaveId, StringComparer.Ordinal))
+        {
+            var origin = lineage.Origins;
+            var displayId = input.Saves.FirstOrDefault(save =>
+                string.Equals(save.Path, lineage.Path, StringComparison.Ordinal))?.Id ?? lineage.SaveId;
+            html.Append(CultureInfo.InvariantCulture,
+                $"<tr><td><code>{Escape(displayId)}</code></td><td>{lineage.Time:0.###}</td>"
+                + $"<td>{origin.Founders}</td><td>{origin.Children}</td><td>{origin.Enrichment}</td>"
+                + $"<td>{origin.Innovation}</td><td>{origin.Overgrowth}</td><td>{origin.Unknown}</td></tr>");
+        }
+
+        html.Append("</table>");
+    }
+
+    private static void AppendMortality(StringBuilder html, GenomeReportInput input)
+    {
+        var saves = input.Mortality.Saves
+            .Where(static item => item.Counts is not null)
+            .OrderBy(static item => item.Time)
+            .ThenBy(static item => item.SaveId, StringComparer.Ordinal)
+            .ToArray();
+        if (saves.Length == 0)
+            return;
+        html.Append("<h2>Death causes</h2>");
+        html.Append("<p class=\"muted\">Cumulative controller counters for starvation (energy <= 0), predation (lethal spike hit), and aging (max age reached). Counters are absent in older saves.</p>");
+        html.Append("<table><tr><th>save</th><th>time</th><th>starvation</th><th>predation</th>"
+            + "<th>aging</th><th>total</th></tr>");
+        foreach (var save in saves)
+        {
+            var counts = save.Counts!;
+            var displayId = input.Saves.FirstOrDefault(item =>
+                string.Equals(item.Path, save.Path, StringComparison.Ordinal))?.Id ?? save.SaveId;
+            html.Append(CultureInfo.InvariantCulture,
+                $"<tr><td><code>{Escape(displayId)}</code></td><td>{save.Time:0.###}</td>"
+                + $"<td>{counts.Starvation}</td><td>{counts.Predation}</td>"
+                + $"<td>{counts.Aging}</td><td>{counts.Total}</td></tr>");
         }
 
         html.Append("</table>");

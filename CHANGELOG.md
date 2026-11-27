@@ -19,10 +19,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   lineages, prior-lineage survival, and turnover from the saved lineage ids.
   The timeline and metrics JSON carry the sequence, `--lineages-csv` writes one
   row per living lineage per save with founder/gen0 flags, and the HTML report
-  includes a lineage/cohort table. New generation-0 lineage ids are a
-  founder-injection proxy; they cover enrichment and organ innovation, and the
-  docs call out that game lineage ids are mutation clusters rather than stable
-  family ancestry.
+  includes lineage/cohort tables. The game now saves `evo.rootLineage`, which is
+  inherited unchanged through mutation-lineage changes, and
+  `evo.spawnOrigin` (founder, child, enrichment, innovation, overgrowth); the
+  tool reports stable root-lineage structure and spawn-origin counts alongside
+  the mutation-lineage view. New generation-0 lineage ids are a
+  founder-injection proxy; the docs call out that ordinary lineage ids are
+  mutation clusters, while root lineage is the stable ancestry view.
+- **Evolution Demo records death causes** — starvation, lethal spike predation,
+  and maximum-age deaths are persisted as cumulative controller counters. The
+  analysis timeline, metrics JSON, and HTML report expose the counts and shares;
+  older saves report no death counters rather than fabricating zeroes.
 - **Evolution Demo campaign tests can isolate content controls** — planned,
   idle, cheapest, and greedy policies honor
   `ORIGO_DEMO_CAMPAIGN_ENRICHMENT=0` and

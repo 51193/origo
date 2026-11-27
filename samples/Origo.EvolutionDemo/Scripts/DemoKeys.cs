@@ -128,6 +128,11 @@ internal static class DemoKeys
     public const string Age = "evo.age";
     public const string Generation = "evo.generation";
     public const string Lineage = "evo.lineage";
+    public const string RootLineage = "evo.rootLineage";
+    public const string SpawnOrigin = "evo.spawnOrigin";
+    public const string StarvationDeaths = "evo.starvationDeaths";
+    public const string PredationDeaths = "evo.predationDeaths";
+    public const string AgeDeaths = "evo.ageDeaths";
     public const string Children = "evo.children";
     public const string Kills = "evo.kills";
     public const string ReproCooldown = "evo.reproCooldown";

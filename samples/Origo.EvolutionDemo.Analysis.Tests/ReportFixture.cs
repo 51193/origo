@@ -108,9 +108,17 @@ internal static class ReportFixture
                 save.Path,
                 save.Time,
                 save.Tick,
-                new LineageSummary(2, 1, 0.5d, 10, 0.5d, 0.6d, 0.9d, 0, 0, 0, null, 0d)))],
+                new LineageSummary(2, 1, 0.5d, 10, 0.5d, 0.6d, 0.9d, 0, 0, 0, null, 0d),
+                new LineageSummary(2, 1, 0.5d, 10, 0.5d, 0.6d, 0.9d, 0, 0, 0, null, 0d),
+                new SpawnOriginCounts(0, 20, 0, 0, 0, 0)))],
             [],
-            new LineageSequenceSummary(2, 2, 2, 0, 0, 0, null, null));
+            new LineageSequenceSummary(2, 2, 2, 0, 0, 0, null, null),
+            new LineageSequenceSummary(2, 2, 2, 0, 0, 0, null, null),
+            new SpawnOriginCounts(0, 60, 0, 0, 0, 0));
+        var mortality = new MortalityAnalysis(
+            [.. saves.Select(save => new SaveMortality(
+                save.Id, save.Path, save.Time, save.Tick, new DeathCounts(2, 3, 1)))],
+            new MortalitySequenceSummary(new DeathCounts(6, 9, 3), 0.5d, 1 / 3d, 1 / 6d));
         var finalLabels = labels.ToArray();
         var clustering = new KMeans.Result(
             finalLabels,
@@ -135,6 +143,7 @@ internal static class ReportFixture
             saves,
             ecology,
             lineage,
+            mortality,
             rows,
             100,
             100,

@@ -206,7 +206,10 @@ public sealed class GenomeReportTests
         Assert.True(firstSave.GetProperty("controller").GetProperty("numbers").TryGetProperty("evo.tick", out _));
         Assert.Equal(2, firstSave.GetProperty("lineage").GetProperty("count").GetInt32());
         Assert.True(json.GetProperty("lineageSequence").TryGetProperty("meanLineageTurnover", out _));
+        Assert.Equal(3, firstSave.GetProperty("deaths").GetProperty("predation").GetInt32());
+        Assert.Equal(9, json.GetProperty("mortalitySequence").GetProperty("counts").GetProperty("predation").GetInt32());
         Assert.Contains("Lineages and founder cohorts", html, StringComparison.Ordinal);
+        Assert.Contains("Death causes", html, StringComparison.Ordinal);
     }
 
     [Fact]
