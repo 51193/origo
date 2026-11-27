@@ -223,12 +223,14 @@ public sealed class GenomeCliTests
             SaveFixture.Creatures(SaveFixture.DefaultGenome(), 4),
             extraControllerPairs: new Dictionary<string, object> { ["evo.deathByRoot"] = "1:7,11,2" });
         var rootCsv = Path.Combine(directory.Path, "root-mortality.csv");
+        var survivalCsv = Path.Combine(directory.Path, "root-survival.csv");
         var metrics = Path.Combine(directory.Path, "metrics.json");
         var report = Path.Combine(directory.Path, "report.html");
 
         var (exitCode, _, error) = Run(
             "genome", "--save", save, "--out", report,
-            "--root-mortality-csv", rootCsv, "--metrics-json", metrics);
+            "--root-mortality-csv", rootCsv, "--root-survival-csv", survivalCsv,
+            "--metrics-json", metrics);
 
         Assert.True(exitCode == 0, error);
         var header = File.ReadLines(rootCsv).First().Split(',');
@@ -236,13 +238,55 @@ public sealed class GenomeCliTests
         Assert.Equal(header.Length, row.Length);
         Assert.Equal("1", row[2]);
         Assert.Equal("20", row[6]);
-        Assert.Equal("1", row[7]);
+        Assert.Equal("20", row[10]);
+        Assert.Equal("1", row[11]);
+        var survivalHeader = File.ReadLines(survivalCsv).First().Split(',');
+        var survivalRow = File.ReadLines(survivalCsv).Skip(1).First().Split(',');
+        Assert.Equal(survivalHeader.Length, survivalRow.Length);
+        Assert.Equal("1", survivalRow[3]);
+        Assert.Equal("20", survivalRow[14]);
+        Assert.Equal("20", survivalRow[18]);
+        Assert.Equal("0", survivalRow[19]);
         using var json = JsonDocument.Parse(File.ReadAllText(metrics));
         Assert.True(json.RootElement.TryGetProperty("rootMortalitySequence", out var rootSequence), json.RootElement.ToString());
         Assert.True(rootSequence.TryGetProperty("counts", out var rootCounts), json.RootElement.ToString());
         Assert.Equal(20, rootCounts.GetProperty("total").GetInt32());
         Assert.Equal(1, json.RootElement.GetProperty("rootMortality")[0].GetProperty("rootLineage").GetInt32());
         Assert.Contains("Deaths by root lineage", File.ReadAllText(report), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Genome_RootSurvivalCsvTracksIntervalsAndExtinction()
+    {
+        using var directory = new TemporaryDirectory();
+        var save1 = SaveFixture.CreateV7Save(
+            directory, "survival_1",
+            SaveFixture.Creatures(SaveFixture.DefaultGenome(), 4),
+            time: 10d, lineages: [1, 1, 2, 2],
+            extraControllerPairs: new Dictionary<string, object> { ["evo.deathByRoot"] = "1:7,0,0" });
+        var save2 = SaveFixture.CreateV7Save(
+            directory, "survival_2",
+            SaveFixture.Creatures(SaveFixture.DefaultGenome(), 4),
+            time: 20d, lineages: [2, 2, 3, 3],
+            extraControllerPairs: new Dictionary<string, object> { ["evo.deathByRoot"] = "1:9,0,0;2:1,0,0" });
+        var survival = Path.Combine(directory.Path, "root-survival.csv");
+
+        var (exitCode, _, error) = Run(
+            "genome", "--save", save1, "--save", save2,
+            "--out", Path.Combine(directory.Path, "report.html"),
+            "--root-survival-csv", survival);
+
+        Assert.True(exitCode == 0, error);
+        var rows = File.ReadLines(survival).Skip(1).Select(line => line.Split(',')).ToArray();
+        var root1Final = Assert.Single(rows, row => row[0] == "survival_2" && row[2] == "1");
+        var root2Final = Assert.Single(rows, row => row[0] == "survival_2" && row[2] == "2");
+        var root1First = Assert.Single(rows, row => row[0] == "survival_1" && row[2] == "1");
+        Assert.Equal("0", root1Final[3]);
+        Assert.Equal("1", root1Final[19]);
+        Assert.Equal("2", root1Final[18]);
+        Assert.Equal("1", root2Final[3]);
+        Assert.Equal("1", root2Final[15]);
+        Assert.Equal("7", root1First[14]);
     }
 
     [Fact]

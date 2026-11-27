@@ -8,6 +8,7 @@ using Origo.EvolutionDemo.Analysis.IO;
 using Origo.EvolutionDemo.Analysis.Math;
 using Origo.EvolutionDemo.Analysis.Perf;
 using Origo.EvolutionDemo.Analysis.Reports;
+using Origo.EvolutionDemo.Logic.Gameplay;
 
 namespace Origo.EvolutionDemo.Analysis;
 
@@ -70,6 +71,7 @@ internal static class Program
         string? lineagesCsv = null;
         string? rootLineagesCsv = null;
         string? rootMortalityCsv = null;
+        string? rootSurvivalCsv = null;
         var timelinePercentiles = false;
         var explicitK = false;
         var explicitStability = false;
@@ -147,6 +149,9 @@ internal static class Program
                     break;
                 case "--root-mortality-csv" when i + 1 < args.Length:
                     rootMortalityCsv = args[++i];
+                    break;
+                case "--root-survival-csv" when i + 1 < args.Length:
+                    rootSurvivalCsv = args[++i];
                     break;
                 case "--timeline-percentiles":
                     timelinePercentiles = true;
@@ -252,6 +257,8 @@ internal static class Program
             WriteRootLineageCsv(rootLineagesCsv, lineage, saveSummaries);
         if (!string.IsNullOrWhiteSpace(rootMortalityCsv))
             WriteRootMortalityCsv(rootMortalityCsv, mortality, lineage, saveSummaries);
+        if (!string.IsNullOrWhiteSpace(rootSurvivalCsv))
+            WriteRootSurvivalCsv(rootSurvivalCsv, lineage, mortality, saveSummaries);
         if (!string.IsNullOrWhiteSpace(metricsJson))
             WriteFile(metricsJson, GenomeMetricsJson.Build(reportInput));
         if (!string.IsNullOrWhiteSpace(enrichmentCsv))
@@ -833,7 +840,8 @@ internal static class Program
             .GroupBy(static item => (item.Path, item.RootLineage))
             .ToDictionary(static group => group.Key, static group => group.First());
         using var writer = new StreamWriter(path);
-        writer.WriteLine("save,time,rootLineage,starvation,predation,aging,total,living,creatures");
+        writer.WriteLine("save,time,rootLineage,starvation,predation,aging,total,intervalStarvation,intervalPredation,intervalAging,intervalTotal,living,creatures");
+        IReadOnlyDictionary<int, RootDeathTally> previous = new Dictionary<int, RootDeathTally>();
         foreach (var save in mortality.Saves
             .Where(static item => item.RootDeaths is not null)
             .OrderBy(static item => item.Time)
@@ -843,6 +851,11 @@ internal static class Program
                 .OrderByDescending(static pair => pair.Value.Total)
                 .ThenBy(static pair => pair.Key))
             {
+                var before = previous.GetValueOrDefault(root);
+                var interval = new RootDeathTally(
+                    tally.Starvation - before.Starvation,
+                    tally.Predation - before.Predation,
+                    tally.Aging - before.Aging);
                 var present = living.GetValueOrDefault((save.Path, root));
                 writer.Write(Csv(displayIds.GetValueOrDefault(save.Path, save.SaveId)));
                 writer.Write(',');
@@ -858,10 +871,101 @@ internal static class Program
                 writer.Write(',');
                 writer.Write(tally.Total.ToString(CultureInfo.InvariantCulture));
                 writer.Write(',');
+                writer.Write(interval.Starvation.ToString(CultureInfo.InvariantCulture));
+                writer.Write(',');
+                writer.Write(interval.Predation.ToString(CultureInfo.InvariantCulture));
+                writer.Write(',');
+                writer.Write(interval.Aging.ToString(CultureInfo.InvariantCulture));
+                writer.Write(',');
+                writer.Write(interval.Total.ToString(CultureInfo.InvariantCulture));
+                writer.Write(',');
                 writer.Write(present is null ? "0" : "1");
                 writer.Write(',');
                 writer.WriteLine((present?.Creatures ?? 0).ToString(CultureInfo.InvariantCulture));
             }
+
+            previous = save.RootDeaths!;
+        }
+    }
+
+    private static void WriteRootSurvivalCsv(
+        string path,
+        LineageAnalysis lineage,
+        MortalityAnalysis mortality,
+        IReadOnlyList<SaveSummary> saves)
+    {
+        EnsureDirectory(path);
+        var displayIds = saves.ToDictionary(static save => save.Path, static save => save.Id, StringComparer.Ordinal);
+        var livingBySave = lineage.RootDetails
+            .GroupBy(static item => item.Path, StringComparer.Ordinal)
+            .ToDictionary(
+                static group => group.Key,
+                static group => group.ToDictionary(static item => item.RootLineage));
+        var deathsByPath = mortality.Saves.ToDictionary(static item => item.Path, StringComparer.Ordinal);
+        using var writer = new StreamWriter(path);
+        writer.WriteLine("save,time,rootLineage,living,creatures,share,founderCreatures,minGeneration,maxGeneration,isNew,isNewGen0,starvation,predation,aging,total,intervalStarvation,intervalPredation,intervalAging,intervalTotal,extinct");
+        IReadOnlyDictionary<int, RootDeathTally> previous = new Dictionary<int, RootDeathTally>();
+        foreach (var save in lineage.Saves
+            .OrderBy(static item => item.Time)
+            .ThenBy(static item => item.SaveId, StringComparer.Ordinal))
+        {
+            Dictionary<int, RootLineageDetail> living = livingBySave.GetValueOrDefault(save.Path) ?? [];
+            IReadOnlyDictionary<int, RootDeathTally> deaths =
+                deathsByPath.GetValueOrDefault(save.Path)?.RootDeaths ?? new Dictionary<int, RootDeathTally>();
+            var roots = living.Keys.Concat(deaths.Keys).Distinct().ToArray();
+            foreach (var root in roots
+                .OrderByDescending(root => living.GetValueOrDefault(root)?.Creatures ?? 0)
+                .ThenBy(root => root))
+            {
+                var detail = living.GetValueOrDefault(root);
+                var tally = deaths.GetValueOrDefault(root);
+                var before = previous.GetValueOrDefault(root);
+                var interval = new RootDeathTally(
+                    tally.Starvation - before.Starvation,
+                    tally.Predation - before.Predation,
+                    tally.Aging - before.Aging);
+                writer.Write(Csv(displayIds.GetValueOrDefault(save.Path, save.SaveId)));
+                writer.Write(',');
+                writer.Write(save.Time.ToString("0.###", CultureInfo.InvariantCulture));
+                writer.Write(',');
+                writer.Write(root.ToString(CultureInfo.InvariantCulture));
+                writer.Write(',');
+                writer.Write(detail is null ? "0" : "1");
+                writer.Write(',');
+                writer.Write((detail?.Creatures ?? 0).ToString(CultureInfo.InvariantCulture));
+                writer.Write(',');
+                writer.Write((detail?.Share ?? 0d).ToString("0.######", CultureInfo.InvariantCulture));
+                writer.Write(',');
+                writer.Write((detail?.FounderCreatures ?? 0).ToString(CultureInfo.InvariantCulture));
+                writer.Write(',');
+                writer.Write((detail?.MinGeneration ?? 0).ToString(CultureInfo.InvariantCulture));
+                writer.Write(',');
+                writer.Write((detail?.MaxGeneration ?? 0).ToString(CultureInfo.InvariantCulture));
+                writer.Write(',');
+                writer.Write(detail?.IsNew == true ? "1" : "0");
+                writer.Write(',');
+                writer.Write(detail?.IsNewGen0 == true ? "1" : "0");
+                writer.Write(',');
+                writer.Write(tally.Starvation.ToString(CultureInfo.InvariantCulture));
+                writer.Write(',');
+                writer.Write(tally.Predation.ToString(CultureInfo.InvariantCulture));
+                writer.Write(',');
+                writer.Write(tally.Aging.ToString(CultureInfo.InvariantCulture));
+                writer.Write(',');
+                writer.Write(tally.Total.ToString(CultureInfo.InvariantCulture));
+                writer.Write(',');
+                writer.Write(interval.Starvation.ToString(CultureInfo.InvariantCulture));
+                writer.Write(',');
+                writer.Write(interval.Predation.ToString(CultureInfo.InvariantCulture));
+                writer.Write(',');
+                writer.Write(interval.Aging.ToString(CultureInfo.InvariantCulture));
+                writer.Write(',');
+                writer.Write(interval.Total.ToString(CultureInfo.InvariantCulture));
+                writer.Write(',');
+                writer.WriteLine(detail is null ? "1" : "0");
+            }
+
+            previous = deaths;
         }
     }
 
@@ -1082,6 +1186,7 @@ internal static class Program
         Console.WriteLine("  --lineages-csv <path>    One row per living mutation lineage per save with turnover flags.");
         Console.WriteLine("  --root-lineages-csv <path> One row per living root lineage per save.");
         Console.WriteLine("  --root-mortality-csv <path> One row per root death total per save.");
+        Console.WriteLine("  --root-survival-csv <path> One row per root per save with living and death intervals.");
         Console.WriteLine("  --timeline-percentiles   Add p50/p90/p95 columns for key features to the timeline CSV.");
         Console.WriteLine("  -h, --help               Show this help.");
     }

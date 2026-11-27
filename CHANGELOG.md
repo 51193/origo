@@ -33,8 +33,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   older saves report no death counters rather than fabricating zeroes.
 - **Evolution Demo records per-root deaths** — the controller persists cumulative
   cause totals by root lineage. `--root-mortality-csv`, `rootMortalitySequence`,
-  and `rootMortality` expose root × cause data, so a root can be followed from
-  living ancestry to starvation, predation, or aging deaths.
+  and `rootMortality` expose root × cause data; interval columns and
+  `--root-survival-csv` track living/extinct roots across saves, so a root can
+  be followed from living ancestry to starvation, predation, or aging deaths.
 - **Evolution Demo campaign tests can isolate content controls** — planned,
   idle, cheapest, and greedy policies honor
   `ORIGO_DEMO_CAMPAIGN_ENRICHMENT=0` and
