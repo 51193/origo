@@ -82,7 +82,10 @@ same `BREAKING:` prefix.
 
 - The scheduled run is every Monday at **02:30 UTC** and covers the **week that
   just ended**: `[previous Monday 00:00, current Monday 00:00) UTC`. The run
-  only starts from `main`.
+  only starts from `main` and stamps/tags the last first-parent commit inside
+  that window;
+  commits made after the cutoff are not included even when they have landed
+  before the scheduled run starts.
 - `workflow_dispatch` can snapshot the current partial week on demand.
 - Snapshot tags look like `v<base>-nightly.YYYYMMDD`, where `<base>` is derived
   from the development `<Version>` in `Directory.Build.props`.

@@ -95,6 +95,7 @@ WEEKLY_DISPATCH_CONDITION = (
     "steps.check.outputs.dispatch_existing == 'true'"
 )
 WEEKLY_BUMP_PREFIXES = (
+    "git checkout --detach ",
     "python3 scripts/python/write-version-stamp.py ",
     "git config ",
     "git add ",
@@ -1457,6 +1458,23 @@ def _weekly_snapshot_errors(workflow: dict) -> list[str]:
                             f"weekly step '{step.get('name', index)}' line "
                             f"{number} pushes outside the bump step: {line!r}"
                         )
+    if 'git rev-list --first-parent' not in _active_text(_strip_heredocs(check_run)):
+        errors.append(
+            "weekly window must use git rev-list --first-parent so a merged "
+            "branch commit cannot replace the last mainline commit."
+        )
+    if 'echo "snapshot_sha=' not in _active_text(_strip_heredocs(check_run)):
+        errors.append(
+            "weekly check step must publish snapshot_sha for the last commit "
+            "inside the weekly window."
+        )
+    if bump_step is not None:
+        bump_run = _active_text(_strip_heredocs(str(bump_step.get("run") or "")))
+        if 'git checkout --detach "${{ steps.check.outputs.snapshot_sha }}"' not in bump_run:
+            errors.append(
+                "weekly bump step must check out the window snapshot_sha "
+                "before stamping and tagging."
+            )
     for name, step_dict, expected_if in (
         (WEEKLY_CHECK_STEP, check_step, None),
         (WEEKLY_BUMP_STEP, bump_step, WEEKLY_BUMP_CONDITION),
