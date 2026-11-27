@@ -48,9 +48,6 @@ function Get-OrigoNuspecInfo {
                 foreach ($dependency in $group.ChildNodes) {
                     if ($dependency.LocalName -ne 'dependency') { continue }
                     $dependencyVersion = [string]$dependency.GetAttribute('version')
-                    if ($dependencyVersion.StartsWith('[') -and $dependencyVersion.EndsWith(']')) {
-                        $dependencyVersion = $dependencyVersion.Substring(1, $dependencyVersion.Length - 2)
-                    }
                     $dependencies += [pscustomobject]@{
                         Id = $dependency.GetAttribute('id')
                         Version = $dependencyVersion
@@ -121,11 +118,15 @@ function Test-OrigoPackageSet {
                 $deps[$dependency.Id] = $dependency.Version
             }
             foreach ($depId in $pairing[$id].Keys) {
-                if (-not $deps.ContainsKey($depId)) {
-                    $failures.Add($id + ': missing dependency ' + $depId + ' ' + $pairing[$id][$depId])
+                $expectedVersion = $pairing[$id][$depId]
+                if ($depId -like 'Origo.*') {
+                    $expectedVersion = '[' + $expectedVersion + ']'
                 }
-                elseif ($deps[$depId] -ne $pairing[$id][$depId]) {
-                    $failures.Add($id + ': dependency ' + $depId + ' version ' + $deps[$depId] + ' != ' + $pairing[$id][$depId])
+                if (-not $deps.ContainsKey($depId)) {
+                    $failures.Add($id + ': missing dependency ' + $depId + ' ' + $expectedVersion)
+                }
+                elseif ($deps[$depId] -ne $expectedVersion) {
+                    $failures.Add($id + ': dependency ' + $depId + ' version ' + $deps[$depId] + ' != ' + $expectedVersion)
                 }
             }
         }

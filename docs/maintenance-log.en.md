@@ -10,6 +10,12 @@ Repository-facing maintenance changes that do not change user-visible runtime, p
 
 CI workflow shape, local test/coverage gates, package-consumer fixture smoke coverage, shell-API baseline tooling, PowerShell/Bash parity, and developer-suite commands.
 
+- **Windows package smoke enforces exact Origo ranges** — the PowerShell
+  package validator now keeps raw nuspec dependency versions and requires
+  `[x.y.z]` for every `Origo.*` edge instead of stripping brackets before
+  comparison. A normalizer regression that leaves bare versions can no longer
+  pass the Windows gate, matching the Bash validator.
+
 - **Godot scripts resolve the SDK before redirecting HOME** — `godot-test.sh`
   and `package-consumer-smoke.sh` now source `scripts/bash/dotnet-env.sh`
   before the Godot user-data HOME redirect. A default `$HOME/.dotnet` install
