@@ -36,6 +36,7 @@ if [[ -z "${NUGET_PACKAGES:-}" && -d "$HOST_NUGET_PACKAGES" ]]; then
     export NUGET_PACKAGES="$HOST_NUGET_PACKAGES"
 fi
 
+source "$ROOT/scripts/bash/demo-acceptance-gate-lib.sh"
 # Godot.NET.Sdk is a version-coupled pair across the adapter and the
 # integration-test project. download-godot.sh owns the parse (and its error
 # messages); fail here if the integration project ever drifts from the adapter
@@ -121,7 +122,12 @@ if [[ $EXIT_CODE -eq 0 ]]; then
     echo "Building Evolution Demo for the headless acceptance smoke..."
     dotnet build "$ROOT/samples/Origo.EvolutionDemo/Origo.EvolutionDemo.csproj"         --configuration Debug --nologo --verbosity quiet
     echo "Running Evolution Demo headless acceptance smoke..."
-    EVOLUTION_DEMO_SMOKE_HOME="$DEMO_SMOKE_HOME"     ORIGO_DEMO_CAMPAIGN_AUTOPLAY=1         bash "$ROOT/samples/Origo.EvolutionDemo/run-demo.sh" --no-build --headless         --seconds 2 --fast-forward 150 --checkpoint-interval 60 --save-slot ci_smoke
+    set +e
+    DEMO_OUTPUT=$(EVOLUTION_DEMO_SMOKE_HOME="$DEMO_SMOKE_HOME"         ORIGO_DEMO_CAMPAIGN_AUTOPLAY=1         bash "$ROOT/samples/Origo.EvolutionDemo/run-demo.sh" --no-build --headless         --seconds 2 --fast-forward 150 --checkpoint-interval 60 --save-slot ci_smoke 2>&1)
+    DEMO_EXIT=$?
+    set -e
+    printf '%s\n' "$DEMO_OUTPUT"
+    require_demo_acceptance_markers "$DEMO_EXIT" "$DEMO_OUTPUT" 2 || exit 1
 fi
 
 exit $EXIT_CODE

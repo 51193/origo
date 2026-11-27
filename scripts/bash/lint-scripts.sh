@@ -120,6 +120,7 @@ bash scripts/bash/test-package-consumer-smoke-lib.sh
 bash scripts/bash/test-download-godot-deps.sh
 bash scripts/bash/test-pre-push-hook.sh
 bash scripts/bash/test-dotnet-env.sh
+bash scripts/bash/test-demo-acceptance-gate.sh
 bash scripts/bash/test-dev-suite.sh
 
 echo "Script lint: OK"
