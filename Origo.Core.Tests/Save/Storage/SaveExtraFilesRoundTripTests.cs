@@ -273,6 +273,47 @@ public class SaveExtraFilesRoundTripTests
     }
 
     [Fact]
+    public void ExtraFiles_DistinctFileSetsWithFramingCollision_AreNotDeduplicated()
+    {
+        // A file name can contain another file's content hash, so raw
+        // name+hash concatenation makes two distinct extra/ sets hash-equal.
+        // The second save must still write the new set instead of skipping as
+        // an idempotent retry and leaving the obsolete snapshot in place.
+        var ctx = CreateContextWithEntry(out _);
+        var archive = ctx.ArchiveFileAccess;
+
+        var x = DataSourceNode.CreateObject()
+            .Add("value", DataSourceNode.CreateNumber(1));
+        var y = DataSourceNode.CreateObject()
+            .Add("value", DataSourceNode.CreateNumber(2));
+        archive.WriteFile("a.json", x);
+        archive.WriteFile("b.json", y);
+        ctx.Save.RequestSaveGame("slot_01");
+        ctx.FlushFrame();
+
+        string xHash;
+        using (var read = archive.ReadFile("a.json"))
+            xHash = read.ComputeSha256Hash();
+
+        // One file whose name is exactly "a.json" + H(X) + "b.json" and whose
+        // content is Y produces the same unframed byte stream as the two-file
+        // set above: "a.json" + H(X) + "b.json" + H(Y).
+        var collisionName = "a.json" + xHash + "b.json";
+        archive.DeleteFile("a.json");
+        archive.DeleteFile("b.json");
+        archive.WriteFile(collisionName, y);
+        ctx.Save.RequestSaveGame("slot_01");
+        ctx.FlushFrame();
+
+        ctx.Save.RequestLoadGame("slot_01");
+        ctx.FlushFrame();
+
+        Assert.False(archive.FileExists("a.json"));
+        Assert.False(archive.FileExists("b.json"));
+        Assert.True(archive.FileExists(collisionName));
+    }
+
+    [Fact]
     public void ExtraFiles_DifferentContent_DifferentCombinedHash()
     {
         var ctx = CreateContextWithEntry(out var fs);

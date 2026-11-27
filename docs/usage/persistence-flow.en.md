@@ -46,6 +46,12 @@ rejects an unpaired UTF-16 surrogate (JSON strings cannot carry it losslessly â€
 the encoder would replace it with U+FFFD), and a mismatched
 `SaveGamePayload.SaveId` target is rejected before hashing as well.
 
+The extra/ side of the combined hash is canonical: a format tag and the file
+count frame the feed, and each relative file name and content hash is
+length-prefixed. Two distinct extra-file sets therefore cannot hash-equal by
+moving bytes across a name/content boundary, and a changed extra/ set always
+rewrites the snapshot instead of being skipped as an unchanged retry.
+
 The write target id must be non-empty because it names `save_{id}/`. A payload
 whose `SaveGamePayload.SaveId` is non-empty must equal the target id: the write
 fails with `ArgumentException` when they differ (including a set payload id with
