@@ -24,6 +24,11 @@ CI workflow shape, local test/coverage gates, package-consumer fixture smoke cov
   the PowerShell gate. A demo that exits zero before the acceptance runner
   attaches no longer turns the gate green. `test-demo-acceptance-gate.sh`
   covers complete/incomplete outputs and the non-zero exit.
+- **PowerShell benchmark fails on missing baseline metrics** — the Windows
+  benchmark gate now collects baseline metrics absent from the current run and
+  fails before the cross-machine comparison skip, matching the Bash gate. A
+  removed or renamed benchmark can no longer silently shrink the monitored
+  surface on Windows; `test-dev-suite.sh` guards the parity structure.
 
 - **Save snapshot benchmark times both directions** — the snapshot benchmark
   times `WriteSavePayloadToCurrentThenSnapshot` and

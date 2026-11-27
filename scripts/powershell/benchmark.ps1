@@ -112,9 +112,14 @@ $throughputRegressed = $false
 $skipped = 0
 $throughputKinds = @('CompareTable', 'Compare', 'Report')
 $baselineMetrics = $baseline.metrics
+$missingMetrics = New-Object System.Collections.Generic.List[string]
+$currentKeys = @($metrics.Keys)
 foreach ($property in $baselineMetrics.PSObject.Properties) {
     $key = $property.Name
-    if (-not $metrics.ContainsKey($key)) { continue }
+    if (-not ($currentKeys -ccontains $key)) {
+        $missingMetrics.Add($key)
+        continue
+    }
     $base = $property.Value
     $current = $metrics[$key]
     if (-not $sameMachine) { continue }
@@ -136,6 +141,13 @@ foreach ($property in $baselineMetrics.PSObject.Properties) {
         }
     }
 }
+# A baseline metric missing from the current run means a benchmark was
+# removed or renamed. Like the Bash gate, fail on every machine: the numeric
+# comparison gates are machine-dependent, but this integrity check is not.
+foreach ($key in $missingMetrics) {
+    $failures.Add('  FAIL missing metric: ' + $key + ' (baseline measurement has no current benchmark; run -UpdateBaseline only for an intentional removal)')
+}
+
 $baselineKeys = @($baselineMetrics.PSObject.Properties | ForEach-Object { $_.Name })
 foreach ($key in $metrics.Keys) {
     if (-not ($baselineKeys -contains $key)) {
@@ -157,7 +169,8 @@ if ($failures.Count -gt 0) {
     # transient scheduling artifact. Retry once in a fresh process before
     # failing; allocation failures are deterministic and fail immediately.
     $allocationFailed = @($failures | Where-Object { $_ -like '*FAIL allocation:*' }).Count -gt 0
-    if ($throughputRegressed -and -not $allocationFailed -and $env:ORIGO_BENCHMARK_RETRY -ne '1') {
+    $missingMetricFailed = $missingMetrics.Count -gt 0
+    if ($throughputRegressed -and -not $allocationFailed -and -not $missingMetricFailed -and $env:ORIGO_BENCHMARK_RETRY -ne '1') {
         $env:ORIGO_BENCHMARK_RETRY = '1'
         Write-Host 'Throughput-only regression; retrying the benchmark once in a fresh process...'
         & $PSCommandPath @PSBoundParameters

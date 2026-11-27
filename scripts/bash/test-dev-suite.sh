@@ -196,6 +196,18 @@ if grep -Fq '`docs.ps1`' <<<"$bash_map"; then
     FAIL "docs.ps1 must not be listed in the Bash script-map section"
 fi
 
+# The PowerShell benchmark gate must reject a baseline metric that is absent
+# from the current run, independently of the cross-machine comparison skip.
+ps_benchmark=scripts/powershell/benchmark.ps1
+grep -Fq '$missingMetrics' "$ps_benchmark" \
+    || FAIL "PowerShell benchmark gate does not track missing baseline metrics"
+grep -Fq '$missingMetrics.Add($key)' "$ps_benchmark" \
+    || FAIL "PowerShell benchmark gate does not collect missing baseline metrics"
+grep -Fq 'foreach ($key in $missingMetrics)' "$ps_benchmark" \
+    || FAIL "PowerShell benchmark gate does not emit its missing baseline metrics"
+grep -Fq 'FAIL missing metric:' "$ps_benchmark" \
+    || FAIL "PowerShell benchmark gate does not fail on a missing baseline metric"
+
 if ((failures > 0)); then
     echo "Development-suite parity: FAILED ($failures issue(s))." >&2
     exit 1
