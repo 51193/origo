@@ -88,12 +88,14 @@ internal sealed partial class ProgressRun : IDisposable
     public string SaveId { get; private set; }
 
     /// <summary>
-    ///     True for the initial-save and main-menu entry runs. Those runs use
-    ///     the internal <c>000</c> working id but have not loaded a runtime
-    ///     save slot, so level mounting must resolve from <c>current/</c> only
-    ///     and must never fall back to a real <c>save_000/</c> snapshot.
+    ///     True until the run saves to a real slot. Initial-save and main-menu
+    ///     runs start with the internal <c>000</c> working id and no loaded
+    ///     runtime save slot, so level mounting resolves from <c>current/</c>
+    ///     only and must never fall back to a real <c>save_000/</c> snapshot.
+    ///     Saving to a real id clears the flag and makes the run's backing slot
+    ///     a real snapshot.
     /// </summary>
-    internal bool IsSyntheticSave { get; }
+    internal bool IsSyntheticSave { get; private set; }
 
     /// <inheritdoc/>
     public void Dispose()
@@ -187,6 +189,7 @@ internal sealed partial class ProgressRun : IDisposable
         if (string.IsNullOrWhiteSpace(saveId))
             throw new ArgumentException("Save id cannot be null or whitespace.", nameof(saveId));
         SaveId = saveId;
+        IsSyntheticSave = false;
     }
 
     internal ISessionRun RequireForegroundSession() => _sessionManager.ForegroundSession ??

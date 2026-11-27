@@ -67,7 +67,7 @@ Deferred-queue semantics and syntax: [Usage: Console Commands — save / load / 
 ```
 delete_save <saveId>
 ```
-Synchronously deletes an inactive save slot and its `.tmp`/`.bak` remnants. The active save, the continue target, and running or pending persistence requests are rejected with an error.
+Synchronously deletes an inactive save slot and its `.tmp`/`.bak` remnants. The save currently backing the current progress run, the continue target, and running or pending persistence requests are rejected with an error.
 
 ## Design Decisions
 

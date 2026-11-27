@@ -231,7 +231,7 @@ var entries = ctx.Save.ListSavesWithMetaData();
 ctx.Save.DeleteSave("old_slot");
 ```
 
-Deletion rejects the active save, the continue target, and any state where a persistence request is executing or pending; a missing slot throws `InvalidOperationException` explicitly. Storage-level behavior is provided by `ISaveStorageService.DeleteSave`.
+Deletion rejects the save currently backing the current progress run, the continue target, and any state where a persistence request is executing or pending; a missing slot throws `InvalidOperationException` explicitly. Storage-level behavior is provided by `ISaveStorageService.DeleteSave`.
 
 ### Observing Persistence Completion
 

@@ -67,6 +67,11 @@ internal sealed class SndContextSaveOperations(SndContext owner) : ISndSaveOpera
             throw new InvalidOperationException(
                 $"Cannot delete active save '{saveId}'.");
 
+        if (owner._progressRun is { IsSyntheticSave: false } progressRun
+            && string.Equals(progressRun.SaveId, saveId, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException(
+                $"Cannot delete save '{saveId}' while it is backing the current progress run.");
+
         owner.StorageService.DeleteSave(saveId);
     }
 

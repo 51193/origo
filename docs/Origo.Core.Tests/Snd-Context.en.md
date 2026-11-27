@@ -43,6 +43,7 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `ListSaves_ReturnsSaveIds` | ListSaves returns save IDs when saves exist | ISndSaveOperations |
 | `ListSavesWithMetaData_ReturnsEmptyWhenNoSaves` | ListSavesWithMetaData returns empty when no saves exist | ISndSaveOperations |
 | `DeleteSave_RemovesInactiveSlot` | After deleting an inactive slot ListSaves no longer returns it while other slots remain | ISndSaveOperations.DeleteSave |
+| `DeleteSave_InactiveSlotAfterLoad_Removes` | After loading one slot, an unrelated inactive slot remains deletable | ISndSaveOperations.DeleteSave |
 | `DeleteSave_MainMenuProgressRun_DoesNotBlockMatchingRealSlot` | The main-menu ProgressRun uses an internal working SaveId that is not the active save; a real slot with the same id remains deletable | ISndSaveOperations.DeleteSave |
 | `RequestSwitchForegroundLevel_MainMenuSyntheticSave_IgnoresRuntimeSave000Snapshot` | A synthetic initial/main-menu run switches from `current/` only; a user-created `save_000` level payload is never mounted | ISndSaveOperations.RequestSwitchForegroundLevel |
 | `RequestSaveGame_PersistsAndSetsActiveSaveSlot` | After save the file exists and ActiveSaveId is correctly set | persistence-flow |
@@ -87,6 +88,8 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `RequestSwitchForegroundLevel_ThrowsOnEmptyId` | Empty levelId | ArgumentException |
 | `DeleteSave_MissingSlot_Throws` | Deleting a missing slot | InvalidOperationException |
 | `DeleteSave_ActiveSave_Throws` | Deleting the active slot referenced by ActiveSaveId | InvalidOperationException, slot remains |
+| `DeleteSave_LoadedSaveAfterContinueTargetChange_Throws` | The continue target points at another slot after a real load | InvalidOperationException for the save backing the run; the slot remains |
+| `DeleteSave_SyntheticRunSavedSlotAfterContinueTargetChange_Throws` | A synthetic initial/main-menu run saves to a real slot, then the continue target changes | InvalidOperationException for the saved slot; the slot remains |
 | `DeleteSave_PendingPersistenceRequest_Throws` | Deleting a different slot while a persistence request is pending | InvalidOperationException |
 | `TrySubmitConsoleCommand_ReturnsFalseForEmptyCommand` | Blank command | Returns false |
 | `TrySubmitConsoleCommand_ReturnsFalseWhenNoConsoleInput` | No console input source | Returns false |
