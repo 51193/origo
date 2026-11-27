@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Origo.EvolutionDemo.Analysis.IO;
+using Origo.EvolutionDemo.Logic.Gameplay;
 
 namespace Origo.EvolutionDemo.Analysis.Genome;
 
@@ -21,12 +22,14 @@ public sealed record DeathCounts(int Starvation, int Predation, int Aging)
 /// <param name="Time">Simulation time.</param>
 /// <param name="Tick">Simulation tick.</param>
 /// <param name="Counts">Death counts, or null for saves written before the counters existed.</param>
+/// <param name="RootDeaths">Cumulative deaths per root lineage, or null when absent.</param>
 public sealed record SaveMortality(
     string SaveId,
     string Path,
     double Time,
     double Tick,
-    DeathCounts? Counts);
+    DeathCounts? Counts,
+    IReadOnlyDictionary<int, RootDeathTally>? RootDeaths);
 
 /// <summary>Final cumulative death counts and shares for a save sequence.</summary>
 /// <param name="Counts">Latest cumulative counts, or null without counters.</param>
@@ -39,12 +42,29 @@ public sealed record MortalitySequenceSummary(
     double? StarvationShare,
     double? AgingShare);
 
-/// <summary>Per-save mortality records and the latest cumulative summary.</summary>
+/// <summary>Aggregate per-root death totals for a save sequence.</summary>
+/// <param name="Roots">Roots with at least one tracked death.</param>
+/// <param name="Counts">Totals by cause.</param>
+/// <param name="PredationShare">Predation share of tracked root deaths.</param>
+/// <param name="StarvationShare">Starvation share of tracked root deaths.</param>
+/// <param name="AgingShare">Aging share of tracked root deaths.</param>
+public sealed record RootMortalitySummary(
+    int Roots,
+    DeathCounts Counts,
+    double? PredationShare,
+    double? StarvationShare,
+    double? AgingShare);
+
+/// <summary>Per-save mortality records and the latest cumulative summaries.</summary>
 /// <param name="Saves">Save mortality in simulation order.</param>
 /// <param name="Sequence">Latest cumulative counts and shares.</param>
+/// <param name="RootDeaths">Latest cumulative per-root death map, or null.</param>
+/// <param name="RootSummary">Latest aggregate per-root death summary, or null.</param>
 public sealed record MortalityAnalysis(
     IReadOnlyList<SaveMortality> Saves,
-    MortalitySequenceSummary Sequence);
+    MortalitySequenceSummary Sequence,
+    IReadOnlyDictionary<int, RootDeathTally>? RootDeaths,
+    RootMortalitySummary? RootSummary);
 
 /// <summary>Reads cumulative starvation, predation, and aging counters from v7 saves.</summary>
 public static class SaveMortalityAnalyzer
@@ -65,16 +85,22 @@ public static class SaveMortalityAnalyzer
             .ToArray();
         var results = new List<SaveMortality>(ordered.Length);
         DeathCounts? latest = null;
+        IReadOnlyDictionary<int, RootDeathTally>? latestRoots = null;
         foreach (var save in ordered)
         {
             var counts = TryRead(save);
-            results.Add(new SaveMortality(save.Id, save.Path, save.Time, save.Tick, counts));
+            var roots = TryReadRoots(save);
+            results.Add(new SaveMortality(save.Id, save.Path, save.Time, save.Tick, counts, roots));
             if (counts is not null)
                 latest = counts;
+            if (roots is not null)
+                latestRoots = roots;
         }
 
+        var rootSummary = latestRoots is null ? null : SummarizeRoots(latestRoots);
         if (latest is null)
-            return new MortalityAnalysis(results, new MortalitySequenceSummary(null, null, null, null));
+            return new MortalityAnalysis(
+                results, new MortalitySequenceSummary(null, null, null, null), latestRoots, rootSummary);
         var total = latest.Total;
         return new MortalityAnalysis(
             results,
@@ -82,7 +108,32 @@ public static class SaveMortalityAnalyzer
                 latest,
                 total > 0 ? latest.Predation / (double)total : null,
                 total > 0 ? latest.Starvation / (double)total : null,
-                total > 0 ? latest.Aging / (double)total : null));
+                total > 0 ? latest.Aging / (double)total : null),
+            latestRoots,
+            rootSummary);
+    }
+
+    private static IReadOnlyDictionary<int, RootDeathTally>? TryReadRoots(SaveSnapshot save)
+    {
+        if (!save.ControllerStrings.TryGetValue("evo.deathByRoot", out var text)
+            || string.IsNullOrWhiteSpace(text))
+            return null;
+        return RootDeathCodec.Parse(text);
+    }
+
+    private static RootMortalitySummary SummarizeRoots(IReadOnlyDictionary<int, RootDeathTally> roots)
+    {
+        var starvation = roots.Values.Sum(static tally => tally.Starvation);
+        var predation = roots.Values.Sum(static tally => tally.Predation);
+        var aging = roots.Values.Sum(static tally => tally.Aging);
+        var counts = new DeathCounts(starvation, predation, aging);
+        var total = counts.Total;
+        return new RootMortalitySummary(
+            roots.Count,
+            counts,
+            total > 0 ? predation / (double)total : null,
+            total > 0 ? starvation / (double)total : null,
+            total > 0 ? aging / (double)total : null);
     }
 
     private static DeathCounts? TryRead(SaveSnapshot save)

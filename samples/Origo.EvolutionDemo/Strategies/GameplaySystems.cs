@@ -66,6 +66,8 @@ internal sealed class EvolutionTickContext : IGameplayWorldContext
     public int FoodPreset { get; set; }
     public List<CollisionBody> CollisionBodies { get; } = [];
     public List<ISndEntity> CollisionEntities { get; } = [];
+    public Dictionary<int, RootDeathTally> DeathByRoot { get; } = [];
+    public bool DeathByRootDirty { get; set; }
 }
 
 /// <summary>Builds the immutable entity/sensor snapshot for one tick.</summary>
@@ -84,6 +86,12 @@ internal sealed class SnapshotSimulationSystem : IGameplaySystem
         world.FoodAlive = world.Snapshot.FoodAlive;
         world.PendingFood = 0;
         world.CarrionFoodReleased = 0;
+        world.DeathByRoot.Clear();
+        var encodedDeaths = world.Controller.TryGetData<string>(DemoKeys.DeathByRoot)
+            is { found: true, value: { } stored } ? stored : string.Empty;
+        foreach (var (root, tally) in RootDeathCodec.Parse(encodedDeaths))
+            world.DeathByRoot[root] = tally;
+        world.DeathByRootDirty = false;
         world.NextFoodId = ReadInt(world.Controller, DemoKeys.NextFoodId, 1);
         world.Mutations.Clear();
         WorldSimulationStrategy.AddPendingFoodSources(world);

@@ -1,0 +1,131 @@
+{
+ "schema": 1,
+ "date": "2026-11-27",
+ "game_commit": "e1cae921",
+ "analysis_tool_commit": "e1cae921",
+ "protocol": "seed 20261301, fresh planned, 3600 s, 300 s checkpoints, enrichment on, predation off/on; analysis of 1500/3000/final saves",
+ "runs": [
+  {
+   "cell": "e1p0",
+   "enrichment": true,
+   "predation": false,
+   "final_population": 2497,
+   "living_roots": 407,
+   "living_root_gen0": 335,
+   "mutation_lineages": 1842,
+   "spawn_origins": {
+    "founders": 0,
+    "children": 2156,
+    "enrichment": 335,
+    "innovation": 0,
+    "overgrowth": 6,
+    "unknown": 0
+   },
+   "deaths": {
+    "starvation": 68217,
+    "predation": 0,
+    "aging": 5554,
+    "total": 73771
+   },
+   "roots_with_deaths": 4430,
+   "top_roots": [
+    {
+     "rootLineage": 4,
+     "starvation": 30706,
+     "predation": 0,
+     "aging": 2983,
+     "total": 33689
+    },
+    {
+     "rootLineage": 26,
+     "starvation": 5585,
+     "predation": 0,
+     "aging": 228,
+     "total": 5813
+    },
+    {
+     "rootLineage": 3,
+     "starvation": 2604,
+     "predation": 0,
+     "aging": 307,
+     "total": 2911
+    },
+    {
+     "rootLineage": 18119,
+     "starvation": 1496,
+     "predation": 0,
+     "aging": 83,
+     "total": 1579
+    },
+    {
+     "rootLineage": 6,
+     "starvation": 1051,
+     "predation": 0,
+     "aging": 290,
+     "total": 1341
+    }
+   ]
+  },
+  {
+   "cell": "e1p1",
+   "enrichment": true,
+   "predation": true,
+   "final_population": 425,
+   "living_roots": 91,
+   "living_root_gen0": 48,
+   "mutation_lineages": 321,
+   "spawn_origins": {
+    "founders": 0,
+    "children": 370,
+    "enrichment": 48,
+    "innovation": 0,
+    "overgrowth": 7,
+    "unknown": 0
+   },
+   "deaths": {
+    "starvation": 25496,
+    "predation": 33508,
+    "aging": 1828,
+    "total": 60832
+   },
+   "roots_with_deaths": 3991,
+   "top_roots": [
+    {
+     "rootLineage": 4,
+     "starvation": 15351,
+     "predation": 12568,
+     "aging": 837,
+     "total": 28756
+    },
+    {
+     "rootLineage": 6,
+     "starvation": 3696,
+     "predation": 2321,
+     "aging": 635,
+     "total": 6652
+    },
+    {
+     "rootLineage": 26,
+     "starvation": 1454,
+     "predation": 681,
+     "aging": 32,
+     "total": 2167
+    },
+    {
+     "rootLineage": 3,
+     "starvation": 1722,
+     "predation": 214,
+     "aging": 177,
+     "total": 2113
+    },
+    {
+     "rootLineage": 5,
+     "starvation": 827,
+     "predation": 130,
+     "aging": 81,
+     "total": 1038
+    }
+   ]
+  }
+ ]
+}

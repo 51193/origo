@@ -34,7 +34,8 @@ internal readonly record struct CreatureSnapshot(
     int OrganMask,
     int SpikeCount,
     float SpikeSpread,
-    float SpikeJitter)
+    float SpikeJitter,
+    int RootLineage)
 {
     public bool SpikeBattery => (OrganMask & (int)DemoOrganMaskV4.SpikeBattery) != 0;
     public bool HardDigest => (OrganMask & (int)DemoOrganMaskV4.HardDigest) != 0;
@@ -225,7 +226,8 @@ internal sealed class WorldSnapshot
             stat.OrganMask,
             stat.SpikeCount,
             stat.SpikeSpread,
-            stat.SpikeJitter);
+            stat.SpikeJitter,
+            ReadInt(entity, DemoKeys.RootLineage, ReadInt(entity, DemoKeys.Lineage, 0)));
     }
 
     private static CreatureStaticView ReadCreatureStatic(ISndEntity entity) => new()

@@ -248,24 +248,52 @@ th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.warn{color:#fca5a5}.no
             .OrderBy(static item => item.Time)
             .ThenBy(static item => item.SaveId, StringComparer.Ordinal)
             .ToArray();
-        if (saves.Length == 0)
+        var hasRoots = input.Mortality.RootDeaths is { Count: > 0 };
+        if (saves.Length == 0 && !hasRoots)
             return;
         html.Append("<h2>Death causes</h2>");
-        html.Append("<p class=\"muted\">Cumulative controller counters for starvation (energy <= 0), predation (lethal spike hit), and aging (max age reached). Counters are absent in older saves.</p>");
-        html.Append("<table><tr><th>save</th><th>time</th><th>starvation</th><th>predation</th>"
-            + "<th>aging</th><th>total</th></tr>");
-        foreach (var save in saves)
+        if (saves.Length > 0)
         {
-            var counts = save.Counts!;
-            var displayId = input.Saves.FirstOrDefault(item =>
-                string.Equals(item.Path, save.Path, StringComparison.Ordinal))?.Id ?? save.SaveId;
-            html.Append(CultureInfo.InvariantCulture,
-                $"<tr><td><code>{Escape(displayId)}</code></td><td>{save.Time:0.###}</td>"
-                + $"<td>{counts.Starvation}</td><td>{counts.Predation}</td>"
-                + $"<td>{counts.Aging}</td><td>{counts.Total}</td></tr>");
+            html.Append("<p class=\"muted\">Cumulative controller counters for starvation (energy <= 0), predation (lethal spike hit), and aging (max age reached). Counters are absent in older saves.</p>");
+            html.Append("<table><tr><th>save</th><th>time</th><th>starvation</th><th>predation</th>"
+                + "<th>aging</th><th>total</th></tr>");
+            foreach (var save in saves)
+            {
+                var counts = save.Counts!;
+                var displayId = input.Saves.FirstOrDefault(item =>
+                    string.Equals(item.Path, save.Path, StringComparison.Ordinal))?.Id ?? save.SaveId;
+                html.Append(CultureInfo.InvariantCulture,
+                    $"<tr><td><code>{Escape(displayId)}</code></td><td>{save.Time:0.###}</td>"
+                    + $"<td>{counts.Starvation}</td><td>{counts.Predation}</td>"
+                    + $"<td>{counts.Aging}</td><td>{counts.Total}</td></tr>");
+            }
+
+            html.Append("</table>");
         }
 
-        html.Append("</table>");
+        if (input.Mortality.RootDeaths is { Count: > 0 } roots)
+        {
+            var finalPath = input.Lineage.Saves.Count == 0 ? null : input.Lineage.Saves[^1].Path;
+            var living = input.Lineage.RootDetails
+                .Where(item => string.Equals(item.Path, finalPath, StringComparison.Ordinal))
+                .Select(static item => item.RootLineage)
+                .ToHashSet();
+            html.Append("<h3>Deaths by root lineage</h3>");
+            html.Append("<p class=\"muted\">Latest cumulative totals; living means the root still had a creature in the final save. Only the ten largest roots are shown.</p>");
+            html.Append("<table><tr><th>root</th><th>starvation</th><th>predation</th>"
+                + "<th>aging</th><th>total</th><th>living</th></tr>");
+            foreach (var (root, tally) in roots.OrderByDescending(static pair => pair.Value.Total)
+                .ThenBy(static pair => pair.Key)
+                .Take(10))
+            {
+                html.Append(CultureInfo.InvariantCulture,
+                    $"<tr><td><code>{root}</code></td><td>{tally.Starvation}</td>"
+                    + $"<td>{tally.Predation}</td><td>{tally.Aging}</td><td>{tally.Total}</td>"
+                    + $"<td>{(living.Contains(root) ? "yes" : "no")}</td></tr>");
+            }
+
+            html.Append("</table>");
+        }
     }
 
     private static void AppendCandidates(StringBuilder html, GenomeReportInput input)

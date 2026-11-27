@@ -31,6 +31,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   and maximum-age deaths are persisted as cumulative controller counters. The
   analysis timeline, metrics JSON, and HTML report expose the counts and shares;
   older saves report no death counters rather than fabricating zeroes.
+- **Evolution Demo records per-root deaths** — the controller persists cumulative
+  cause totals by root lineage. `--root-mortality-csv`, `rootMortalitySequence`,
+  and `rootMortality` expose root × cause data, so a root can be followed from
+  living ancestry to starvation, predation, or aging deaths.
 - **Evolution Demo campaign tests can isolate content controls** — planned,
   idle, cheapest, and greedy policies honor
   `ORIGO_DEMO_CAMPAIGN_ENRICHMENT=0` and

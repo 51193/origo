@@ -131,7 +131,9 @@ This is the cleanest mechanism evidence so far:
   of tracked deaths; the population collapses.
 
 A 10-seed instrumented follow-up is recorded in
-[campaign-rooted-2026-11-27](campaign-rooted-2026-11-27.md).
+[campaign-rooted-2026-11-27](campaign-rooted-2026-11-27.md); the root × cause
+follow-up is in
+[campaign-root-mortality-2026-11-27](campaign-root-mortality-2026-11-27.md).
 
 The root lineage view also shows why mutation-lineage counts were misleading:
 the same e1p0 snapshot has 1,842 mutation lineages but only **407** roots, and
