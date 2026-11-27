@@ -150,6 +150,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `Blackboard.TryGet<Vector3>` reads drop from 32 bytes of allocation per read
   to zero in the steady state; registration still happens once from the
   adapter module initializers.
+- **Release packages pin exact Origo dependency versions** — packed Origo
+  packages now declare their `Origo.*` dependencies as exact `[x.y.z]` ranges
+  instead of bare minimum versions, so a restore cannot silently combine
+  packages from different Origo versions. Matching shell/kernel sets restore
+  normally; non-Origo dependencies such as `GodotSharp` keep their
+  minimum-version semantics.
 
 - **Evolution Demo smoke waits for a second generation** — the smoke phase
   now keeps running for up to 30 simulation seconds when generation 1 has not

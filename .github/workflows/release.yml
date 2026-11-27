@@ -312,6 +312,11 @@ jobs:
       - name: Pack Origo.ConsoleBridge
         run: dotnet pack Origo.ConsoleBridge/Origo.ConsoleBridge.csproj --no-build --configuration Release --output ./artifacts
 
+      - name: Normalize Origo package dependency ranges
+        env:
+          TAG: ${{ steps.resolve-tag.outputs.tag }}
+        run: python3 scripts/python/normalize_package_dependencies.py ./artifacts "${TAG#v}"
+
       - name: Validate release package set
         env:
           TAG: ${{ steps.resolve-tag.outputs.tag }}

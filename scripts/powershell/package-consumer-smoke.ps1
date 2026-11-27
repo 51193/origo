@@ -237,6 +237,7 @@ try {
     foreach ($project in $packProjects) {
         Invoke-OrigoDotnet -Arguments @('pack', $project, '--configuration', 'Release', '--output', $feed) -Quiet
     }
+    Invoke-OrigoPython -Arguments @('scripts/python/normalize_package_dependencies.py', $feed, $version)
     Test-OrigoPackageSet $feed $version $sdkVersion
 
     Copy-Item -Path (Join-Path $root 'tools\ShellPackageConsumer\*') -Destination $consumer -Recurse -Force

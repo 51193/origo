@@ -44,8 +44,6 @@ def dependency_map(root):
     result = {}
     for dep in root.findall(".//n:dependency", ns):
         dep_version = (dep.get("version") or "").strip()
-        if dep_version.startswith("[") and dep_version.endswith("]"):
-            dep_version = dep_version[1:-1]
         result[dep.get("id")] = {"version": dep_version, "exclude": dep.get("exclude") or ""}
     return result
 
@@ -85,12 +83,15 @@ for package_id, requirements in pairing.items():
         continue
     deps = packages[package_id][2]
     for dependency_id, required_version in requirements.items():
+        expected_version = (
+            f"[{required_version}]" if dependency_id.startswith("Origo.") else required_version
+        )
         if dependency_id not in deps:
-            failures.append(f"{package_id}: missing dependency {dependency_id} {required_version}")
-        elif deps[dependency_id]["version"] != required_version:
+            failures.append(f"{package_id}: missing dependency {dependency_id} {expected_version}")
+        elif deps[dependency_id]["version"] != expected_version:
             failures.append(
                 f"{package_id}: dependency {dependency_id} version "
-                f"{deps[dependency_id]['version']} != {required_version}")
+                f"{deps[dependency_id]['version']} != {expected_version}")
 
 expected_origo_dependencies = {
     "Origo.Core.Contracts": set(),

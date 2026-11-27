@@ -81,6 +81,11 @@ dotnet pack Origo.Core/Origo.Core.csproj --configuration Release --output "$FEED
 dotnet pack Origo.GodotAdapter/Origo.GodotAdapter.csproj --configuration Release --output "$FEED" >/dev/null
 dotnet pack Origo.ConsoleBridge/Origo.ConsoleBridge.csproj --configuration Release --output "$FEED" >/dev/null
 
+# NuGet's project-to-project packing emits minimum versions. Rewrite the Origo
+# dependencies to exact ranges before validating and restoring, matching the
+# release pipeline's exact shell/kernel pairing contract.
+python3 scripts/python/normalize_package_dependencies.py "$FEED" "$VERSION"
+
 # Exercise the release artifact validator against the same freshly packed
 # feed, so normal CI and local runs cover exact identities, shell/kernel
 # pairing, dependency direction, analyzer assets, and kernel isolation. The

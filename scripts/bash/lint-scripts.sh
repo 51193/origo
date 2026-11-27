@@ -95,6 +95,7 @@ if command -v python3 >/dev/null 2>&1; then
     PYTHONDONTWRITEBYTECODE=1 python3 scripts/python/check_test.py
     python3 scripts/python/validate-agent-docs.py
     python3 scripts/python/test-validate-release-packages.py
+    PYTHONDONTWRITEBYTECODE=1 python3 scripts/python/normalize_package_dependencies_test.py
     bash scripts/bash/test-write-version-stamp.sh
     bash scripts/bash/test-validate-release-source.sh
     bash scripts/bash/test-validate-release-artifacts.sh

@@ -141,6 +141,8 @@ mirrors the development gates but not the release pipeline; this is why
 | `work_identity.py` | Branch/worktree identity implementation |
 | `work_identity_test.py` | Tests for branch/worktree identity |
 | `write-version-stamp.py` | Stamp version properties for release/snapshot commits |
+| `normalize_package_dependencies.py` | Wrap packed `Origo.*` dependencies in exact NuGet version ranges |
+| `normalize_package_dependencies_test.py` | Tests for the exact-range package normalizer |
 
 These helpers are invoked through the Bash or PowerShell gates; they are not
 standalone platform entry points.
