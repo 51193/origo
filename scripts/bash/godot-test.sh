@@ -6,18 +6,24 @@ ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
 
 # Keep using the caller's NuGet package cache when the headless Godot run
-# redirects HOME below. Otherwise dotnet-env.sh sees the redirected HOME and
-# creates an empty repository-local cache, so Godot.NET.Sdk cannot be resolved
-# in offline/local runs even though the package is already installed.
+# redirects HOME below. The SDK is resolved before that redirect so
+# dotnet-env.sh still sees the caller's $HOME/.dotnet; pinning the caller's
+# package cache here keeps Godot.NET.Sdk resolvable in offline/local runs.
 HOST_NUGET_PACKAGES="${NUGET_PACKAGES:-${HOME:-}/.nuget/packages}"
 
 # Godot writes logs/caches under the XDG user directories. In containers and
 # restricted sandboxes those directories are often read-only; redirect them to
-# a repository-local (git-ignored) home before any dotnet or Godot process
-# runs, so no caller-side HOME/XDG export is needed.
+# a repository-local (git-ignored) home before any Godot process runs.
 GODOT_DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}"
 GODOT_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 GODOT_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}"
+
+# Resolve the SDK before changing HOME. dotnet-env.sh selects the repository
+# root, then $HOME/.dotnet, then PATH; redirecting HOME first would make a
+# default $HOME/.dotnet install invisible even though the installer reports
+# that no PATH export is required.
+source "$ROOT/scripts/bash/dotnet-env.sh"
+
 if [[ ! -w "$GODOT_DATA_DIR" || ! -w "$GODOT_CONFIG_DIR" || ! -w "$GODOT_CACHE_DIR" ]]; then
     mkdir -p "$ROOT/.godot-home/.local/share" "$ROOT/.godot-home/.config" "$ROOT/.godot-home/.cache"
     export HOME="$ROOT/.godot-home"
@@ -29,8 +35,6 @@ fi
 if [[ -z "${NUGET_PACKAGES:-}" && -d "$HOST_NUGET_PACKAGES" ]]; then
     export NUGET_PACKAGES="$HOST_NUGET_PACKAGES"
 fi
-
-source "$ROOT/scripts/bash/dotnet-env.sh"
 
 # Godot.NET.Sdk is a version-coupled pair across the adapter and the
 # integration-test project. download-godot.sh owns the parse (and its error

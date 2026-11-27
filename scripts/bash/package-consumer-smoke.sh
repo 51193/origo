@@ -17,10 +17,16 @@ HOST_NUGET_PACKAGES="${NUGET_PACKAGES:-${HOME:-}/.nuget/packages}"
 
 # Godot writes logs/caches under the XDG user directories. In containers and
 # restricted sandboxes those directories are often read-only; redirect them to
-# a repository-local (git-ignored) home before any dotnet or Godot process runs.
+# a repository-local (git-ignored) home before any Godot process runs.
 GODOT_DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}"
 GODOT_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 GODOT_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}"
+
+# Resolve the SDK before changing HOME; dotnet-env.sh selects the repository
+# root, then $HOME/.dotnet, then PATH. Redirecting HOME first would hide a
+# default $HOME/.dotnet install that needs no PATH export.
+source "$ROOT/scripts/bash/dotnet-env.sh"
+
 if [[ ! -w "$GODOT_DATA_DIR" || ! -w "$GODOT_CONFIG_DIR" || ! -w "$GODOT_CACHE_DIR" ]]; then
     mkdir -p "$ROOT/.godot-home/.local/share" "$ROOT/.godot-home/.config" "$ROOT/.godot-home/.cache"
     export HOME="$ROOT/.godot-home"
@@ -33,7 +39,6 @@ if [[ -z "${NUGET_PACKAGES:-}" && -d "$HOST_NUGET_PACKAGES" ]]; then
     export NUGET_PACKAGES="$HOST_NUGET_PACKAGES"
 fi
 
-source "$ROOT/scripts/bash/dotnet-env.sh"
 source "$ROOT/scripts/bash/package-consumer-smoke-lib.sh"
 
 FAIL() {

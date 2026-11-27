@@ -10,6 +10,14 @@ Repository-facing maintenance changes that do not change user-visible runtime, p
 
 CI workflow shape, local test/coverage gates, package-consumer fixture smoke coverage, shell-API baseline tooling, PowerShell/Bash parity, and developer-suite commands.
 
+- **Godot scripts resolve the SDK before redirecting HOME** — `godot-test.sh`
+  and `package-consumer-smoke.sh` now source `scripts/bash/dotnet-env.sh`
+  before the Godot user-data HOME redirect. A default `$HOME/.dotnet` install
+  selected by the installer no longer disappears when an XDG directory is
+  missing or unwritable, and the caller's NuGet cache remains pinned for the
+  redirected run. `test-dotnet-env.sh` covers the redirect with a stub SDK and
+  guards the source-before-HOME ordering in both POSIX entry points.
+
 - **Save snapshot benchmark times both directions** — the snapshot benchmark
   times `WriteSavePayloadToCurrentThenSnapshot` and
   `ReadSavePayloadFromSnapshot` separately and reports each direction's
