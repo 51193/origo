@@ -144,6 +144,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **Typed data fallback dispatch no longer allocates per read** — the
+  layered adapter registry caches each registered fallback chain instead of
+  calling `Delegate.GetInvocationList()` on every resolution. Public
+  `Blackboard.TryGet<Vector3>` reads drop from 32 bytes of allocation per read
+  to zero in the steady state; registration still happens once from the
+  adapter module initializers.
+
 - **Evolution Demo smoke waits for a second generation** — the smoke phase
   now keeps running for up to 30 simulation seconds when generation 1 has not
   appeared, instead of failing a valid seed at the 2 s smoke target. The

@@ -22,6 +22,23 @@ public class TypedDataTests
     }
 
     [Fact]
+    public void ResetKindRegistry_ClearsCachedLayeredHandlers()
+    {
+        // The test reset clears the delegate chains; resolution reads the
+        // cached invocation arrays, so the reset must clear those too or a
+        // stale adapter callback survives across tests.
+        TypedDataLayeredRegistry.RegisterKindResolver(static _ => 201);
+        TypedDataLayeredRegistry.RegisterFromObjectFallback(static (_, _) => (42L, null));
+        TypedDataLayeredRegistry.RegisterToObjectFallback(static _ => "stale");
+
+        TypedDataTestSupport.ResetKindRegistry();
+
+        Assert.Equal(0, TypedDataLayeredRegistry.ResolveKind(typeof(DateTime)));
+        Assert.Null(TypedDataLayeredRegistry.ResolveFromObject(211, new object()));
+        Assert.Null(TypedDataLayeredRegistry.ResolveToObject(default));
+    }
+
+    [Fact]
     public void NullValue_IsAllowed()
     {
         var td = new TypedData(TypedData.KindMap.String, 0, null);
