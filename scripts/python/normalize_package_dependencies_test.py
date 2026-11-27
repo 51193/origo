@@ -51,6 +51,15 @@ class NormalizePackageDependenciesTests(unittest.TestCase):
             self.assertIn('id="GodotSharp" version="4.7.2"', nuspec)
             self.assertEqual(0, normalizer.normalize_package(path, "1.2.3"))
 
+    def test_without_expected_version_accepts_matching_exact_range(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            path = make_package(
+                Path(temp),
+                "Origo.Core",
+                '<dependency id="Origo.Core.Contracts" version="[1.2.3]" />',
+            )
+            self.assertEqual(0, normalizer.normalize_package(path, None))
+
     def test_version_mismatch_fails(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             path = make_package(
