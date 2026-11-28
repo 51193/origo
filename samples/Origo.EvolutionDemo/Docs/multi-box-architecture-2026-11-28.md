@@ -70,7 +70,9 @@ migration flows, origin box, compatibility rejects, and arena outcomes.
 3. **Migration** — compatibility checks, queue at frame boundaries, stable
    entity transfer, origin box metrics. The core transfer and trait passport
    are implemented; queued/UI-driven migration remains.
-4. **Arena** — neutral all-enabled match rules and comparison output.
+4. **Arena** — neutral all-enabled match rules and comparison output. The
+   ephemeral arena session, cohort import, reproduction/overgrowth suppression,
+   and survivor/winner result are implemented; UI/reporting remain.
 5. **UI and analytics migration** — box configuration, switch/foreground,
    migration controls, box-aware saves and reports. Save selection and
    metrics box identity are implemented; root-origin composite keys and arena
@@ -89,9 +91,10 @@ Stages 1–3 are implemented and tested.
 - `BoxMigration` applies the destination profile to every expressed trait,
   then transfers the stable genome/phenotype and life state without
   recompiling. `evo.rootOriginBox` preserves the origin namespace across boxes.
-- The demo smoke requires two live boxes whose controllers both advance, and
-  migrates a creature across a save/load boundary.
+- The demo smoke requires two live boxes whose controllers both advance,
+  migrates a creature across a save/load boundary, and runs a neutral
+  pond-vs-meadow arena match.
 
 The visible UI is still the foreground pond. Box switching, box creation,
-migration controls, arenas, root-origin composite analytics, and UI-driven
-migration remain.
+migration controls, arena controls/reporting, root-origin composite analytics,
+and UI-driven migration remain.

@@ -4,10 +4,10 @@ using System.Text.Json;
 namespace Origo.EvolutionDemo.Logic;
 
 /// <summary>
-///     Central configurable world settings. The demo keeps a single active
-///     instance for the foreground pond; Tuning exposes read-only proxies so
-///     simulation code keeps a compact call site while the advanced-settings UI
-///     edits this object.
+///     Central configurable world settings. `Tuning` exposes read-only proxies so
+///     simulation code keeps a compact call site. The active instance is scoped
+///     to one controller while WorldSimulation/Overgrowth process that box; the
+///     foreground UI edits the foreground controller's saved config.
 /// </summary>
 public sealed class DemoSettings
 {

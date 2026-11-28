@@ -142,6 +142,8 @@ internal static class DemoKeys
     public const string MigrationsIn = "evo.migrationsIn";
     public const string MigrationsOut = "evo.migrationsOut";
     public const string MigrationRejects = "evo.migrationRejects";
+    public const string ArenaMode = "evo.arena";
+    public const string ArenaCohort = "evo.arenaCohort";
     public const string Children = "evo.children";
     public const string Kills = "evo.kills";
     public const string ReproCooldown = "evo.reproCooldown";

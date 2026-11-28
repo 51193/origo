@@ -34,6 +34,9 @@ public sealed class EvolutionGameSession
     private ISessionManager LiveSessions => _sessionsProvider();
     /// <summary>All registered boxes, including loaded background sessions.</summary>
     public IReadOnlyList<EcologyBox> Boxes => _boxes;
+
+    /// <summary>All-enabled profile used for neutral arena boxes.</summary>
+    public BoxUnlockProfile DefaultProfile => _defaultProfile;
     /// <summary>Foreground box resolved from the current session manager.</summary>
     public EcologyBox ForegroundBox => EnsureForegroundBox();
     /// <summary>Foreground box runtime used by the visible UI.</summary>
@@ -169,6 +172,21 @@ public sealed class EvolutionGameSession
     /// <param name="session">Mounted session.</param>
     /// <summary>Finds a box by stable id.</summary>
     /// <param name="id">Box id.</param>
+    /// <summary>Destroys and unregisters a background box.</summary>
+    /// <param name="id">Box id.</param>
+    public void RemoveBox(string id)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(id);
+        var box = _boxes.FirstOrDefault(item => string.Equals(item.Id, id, StringComparison.Ordinal));
+        if (box is null)
+            return;
+        _boxes.Remove(box);
+        if (box.IsForeground)
+            throw new InvalidOperationException("The foreground box cannot be removed.");
+        LiveSessions.DestroySession(box.Session.LevelId);
+    }
+
+    /// <summary>Finds a box by stable id.</summary>
     public EcologyBox? TryGetBox(string id)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(id);

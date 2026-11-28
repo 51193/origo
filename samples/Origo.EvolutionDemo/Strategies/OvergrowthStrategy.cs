@@ -39,7 +39,23 @@ public sealed class OvergrowthStrategy : LifecycleStrategyBase
     {
         ArgumentNullException.ThrowIfNull(entity);
         ArgumentNullException.ThrowIfNull(ctx);
+        var previous = DemoSettings.Current;
+        try
+        {
+            ProcessWithSettings(entity, ctx);
+        }
+        finally
+        {
+            DemoSettings.Current = previous;
+        }
+    }
+
+    private static void ProcessWithSettings(ISndEntity entity, ISndContext ctx)
+    {
+        if (entity.TryGetData<string>(DemoKeys.ConfigJson) is { found: true, value: { Length: > 0 } config })
+            DemoSettings.Current = DemoSettings.FromJson(config);
         if (!Tuning.OvergrowthEnabled
+            || ReadBool(entity, DemoKeys.ArenaMode, false)
             || !string.Equals(ReadString(entity, DemoKeys.Phase, string.Empty), DemoKeys.PhaseRunning, StringComparison.Ordinal)
             || ReadBool(entity, DemoKeys.Paused, false))
             return;

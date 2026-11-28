@@ -53,6 +53,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   multi-box save, mixed-box input is rejected, and metrics JSON carries a
   `box` object plus per-save `boxId`/`boxProfile`. `--pool` no longer merges
   distinct boxes.
+- **Evolution Demo runs neutral arena matches** — `ArenaMatch` creates an
+  ephemeral all-enabled arena session, imports fixed-size cohorts from two
+  boxes without removing their sources, disables reproduction and overgrowth,
+  and reports survivors and a winner after the match duration. Per-controller
+  settings are scoped around simulation and overgrowth so an arena or
+  background box cannot replace the foreground world defaults.
 - **Evolution Demo migrates creatures between ecology boxes** — `BoxMigration`
   validates the destination profile against every expressed organ, action, and
   sensor, then transfers the genome, phenotype, energy, age, lineage, root
