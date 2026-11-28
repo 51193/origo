@@ -300,7 +300,9 @@ origo-analysis batch \
 It reports per-run population, mutation/root lineages, enrichment founders,
 deaths, mortality shares, roots with deaths, and top-root share/living state.
 The HTML groups runs into high (>1,000 final creatures) and low regimes and
-shows medians for population, roots, predation, and top-root share.
+shows medians for population, roots, predation, top-root share, and the share of
+runs whose top root is still alive. JSON also carries `runCount`, `highRuns`,
+`lowRuns`, and `highShare`.
 
 ## Performance analysis
 

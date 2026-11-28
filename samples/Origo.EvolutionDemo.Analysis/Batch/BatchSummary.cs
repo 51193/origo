@@ -210,10 +210,16 @@ public static class BatchAnalyzer
             writer.WriteNumber("medianRoots", group.MedianRoots);
             WriteNullable(writer, "medianPredationShare", group.MedianPredationShare);
             WriteNullable(writer, "medianTopRootShare", group.MedianTopRootShare);
+            writer.WriteNumber("topRootLivingShare", group.TopRootLivingShare);
             writer.WriteEndObject();
         }
 
         writer.WriteEndArray();
+        var high = report.Runs.Count(static run => run.Regime == "high");
+        writer.WriteNumber("runCount", report.Runs.Count);
+        writer.WriteNumber("highRuns", high);
+        writer.WriteNumber("lowRuns", report.Runs.Count - high);
+        writer.WriteNumber("highShare", report.Runs.Count > 0 ? high / (double)report.Runs.Count : 0d);
         writer.WriteEndObject();
     }
 
@@ -224,14 +230,16 @@ public static class BatchAnalyzer
         ArgumentNullException.ThrowIfNull(report);
         var html = new StringBuilder();
         html.Append("<!doctype html><html><head><meta charset=\"utf-8\"><title>Run comparison</title></head><body>");
-        html.Append("<h1>Run comparison</h1><p>High means final population above 1,000. Top-root share uses tracked deaths.</p>");
-        html.Append("<h2>By regime</h2><table><tr><th>regime</th><th>runs</th><th>median population</th><th>median roots</th><th>median predation</th><th>median top-root share</th></tr>");
+        var highCount = report.Runs.Count(static run => run.Regime == "high");
+        html.Append(CultureInfo.InvariantCulture,
+            $"<h1>Run comparison</h1><p>{highCount}/{report.Runs.Count} runs are high (above 1,000 final creatures). Top-root share uses tracked deaths.</p>");
+        html.Append("<h2>By regime</h2><table><tr><th>regime</th><th>runs</th><th>median population</th><th>median roots</th><th>median predation</th><th>median top-root share</th><th>top root alive</th></tr>");
         foreach (var group in Group(report.Runs))
         {
             html.Append(CultureInfo.InvariantCulture,
                 $"<tr><td>{group.Regime}</td><td>{group.Count}</td><td>{group.MedianPopulation:0}</td>"
                 + $"<td>{group.MedianRoots:0}</td><td>{Percent(group.MedianPredationShare)}</td>"
-                + $"<td>{Percent(group.MedianTopRootShare)}</td></tr>");
+                + $"<td>{Percent(group.MedianTopRootShare)}</td><td>{group.TopRootLivingShare:0%}</td></tr>");
         }
 
         html.Append("</table><h2>Runs</h2><table><tr><th>seed</th><th>regime</th><th>population</th>"
@@ -293,7 +301,8 @@ public static class BatchAnalyzer
                     Median(items.Where(static item => item.PredationShare is not null)
                         .Select(static item => item.PredationShare!.Value)),
                     Median(items.Where(static item => item.TopRootShare is not null)
-                        .Select(static item => item.TopRootShare!.Value)));
+                        .Select(static item => item.TopRootShare!.Value)),
+                    items.Count(static item => item.TopRootLiving == true) / (double)items.Length);
             });
 
     private static double Median(IEnumerable<double> values)
@@ -308,5 +317,5 @@ public static class BatchAnalyzer
 
     private sealed record GroupSummary(
         string Regime, int Count, double MedianPopulation, double MedianRoots,
-        double? MedianPredationShare, double? MedianTopRootShare);
+        double? MedianPredationShare, double? MedianTopRootShare, double TopRootLivingShare);
 }

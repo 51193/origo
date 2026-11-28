@@ -39,7 +39,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Evolution Demo analysis compares runs by regime** — the new `batch`
   command reads per-run metrics JSON and writes a cross-run HTML/CSV/JSON
   comparison of high/low population regimes, root diversity, mortality shares,
-  and top-root dominance.
+  top-root dominance, and top-root survival.
 - **Evolution Demo campaign tests can isolate content controls** — planned,
   idle, cheapest, and greedy policies honor
   `ORIGO_DEMO_CAMPAIGN_ENRICHMENT=0` and
