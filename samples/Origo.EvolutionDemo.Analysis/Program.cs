@@ -33,6 +33,7 @@ internal static class Program
                 "-h" or "--help" => PrintHelp(),
                 "genome" => GenomeCommand([.. args.Skip(1)]),
                 "batch" => BatchCommand([.. args.Skip(1)]),
+                "manifest" => ManifestCommand([.. args.Skip(1)]),
                 "perf" => PerfCommand([.. args.Skip(1)]),
                 "compare" => CompareCommand([.. args.Skip(1)]),
                 _ => Unknown(args[0]),
@@ -74,6 +75,8 @@ internal static class Program
         string? rootLineagesCsv = null;
         string? rootMortalityCsv = null;
         string? rootSurvivalCsv = null;
+        string? eventRatesCsv = null;
+        var rateKeys = new List<string>();
         var timelinePercentiles = false;
         var explicitK = false;
         var explicitStability = false;
@@ -154,6 +157,12 @@ internal static class Program
                     break;
                 case "--root-survival-csv" when i + 1 < args.Length:
                     rootSurvivalCsv = args[++i];
+                    break;
+                case "--event-rates-csv" when i + 1 < args.Length:
+                    eventRatesCsv = args[++i];
+                    break;
+                case "--rate-key" when i + 1 < args.Length:
+                    rateKeys.Add(args[++i]);
                     break;
                 case "--timeline-percentiles":
                     timelinePercentiles = true;
@@ -265,6 +274,12 @@ internal static class Program
             WriteRootMortalityCsv(rootMortalityCsv, mortality, lineage, saveSummaries);
         if (!string.IsNullOrWhiteSpace(rootSurvivalCsv))
             WriteRootSurvivalCsv(rootSurvivalCsv, lineage, mortality, births, saveSummaries);
+        if (!string.IsNullOrWhiteSpace(eventRatesCsv))
+        {
+            if (rateKeys.Count == 0)
+                throw new InvalidOperationException("--event-rates-csv needs at least one --rate-key.");
+            WriteEventRatesCsv(eventRatesCsv, EventRateAnalyzer.Analyze(snapshots, rateKeys));
+        }
         if (!string.IsNullOrWhiteSpace(metricsJson))
             WriteFile(metricsJson, GenomeMetricsJson.Build(reportInput));
         if (!string.IsNullOrWhiteSpace(enrichmentCsv))
@@ -494,6 +509,81 @@ internal static class Program
         Console.WriteLine(string.Create(CultureInfo.InvariantCulture,
             $"batch: {legacy.Runs.Count} runs; wrote {output}"));
         return 0;
+    }
+
+    private static int ManifestCommand(string[] args)
+    {
+        string? root = null;
+        var output = "experiment.manifest.json";
+        string? name = null;
+        string? protocol = null;
+        string? sidecar = null;
+        var labels = new Dictionary<string, string>(StringComparer.Ordinal);
+        var metrics = new List<BatchMetricDefinition>();
+        for (var i = 0; i < args.Length; i++)
+        {
+            switch (args[i])
+            {
+                case "-h" or "--help":
+                    PrintManifestUsage();
+                    return 0;
+                case "--dir" when i + 1 < args.Length:
+                    root = args[++i];
+                    break;
+                case "--out" when i + 1 < args.Length:
+                    output = args[++i];
+                    break;
+                case "--name" when i + 1 < args.Length:
+                    name = args[++i];
+                    break;
+                case "--protocol" when i + 1 < args.Length:
+                    protocol = args[++i];
+                    break;
+                case "--sidecar" when i + 1 < args.Length:
+                    sidecar = args[++i];
+                    break;
+                case "--label" when i + 1 < args.Length:
+                    var (labelKey, labelValue) = ParsePair(args[++i], "--label");
+                    labels[labelKey] = labelValue;
+                    break;
+                case "--metric" when i + 1 < args.Length:
+                    var (metricName, metricPath) = ParsePair(args[++i], "--metric");
+                    metrics.Add(new BatchMetricDefinition(metricName, metricPath));
+                    break;
+                case "--bool-metric" when i + 1 < args.Length:
+                    var (booleanName, booleanPath) = ParsePair(args[++i], "--bool-metric");
+                    metrics.Add(new BatchMetricDefinition(booleanName, booleanPath, BatchMetricKind.Boolean));
+                    break;
+                default:
+                    Console.Error.WriteLine($"Unknown manifest option '{args[i]}'.");
+                    PrintManifestUsage();
+                    return 2;
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(root))
+        {
+            Console.Error.WriteLine("manifest needs --dir <runs-root>.");
+            return 2;
+        }
+
+        var manifest = BatchManifestWriter.Discover(
+            root, output, name, protocol,
+            metrics.Count == 0 ? null : metrics,
+            labels,
+            sidecar ?? "run.json");
+        BatchManifestWriter.Write(output, manifest);
+        Console.WriteLine(string.Create(CultureInfo.InvariantCulture,
+            $"manifest: {manifest.Runs.Count} runs, {manifest.Metrics.Count} metrics; wrote {output}"));
+        return 0;
+
+        static (string Key, string Value) ParsePair(string text, string option)
+        {
+            var index = text.IndexOf('=', StringComparison.Ordinal);
+            if (index <= 0 || index == text.Length - 1)
+                throw new InvalidOperationException($"{option} expects name=value, got '{text}'.");
+            return (text[..index], text[(index + 1)..]);
+        }
     }
 
     private static int PerfCommand(string[] args)
@@ -1068,6 +1158,29 @@ internal static class Program
         }
     }
 
+    private static void WriteEventRatesCsv(string path, IReadOnlyList<EventRate> rates)
+    {
+        EnsureDirectory(path);
+        using var writer = new StreamWriter(path);
+        writer.WriteLine("save,time,intervalSeconds,key,delta,ratePerSecond,reset");
+        foreach (var rate in rates)
+        {
+            writer.Write(Csv(rate.SaveId));
+            writer.Write(',');
+            writer.Write(rate.Time.ToString("0.###", CultureInfo.InvariantCulture));
+            writer.Write(',');
+            writer.Write(rate.IntervalSeconds.ToString("0.###", CultureInfo.InvariantCulture));
+            writer.Write(',');
+            writer.Write(Csv(rate.Key));
+            writer.Write(',');
+            writer.Write(rate.Delta.ToString("0.###", CultureInfo.InvariantCulture));
+            writer.Write(',');
+            writer.Write(rate.RatePerSecond.ToString("0.######", CultureInfo.InvariantCulture));
+            writer.Write(',');
+            writer.WriteLine(rate.Reset ? "1" : "0");
+        }
+    }
+
     private static void WriteFeaturesCsv(string path, IReadOnlyList<FeatureRow> rows, KMeans.Result clustering)
     {
         EnsureDirectory(path);
@@ -1232,7 +1345,23 @@ internal static class Program
         Console.WriteLine("  perf --profile <profile.jsonl> [--out perf.html] [--segment all|last|<index>] [--from <simsec>] [--to <simsec>]");
         Console.WriteLine("  compare --baseline <baseline.jsonl> --current <current.jsonl> [--out compare.html] [options]");
         Console.WriteLine("  batch --metrics <metrics.json> [--metrics ...] [--out batch.html] [--csv batch.csv] [--json batch.json]");
-        Console.WriteLine("Run 'genome --help', 'batch --help', 'perf --help', or 'compare --help' for the command options.");
+        Console.WriteLine("  manifest --dir <runs-root> [--out experiment.manifest.json] [--label k=v] [--metric name=path]");
+        Console.WriteLine("Run 'genome --help', 'batch --help', 'manifest --help', 'perf --help', or 'compare --help' for the command options.");
+    }
+
+    private static void PrintManifestUsage()
+    {
+        Console.WriteLine("Usage: manifest --dir <runs-root> [--out experiment.manifest.json] [options]");
+        Console.WriteLine();
+        Console.WriteLine("  --dir <path>          recursive root containing metrics.json run directories.");
+        Console.WriteLine("  --out <path>          manifest output (default experiment.manifest.json).");
+        Console.WriteLine("  --name <text>         experiment name (default root directory name).");
+        Console.WriteLine("  --protocol <text>     free-form protocol note.");
+        Console.WriteLine("  --label <key=value>   label applied to every run; repeatable.");
+        Console.WriteLine("  --metric <name=path>  numeric metric; repeatable (default standard set).");
+        Console.WriteLine("  --bool-metric <name=path> boolean metric; repeatable.");
+        Console.WriteLine("  --sidecar <name>      per-run label JSON (default run.json).");
+        Console.WriteLine("  -h, --help            Show this help.");
     }
 
     private static void PrintBatchUsage()
@@ -1300,6 +1429,8 @@ internal static class Program
         Console.WriteLine("  --root-lineages-csv <path> One row per living root lineage per save.");
         Console.WriteLine("  --root-mortality-csv <path> One row per root death total per save.");
         Console.WriteLine("  --root-survival-csv <path> One row per root per save with living and death intervals.");
+        Console.WriteLine("  --event-rates-csv <path>   Per-interval rates for selected --rate-key controller counters.");
+        Console.WriteLine("  --rate-key <key>           Controller numeric key to rate; repeatable.");
         Console.WriteLine("  --timeline-percentiles   Add p50/p90/p95 columns for key features to the timeline CSV.");
         Console.WriteLine("  -h, --help               Show this help.");
     }

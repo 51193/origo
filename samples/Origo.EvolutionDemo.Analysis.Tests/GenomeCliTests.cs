@@ -302,6 +302,31 @@ public sealed class GenomeCliTests
     }
 
     [Fact]
+    public void Manifest_DiscoversMetricsAndBatchGroupsByRunLabel()
+    {
+        using var directory = new TemporaryDirectory();
+        var runA = Path.Combine(directory.Path, "run-a");
+        var runB = Path.Combine(directory.Path, "run-b");
+        Directory.CreateDirectory(runA);
+        Directory.CreateDirectory(runB);
+        File.WriteAllText(Path.Combine(runA, "metrics.json"), BatchMetrics(seed: 1, population: 100, roots: 2, enrichment: 0, total: 10, predation: 0.1, topRoot: 1, topDeaths: 5, topLiving: true));
+        File.WriteAllText(Path.Combine(runB, "metrics.json"), BatchMetrics(seed: 2, population: 200, roots: 4, enrichment: 0, total: 20, predation: 0.2, topRoot: 2, topDeaths: 10, topLiving: true));
+        var manifest = Path.Combine(directory.Path, "experiment.json");
+        var csv = Path.Combine(directory.Path, "groups.csv");
+
+        var (manifestCode, manifestOutput, manifestError) = Run(
+            "manifest", "--dir", directory.Path, "--out", manifest,
+            "--metric", "population=saves[-1].creatures", "--label", "policy=planned");
+        Assert.True(manifestCode == 0, manifestOutput + manifestError);
+
+        var (batchCode, batchOutput, batchError) = Run(
+            "batch", "--manifest", manifest, "--group-by", "run", "--out", Path.Combine(directory.Path, "groups.html"), "--csv", csv);
+        Assert.True(batchCode == 0, batchOutput + batchError);
+        Assert.Contains("run-a", File.ReadAllText(csv), StringComparison.Ordinal);
+        Assert.Contains("run-b", File.ReadAllText(csv), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Batch_ManifestGroupsByArbitraryLabels()
     {
         using var directory = new TemporaryDirectory();
@@ -372,6 +397,34 @@ public sealed class GenomeCliTests
         Assert.Contains("extinctRoots", File.ReadLines(csv).First(), StringComparison.Ordinal);
         Assert.Equal(1d, summary.RootElement.GetProperty("groups")[0].GetProperty("topRootLivingShare").GetDouble(), 9);
         Assert.Equal(0d, summary.RootElement.GetProperty("groups")[1].GetProperty("topRootLivingShare").GetDouble(), 9);
+    }
+
+    [Fact]
+    public void Genome_EventRatesCsvUsesSelectedControllerKeys()
+    {
+        using var directory = new TemporaryDirectory();
+        var save1 = SaveFixture.CreateV7Save(
+            directory, "rates_1",
+            SaveFixture.Creatures(SaveFixture.DefaultGenome(), 3),
+            time: 10d,
+            extraControllerPairs: new Dictionary<string, object> { ["evo.births"] = 10d });
+        var save2 = SaveFixture.CreateV7Save(
+            directory, "rates_2",
+            SaveFixture.Creatures(SaveFixture.DefaultGenome(), 3),
+            time: 20d,
+            extraControllerPairs: new Dictionary<string, object> { ["evo.births"] = 40d });
+        var rates = Path.Combine(directory.Path, "rates.csv");
+
+        var (exitCode, output, error) = Run(
+            "genome", "--save", save1, "--save", save2,
+            "--out", Path.Combine(directory.Path, "report.html"),
+            "--event-rates-csv", rates, "--rate-key", "evo.births");
+
+        Assert.True(exitCode == 0, output + error);
+        var lines = File.ReadAllLines(rates);
+        Assert.Equal("save,time,intervalSeconds,key,delta,ratePerSecond,reset", lines[0]);
+        Assert.Contains("evo.births", lines[1], StringComparison.Ordinal);
+        Assert.Contains("30", lines[1], StringComparison.Ordinal);
     }
 
     [Fact]

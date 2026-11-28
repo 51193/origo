@@ -295,6 +295,22 @@ The report contains:
   report lists reader warnings (ignored malformed/unknown entities, integrity
   markers).
 
+### Event-rate intervals
+
+`--event-rates-csv` derives per-interval rates from any cumulative numeric
+controller counter, without game-side changes:
+
+```bash
+origo-analysis genome --save <s1> --save <s2> \
+  --event-rates-csv rates.csv \
+  --rate-key evo.births --rate-key evo.spikeKills
+```
+
+Each row is `save,time,intervalSeconds,key,delta,ratePerSecond,reset`. Counters
+that decrease are treated as a reset and the ending value is used. This is the
+generic mechanism for short-window rates: choose any controller key exposed by
+the game.
+
 ## Batch comparison
 
 `batch` reads per-run metrics JSON files and compares regimes without
@@ -314,6 +330,24 @@ shows medians for population, roots, predation, top-root share, and the share of
 runs whose top root is still alive. JSON also carries `runCount`, `highRuns`,
 `lowRuns`, `highShare`, a 95% Wilson interval (`highShareLow`/`High`), and
 per-run roots-ever/extinct counts.
+
+### Automatic manifest discovery
+
+`manifest` scans a run tree for `metrics.json` files and writes a portable
+manifest:
+
+```bash
+origo-analysis manifest --dir runs/ --out experiment.manifest.json \
+  --name planned-batch --protocol "3600 s, fresh planned" \
+  --label policy=planned
+```
+
+- Every `metrics.json` becomes a run; paths are relative to the output.
+- A flat `run.json` beside `metrics.json` contributes per-run labels; a default
+  `run=<directory>` label is added when absent.
+- `--metric name=path` / `--bool-metric name=path` select custom metrics;
+  without them the current Evolution Demo standard set is emitted.
+- `--label` adds a fixed label to every run.
 
 ### Manifest-driven comparison
 

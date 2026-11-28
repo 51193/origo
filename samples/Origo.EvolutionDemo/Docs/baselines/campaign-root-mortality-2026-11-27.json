@@ -1224,5 +1224,54 @@
     "checkpoint_count": 12
    }
   }
+ },
+ "event_rate_followup_2026-11-28": {
+  "interval_seconds": 300,
+  "cells": {
+   "e1p0": {
+    "evo.births": {
+     "final_rate_per_second": 29.290713,
+     "max_rate_per_second": 29.290713,
+     "final_time": 3600.061
+    },
+    "evo.spikeKills": {
+     "final_rate_per_second": 0.0,
+     "max_rate_per_second": 0.0,
+     "final_time": 3600.061
+    },
+    "evo.starvationDeaths": {
+     "final_rate_per_second": 30.217402,
+     "max_rate_per_second": 30.217402,
+     "final_time": 3600.061
+    },
+    "evo.predationDeaths": {
+     "final_rate_per_second": 0.0,
+     "max_rate_per_second": 0.0,
+     "final_time": 3600.061
+    }
+   },
+   "e1p1": {
+    "evo.births": {
+     "final_rate_per_second": 16.623738,
+     "max_rate_per_second": 23.87916,
+     "final_time": 3600.061
+    },
+    "evo.spikeKills": {
+     "final_rate_per_second": 16.190394,
+     "max_rate_per_second": 21.21719,
+     "final_time": 3600.061
+    },
+    "evo.starvationDeaths": {
+     "final_rate_per_second": 3.106742,
+     "max_rate_per_second": 15.235409,
+     "final_time": 3600.061
+    },
+    "evo.predationDeaths": {
+     "final_rate_per_second": 16.190394,
+     "max_rate_per_second": 21.21719,
+     "final_time": 3600.061
+    }
+   }
+  }
  }
 }
