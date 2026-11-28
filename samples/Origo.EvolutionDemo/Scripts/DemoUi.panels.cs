@@ -138,6 +138,9 @@ public partial class DemoUi
         var resume = WideButton("Resume");
         resume.Pressed += ResumeGame;
         column.AddChild(resume);
+        var boxes = WideButton("Ecology Boxes");
+        boxes.Pressed += OpenBoxes;
+        column.AddChild(boxes);
         var save = WideButton("Save Game");
         save.Pressed += OpenSave;
         column.AddChild(save);

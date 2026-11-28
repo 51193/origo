@@ -53,12 +53,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   multi-box save, mixed-box input is rejected, and metrics JSON carries a
   `box` object plus per-save `boxId`/`boxProfile`. `--pool` no longer merges
   distinct boxes.
-- **Evolution Demo exposes box management** — the `Boxes` HUD button and `G`
-  open the ecology-box panel, which lists every box, switches foreground,
+- **Evolution Demo exposes box management** — the `Eco Boxes` HUD button and
+  `G` open the ecology-box panel, which lists every box, switches foreground,
   pauses/resumes one or all boxes, deletes background boxes, creates
   all-enabled, no-predation, or empty manual-start boxes, and seeds or moves
   the selected creature into a chosen target. Keyboard shortcuts remain
   optional accelerators.
+- **Evolution Demo simplifies the HUD** — the top-left status now shows the
+  essential simulation time, population, generation, food, foreground box, and
+  run state; box management is the first HUD action under `Eco Boxes`.
 - **Evolution Demo supports manually seeded boxes** — `box.manualStart` skips
   default founders for a normal box; the caller seeds it through `Seed` or
   `BoxMigration`. This is the arena model: a regular box with the all-enabled
