@@ -23,7 +23,13 @@ public static class SaveSnapshotReader
     /// <param name="paths">Save roots, level directories, or snd_scene.json files.</param>
     /// <exception cref="FileNotFoundException">A requested path does not exist.</exception>
     /// <exception cref="InvalidOperationException">A directory resolves to several scenes without pooling.</exception>
-    public static IReadOnlyList<SaveSnapshot> Read(params string[] paths) => Read(paths, allowPool: false);
+    public static IReadOnlyList<SaveSnapshot> Read(params string[] paths) => Read(paths, allowPool: false, boxId: null);
+
+    /// <summary>Reads snapshots without selecting a box; mixed-box input is rejected.</summary>
+    /// <param name="paths">Save roots, level directories, or snd_scene.json files.</param>
+    /// <param name="allowPool">Whether a directory may expand to several save scenes.</param>
+    public static IReadOnlyList<SaveSnapshot> Read(IReadOnlyList<string> paths, bool allowPool) =>
+        Read(paths, allowPool, boxId: null);
 
     /// <summary>Reads one snapshot per resolved save scene.</summary>
     /// <param name="paths">Save roots, level directories, or snd_scene.json files.</param>
@@ -31,11 +37,12 @@ public static class SaveSnapshotReader
     ///     When true, a directory that contains several save scenes is analyzed as
     ///     one pooled input; when false it is a hard error.
     /// </param>
+    /// <param name="boxId">Optional ecology box id; selects one box from a multi-box save root.</param>
     /// <exception cref="ArgumentException">The path list is empty or contains a blank entry.</exception>
     /// <exception cref="FileNotFoundException">A requested path does not exist.</exception>
     /// <exception cref="DirectoryNotFoundException">A directory contains no snd_scene.json.</exception>
-    /// <exception cref="InvalidOperationException">A directory resolves to several scenes without pooling.</exception>
-    public static IReadOnlyList<SaveSnapshot> Read(IReadOnlyList<string> paths, bool allowPool)
+    /// <exception cref="InvalidOperationException">A directory resolves to several scenes without pooling, or the input mixes boxes.</exception>
+    public static IReadOnlyList<SaveSnapshot> Read(IReadOnlyList<string> paths, bool allowPool, string? boxId)
     {
         ArgumentNullException.ThrowIfNull(paths);
         if (paths.Count == 0)
@@ -55,7 +62,7 @@ public static class SaveSnapshotReader
                 if (scenes.Length == 0)
                     throw new DirectoryNotFoundException(
                         $"No snd_scene.json was found under save path '{fullPath}'.");
-                if (scenes.Length > 1 && !allowPool)
+                if (scenes.Length > 1 && !allowPool && boxId is null)
                     throw new InvalidOperationException(
                         $"Save path '{fullPath}' contains {scenes.Length} save scenes. "
                         + "Pass each save slot or scene explicitly (repeat --save) or pass --pool to "
@@ -72,8 +79,23 @@ public static class SaveSnapshotReader
             }
         }
 
-        return [.. files.Distinct(StringComparer.Ordinal).OrderBy(static path => path, StringComparer.Ordinal)
-            .Select(ReadSnapshot)];
+        var snapshots = files.Distinct(StringComparer.Ordinal)
+            .OrderBy(static path => path, StringComparer.Ordinal)
+            .Select(ReadSnapshot)
+            .ToArray();
+        if (boxId is not null)
+        {
+            snapshots = [.. snapshots.Where(snapshot =>
+                string.Equals(snapshot.BoxId, boxId, StringComparison.Ordinal))];
+            if (snapshots.Length == 0)
+                throw new InvalidOperationException($"No save scene belongs to ecology box '{boxId}'.");
+        }
+
+        var boxes = snapshots.Select(static snapshot => snapshot.BoxId).Distinct(StringComparer.Ordinal).ToArray();
+        if (boxes.Length > 1)
+            throw new InvalidOperationException(
+                $"Save input mixes ecology boxes [{string.Join(", ", boxes)}]. Pass --box <id> to select one.");
+        return snapshots;
     }
 
     private static SaveSnapshot ReadSnapshot(string path)
@@ -144,6 +166,13 @@ public static class SaveSnapshotReader
                 throw new InvalidDataException(
                     $"Save '{path}' is not a v{SupportedGenomeVersion:0} save "
                     + $"(evo.genomeVersion='{version}'). The analysis tool supports only the current save schema.");
+            if (!controllerStrings.TryGetValue("box.id", out var boxIdValue) || string.IsNullOrWhiteSpace(boxIdValue))
+                throw new InvalidDataException(
+                    $"Save '{path}' has no box.id controller value; the analysis tool requires a box-scoped save.");
+            if (!controllerStrings.TryGetValue("box.profile", out var boxProfileValue)
+                || string.IsNullOrWhiteSpace(boxProfileValue))
+                throw new InvalidDataException(
+                    $"Save '{path}' has no box.profile controller value; the analysis tool requires a box-scoped save.");
             if (!controllerNumbers.TryGetValue("evo.time", out _) || !controllerNumbers.TryGetValue("evo.tick", out _))
                 throw new InvalidDataException(
                     $"Save '{path}' has no evo.time/evo.tick controller value; time-series analysis "
@@ -179,6 +208,8 @@ public static class SaveSnapshotReader
                 path, malformedEntities, unknownKindEntities, skipped.Count, foodWithoutPosition);
             return new SaveSnapshot(
                 ResolveId(path),
+                boxIdValue,
+                boxProfileValue,
                 path,
                 controllerNumbers["evo.time"],
                 controllerNumbers["evo.tick"],
@@ -328,6 +359,8 @@ public sealed record CreatureSkip(string Name, string Reason);
 /// <param name="Warnings">Reader warnings (integrity markers, ignored entities, skipped creatures).</param>
 public sealed record SaveSnapshot(
     string Id,
+    string BoxId,
+    string BoxProfile,
     string Path,
     double Time,
     double Tick,

@@ -27,7 +27,9 @@ public sealed record SaveSummary(
     int FoodSources,
     IReadOnlyDictionary<string, double> ControllerNumbers,
     IReadOnlyDictionary<string, string> ControllerStrings,
-    IReadOnlyDictionary<string, bool> ControllerBooleans);
+    IReadOnlyDictionary<string, bool> ControllerBooleans,
+    string BoxId = "pond",
+    string BoxProfile = "all");
 
 /// <summary>Resolved genome command options recorded in the report provenance.</summary>
 /// <param name="Seed">Random seed for sampling, k-means/Jaccard restarts, and bootstrap ARI.</param>

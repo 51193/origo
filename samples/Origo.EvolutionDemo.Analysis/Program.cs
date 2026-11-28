@@ -67,6 +67,7 @@ internal static class Program
         var minClusterSize = 0;
         var allowSkips = false;
         var pool = false;
+        string? boxId = null;
         string? timelineCsv = null;
         string? metricsJson = null;
         string? enrichmentCsv = null;
@@ -134,6 +135,9 @@ internal static class Program
                 case "--pool":
                     pool = true;
                     break;
+                case "--box" when i + 1 < args.Length:
+                    boxId = args[++i];
+                    break;
                 case "--timeline-csv" when i + 1 < args.Length:
                     timelineCsv = args[++i];
                     break;
@@ -177,7 +181,7 @@ internal static class Program
             saves.Count, maxCreatures, requestedK, method, mode, stabilityRounds, dbscanEps,
             dbscanMinPoints, minClusterSize, explicitK, explicitStability, explicitEps,
             explicitMinPoints, explicitMinClusterSize));
-        var snapshots = SaveSnapshotReader.Read([.. saves], pool);
+        var snapshots = SaveSnapshotReader.Read([.. saves], pool, boxId);
         var ecology = SaveEcologyAnalyzer.Analyze(snapshots);
         var lineage = SaveLineageAnalyzer.Analyze(snapshots);
         var mortality = SaveMortalityAnalyzer.Analyze(snapshots);
@@ -370,7 +374,9 @@ internal static class Program
                 snapshot.FoodSources,
                 snapshot.ControllerNumbers,
                 snapshot.ControllerStrings,
-                snapshot.ControllerBooleans);
+                snapshot.ControllerBooleans,
+                snapshot.BoxId,
+                snapshot.BoxProfile);
         })];
     }
 
@@ -1409,6 +1415,7 @@ internal static class Program
         Console.WriteLine();
         Console.WriteLine("  --save <path>            v7 save root, scene directory, or snd_scene.json; repeat to pool.");
         Console.WriteLine("  --pool                   allow one --save directory to expand to several save scenes.");
+        Console.WriteLine("  --box <id>               select one ecology box from multi-box saves.");
         Console.WriteLine("  --out <path>             HTML report (default genome-report.html).");
         Console.WriteLine("                           A sibling .clusters.csv is always written.");
         Console.WriteLine("  --max <n>                Per-save analyzed row cap; 0 analyzes every creature (default 5000).");

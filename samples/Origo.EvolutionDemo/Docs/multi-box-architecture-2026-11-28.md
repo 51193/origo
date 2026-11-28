@@ -72,7 +72,9 @@ migration flows, origin box, compatibility rejects, and arena outcomes.
    are implemented; queued/UI-driven migration remains.
 4. **Arena** — neutral all-enabled match rules and comparison output.
 5. **UI and analytics migration** — box configuration, switch/foreground,
-   migration controls, box-aware saves and reports.
+   migration controls, box-aware saves and reports. Save selection and
+   metrics box identity are implemented; root-origin composite keys and arena
+   reporting remain.
 
 ## Status
 
@@ -91,4 +93,5 @@ Stages 1–3 are implemented and tested.
   migrates a creature across a save/load boundary.
 
 The visible UI is still the foreground pond. Box switching, box creation,
-migration controls, arenas, and box-aware analytics remain.
+migration controls, arenas, root-origin composite analytics, and UI-driven
+migration remain.

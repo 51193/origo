@@ -47,6 +47,7 @@ public static class GenomeMetricsJson
             writer.WriteString("tool", ToolName);
             writer.WriteString("command", "genome");
             writer.WriteString("commandLine", input.CommandLine);
+            WriteBox(writer, input);
             WriteOptions(writer, input);
             WritePopulation(writer, input);
             WriteLineageSequence(writer, "lineageSequence", input.Lineage.Sequence);
@@ -65,6 +66,17 @@ public static class GenomeMetricsJson
         }
 
         return System.Text.Encoding.UTF8.GetString(stream.ToArray());
+    }
+
+    private static void WriteBox(Utf8JsonWriter writer, GenomeReportInput input)
+    {
+        if (input.Saves.Count == 0)
+            return;
+        var box = input.Saves[0];
+        writer.WriteStartObject("box");
+        writer.WriteString("id", box.BoxId);
+        writer.WriteString("profile", box.BoxProfile);
+        writer.WriteEndObject();
     }
 
     private static void WriteOptions(Utf8JsonWriter writer, GenomeReportInput input)
@@ -105,6 +117,8 @@ public static class GenomeMetricsJson
         {
             writer.WriteStartObject();
             writer.WriteString("id", save.Id);
+            writer.WriteString("boxId", save.BoxId);
+            writer.WriteString("boxProfile", save.BoxProfile);
             writer.WriteString("path", save.Path);
             writer.WriteNumber("time", save.Time);
             writer.WriteNumber("tick", save.Tick);
