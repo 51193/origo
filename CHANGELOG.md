@@ -418,6 +418,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   unlock state are box-scoped and live in the box controller/save payload.
 ### Fixed
 
+- **Evolution Demo foreground switches no longer retain disposed boxes** —
+  switching foreground now purges boxes whose sessions were destroyed, resets
+  the selected/display context, and refreshes the new foreground's saved
+  settings. The box panel tolerates the transient no-foreground window instead
+  of querying a disposed `SessionRun`. The demo smoke exercises a pond → meadow
+  → pond switch with the box panel open.
+
 - **camera_view reports points in the near half of the frustum** — the
   projection helper clipped NDC Z against [0, 1], but Godot's CPU camera
   projection maps near to -1 and far to +1. Perspective points closer than the

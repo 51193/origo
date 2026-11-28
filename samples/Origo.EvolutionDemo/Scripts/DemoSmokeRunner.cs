@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using Godot;
+using Origo.Core.Abstractions.Entity;
 using Origo.EvolutionDemo.Logic;
 using Origo.EvolutionDemo.Logic.Gameplay;
 
@@ -32,6 +33,9 @@ public partial class DemoSmokeRunner : Node
     private string? _migrationMigrantName;
     private string? _migrationGenome;
     private string? _migrationSourceBox;
+    private int _switchSmokePhase;
+    private int _switchSmokeWait;
+    private bool _switchPanelOpened;
     private int _migrationRootLineage;
     private float _savedTime;
     private int _restoredCreatures;
@@ -589,9 +593,11 @@ public partial class DemoSmokeRunner : Node
                     break;
                 var fastForwarded = ui.SmokeStats();
                 AssertWithinCaps(fastForwarded);
-                if (fastForwarded.time < _fastForwardStartTime + 2f)
+                if (_switchSmokePhase == 0 && fastForwarded.time < _fastForwardStartTime + 2f)
                     throw new InvalidOperationException("Timed iteration did not advance simulation time.");
                 var expectedCheckpoints = VerifyIterateCheckpoints();
+                if (!RunForegroundSwitchSmoke())
+                    break;
                 RunManualBoxSmoke();
                 if (!string.IsNullOrWhiteSpace(_benchmarkSaveSlot))
                 {
@@ -713,6 +719,65 @@ public partial class DemoSmokeRunner : Node
         File.AppendAllText(path, line + System.Environment.NewLine);
     }
 
+    private bool RunForegroundSwitchSmoke()
+    {
+        var manager = _entry.Runtime.SessionManager;
+        var foreground = manager.ForegroundSession;
+        switch (_switchSmokePhase)
+        {
+            case 0:
+                if (!_switchPanelOpened)
+                {
+                    _switchPanelOpened = true;
+                    Input.ParseInputEvent(new InputEventKey
+                    {
+                        Keycode = Key.G,
+                        Pressed = true,
+                    });
+                }
+
+                _entry.Context.Save.RequestSwitchForegroundLevel("box_meadow");
+                _switchSmokePhase = 1;
+                _switchSmokeWait = 0;
+                return false;
+            case 1:
+                _switchSmokeWait++;
+                if (_switchSmokeWait > StartupFrameLimit)
+                    throw new InvalidOperationException("Foreground switch to meadow did not complete.");
+                if (foreground?.LevelId != "box_meadow")
+                    return false;
+                _entry.Context.Save.RequestSwitchForegroundLevel("pond");
+                _switchSmokePhase = 2;
+                _switchSmokeWait = 0;
+                return false;
+            case 2:
+                _switchSmokeWait++;
+                if (_switchSmokeWait > StartupFrameLimit)
+                    throw new InvalidOperationException("Foreground switch back to pond did not complete.");
+                if (foreground?.LevelId != "pond")
+                    return false;
+                _entry.Session.EnsureTopology(createDefaultBackground: true);
+                _switchSmokePhase = 3;
+                _switchSmokeWait = 0;
+                return false;
+            case 3:
+                _switchSmokeWait++;
+                if (_switchSmokeWait > StartupFrameLimit)
+                    throw new InvalidOperationException("Restored meadow did not start.");
+                var meadow = _entry.Session.TryGetBox("meadow")?.Controller;
+                if (meadow is null || ReadFloat(meadow, DemoKeys.Time) <= 0f)
+                    return false;
+                _switchSmokePhase = 4;
+                GD.Print("DEMO_FOREGROUND_SWITCH_OK");
+                return true;
+            default:
+                return true;
+        }
+    }
+
+    private static float ReadFloat(ISndEntity entity, string key) =>
+        entity.TryGetData<float>(key) is { found: true } value ? value.value : 0f;
+
     private void RunManualBoxSmoke()
     {
         var source = _entry.Session.TryGetBox("pond")
@@ -816,7 +881,10 @@ public partial class DemoSmokeRunner : Node
                 ?? throw new InvalidOperationException($"Box '{box.Id}' has no controller.");
             var time = controller.TryGetData<float>(DemoKeys.Time) is { found: true } value ? value.value : 0f;
             if (time <= 0f)
-                throw new InvalidOperationException($"Box '{box.Id}' did not advance time.");
+                throw new InvalidOperationException(
+                    $"Box '{box.Id}' did not advance time " +
+                    $"(session={box.Session.LevelId}, ref={ReferenceEquals(sessions.TryGet(box.LevelId), box.Session)}, " +
+                    $"fg={box.IsForeground}, entities={box.Session.GetEntities().Count}).");
         }
 
         GD.Print($"DEMO_BOXES count={boxes.Length} " + string.Join(' ', boxes.Select(box =>
