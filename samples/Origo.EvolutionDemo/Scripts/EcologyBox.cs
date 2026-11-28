@@ -15,13 +15,15 @@ public sealed class EcologyBox
     /// <param name="runtime">Box-owned gameplay runtime.</param>
     /// <param name="session">Mounted session.</param>
     /// <param name="seed">Simulation seed.</param>
+    /// <param name="rootBase">Namespace base for stable root lineage ids.</param>
     public EcologyBox(
         string id,
         string levelId,
         BoxUnlockProfile profile,
         GameplayRuntime runtime,
         ISessionRun session,
-        int seed)
+        int seed,
+        int rootBase)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
         ArgumentException.ThrowIfNullOrWhiteSpace(levelId);
@@ -34,6 +36,7 @@ public sealed class EcologyBox
         Runtime = runtime;
         Session = session;
         Seed = seed;
+        RootBase = rootBase;
     }
 
     /// <summary>Stable box id.</summary>
@@ -53,6 +56,9 @@ public sealed class EcologyBox
 
     /// <summary>Simulation seed.</summary>
     public int Seed { get; }
+
+    /// <summary>Namespace base for this box's stable root lineage ids.</summary>
+    public int RootBase { get; }
 
     /// <summary>Whether this box is the visible foreground session.</summary>
     public bool IsForeground => Session.IsFrontSession;

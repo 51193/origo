@@ -138,6 +138,7 @@ internal static class DemoKeys
     public const string BoxId = "box.id";
     public const string BoxProfile = "box.profile";
     public const string BoxSeed = "box.seed";
+    public const string BoxRootBase = "box.rootBase";
     public const string RootOriginBox = "evo.rootOriginBox";
     public const string MigrationsIn = "evo.migrationsIn";
     public const string MigrationsOut = "evo.migrationsOut";

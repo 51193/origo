@@ -62,7 +62,7 @@ public partial class DemoEntry : OrigoDefaultEntry
         var profile = BoxUnlockProfile.All(gameplayRuntime.Content);
         var foreground = Runtime.SessionManager.ForegroundSession
             ?? throw new InvalidOperationException("The demo has no foreground session.");
-        if (BoxProfileCodec.TryRead(foreground, out _, out _, out _))
+        if (BoxProfileCodec.TryRead(foreground, out _, out _, out _, out _))
         {
             Session.AttachLoadedBox(foreground);
         }

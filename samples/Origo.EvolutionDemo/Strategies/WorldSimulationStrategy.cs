@@ -258,8 +258,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 NextHeading(rng),
                 MathF.Min(Tuning.InitialEnergy, phenotype.MaxEnergy),
                 0,
-                (i % founderLineages) + 1,
-                (i % founderLineages) + 1,
+                box.RootBase + ((i % founderLineages) + 1),
+                box.RootBase + ((i % founderLineages) + 1),
                 "founder",
                 0f,
                 box.Id));
@@ -363,7 +363,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         var session = EvolutionGameSession.For(ctx);
         var box = session.BoxFor(controller.OwningSession);
         var world = new EvolutionTickContext(
-            controller, ctx, Tuning.SimulationTickSeconds, session, box.Runtime, box.Id);
+            controller, ctx, Tuning.SimulationTickSeconds, session, box.Runtime, box.Id, box.RootBase);
         session.Profiler.Begin();
         box.Runtime.Pipeline.Tick(world, static _ => true,
             session.Profiler.Enabled
@@ -469,8 +469,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                             NextHeading(rng),
                             MathF.Min(Tuning.InitialEnergy, candidate.Phenotype.MaxEnergy),
                             0,
-                            injectedLineage,
-                            injectedLineage,
+                            world.RootBase + injectedLineage,
+                            world.RootBase + injectedLineage,
                             "innovation",
                             0f,
                             world.BoxId));

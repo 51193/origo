@@ -138,8 +138,8 @@ internal sealed class FoodEnrichmentSpawnHandler : IGameplayHandler<SpawnPolicyC
             (float)(context.Rng.NextDouble() * MathF.Tau),
             MathF.Min(Tuning.InitialEnergy, founder.Phenotype.MaxEnergy),
             0,
-            lineage,
-            lineage,
+            box.RootBase + lineage,
+            box.RootBase + lineage,
             "enrichment",
             0f,
             box.Id));

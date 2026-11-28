@@ -96,5 +96,4 @@ Stages 1–3 are implemented and tested.
   pond-vs-meadow arena match.
 
 The visible UI is still the foreground pond. Box switching, box creation,
-migration controls, arena controls/reporting, root-origin composite analytics,
-and UI-driven migration remain.
+migration controls, arena controls/reporting, and UI-driven migration remain.
