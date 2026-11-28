@@ -198,6 +198,28 @@ public sealed class GameplayRuntime
     public GameplayModuleHost Modules { get; }
     public GameplayPipeline Pipeline { get; }
 
+    /// <summary>Box-scoped genomic gate; never shared between boxes.</summary>
+    public GenomeContentGate GenomeGate { get; private set; } = GenomeContentGate.Open;
+
+    /// <summary>Applies a box-scoped unlock profile to this runtime.</summary>
+    /// <exception cref="ArgumentNullException"><paramref name="profile" /> is null.</exception>
+    /// <exception cref="InvalidOperationException">The profile names an unknown unlock.</exception>
+    public void ApplyBoxProfile(BoxUnlockProfile profile)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+        foreach (var unlock in profile.UnlockIds)
+            if (!Content.Unlocks.ContainsKey(unlock))
+                throw new InvalidOperationException($"Box profile '{profile.Id}' names unknown unlock '{unlock}'.");
+        Progression.Mode = GameplayMode.Profile;
+        Progression.Points = 0;
+        Progression.PassivePointProgress = 0;
+        Progression.UnlockedIds.Clear();
+        Progression.UnlockedIds.UnionWith(profile.UnlockIds);
+        Progression.CompletedMilestones.Clear();
+        Progression.PendingInnovationUnlocks.Clear();
+        RefreshContentGates();
+    }
+
     /// <summary>Resets progression for a fresh campaign test and refreshes content gates.</summary>
     public void ResetCampaignProgression()
     {
@@ -304,6 +326,17 @@ public sealed class GameplayRuntime
         }
     }
 
+    /// <summary>Creates a runtime whose content gates are fixed to one box profile.</summary>
+    public static GameplayRuntime CreateForBox(
+        BoxUnlockProfile profile,
+        IReadOnlyList<IGameplayModule>? modules = null)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+        var runtime = CreateDefault(modules, GameplayMode.Profile);
+        runtime.ApplyBoxProfile(profile);
+        return runtime;
+    }
+
     public static GameplayRuntime CreateDefault(
         IReadOnlyList<IGameplayModule>? modules = null,
         GameplayMode mode = GameplayMode.Sandbox)
@@ -328,27 +361,28 @@ public sealed class GameplayRuntime
     /// <summary>Demo-scoped runtime; replaced by a scoped host during later migration.</summary>
     private void ConfigureGenomeGate()
     {
-        GenomeContentGate.OrganFilter = organ =>
-        {
-            var id = GameplayContentIds.ForOrgan(organ);
-            return id is null || Unlocks.IsContentAvailable(id);
-        };
-        GenomeContentGate.ActionFilter = action =>
-        {
-            var id = GameplayContentIds.ForAction(action);
-            return id is null || Unlocks.IsContentAvailable(id);
-        };
-        GenomeContentGate.SensorFilter = sensor =>
-        {
-            var id = GameplayContentIds.ForSensor(sensor);
-            return id is null || Unlocks.IsContentAvailable(id);
-        };
+        GenomeGate = new GenomeContentGate(
+            organ =>
+            {
+                var id = GameplayContentIds.ForOrgan(organ);
+                return id is null || Unlocks.IsContentAvailable(id);
+            },
+            action =>
+            {
+                var id = GameplayContentIds.ForAction(action);
+                return id is null || Unlocks.IsContentAvailable(id);
+            },
+            sensor =>
+            {
+                var id = GameplayContentIds.ForSensor(sensor);
+                return id is null || Unlocks.IsContentAvailable(id);
+            });
     }
 
     /// <summary>Advances passive points and evaluates milestones for one simulation tick.</summary>
     public void TickProgression(double deltaSeconds, MilestoneMetrics metrics)
     {
-        if (Progression.Mode == GameplayMode.Sandbox)
+        if (Progression.Mode != GameplayMode.Campaign)
             return;
         if (deltaSeconds > 0d)
         {

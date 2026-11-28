@@ -170,9 +170,10 @@ public static class GenomeV4Factory
     ///     small random hidden layer. This replaces the fixed calibrated lattice
     ///     without reducing the founder's phenotype surface.
     /// </summary>
-    public static GenomeV4 CreateDemoFounder(Random random)
+    public static GenomeV4 CreateDemoFounder(Random random, GenomeContentGate? gate = null)
     {
         ArgumentNullException.ThrowIfNull(random);
+        gate ??= GenomeContentGate.Open;
         var genes = new List<GeneV4>();
         var next = 1u;
         uint Add(GeneKind kind, byte[] payload, byte copies = 1)
@@ -204,7 +205,7 @@ public static class GenomeV4Factory
 
         void AddOrganIfAllowed(OrganKindV4 kind, float size, double chance = 1d, byte copies = 1)
         {
-            if (GenomeContentGate.IsOrganAllowed(kind) && random.NextDouble() < chance)
+            if (gate.IsOrganAllowed(kind) && random.NextDouble() < chance)
                 Add(GeneKind.Organ, GenePayloadV4.Organ(kind, size), copies);
         }
 
@@ -219,7 +220,7 @@ public static class GenomeV4Factory
         AddOrganIfAllowed(OrganKindV4.Sprint, 0.5f, 0.5d);
         AddOrganIfAllowed(OrganKindV4.Armor, 0.8f, 0.25d);
         var foodTypeVision = false;
-        if (GenomeContentGate.IsOrganAllowed(OrganKindV4.FoodTypeVision)
+        if (gate.IsOrganAllowed(OrganKindV4.FoodTypeVision)
             && random.NextDouble() < 0.2d)
         {
             Add(GeneKind.Organ, GenePayloadV4.Organ(OrganKindV4.FoodTypeVision, 0.5f));
@@ -229,7 +230,7 @@ public static class GenomeV4Factory
         var sensorIds = new List<uint>();
         void AddSensorIfAllowed(SensorKindV4 sensor)
         {
-            if (GenomeContentGate.IsSensorAllowed(sensor))
+            if (gate.IsSensorAllowed(sensor))
                 sensorIds.Add(Add(GeneKind.Neuron, GenePayloadV4.Neuron(
                     NeuronKindV4.Sensor, (ushort)sensor, ActivationKindV4.Linear, 0f)));
         }
@@ -259,7 +260,7 @@ public static class GenomeV4Factory
         var outputIds = new List<uint>();
         void AddOutputIfAllowed(ActionKindV4 action, float bias)
         {
-            if (GenomeContentGate.IsActionAllowed(action))
+            if (gate.IsActionAllowed(action))
                 outputIds.Add(Add(GeneKind.Neuron, GenePayloadV4.Neuron(
                     NeuronKindV4.Output, (ushort)action, ActivationKindV4.Tanh, bias)));
         }
@@ -272,7 +273,7 @@ public static class GenomeV4Factory
 
         void AddReflexIfAllowed(SensorKindV4 sensor, ActionKindV4 action, float gain)
         {
-            if (GenomeContentGate.IsSensorAllowed(sensor) && GenomeContentGate.IsActionAllowed(action))
+            if (gate.IsSensorAllowed(sensor) && gate.IsActionAllowed(action))
                 Add(GeneKind.Reflex, GenePayloadV4.Reflex(sensor, action, gain));
         }
 

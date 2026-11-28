@@ -31,10 +31,10 @@ public sealed class CreatureGenome
     public BodyPhenotype Phenotype => DemoPhenotypeAdapter.ToBodyPhenotype(Genome);
 
     /// <summary>Creates a V4 founder with a variable body and neural graph.</summary>
-    public static CreatureGenome RandomFounder(Random random)
+    public static CreatureGenome RandomFounder(Random random, GenomeContentGate? gate = null)
     {
         ArgumentNullException.ThrowIfNull(random);
-        return new CreatureGenome(GenomeV4Factory.CreateDemoFounder(random));
+        return new CreatureGenome(GenomeV4Factory.CreateDemoFounder(random, gate));
     }
 
     /// <summary>Decodes a serialized V4 genome.</summary>
@@ -76,7 +76,8 @@ public sealed class CreatureGenome
         CreatureGenome parent,
         MutationProfile profile,
         Random random,
-        out int changes)
+        out int changes,
+        GenomeContentGate? gate = null)
     {
         ArgumentNullException.ThrowIfNull(parent);
         ArgumentNullException.ThrowIfNull(profile);
@@ -84,7 +85,7 @@ public sealed class CreatureGenome
         var working = parent.Genome.Clone();
         for (var step = 0; step < profile.Steps; step++)
         {
-            var next = GenomeV4Mutator.Mutate(working, random, profile.Settings);
+            var next = GenomeV4Mutator.Mutate(working, random, profile.Settings, gate);
             if (string.Equals(new CreatureGenome(next).Body,
                     new CreatureGenome(working).Body, StringComparison.Ordinal))
                 continue;

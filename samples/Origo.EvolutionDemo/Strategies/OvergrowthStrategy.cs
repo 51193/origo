@@ -135,13 +135,15 @@ public sealed class OvergrowthStrategy : LifecycleStrategyBase
             return;
 
         var mutationProfile = MutationProfile.ForOvergrowth(DemoSettings.Current, rng);
+        var gate = EvolutionGameSession.For(ctx).Runtime.GenomeGate;
         var childGenome = CreatureGenome.Mutate(
             parentGenome,
             mutationProfile,
             rng,
-            out var changes);
+            out var changes,
+            gate);
         if (changes == 0)
-            childGenome = CreatureGenome.Mutate(childGenome, mutationProfile, rng, out changes);
+            childGenome = CreatureGenome.Mutate(childGenome, mutationProfile, rng, out changes, gate);
         var childPhenotype = childGenome.Phenotype;
 
         var generation = Math.Max(0, ReadInt(parent, DemoKeys.Generation, 0)) + 1;

@@ -4,7 +4,7 @@ using Xunit;
 
 namespace Origo.EvolutionDemo.Logic.Tests;
 
-public sealed class GameplayRuntimeTests : System.IDisposable
+public sealed class GameplayRuntimeTests
 {
     [Fact]
     public void ExternalContent_MergesWithoutLosingCoreProgression()
@@ -90,11 +90,5 @@ public sealed class GameplayRuntimeTests : System.IDisposable
         Assert.Equal("food_enrichment_spawn", runtime.Resolver.Resolve("spawn.policy")?.HandlerId);
     }
 
-    public void Dispose()
-    {
-        Origo.EvolutionDemo.Logic.V4.GenomeContentGate.OrganFilter = static _ => true;
-        Origo.EvolutionDemo.Logic.V4.GenomeContentGate.ActionFilter = static _ => true;
-        Origo.EvolutionDemo.Logic.V4.GenomeContentGate.SensorFilter = static _ => true;
-    }
 
 }

@@ -12,6 +12,9 @@ public enum GameplayMode
 
     /// <summary>Full sandbox content, used by benchmarks and free play.</summary>
     Sandbox = 1,
+
+    /// <summary>Box-scoped fixed unlock set; no points or milestones.</summary>
+    Profile = 2,
 }
 
 /// <summary>Persistent account-wide progression state.</summary>
@@ -62,16 +65,16 @@ public sealed class UnlockService(GameplayContentSnapshot content, GameplayProgr
     {
         if (_progression.UnlockedIds.Contains(unlockId))
             return true;
-        // Sandbox is the historical benchmark ecosystem: the optional
-        // enrichment spawn policy remains off unless explicitly purchased.
         if (_progression.Mode != GameplayMode.Sandbox)
             return false;
+        // Sandbox is the historical benchmark ecosystem: the optional
+        // enrichment spawn policy remains off unless explicitly purchased.
         return !string.Equals(unlockId, "unlock.spawn.enrichment", StringComparison.Ordinal);
     }
 
     public bool CanUnlock(string unlockId)
     {
-        if (_progression.Mode == GameplayMode.Sandbox)
+        if (_progression.Mode is GameplayMode.Sandbox or GameplayMode.Profile)
             return false;
         if (!Content.Unlocks.TryGetValue(unlockId, out var definition))
             return false;

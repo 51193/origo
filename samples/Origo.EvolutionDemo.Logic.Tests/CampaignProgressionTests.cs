@@ -6,21 +6,21 @@ using Xunit;
 
 namespace Origo.EvolutionDemo.Logic.Tests;
 
-public sealed class CampaignProgressionTests : IDisposable
+public sealed class CampaignProgressionTests
 {
     [Fact]
     public void CampaignStart_IsPrimordialAndContentGated()
     {
         var runtime = GameplayRuntime.CreateDefault(null, GameplayMode.Campaign);
         Assert.True(GameplayRuntime.CreateDefault(null, GameplayMode.Campaign).Unlocks.IsUnlocked("unlock.core"));
-        Assert.True(GenomeContentGate.IsOrganAllowed(OrganKindV4.Vision));
-        Assert.False(GenomeContentGate.IsOrganAllowed(OrganKindV4.HardDigest));
-        Assert.False(GenomeContentGate.IsOrganAllowed(OrganKindV4.SpikeOrgan));
-        Assert.False(GenomeContentGate.IsOrganAllowed(OrganKindV4.FoodTypeVision));
-        Assert.True(GenomeContentGate.IsSensorAllowed(SensorKindV4.FoodAhead));
-        Assert.False(GenomeContentGate.IsSensorAllowed(SensorKindV4.FoodTough));
-        Assert.True(GenomeContentGate.IsActionAllowed(ActionKindV4.Move));
-        Assert.False(GenomeContentGate.IsActionAllowed(ActionKindV4.Spike));
+        Assert.True(runtime.GenomeGate.IsOrganAllowed(OrganKindV4.Vision));
+        Assert.False(runtime.GenomeGate.IsOrganAllowed(OrganKindV4.HardDigest));
+        Assert.False(runtime.GenomeGate.IsOrganAllowed(OrganKindV4.SpikeOrgan));
+        Assert.False(runtime.GenomeGate.IsOrganAllowed(OrganKindV4.FoodTypeVision));
+        Assert.True(runtime.GenomeGate.IsSensorAllowed(SensorKindV4.FoodAhead));
+        Assert.False(runtime.GenomeGate.IsSensorAllowed(SensorKindV4.FoodTough));
+        Assert.True(runtime.GenomeGate.IsActionAllowed(ActionKindV4.Move));
+        Assert.False(runtime.GenomeGate.IsActionAllowed(ActionKindV4.Spike));
 
         var settings = DemoSettings.Defaults();
         CampaignProgressionRules.ApplyStartSettings(settings, runtime.Progression);
@@ -39,8 +39,8 @@ public sealed class CampaignProgressionTests : IDisposable
         var runtime = GameplayRuntime.CreateDefault(null, GameplayMode.Sandbox);
         Assert.True(runtime.Unlocks.IsContentAvailable("gene.organ.spike"));
         Assert.True(runtime.Unlocks.IsContentAvailable("gene.organ.food_type_vision"));
-        Assert.True(GenomeContentGate.IsOrganAllowed(OrganKindV4.SpikeOrgan));
-        Assert.True(GenomeContentGate.IsSensorAllowed(SensorKindV4.FoodTough));
+        Assert.True(runtime.GenomeGate.IsOrganAllowed(OrganKindV4.SpikeOrgan));
+        Assert.True(runtime.GenomeGate.IsSensorAllowed(SensorKindV4.FoodTough));
         Assert.False(runtime.Unlocks.IsContentAvailable("mechanic.spawn.enrichment"));
         Assert.Equal("spawn.base", runtime.Resolver.Resolve("spawn.policy")?.Id);
         Assert.False(runtime.TryUnlock("unlock.forage.hard_digest"));
@@ -104,10 +104,4 @@ public sealed class CampaignProgressionTests : IDisposable
         Assert.Empty(runtime.TakePendingInnovations());
     }
 
-    public void Dispose()
-    {
-        GenomeContentGate.OrganFilter = static _ => true;
-        GenomeContentGate.ActionFilter = static _ => true;
-        GenomeContentGate.SensorFilter = static _ => true;
-    }
 }

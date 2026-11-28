@@ -589,18 +589,21 @@ public static class GenomeV4Mutator
     public static GenomeV4 Mutate(
         GenomeV4 parent,
         Random random,
-        GenomeMutationSettingsV4? settings = null)
+        GenomeMutationSettingsV4? settings = null,
+        GenomeContentGate? gate = null)
     {
         ArgumentNullException.ThrowIfNull(parent);
         ArgumentNullException.ThrowIfNull(random);
-        var child = MutateCore(parent, random, settings);
-        return CanCompile(child) ? child : parent.Clone();
+        gate ??= GenomeContentGate.Open;
+        var child = MutateCore(parent, random, settings, gate);
+        return CanCompile(child, gate) ? child : parent.Clone();
     }
 
     private static GenomeV4 MutateCore(
         GenomeV4 parent,
         Random random,
-        GenomeMutationSettingsV4? settings)
+        GenomeMutationSettingsV4? settings,
+        GenomeContentGate gate)
     {
         settings ??= new GenomeMutationSettingsV4();
         var totalWeight = settings.Expression + settings.CopyCount + settings.Duplicate + settings.Delete
@@ -649,7 +652,7 @@ public static class GenomeV4Mutator
         cursor += settings.AddNeuron;
         if (roll < cursor)
         {
-            AddNeuron(child, random);
+            AddNeuron(child, random, gate);
             return child;
         }
 
@@ -663,14 +666,14 @@ public static class GenomeV4Mutator
         cursor += settings.AddReflex;
         if (roll < cursor)
         {
-            AddReflex(child, random);
+            AddReflex(child, random, gate);
             return child;
         }
 
         cursor += settings.AddOrgan;
         if (roll < cursor)
         {
-            AddOrgan(child, random);
+            AddOrgan(child, random, gate);
             return child;
         }
 
@@ -685,14 +688,14 @@ public static class GenomeV4Mutator
         return child;
     }
 
-    private static bool CanCompile(GenomeV4 genome)
+    private static bool CanCompile(GenomeV4 genome, GenomeContentGate gate)
     {
         try
         {
             GenomeV4Validator.Validate(genome);
             var phenotype = GenomeV4Compiler.Compile(genome, ExpressionContextV4.Neutral);
-            if (phenotype.SensorPorts.Any(port => !GenomeContentGate.IsSensorAllowed((SensorKindV4)port))
-                || phenotype.ActionPorts.Any(port => !GenomeContentGate.IsActionAllowed((ActionKindV4)port)))
+            if (phenotype.SensorPorts.Any(port => !gate.IsSensorAllowed((SensorKindV4)port))
+                || phenotype.ActionPorts.Any(port => !gate.IsActionAllowed((ActionKindV4)port)))
                 return false;
             return true;
         }
@@ -780,7 +783,7 @@ public static class GenomeV4Mutator
         BitConverter.GetBytes(value).CopyTo(payload, offset);
     }
 
-    private static void AddNeuron(GenomeV4 genome, Random random)
+    private static void AddNeuron(GenomeV4 genome, Random random, GenomeContentGate gate)
     {
         var kind = random.Next(3) switch
         {
@@ -795,12 +798,12 @@ public static class GenomeV4Mutator
             SensorKindV4.CorpseAhead, SensorKindV4.Sin, SensorKindV4.Cos,
             SensorKindV4.FoodSoft, SensorKindV4.FoodTough, SensorKindV4.FoodToxic,
             SensorKindV4.FoodValueAhead, SensorKindV4.FoodValueLeft, SensorKindV4.FoodValueRight,
-        }.Where(GenomeContentGate.IsSensorAllowed).ToArray();
+        }.Where(gate.IsSensorAllowed).ToArray();
         var actionCandidates = new[]
         {
             ActionKindV4.Move, ActionKindV4.Turn, ActionKindV4.Spike,
             ActionKindV4.Aim, ActionKindV4.Sprint,
-        }.Where(GenomeContentGate.IsActionAllowed).ToArray();
+        }.Where(gate.IsActionAllowed).ToArray();
         if (kind == NeuronKindV4.Sensor && sensorCandidates.Length == 0)
             return;
         if (kind == NeuronKindV4.Output && actionCandidates.Length == 0)
@@ -831,7 +834,7 @@ public static class GenomeV4Mutator
             from.Id, to.Id, (float)((random.NextDouble() * 2d) - 1d)));
     }
 
-    private static void AddReflex(GenomeV4 genome, Random random)
+    private static void AddReflex(GenomeV4 genome, Random random, GenomeContentGate gate)
     {
         var sensors = new[]
         {
@@ -840,12 +843,12 @@ public static class GenomeV4Mutator
             SensorKindV4.CorpseAhead, SensorKindV4.Sin, SensorKindV4.Cos,
             SensorKindV4.FoodSoft, SensorKindV4.FoodTough, SensorKindV4.FoodToxic,
             SensorKindV4.FoodValueAhead, SensorKindV4.FoodValueLeft, SensorKindV4.FoodValueRight,
-        }.Where(GenomeContentGate.IsSensorAllowed).ToArray();
+        }.Where(gate.IsSensorAllowed).ToArray();
         var actions = new[]
         {
             ActionKindV4.Move, ActionKindV4.Turn, ActionKindV4.Spike,
             ActionKindV4.Aim, ActionKindV4.Sprint,
-        }.Where(GenomeContentGate.IsActionAllowed).ToArray();
+        }.Where(gate.IsActionAllowed).ToArray();
         if (sensors.Length == 0 || actions.Length == 0)
             return;
         AddGene(genome, GeneKind.Reflex, GenePayloadV4.Reflex(
@@ -854,7 +857,7 @@ public static class GenomeV4Mutator
             (float)((random.NextDouble() * 2d) - 1d)));
     }
 
-    private static void AddOrgan(GenomeV4 genome, Random random)
+    private static void AddOrgan(GenomeV4 genome, Random random, GenomeContentGate gate)
     {
         var allowed = new[]
         {
@@ -862,7 +865,7 @@ public static class GenomeV4Mutator
             OrganKindV4.HardDigest, OrganKindV4.ToxinResistance, OrganKindV4.Rhythm,
             OrganKindV4.CreatureSense, OrganKindV4.CarrionSense, OrganKindV4.Sprint,
             OrganKindV4.Armor, OrganKindV4.FoodTypeVision,
-        }.Where(GenomeContentGate.IsOrganAllowed).ToArray();
+        }.Where(gate.IsOrganAllowed).ToArray();
         if (allowed.Length == 0)
             return;
         AddGene(genome, GeneKind.Organ, GenePayloadV4.Organ(

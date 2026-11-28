@@ -9,6 +9,7 @@ namespace Origo.EvolutionDemo;
 public sealed class EvolutionGameSession
 {
     private static readonly ConditionalWeakTable<ISndContext, EvolutionGameSession> Sessions = [];
+    private static readonly ConditionalWeakTable<Origo.Core.Abstractions.Lifecycle.ISessionRun, EvolutionGameSession> RunSessions = [];
 
     public EvolutionGameSession(ISndContext context, GameplayRuntime runtime)
     {
@@ -28,6 +29,22 @@ public sealed class EvolutionGameSession
     {
         ArgumentNullException.ThrowIfNull(session);
         Sessions.AddOrUpdate(session.Context, session);
+    }
+
+    /// <summary>Binds one box session to its gameplay owner.</summary>
+    public static void RegisterSession(Origo.Core.Abstractions.Lifecycle.ISessionRun run, EvolutionGameSession session)
+    {
+        ArgumentNullException.ThrowIfNull(run);
+        ArgumentNullException.ThrowIfNull(session);
+        RunSessions.AddOrUpdate(run, session);
+    }
+
+    public static EvolutionGameSession ForSession(Origo.Core.Abstractions.Lifecycle.ISessionRun session)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        return RunSessions.TryGetValue(session, out var value)
+            ? value
+            : throw new InvalidOperationException($"No evolution gameplay session is registered for level '{session.LevelId}'.");
     }
 
     public static EvolutionGameSession For(ISndContext context)
