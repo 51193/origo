@@ -71,7 +71,9 @@ internal static class SaveStorageFacade
     ///     <see cref="SaveAtomicWriter.SwapSnapshotDirectory" />: when the real
     ///     slot is missing but a complete <c>.bak</c> snapshot exists, restore
     ///     the backup as the real slot. Incomplete backups are left untouched
-    ///     and are never enumerated as slots.
+    ///     and are never enumerated as slots; a backup that is complete except
+    ///     for a legacy level-directory name is reported as an actionable
+    ///     migration failure by the snapshot read entry points.
     /// </summary>
     internal static void RecoverInterruptedSnapshots(SaveFileHandle handle)
     {
@@ -84,6 +86,13 @@ internal static class SaveStorageFacade
             RecoverInterruptedSnapshot(handle, saveId, backupRel);
     }
 
+    /// <summary>
+    ///     Read-entry recovery: promote a complete backup; report the legacy
+    ///     level-directory migration failure when that naming is the only
+    ///     reason the backup cannot be promoted; otherwise leave the
+    ///     incomplete backup untouched so the strict read reports the missing
+    ///     payload.
+    /// </summary>
     private static void RecoverInterruptedSnapshot(SaveFileHandle handle, string saveId)
     {
         // A missing save root is the normal "no saves yet" state: direct
@@ -93,16 +102,33 @@ internal static class SaveStorageFacade
             return;
 
         var realRel = handle.PathPolicy.GetSaveDirectory(saveId);
-        if (handle.MetaAccess.DirectoryExists(handle.GetAbsolutePath(realRel)))
+        var realAbs = handle.GetAbsolutePath(realRel);
+        if (handle.MetaAccess.DirectoryExists(realAbs))
             return;
 
         if (!handle.PathPolicy.EnumerateInterruptedSnapshots(
                 handle.MetaAccess, handle.SaveRootPath).TryGetValue(saveId, out var backupRel))
             return;
 
-        RecoverInterruptedSnapshot(handle, saveId, backupRel);
+        var backupAbs = handle.GetAbsolutePath(backupRel);
+        if (!handle.MetaAccess.DirectoryExists(backupAbs))
+            return;
+
+        var inspection = InspectSnapshot(handle, backupRel);
+        if (inspection.Completeness == SnapshotCompleteness.InvalidLevelDirectories)
+            throw SavePayloadReader.CreateLegacyLevelDirectoryException(
+                $"the interrupted backup '{backupRel}' of save '{saveId}'",
+                inspection.InvalidLevelDirectories);
+
+        if (inspection.Completeness == SnapshotCompleteness.Complete)
+            handle.MetaAccess.Rename(backupAbs, realAbs);
     }
 
+    /// <summary>
+    ///     Enumeration recovery: promote only a complete backup. Discovery
+    ///     must stay inert for every incomplete snapshot, including one whose
+    ///     only defect is a legacy level-directory name.
+    /// </summary>
     private static void RecoverInterruptedSnapshot(
         SaveFileHandle handle,
         string saveId,
@@ -117,7 +143,7 @@ internal static class SaveStorageFacade
         if (!handle.MetaAccess.DirectoryExists(backupAbs))
             return;
 
-        if (IsCompleteSnapshot(handle, backupRel))
+        if (InspectSnapshot(handle, backupRel).Completeness == SnapshotCompleteness.Complete)
             handle.MetaAccess.Rename(backupAbs, realAbs);
     }
 
@@ -129,51 +155,83 @@ internal static class SaveStorageFacade
                && handle.MetaAccess.FileExists(handle.GetAbsolutePath(stateMachinesRel));
     }
 
-    private static bool IsCompleteSnapshot(SaveFileHandle handle, string snapshotRel)
+    /// <summary>
+    ///     Classifies why a snapshot can or cannot be promoted. The read path
+    ///     distinguishes a backup whose only defect is a legacy level-directory
+    ///     name (actionable migration) from one that is genuinely incomplete
+    ///     (generic missing-payload failure), so an incomplete backup is never
+    ///     misreported as loadable after a rename.
+    /// </summary>
+    private static SnapshotInspection InspectSnapshot(SaveFileHandle handle, string snapshotRel)
     {
-        var progressRel = handle.PathPolicy.GetProgressFile(snapshotRel);
-        var stateMachinesRel = handle.PathPolicy.GetProgressStateMachinesFile(snapshotRel);
-        if (!handle.MetaAccess.FileExists(handle.GetAbsolutePath(progressRel))
-            || !handle.MetaAccess.FileExists(handle.GetAbsolutePath(stateMachinesRel)))
-            return false;
+        if (!HasSnapshotRootFiles(handle, snapshotRel))
+            return new SnapshotInspection(SnapshotCompleteness.Incomplete, []);
 
         var snapshotAbs = handle.GetAbsolutePath(snapshotRel);
-        var hasLevel = false;
+        var invalidLevelDirectories = new List<string>();
+        var hasCompleteLevel = false;
+        var hasIncompleteLevel = false;
         foreach (var levelDir in handle.MetaAccess.EnumerateDirectories(snapshotAbs))
         {
             var levelId = handle.PathPolicy.TryGetLevelIdFromDirectory(levelDir);
             if (levelId is null)
                 continue;
 
+            // A legacy level directory is only the sole defect when its
+            // payload files are present; renaming an empty or partial
+            // directory would not make the backup loadable. Derive the path
+            // from the snapshot root and the discovered leaf instead of
+            // round-tripping through relative-path extraction: a dot-only or
+            // trailing-dots legacy name is a valid POSIX directory and must
+            // not trip the traversal guard.
+            if (!SavePathLayout.IsValidLevelId(levelId))
+            {
+                var legacyLevelRel = SavePathLayout.Combine(
+                    snapshotRel, SaveFileHandle.GetLeafDirectoryName(levelDir));
+                if (HasLevelPayloadFiles(handle, legacyLevelRel))
+                    invalidLevelDirectories.Add(SaveFileHandle.GetLeafDirectoryName(levelDir));
+                else
+                    hasIncompleteLevel = true;
+                continue;
+            }
+
             // Round-trip the discovered ID through the policy's canonical
             // level path so the completeness check uses exactly the path the
-            // writer would use, not the raw directory leaf. A malformed level
-            // directory name is treated as an incomplete backup and left
-            // untouched, so one stray remnant cannot break listing.
-            string levelRel;
-            try
-            {
-                levelRel = handle.PathPolicy.GetLevelDirectory(snapshotRel, levelId);
-            }
-            catch (ArgumentException)
-            {
-                return false;
-            }
-
-            var hasScene = handle.MetaAccess.FileExists(handle.GetAbsolutePath(
-                handle.PathPolicy.GetLevelSndSceneFile(levelRel)));
-            var hasSession = handle.MetaAccess.FileExists(handle.GetAbsolutePath(
-                handle.PathPolicy.GetLevelSessionFile(levelRel)));
-            var hasStateMachines = handle.MetaAccess.FileExists(handle.GetAbsolutePath(
-                handle.PathPolicy.GetLevelSessionStateMachinesFile(levelRel)));
-            if (!hasScene || !hasSession || !hasStateMachines)
-                return false;
-
-            hasLevel = true;
+            // writer would use, not the raw directory leaf.
+            var levelRel = handle.PathPolicy.GetLevelDirectory(snapshotRel, levelId);
+            if (HasLevelPayloadFiles(handle, levelRel))
+                hasCompleteLevel = true;
+            else
+                hasIncompleteLevel = true;
         }
 
-        return hasLevel;
+        if (invalidLevelDirectories.Count > 0 && !hasIncompleteLevel)
+            return new SnapshotInspection(
+                SnapshotCompleteness.InvalidLevelDirectories, invalidLevelDirectories);
+        if (hasCompleteLevel && !hasIncompleteLevel)
+            return new SnapshotInspection(SnapshotCompleteness.Complete, []);
+
+        return new SnapshotInspection(SnapshotCompleteness.Incomplete, []);
     }
+
+    private static bool HasLevelPayloadFiles(SaveFileHandle handle, string levelDirectoryRel) =>
+        handle.MetaAccess.FileExists(handle.GetAbsolutePath(
+            handle.PathPolicy.GetLevelSndSceneFile(levelDirectoryRel)))
+        && handle.MetaAccess.FileExists(handle.GetAbsolutePath(
+            handle.PathPolicy.GetLevelSessionFile(levelDirectoryRel)))
+        && handle.MetaAccess.FileExists(handle.GetAbsolutePath(
+            handle.PathPolicy.GetLevelSessionStateMachinesFile(levelDirectoryRel)));
+
+    private enum SnapshotCompleteness
+    {
+        Complete,
+        Incomplete,
+        InvalidLevelDirectories
+    }
+
+    private sealed record SnapshotInspection(
+        SnapshotCompleteness Completeness,
+        IReadOnlyList<string> InvalidLevelDirectories);
 
     /// <summary>
     ///     True when the policy sees a slot whose ID differs from

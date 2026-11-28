@@ -418,14 +418,15 @@ internal static class SavePayloadReader
     }
 
     /// <summary>
-    ///     Builds the strict-read failure for legacy level directories whose
-    ///     names do not satisfy the level identity rule. The writer intentionally
-    ///     preserves such directories for an explicit migration, so the reader
-    ///     must name them and instruct the rename instead of failing with an
-    ///     opaque path-validation error.
+    ///     Builds the failure for legacy level directories whose names do not
+    ///     satisfy the level identity rule. The writer intentionally preserves
+    ///     such directories for an explicit migration, so both a strict read
+    ///     and interrupted-backup recovery must name them and instruct the
+    ///     rename instead of failing with an opaque path-validation or generic
+    ///     missing-payload error.
     /// </summary>
-    private static InvalidOperationException CreateLegacyLevelDirectoryException(
-        string location, List<string> directoryNames)
+    internal static InvalidOperationException CreateLegacyLevelDirectoryException(
+        string location, IReadOnlyList<string> directoryNames)
     {
         var noun = directoryNames.Count == 1 ? "directory" : "directories";
         var names = string.Join("', '", directoryNames);

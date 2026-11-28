@@ -500,6 +500,253 @@ public class SaveStorageAndPayloadTests
     }
 
     [Fact]
+    public void SaveStorageFacade_ReadProgressFromSnapshot_LegacyLevelInOnlyBackup_ThrowsMigrationError()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        SeedLegacyLevelSnapshot(fs, "root/save_legacy.bak");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => SaveStorageFacade.ReadProgressNodeFromSnapshot(handle, "legacy"));
+
+        Assert.Contains("level_Town", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("lowercase", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("save_legacy.bak", ex.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain("Missing required progress.json", ex.Message, StringComparison.Ordinal);
+
+        // The read must report the migration failure without promoting or
+        // deleting the only remaining copy.
+        Assert.True(fs.DirectoryExists("root/save_legacy.bak"));
+        Assert.False(fs.DirectoryExists("root/save_legacy"));
+    }
+
+    [Fact]
+    public void SaveStorageFacade_ReadSavePayloadFromSnapshot_LegacyLevelInOnlyBackup_ThrowsMigrationError()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        SeedLegacyLevelSnapshot(fs, "root/save_legacy.bak");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => SaveStorageFacade.ReadSavePayloadFromSnapshot(handle, "legacy", "default"));
+
+        Assert.Contains("level_Town", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("save_legacy.bak", ex.Message, StringComparison.Ordinal);
+        Assert.True(fs.DirectoryExists("root/save_legacy.bak"));
+        Assert.False(fs.DirectoryExists("root/save_legacy"));
+    }
+
+    [Fact]
+    public void SaveStorageFacade_TryReadLevelPayloadFromSnapshot_LegacyLevelInOnlyBackup_ThrowsMigrationError()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        SeedLegacyLevelSnapshot(fs, "root/save_legacy.bak");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => SaveStorageFacade.TryReadLevelPayloadFromSnapshot(handle, "legacy", "default"));
+
+        Assert.Contains("level_Town", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("save_legacy.bak", ex.Message, StringComparison.Ordinal);
+        Assert.True(fs.DirectoryExists("root/save_legacy.bak"));
+    }
+
+    [Fact]
+    public void DefaultSaveStorageService_ReadSavePayloadFromSnapshot_LegacyLevelInOnlyBackup_ThrowsMigrationError()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var service = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
+        SeedLegacyLevelSnapshot(fs, "root/save_legacy.bak");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => service.ReadSavePayloadFromSnapshot("legacy", "default"));
+
+        Assert.Contains("level_Town", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("save_legacy.bak", ex.Message, StringComparison.Ordinal);
+        Assert.True(fs.DirectoryExists("root/save_legacy.bak"));
+        Assert.False(fs.DirectoryExists("root/save_legacy"));
+    }
+
+    [Fact]
+    public void SaveStorageFacade_ReadProgressFromSnapshot_MultipleLegacyLevelsInBackup_ThrowsMigrationErrorNamingAll()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        SeedLegacyLevelSnapshot(fs, "root/save_legacy.bak");
+        SeedLevelFiles(fs, "root/save_legacy.bak", "level_City");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => SaveStorageFacade.ReadProgressNodeFromSnapshot(handle, "legacy"));
+
+        // One failure must name every offending directory so a multi-level
+        // legacy save can be migrated in one pass.
+        Assert.Contains("level_Town", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("level_City", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("directories", ex.Message, StringComparison.Ordinal);
+        Assert.True(fs.DirectoryExists("root/save_legacy.bak"));
+    }
+
+    [Fact]
+    public void SaveStorageFacade_ReadProgressFromSnapshot_DotOnlyLegacyLevelInOnlyBackup_ThrowsMigrationError()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        SeedSnapshotRootFiles(fs, "root/save_legacy.bak");
+        SeedLevelFiles(fs, "root/save_legacy.bak", "level_..");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => SaveStorageFacade.ReadProgressNodeFromSnapshot(handle, "legacy"));
+
+        // Dot-only legacy ids are a valid POSIX directory name. Recovery must
+        // report the migration error rather than leaking the path-traversal
+        // ArgumentException from relative-path extraction.
+        Assert.Contains("level_..", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("lowercase", ex.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain("path traversal", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.True(fs.DirectoryExists("root/save_legacy.bak"));
+        Assert.False(fs.DirectoryExists("root/save_legacy"));
+    }
+
+    [Fact]
+    public void SaveStorageFacade_ReadProgressFromSnapshot_TrailingDotsLegacyLevelInOnlyBackup_ThrowsMigrationError()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        SeedSnapshotRootFiles(fs, "root/save_legacy.bak");
+        SeedLevelFiles(fs, "root/save_legacy.bak", "level_room..");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => SaveStorageFacade.ReadProgressNodeFromSnapshot(handle, "legacy"));
+
+        Assert.Contains("level_room..", ex.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain("path traversal", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.True(fs.DirectoryExists("root/save_legacy.bak"));
+    }
+
+    [Fact]
+    public void SaveStorageFacade_EnumerateSaveIds_EmptyDotOnlyLevelBackup_DoesNotThrowOrPromote()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        SeedSnapshotRootFiles(fs, "root/save_legacy.bak");
+        fs.CreateDirectory("root/save_legacy.bak/level_..");
+
+        // An empty dot-only directory is not complete enough to be reported as
+        // a migration failure, but it must never break listing or the probe.
+        var ids = SaveStorageFacade.EnumerateSaveIds(handle);
+
+        Assert.Empty(ids);
+        using var progress = SaveStorageFacade.ReadProgressNodeFromSnapshot(handle, "legacy");
+        Assert.Null(progress);
+        Assert.True(fs.DirectoryExists("root/save_legacy.bak"));
+        Assert.False(fs.DirectoryExists("root/save_legacy"));
+    }
+
+    [Fact]
+    public void SaveStorageFacade_ReadProgressFromSnapshot_LegacyLevelBackupWithValidSibling_ThrowsMigrationError()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        SeedCompleteSnapshot(fs, "root/save_legacy.bak");
+        SeedLevelFiles(fs, "root/save_legacy.bak", "level_Town");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => SaveStorageFacade.ReadProgressNodeFromSnapshot(handle, "legacy"));
+
+        // The invalid sibling is the only reason the otherwise complete
+        // backup cannot be promoted, so the migration error must win over the
+        // generic missing-progress error.
+        Assert.Contains("level_Town", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("save_legacy.bak", ex.Message, StringComparison.Ordinal);
+        Assert.True(fs.DirectoryExists("root/save_legacy.bak"));
+    }
+
+    [Fact]
+    public void SaveStorageFacade_ReadProgressFromSnapshot_IncompleteLegacyLevelBackup_ReturnsNull()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        SeedLegacyLevelSnapshot(fs, "root/save_legacy.bak");
+        fs.Delete("root/save_legacy.bak/level_Town/session.json");
+
+        using var progress = SaveStorageFacade.ReadProgressNodeFromSnapshot(handle, "legacy");
+
+        // Renaming would not make this backup loadable; it stays an
+        // incomplete backup and must not be reported as a migration failure.
+        Assert.Null(progress);
+        Assert.True(fs.DirectoryExists("root/save_legacy.bak"));
+        Assert.False(fs.DirectoryExists("root/save_legacy"));
+    }
+
+    [Fact]
+    public void SaveStorageFacade_ReadProgressFromSnapshot_LegacyLevelWithIncompleteValidSibling_ReturnsNull()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        SeedCompleteSnapshot(fs, "root/save_legacy.bak");
+        SeedLevelFiles(fs, "root/save_legacy.bak", "level_Town");
+        fs.Delete("root/save_legacy.bak/level_default/session.json");
+
+        using var progress = SaveStorageFacade.ReadProgressNodeFromSnapshot(handle, "legacy");
+
+        // A valid sibling is still incomplete, so the legacy name is not the
+        // only defect; the backup keeps the generic incomplete-backup result.
+        Assert.Null(progress);
+        Assert.True(fs.DirectoryExists("root/save_legacy.bak"));
+        Assert.False(fs.DirectoryExists("root/save_legacy"));
+    }
+
+    [Fact]
+    public void SaveStorageFacade_EnumerateSaveIds_LegacyLevelBackupWithValidSibling_DoesNotPromote()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        SeedCompleteSnapshot(fs, "root/save_legacy.bak");
+        SeedLevelFiles(fs, "root/save_legacy.bak", "level_Town");
+
+        var ids = SaveStorageFacade.EnumerateSaveIds(handle);
+
+        // Listing must stay inert: the legacy name blocks promotion, and a
+        // discovery surface must not throw for it.
+        Assert.Empty(ids);
+        Assert.True(fs.DirectoryExists("root/save_legacy.bak"));
+        Assert.False(fs.DirectoryExists("root/save_legacy"));
+    }
+
+    [Fact]
+    public void DefaultSaveStorageService_ReadSavePayloadFromSnapshot_CustomLayoutLegacyLevelBackup_ThrowsMigrationError()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var service = new DefaultSaveStorageService(
+            metaAccess, dataSourceIo, pathResolver, "root", new PrefixedRecoveryPathPolicy());
+        SeedCompleteCustomSnapshot(fs, "root/custom_save_recovered.bak");
+        SeedLevelFiles(fs, "root/custom_save_recovered.bak", "custom_level_Town");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => service.ReadSavePayloadFromSnapshot("recovered", "default"));
+
+        // Detection must follow the injected policy's level-directory naming,
+        // and the message must name the backup path that was actually found.
+        Assert.Contains("custom_level_Town", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("custom_save_recovered.bak", ex.Message, StringComparison.Ordinal);
+        Assert.True(fs.DirectoryExists("root/custom_save_recovered.bak"));
+        Assert.False(fs.DirectoryExists("root/custom_save_recovered"));
+    }
+
+    [Fact]
     public void SaveStorageFacade_SnapshotCurrentToSave_PreservesRootMarkerButCopiesArchiveMarker()
     {
         var fs = new TestMemoryFileSystem();
@@ -565,6 +812,25 @@ public class SaveStorageAndPayloadTests
         fs.SeedFile($"{root}/level_default/snd_scene.json", "[]");
         fs.SeedFile($"{root}/level_default/session.json", "{}");
         fs.SeedFile($"{root}/level_default/session_state_machines.json", """{"machines":[]}""");
+    }
+
+    private static void SeedLegacyLevelSnapshot(TestMemoryFileSystem fs, string root)
+    {
+        SeedSnapshotRootFiles(fs, root);
+        SeedLevelFiles(fs, root, "level_Town");
+    }
+
+    private static void SeedSnapshotRootFiles(TestMemoryFileSystem fs, string root)
+    {
+        fs.SeedFile($"{root}/progress.json", "{}");
+        fs.SeedFile($"{root}/progress_state_machines.json", """{"machines":[]}""");
+    }
+
+    private static void SeedLevelFiles(TestMemoryFileSystem fs, string root, string levelDirectoryName)
+    {
+        fs.SeedFile($"{root}/{levelDirectoryName}/snd_scene.json", "[]");
+        fs.SeedFile($"{root}/{levelDirectoryName}/session.json", "{}");
+        fs.SeedFile($"{root}/{levelDirectoryName}/session_state_machines.json", """{"machines":[]}""");
     }
 
     private static void SeedSnapshotWithLevels(

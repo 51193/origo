@@ -62,7 +62,7 @@ DefaultSaveStorageService.WriteSavePayloadToCurrentThenSnapshot(...)
 
 > Note: `current/.payload.sha` is written after `WriteToCurrent` completes, before the snapshot marker is recreated, carrying the combined hash (payload + `extra/` directory); the snapshot's `.payload.sha` is used for idempotent dedup.
 
-> Save IDs must not end in `.tmp` or `.bak`: those suffixes are reserved for the staging and backup directories above. A crash between the two renames is recovered when the slot is next listed or read; a complete `.bak` is restored as the real slot, and incomplete staging/backup directories are never listed as saves.
+> Save IDs must not end in `.tmp` or `.bak`: those suffixes are reserved for the staging and backup directories above. A crash between the two renames is recovered when the slot is next listed or read; a complete `.bak` is restored as the real slot, and incomplete staging/backup directories are never listed as saves. A backup whose only defect is a legacy level-directory name is not promoted; a direct read reports the actionable migration error naming the backup path instead.
 
 ## Strict Read Rules
 
@@ -73,7 +73,7 @@ DefaultSaveStorageService.WriteSavePayloadToCurrentThenSnapshot(...)
 - **Format version newer than the supported one** → throw exception (refuses to load future saves)
 - **A level referenced by the topology has no payload** (foreground or background) → throw exception (an inconsistent topology; both foreground and background reject the silent fallback to an empty session)
 - **A payload level not referenced by the topology** → throw exception (an unreferenced level would otherwise be read and silently ignored, losing its state on the next save)
-- **A level directory whose name is not a valid level identity** (legacy mixed case or trailing period) → throw a migration error that names the director(y/ies) and instructs the lowercase/path-safe rename; the writer preserves such legacy data for explicit migration, so the reader neither skips it silently nor exposes a raw path-validation error
+- **A level directory whose name is not a valid level identity** (legacy mixed case or trailing period) → throw a migration error that names the director(y/ies) and instructs the lowercase/path-safe rename; the writer preserves such legacy data for explicit migration, so the reader neither skips it silently nor exposes a raw path-validation error. Snapshot read recovery raises the same error when a legacy level directory is the only reason an interrupted `.bak` backup cannot be promoted
 
 ## DataSourceNode Ownership
 
