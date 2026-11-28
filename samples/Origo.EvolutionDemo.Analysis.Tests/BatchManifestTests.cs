@@ -32,6 +32,8 @@ public sealed class BatchManifestTests
         Assert.Equal(2, a.Runs);
         Assert.Equal(150d, Assert.Single(a.Metrics, metric => metric.Name == "population").Median!.Value, 9);
         Assert.Equal(0.5d, Assert.Single(a.Metrics, metric => metric.Name == "alive").Proportion!.Value, 9);
+        Assert.Equal(36.6666666666667d,
+            Assert.Single(a.Metrics, metric => metric.Name == "perRoot").Median!.Value, 9);
         var b = Assert.Single(report.Groups, group => group.Labels["mechanic"] == "mechanic-b");
         Assert.Equal(300d, Assert.Single(b.Metrics, metric => metric.Name == "population").Median!.Value, 9);
         Assert.Equal(1d, Assert.Single(b.Metrics, metric => metric.Name == "alive").Proportion!.Value, 9);
@@ -99,11 +101,12 @@ public sealed class BatchManifestTests
             schemaVersion = 1,
             name = "arbitrary-mechanic-test",
             protocol = "synthetic",
-            metrics = new[]
+            metrics = new object[]
             {
                 new { name = "population", path = "saves[-1].creatures", kind = "number" },
                 new { name = "roots", path = "saves[-1].rootLineage.count", kind = "number" },
                 new { name = "predation", path = "mortalitySequence.predationShare", kind = "number" },
+                new { name = "perRoot", expression = "population / roots", kind = "number" },
                 new { name = "alive", path = "rootMortalitySequence.topRootLiving", kind = "boolean" },
             },
             runs = new[]

@@ -319,7 +319,8 @@ axes in labels and the outcome columns in JSON paths:
     {"name": "population", "path": "saves[-1].creatures"},
     {"name": "roots", "path": "saves[-1].rootLineage.count"},
     {"name": "topRootShare", "path": "rootMortalitySequence.topRootShare"},
-    {"name": "topRootLiving", "path": "rootMortalitySequence.topRootLiving", "kind": "boolean"}
+    {"name": "topRootLiving", "path": "rootMortalitySequence.topRootLiving", "kind": "boolean"},
+    {"name": "deathsPerLiving", "expression": "deaths / population"}
   ],
   "runs": [
     {
@@ -336,11 +337,14 @@ origo-analysis batch --manifest experiment.json --group-by variant,trait \
 ```
 
 - Metrics are addressed by a restricted JSON path: object keys plus `[n]`/`[-1]`
-  array indexes.
+  array indexes, or by an arithmetic `expression` over **earlier** numeric
+  metrics (`+ - * /`, parentheses, numbers, metric names).
 - Labels are arbitrary strings; `--group-by` selects any subset. Missing labels
   fail explicitly.
 - Numeric metrics report count/min/median/max. Boolean metrics report a
   proportion with a 95% Wilson interval.
+- Expressions are evaluated in manifest order; reference earlier metrics only,
+  and division by zero or non-finite results fail explicitly.
 - `schemaVersion` must be 1; the schema is
   [manifest.schema.json](Batch/manifest.schema.json).
 - The legacy `--metrics` mode keeps the population high/low view as a

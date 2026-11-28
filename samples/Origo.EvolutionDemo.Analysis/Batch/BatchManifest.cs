@@ -24,8 +24,11 @@ public interface IBatchMetricSelector
     /// <summary>Output name.</summary>
     string Name { get; }
 
-    /// <summary>Restricted JSON dot path.</summary>
+    /// <summary>Restricted JSON dot path; empty when <see cref="Expression" /> is used.</summary>
     string JsonPath { get; }
+
+    /// <summary>Optional arithmetic expression over earlier numeric metrics.</summary>
+    string? Expression { get; }
 
     /// <summary>Value kind.</summary>
     BatchMetricKind Kind { get; }
@@ -43,9 +46,14 @@ public interface IBatchRunSource
 
 /// <summary>One metric selected from each run's metrics JSON.</summary>
 /// <param name="Name">Output column name.</param>
-/// <param name="JsonPath">Dot path with optional array indexes, e.g. saves[-1].creatures.</param>
+/// <param name="JsonPath">Dot path with optional array indexes; empty when <paramref name="Expression" /> is used.</param>
 /// <param name="Kind">Value kind.</param>
-public sealed record BatchMetricDefinition(string Name, string JsonPath, BatchMetricKind Kind = BatchMetricKind.Number) : IBatchMetricSelector;
+/// <param name="Expression">Optional arithmetic expression over earlier numeric metrics.</param>
+public sealed record BatchMetricDefinition(
+    string Name,
+    string JsonPath,
+    BatchMetricKind Kind = BatchMetricKind.Number,
+    string? Expression = null) : IBatchMetricSelector;
 
 /// <summary>One run source and arbitrary experiment labels.</summary>
 /// <param name="MetricsPath">Metrics JSON path, resolved relative to the manifest.</param>
@@ -137,6 +145,15 @@ public static class BatchManifestAnalyzer
             var booleans = new Dictionary<string, bool?>(StringComparer.Ordinal);
             foreach (var metric in manifest.Metrics)
             {
+                if (metric.Expression is { } expression)
+                {
+                    var prior = numbers
+                        .Where(static pair => pair.Value is not null)
+                        .ToDictionary(static pair => pair.Key, static pair => pair.Value!.Value, StringComparer.Ordinal);
+                    numbers[metric.Name] = BatchExpression.Evaluate(expression, prior);
+                    continue;
+                }
+
                 var value = BatchJsonPath.Resolve(document.RootElement, metric.JsonPath, metricsPath);
                 if (metric.Kind == BatchMetricKind.Boolean)
                 {
@@ -372,11 +389,16 @@ public static class BatchManifestAnalyzer
         {
             var metricName = metric.TryGetProperty("name", out var metricNameValue) ? metricNameValue.GetString() : null;
             var jsonPath = metric.TryGetProperty("path", out var pathValue) ? pathValue.GetString() : null;
-            if (string.IsNullOrWhiteSpace(metricName) || string.IsNullOrWhiteSpace(jsonPath))
-                throw new InvalidDataException($"Manifest '{path}' has a metric without name/path.");
+            var expression = metric.TryGetProperty("expression", out var expressionValue) ? expressionValue.GetString() : null;
+            if (string.IsNullOrWhiteSpace(metricName)
+                || (string.IsNullOrWhiteSpace(jsonPath) == string.IsNullOrWhiteSpace(expression)))
+                throw new InvalidDataException(
+                    $"Manifest '{path}' metric needs exactly one of path/expression.");
             var kind = metric.TryGetProperty("kind", out var kindValue) && kindValue.GetString() == "boolean"
                 ? BatchMetricKind.Boolean : BatchMetricKind.Number;
-            metrics.Add(new BatchMetricDefinition(metricName, jsonPath, kind));
+            if (kind == BatchMetricKind.Boolean && expression is not null)
+                throw new InvalidDataException($"Manifest '{path}' boolean metric '{metricName}' cannot use expression.");
+            metrics.Add(new BatchMetricDefinition(metricName, jsonPath ?? string.Empty, kind, expression));
         }
 
         if (metrics.Select(static metric => metric.Name).Distinct(StringComparer.Ordinal).Count() != metrics.Count)
