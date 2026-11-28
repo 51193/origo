@@ -47,6 +47,7 @@ public partial class DemoUi
         BuildSavePanel();
         BuildPausePanel();
         BuildExtinctPanel();
+        BuildBoxPanel();
 
         _toastLabel = new Label
         {
@@ -85,6 +86,7 @@ public partial class DemoUi
         _savePanel.Visible = false;
         _pausePanel.Visible = false;
         _extinctPanel.Visible = false;
+        _boxPanel.Visible = false;
         _diversityPanel.Visible = false;
         _advancedPanel.Visible = false;
         _fastForwardPanel.Visible = false;
@@ -135,6 +137,9 @@ public partial class DemoUi
         _feedButton = MakeButton("Feed", 120);
         _feedButton.Pressed += Feed;
         row.AddChild(_feedButton);
+        var boxes = MakeButton("Boxes", 90);
+        boxes.Pressed += OpenBoxes;
+        row.AddChild(boxes);
         var diversity = MakeButton("Diversity", 110);
         diversity.Pressed += OpenDiversity;
         row.AddChild(diversity);
@@ -150,7 +155,7 @@ public partial class DemoUi
 
         _hintLabel = new Label
         {
-            Text = "Wheel zoom · right-drag pan · R reset view · click a creature to inspect · U unlocks.",
+            Text = "Wheel zoom · right-drag pan · R reset view · click to inspect · G boxes · U unlocks.",
             HorizontalAlignment = HorizontalAlignment.Center,
             MouseFilter = Control.MouseFilterEnum.Ignore,
         };
@@ -215,6 +220,33 @@ public partial class DemoUi
         _inspectorSensors = new Label { Modulate = MutedColor };
         _inspectorSensors.AddThemeFontSizeOverride("font_size", 12);
         column.AddChild(_inspectorSensors);
+    }
+
+    private void BuildBoxPanel()
+    {
+        _boxPanel = CenterPanel(820f, 620f);
+        var column = VBox(_boxPanel);
+        column.AddChild(Title("ECOLOGY BOXES", 28));
+        _boxPanelStatus = LabelText(string.Empty, MutedColor);
+        column.AddChild(_boxPanelStatus);
+        _boxList = new VBoxContainer { SizeFlagsVertical = Control.SizeFlags.ExpandFill };
+        _boxList.AddThemeConstantOverride("separation", 6);
+        column.AddChild(_boxList);
+        var actions = new HBoxContainer();
+        actions.AddThemeConstantOverride("separation", 8);
+        var sandbox = MakeButton("Create sandbox", 150);
+        sandbox.Pressed += () => CreateBox(restricted: false);
+        actions.AddChild(sandbox);
+        var forage = MakeButton("Create no-predation", 180);
+        forage.Pressed += () => CreateBox(restricted: true);
+        actions.AddChild(forage);
+        var empty = MakeButton("Create empty", 130);
+        empty.Pressed += () => CreateBox(restricted: false, manual: true);
+        actions.AddChild(empty);
+        var close = MakeButton("Close", 90);
+        close.Pressed += CloseModals;
+        actions.AddChild(close);
+        column.AddChild(actions);
     }
 
     private void BuildDiversityPanel()

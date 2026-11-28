@@ -48,6 +48,9 @@ public partial class DemoUi : CanvasLayer
     private PanelContainer _diversityPanel = null!;
     private PanelContainer _advancedPanel = null!;
     private PanelContainer _fastForwardPanel = null!;
+    private PanelContainer _boxPanel = null!;
+    private VBoxContainer _boxList = null!;
+    private Label _boxPanelStatus = null!;
     private ColorRect _fastForwardOverlay = null!;
     private ProgressBar _fastForwardProgress = null!;
     private Label _fastForwardStatus = null!;
@@ -108,7 +111,6 @@ public partial class DemoUi : CanvasLayer
     private double _realTimeWriteTimer;
     private double _gameplayProfileTimer;
     private bool _fastForwarding;
-    private ArenaMatch? _arenaMatch;
     private int _previousMaxFps = 60;
     private DisplayServer.VSyncMode _previousVsync = DisplayServer.VSyncMode.Enabled;
     private ulong _fastForwardStartWallMs;
@@ -119,6 +121,7 @@ public partial class DemoUi : CanvasLayer
     private int _iterateCheckpointIndex;
     private bool _resumeAfterCheckpointSave;
     private double _diversityTimer;
+    private double _boxRefreshTimer;
     private string? _selectedName;
     private string _pendingSaveSlot = string.Empty;
     private ISessionRun? _cachedSession;
@@ -144,7 +147,16 @@ public partial class DemoUi : CanvasLayer
     {
         if (_ready)
             _entry.Session.EnsureTopology();
-        PollArena();
+        if (_boxPanel is not null && _boxPanel.Visible)
+        {
+            _boxRefreshTimer -= delta;
+            if (_boxRefreshTimer <= 0d)
+            {
+                _boxRefreshTimer = 0.35d;
+                RefreshBoxes();
+            }
+        }
+
         if (!_ready)
         {
             TryInitialize();
@@ -228,6 +240,9 @@ public partial class DemoUi : CanvasLayer
             {
                 switch (key.Keycode)
                 {
+                    case Key.G:
+                        OpenBoxes();
+                        return;
                     case Key.B:
                         SwitchBox();
                         return;
@@ -236,9 +251,6 @@ public partial class DemoUi : CanvasLayer
                         return;
                     case Key.M:
                         MigrateSelected();
-                        return;
-                    case Key.A:
-                        StartArena();
                         return;
                 }
             }
@@ -284,10 +296,133 @@ public partial class DemoUi : CanvasLayer
         UpdateInspector();
     }
 
+    private void OpenBoxes()
+    {
+        if (_busy || !_gameVisible)
+            return;
+        HideAllPanels();
+        _boxPanel.Visible = true;
+        _shade.Visible = true;
+        _toastLabel.Visible = false;
+        RefreshBoxes();
+    }
+
+    private void RefreshBoxes()
+    {
+        foreach (var child in _boxList.GetChildren())
+        {
+            _boxList.RemoveChild(child);
+            child.QueueFree();
+        }
+
+        var boxes = _entry.Session.Boxes;
+        _boxPanelStatus.Text = $"{boxes.Count} box(es) · foreground {_entry.Session.ForegroundBox.Id}";
+        foreach (var box in boxes)
+        {
+            var controller = box.Controller;
+            var phase = controller is null
+                ? "unborn"
+                : ReadString(controller, DemoKeys.Phase, DemoKeys.PhaseMenu);
+            var paused = controller is not null && ReadBool(controller, DemoKeys.Paused, false);
+            var row = new HBoxContainer();
+            row.AddThemeConstantOverride("separation", 8);
+            var label = new Label
+            {
+                Text = $"{box.Id}  [{box.Profile.Id}]  pop={CountCreatures(box)}  {phase}{(paused ? " · paused" : string.Empty)}",
+                SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            };
+            label.AddThemeFontSizeOverride("font_size", 14);
+            row.AddChild(label);
+            if (!box.IsForeground)
+            {
+                var foreground = MakeButton("Foreground", 110);
+                foreground.Pressed += () => SwitchToBox(box);
+                row.AddChild(foreground);
+            }
+
+            if (!box.IsForeground)
+            {
+                var seed = MakeButton("Seed", 74);
+                seed.Disabled = _selectedName is null;
+                seed.TooltipText = "Copy the selected foreground creature into this box.";
+                seed.Pressed += () => SeedBox(box);
+                row.AddChild(seed);
+            }
+
+            var pause = MakeButton(paused ? "Resume" : "Pause", 90);
+            pause.Pressed += () => ToggleBoxPause(box);
+            row.AddChild(pause);
+            var delete = MakeButton("Delete", 80);
+            delete.Disabled = box.IsForeground;
+            delete.Pressed += () => DeleteBox(box);
+            row.AddChild(delete);
+            _boxList.AddChild(row);
+        }
+    }
+
+    private static int CountCreatures(EcologyBox box)
+    {
+        var count = 0;
+        foreach (var entity in box.Session.GetEntities())
+            if (!entity.IsPendingKill
+                && entity.TryGetData<string>(DemoKeys.Kind) is { found: true, value: DemoKeys.CreatureKind })
+                count++;
+        return count;
+    }
+
+    private void SwitchToBox(EcologyBox box)
+    {
+        _entry.Context.Save.RequestSwitchForegroundLevel(box.LevelId);
+        ShowToast($"Switching to {box.Id} [{box.Profile.Id}]");
+    }
+
+    private void SeedBox(EcologyBox box)
+    {
+        if (_selectedName is null)
+        {
+            ShowToast("Select a creature first.", true);
+            return;
+        }
+
+        var source = _entry.Session.ForegroundBox;
+        var result = BoxMigration.Migrate(
+            _entry.Session, source.Id, _selectedName, box.Id, removeSource: false);
+        if (!result.Success)
+        {
+            ShowToast($"Seed rejected: {result.Reason}", true);
+            return;
+        }
+
+        ShowToast($"Seeded {box.Id} with {result.MigrantName}");
+        RefreshBoxes();
+    }
+
+    private void ToggleBoxPause(EcologyBox box)
+    {
+        if (box.Controller is not { } controller)
+            return;
+        var paused = ReadBool(controller, DemoKeys.Paused, false);
+        controller.SetData(DemoKeys.Paused, !paused);
+        ShowToast($"{box.Id} {(paused ? "resumed" : "paused")}");
+        RefreshBoxes();
+    }
+
+    private void DeleteBox(EcologyBox box)
+    {
+        if (box.IsForeground)
+        {
+            ShowToast("Switch away before deleting the foreground box.", true);
+            return;
+        }
+
+        _entry.Session.RemoveBox(box.Id);
+        ShowToast($"Deleted {box.Id}");
+        RefreshBoxes();
+    }
+
     private void SwitchBox()
     {
-        var boxes = _entry.Session.Boxes.Where(static box => !string.Equals(box.Id, ArenaMatch.ArenaBoxId, StringComparison.Ordinal))
-            .ToArray();
+        var boxes = _entry.Session.Boxes.ToArray();
         if (boxes.Length < 2)
         {
             ShowToast("No second ecology box is mounted.", true);
@@ -297,13 +432,12 @@ public partial class DemoUi : CanvasLayer
         var current = _entry.Session.ForegroundBox;
         var index = Array.FindIndex(boxes, box => ReferenceEquals(box, current));
         var next = boxes[(index + 1) % boxes.Length];
-        _entry.Context.Save.RequestSwitchForegroundLevel(next.LevelId);
-        ShowToast($"Switching to {next.Id} [{next.Profile.Id}]");
+        SwitchToBox(next);
     }
 
-    private void CreateBox(bool restricted)
+    private void CreateBox(bool restricted, bool manual = false)
     {
-        var count = _entry.Session.Boxes.Count(box => !string.Equals(box.Id, ArenaMatch.ArenaBoxId, StringComparison.Ordinal));
+        var count = _entry.Session.Boxes.Count;
         var profile = _entry.Session.DefaultProfile;
         var id = "box_" + (count + 1);
         if (restricted)
@@ -315,9 +449,12 @@ public partial class DemoUi : CanvasLayer
                     !unlock.Contains("predation", StringComparison.Ordinal)));
         }
 
-        _entry.Session.CreateBackgroundBox(id, profile, Random.Shared.Next(1, int.MaxValue));
+        _entry.Session.CreateBackgroundBox(id, profile, Random.Shared.Next(1, int.MaxValue),
+            manualInitialPopulation: manual);
         _entry.Session.EnsureTopology();
-        ShowToast($"Created {id} [{profile.Id}]");
+        ShowToast($"Created {id} [{profile.Id}]{(manual ? " · empty" : string.Empty)}");
+        if (_boxPanel.Visible)
+            RefreshBoxes();
     }
 
     private void MigrateSelected()
@@ -329,8 +466,7 @@ public partial class DemoUi : CanvasLayer
         }
 
         var source = _entry.Session.ForegroundBox;
-        var target = _entry.Session.Boxes.FirstOrDefault(box =>
-            !ReferenceEquals(box, source) && !string.Equals(box.Id, ArenaMatch.ArenaBoxId, StringComparison.Ordinal));
+        var target = _entry.Session.Boxes.FirstOrDefault(box => !ReferenceEquals(box, source));
         if (target is null)
         {
             ShowToast("No destination box.", true);
@@ -349,41 +485,6 @@ public partial class DemoUi : CanvasLayer
         FindController()?.SetData(DemoKeys.InspectTarget, string.Empty);
         _inspector.Visible = false;
         ShowToast($"Migrated {result.MigrantName} to {target.Id}");
-    }
-
-    private void StartArena()
-    {
-        if (_arenaMatch is not null)
-        {
-            ShowToast("Arena is already running.");
-            return;
-        }
-
-        var source = _entry.Session.ForegroundBox;
-        var rival = _entry.Session.Boxes.FirstOrDefault(box =>
-            !ReferenceEquals(box, source) && !string.Equals(box.Id, ArenaMatch.ArenaBoxId, StringComparison.Ordinal));
-        if (rival is null)
-        {
-            ShowToast("Arena needs a rival box.", true);
-            return;
-        }
-
-        _arenaMatch = ArenaMatch.Start(_entry.Session, [source.Id, rival.Id], perCohort: 8,
-            Random.Shared.Next(1, int.MaxValue), durationSeconds: 10d);
-        ShowToast($"Arena: {source.Id} vs {rival.Id}");
-    }
-
-    private void PollArena()
-    {
-        if (_arenaMatch is null)
-            return;
-        var result = _arenaMatch.Poll(_entry.Session);
-        if (result is null)
-            return;
-        _arenaMatch = null;
-        var score = string.Join("  ", result.Cohorts.Select(static cohort =>
-            $"{cohort.SourceBoxId} {cohort.Survived}/{cohort.Started}"));
-        ShowToast($"Arena winner: {result.Winner ?? "tie"}  {score}");
     }
 
     private void TryInitialize()
@@ -539,6 +640,8 @@ public partial class DemoUi : CanvasLayer
             _advancedPanel.Visible = false;
         if (_fastForwardPanel is not null)
             _fastForwardPanel.Visible = false;
+        if (_boxPanel is not null)
+            _boxPanel.Visible = false;
         if (_loadingLabel is not null)
             _loadingLabel.Visible = false;
     }
@@ -547,7 +650,7 @@ public partial class DemoUi : CanvasLayer
         _menuPanel.Visible || _newGamePanel.Visible || _loadPanel.Visible
         || _savePanel.Visible || _pausePanel.Visible || _extinctPanel.Visible
         || _diversityPanel.Visible || _advancedPanel.Visible
-        || _fastForwardPanel.Visible;
+        || _fastForwardPanel.Visible || _boxPanel.Visible;
 
     private void CloseModals()
     {
@@ -712,7 +815,7 @@ public partial class DemoUi : CanvasLayer
         controller.SetData(DemoKeys.FastForwardActive, false);
         controller.SetData(DemoKeys.FastForwardProgress, 0f);
         FindController()?.SetData(DemoKeys.InspectTarget, string.Empty);
-        _entry.Session.EnsureTopology();
+        _entry.Session.EnsureTopology(createDefaultBackground: true);
         ShowGame();
         _diversityChart.Clear();
         ShowToast("A new pond is alive.");
@@ -787,7 +890,7 @@ public partial class DemoUi : CanvasLayer
             _settingsDraft = DemoSettings.Current.Clone();
         }
 
-        _entry.Session.EnsureTopology();
+        _entry.Session.EnsureTopology(createDefaultBackground: true);
         ShowGame();
         _diversityChart.Clear();
         ShowToast("Pond loaded.");

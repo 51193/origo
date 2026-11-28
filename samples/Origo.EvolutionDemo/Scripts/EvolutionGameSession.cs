@@ -36,7 +36,7 @@ public sealed class EvolutionGameSession
     /// <summary>All registered boxes, including loaded background sessions.</summary>
     public IReadOnlyList<EcologyBox> Boxes => _boxes;
 
-    /// <summary>All-enabled profile used for neutral arena boxes.</summary>
+    /// <summary>All-enabled profile used as the default for new boxes.</summary>
     public BoxUnlockProfile DefaultProfile => _defaultProfile;
     /// <summary>Foreground box resolved from the current session manager.</summary>
     public EcologyBox ForegroundBox => EnsureForegroundBox();
@@ -137,7 +137,12 @@ public sealed class EvolutionGameSession
     /// <param name="id">Stable box id.</param>
     /// <param name="profile">Box unlock profile.</param>
     /// <param name="seed">Simulation seed.</param>
-    public EcologyBox CreateBackgroundBox(string id, BoxUnlockProfile profile, int seed)
+    /// <param name="manualInitialPopulation">Skip default founders; the caller seeds the box.</param>
+    public EcologyBox CreateBackgroundBox(
+        string id,
+        BoxUnlockProfile profile,
+        int seed,
+        bool manualInitialPopulation = false)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
         ArgumentNullException.ThrowIfNull(profile);
@@ -150,12 +155,15 @@ public sealed class EvolutionGameSession
         RegisterBox(box, foreground: false);
         var controller = session.Spawn(EvolutionEntityFactory.Controller(seed));
         GameplayStateSync.Save(controller, runtime);
+        if (manualInitialPopulation)
+            controller.SetData(DemoKeys.BoxManualStart, true);
         BoxProfileCodec.Save(session, box);
         return box;
     }
 
-    /// <summary>Attaches live box sessions and restores the default background box.</summary>
-    public void EnsureTopology()
+    /// <summary>Attaches live box sessions and optionally restores the default background box.</summary>
+    /// <param name="createDefaultBackground">Create the meadow when no background box is live.</param>
+    public void EnsureTopology(bool createDefaultBackground = false)
     {
         if (LiveSessions.ForegroundSession is null)
             return;
@@ -170,7 +178,7 @@ public sealed class EvolutionGameSession
 
         var hasLiveBackground = _boxes.Any(box =>
             !box.IsForeground && ReferenceEquals(LiveSessions.TryGet(box.LevelId), box.Session));
-        if (!hasLiveBackground)
+        if (createDefaultBackground && !hasLiveBackground)
             CreateBackgroundBox("meadow", _defaultProfile, ForegroundBox.Seed + 1);
     }
 
