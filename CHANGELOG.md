@@ -41,6 +41,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   comparison of high/low population regimes, root diversity, mortality shares,
   top-root dominance, top-root survival, root extinction, and a Wilson
   interval for the high-density share.
+- **Evolution Demo analysis accepts versioned experiment manifests** — batch
+  runs can carry arbitrary labels and select metrics by JSON paths, so future
+  mechanics can be compared with `--group-by` without adding mechanism-specific
+  report code. Numeric metrics aggregate min/median/max; booleans aggregate
+  proportions with Wilson intervals.
 - **Evolution Demo campaign tests can isolate content controls** — planned,
   idle, cheapest, and greedy policies honor
   `ORIGO_DEMO_CAMPAIGN_ENRICHMENT=0` and

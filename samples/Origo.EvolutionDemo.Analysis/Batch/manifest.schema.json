@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Origo analysis batch manifest",
+  "type": "object",
+  "required": ["schemaVersion", "name", "metrics", "runs"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "name": {"type": "string", "minLength": 1},
+    "protocol": {"type": "string"},
+    "metrics": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "path"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "path": {"type": "string", "minLength": 1},
+          "kind": {"enum": ["number", "boolean"]}
+        },
+        "additionalProperties": false
+      }
+    },
+    "runs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["metrics", "labels"],
+        "properties": {
+          "metrics": {"type": "string", "minLength": 1},
+          "labels": {
+            "type": "object",
+            "additionalProperties": {"type": ["string", "number", "boolean"]}
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

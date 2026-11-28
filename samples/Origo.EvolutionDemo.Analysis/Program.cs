@@ -419,7 +419,9 @@ internal static class Program
     private static int BatchCommand(string[] args)
     {
         var metrics = new List<string>();
+        var groupBy = new List<string>();
         var output = "batch-report.html";
+        string? manifest = null;
         string? csv = null;
         string? json = null;
         for (var i = 0; i < args.Length; i++)
@@ -431,6 +433,12 @@ internal static class Program
                     return 0;
                 case "--metrics" when i + 1 < args.Length:
                     metrics.Add(args[++i]);
+                    break;
+                case "--manifest" when i + 1 < args.Length:
+                    manifest = args[++i];
+                    break;
+                case "--group-by" when i + 1 < args.Length:
+                    groupBy.AddRange(args[++i].Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
                     break;
                 case "--out" when i + 1 < args.Length:
                     output = args[++i];
@@ -448,20 +456,39 @@ internal static class Program
             }
         }
 
-        if (metrics.Count == 0)
+        if (manifest is not null && metrics.Count > 0)
         {
-            Console.Error.WriteLine("batch needs at least one --metrics <path>.");
+            Console.Error.WriteLine("batch --manifest cannot be combined with --metrics.");
             return 2;
         }
 
-        var report = BatchAnalyzer.Read(metrics);
-        WriteFile(output, BatchAnalyzer.BuildHtml(report));
+        if (manifest is not null)
+        {
+            var report = BatchManifestAnalyzer.Read(manifest, groupBy);
+            WriteFile(output, BatchManifestAnalyzer.BuildHtml(report));
+            if (!string.IsNullOrWhiteSpace(csv))
+                BatchManifestAnalyzer.WriteCsv(csv, report);
+            if (!string.IsNullOrWhiteSpace(json))
+                BatchManifestAnalyzer.WriteJson(json, report);
+            Console.WriteLine(string.Create(CultureInfo.InvariantCulture,
+                $"batch manifest: {report.Runs.Count} runs, {report.Groups.Count} groups; wrote {output}"));
+            return 0;
+        }
+
+        if (metrics.Count == 0)
+        {
+            Console.Error.WriteLine("batch needs at least one --metrics <path> or --manifest <path>.");
+            return 2;
+        }
+
+        var legacy = BatchAnalyzer.Read(metrics);
+        WriteFile(output, BatchAnalyzer.BuildHtml(legacy));
         if (!string.IsNullOrWhiteSpace(csv))
-            BatchAnalyzer.WriteCsv(csv, report);
+            BatchAnalyzer.WriteCsv(csv, legacy);
         if (!string.IsNullOrWhiteSpace(json))
-            BatchAnalyzer.WriteJson(json, report);
+            BatchAnalyzer.WriteJson(json, legacy);
         Console.WriteLine(string.Create(CultureInfo.InvariantCulture,
-            $"batch: {report.Runs.Count} runs; wrote {output}"));
+            $"batch: {legacy.Runs.Count} runs; wrote {output}"));
         return 0;
     }
 
@@ -1192,6 +1219,8 @@ internal static class Program
         Console.WriteLine("Usage: batch --metrics <metrics.json> [--metrics ...] [--out batch.html] [options]");
         Console.WriteLine();
         Console.WriteLine("  --metrics <path>  genome metrics JSON; repeat for each run.");
+        Console.WriteLine("  --manifest <path> generalized manifest with labels and metric JSON paths.");
+        Console.WriteLine("  --group-by <csv>  labels to group by; manifest mode only (default all labels).");
         Console.WriteLine("  --out <path>      HTML comparison (default batch-report.html).");
         Console.WriteLine("  --csv <path>      optional per-run CSV.");
         Console.WriteLine("  --json <path>     optional per-run and grouped JSON.");

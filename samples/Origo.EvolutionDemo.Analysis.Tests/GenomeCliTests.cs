@@ -290,6 +290,45 @@ public sealed class GenomeCliTests
     }
 
     [Fact]
+    public void Batch_ManifestGroupsByArbitraryLabels()
+    {
+        using var directory = new TemporaryDirectory();
+        var a = Path.Combine(directory.Path, "a.json");
+        var b = Path.Combine(directory.Path, "b.json");
+        File.WriteAllText(a, BatchMetrics(seed: 1, population: 2497, roots: 407, enrichment: 335, total: 1000, predation: 0.1, topRoot: 4, topDeaths: 500, topLiving: true));
+        File.WriteAllText(b, BatchMetrics(seed: 2, population: 300, roots: 90, enrichment: 40, total: 800, predation: 0.5, topRoot: 6, topDeaths: 120, topLiving: false));
+        var manifest = Path.Combine(directory.Path, "experiment.json");
+        File.WriteAllText(manifest, JsonSerializer.Serialize(new
+        {
+            schemaVersion = 1,
+            name = "arbitrary",
+            metrics = new[]
+            {
+                new { name = "population", path = "saves[-1].creatures", kind = "number" },
+                new { name = "predation", path = "mortalitySequence.predationShare", kind = "number" },
+            },
+            runs = new[]
+            {
+                new { metrics = a, labels = new Dictionary<string, string> { ["mechanism"] = "A" } },
+                new { metrics = b, labels = new Dictionary<string, string> { ["mechanism"] = "B" } },
+            },
+        }));
+        var csv = Path.Combine(directory.Path, "manifest.csv");
+        var json = Path.Combine(directory.Path, "manifest.json");
+
+        var (exitCode, output, error) = Run(
+            "batch", "--manifest", manifest, "--group-by", "mechanism",
+            "--out", Path.Combine(directory.Path, "manifest.html"), "--csv", csv, "--json", json);
+
+        Assert.True(exitCode == 0, output + error);
+        Assert.Contains("mechanism=A", File.ReadAllText(csv), StringComparison.Ordinal);
+        Assert.Contains("mechanism=B", File.ReadAllText(csv), StringComparison.Ordinal);
+        using var summary = JsonDocument.Parse(File.ReadAllText(json));
+        Assert.Equal("mechanism", summary.RootElement.GetProperty("groupBy")[0].GetString());
+        Assert.Equal(2, summary.RootElement.GetProperty("groups").GetArrayLength());
+    }
+
+    [Fact]
     public void Batch_WritesRegimeComparisonOutputs()
     {
         using var directory = new TemporaryDirectory();
