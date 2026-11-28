@@ -313,6 +313,10 @@ public sealed class GenomeCliTests
         using var summary = JsonDocument.Parse(File.ReadAllText(json));
         Assert.Equal(2, summary.RootElement.GetProperty("runs").GetArrayLength());
         Assert.Equal(2, summary.RootElement.GetProperty("groups").GetArrayLength());
+        Assert.Equal(1, summary.RootElement.GetProperty("highRuns").GetInt32());
+        Assert.Equal(0.5d, summary.RootElement.GetProperty("highShare").GetDouble(), 9);
+        Assert.Equal(1d, summary.RootElement.GetProperty("groups")[0].GetProperty("topRootLivingShare").GetDouble(), 9);
+        Assert.Equal(0d, summary.RootElement.GetProperty("groups")[1].GetProperty("topRootLivingShare").GetDouble(), 9);
     }
 
     [Fact]

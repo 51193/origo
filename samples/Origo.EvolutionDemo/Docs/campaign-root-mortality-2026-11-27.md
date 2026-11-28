@@ -109,6 +109,24 @@ The high seeds (20261303, 20261317, 20261404, 20261405) had no enrichment,
 extinct at final. This is a sharper regime difference than the first five-seed
 snapshot suggested.
 
+## Unbiased 10-seed per-root batch
+
+A fresh, unselected batch (20261501–20261510, 3,600 s):
+
+| Regime | Runs | Median pop | Median roots | Median predation | Median top-root share | Top root alive |
+|---|---:|---:|---:|---:|---:|---:|
+| high | 1/10 | 1,587 | 3 | 20.0% | 56.7% | 1/1 |
+| low | 9/10 | 320 | 92 | 49.0% | 35.9% | 4/9 |
+
+The high rate in this fresh batch is **10%**. The top root survived in the one
+high run and in 4 of 9 low runs, so top-root survival is not a clean binary
+regime marker on its own. What remains consistent is the high regime's much
+lower root count (3 versus median 92) and lower predation share (20% versus
+49%). Low-run top-root shares span 18–74%; high runs are a small sample.
+
+The earlier five-seed batch happened to have all top roots extinct; this fresh
+batch corrects that overgeneralization.
+
 ## Caveats
 
 - Root ids are stable ancestry, but not a complete parent tree.
