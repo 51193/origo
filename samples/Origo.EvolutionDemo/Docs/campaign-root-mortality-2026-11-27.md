@@ -130,6 +130,23 @@ roughly half of all births **and** absorbs roughly half of all deaths. Its survi
 comes from a very thin net-positive balance (e1p0 +537, e1p1 +103), not from low
 mortality. A root can dominate while being almost exactly at replacement.
 
+## Root survival hazard
+
+Using all 300 s checkpoints (not only 1,500/3,000/final):
+
+| Cell | Distinct roots | Extinct roots | Extinction share | Mean interval hazard | Mean extinct lifetime | Median positive lifetime | Final interval hazard |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| e1p0 | 2,113 | 1,706 | 80.7% | 43.6% | 41.0 s | 300 s | 81.8% |
+| e1p1 | 463 | 372 | 80.3% | 43.6% | 34.7 s | 300 s | 90.5% |
+
+The final interval is the harshest: e1p0 loses 341 of 417 living roots
+(81.8% hazard), e1p1 loses 76 of 91 (90.5%). The median extinct lifetime is
+zero because many roots appear at only one 300 s checkpoint; the positive
+median is one interval (300 s). Hazard is checkpoint-resolution, so roots born
+and lost entirely between checkpoints are invisible. The per-root death map,
+which has more roots, should be used for total extinct counts; the survival
+curve describes checkpoint-visible roots.
+
 ## Unbiased 20-seed per-root batch
 
 A fresh, unselected batch (20261501–20261520, 3,600 s):

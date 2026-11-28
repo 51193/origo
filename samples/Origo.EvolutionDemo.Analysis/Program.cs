@@ -173,6 +173,7 @@ internal static class Program
         var lineage = SaveLineageAnalyzer.Analyze(snapshots);
         var mortality = SaveMortalityAnalyzer.Analyze(snapshots);
         var births = BirthsAnalyzer.Analyze(snapshots);
+        var rootSurvival = RootSurvivalAnalyzer.Analyze(lineage);
         var extraction = FeatureExtractor.Extract(snapshots, maxCreatures, seed);
         if (extraction.SkippedCreatures.Count > 0 && !allowSkips)
         {
@@ -229,6 +230,7 @@ internal static class Program
             lineage,
             mortality,
             births,
+            rootSurvival,
             rows,
             extraction.TotalCreatures,
             extraction.ConsideredCreatures,
@@ -985,8 +987,9 @@ internal static class Program
         var deathsByPath = mortality.Saves.ToDictionary(static item => item.Path, StringComparer.Ordinal);
         var birthsByPath = births.Saves.ToDictionary(static item => item.Path, StringComparer.Ordinal);
         using var writer = new StreamWriter(path);
-        writer.WriteLine("save,time,rootLineage,living,creatures,share,founderCreatures,minGeneration,maxGeneration,isNew,isNewGen0,starvation,predation,aging,total,intervalStarvation,intervalPredation,intervalAging,intervalTotal,extinct,births,netGrowth");
+        writer.WriteLine("save,time,rootLineage,living,creatures,share,founderCreatures,minGeneration,maxGeneration,isNew,isNewGen0,starvation,predation,aging,total,intervalStarvation,intervalPredation,intervalAging,intervalTotal,extinct,births,netGrowth,intervalBirths,intervalNetGrowth");
         IReadOnlyDictionary<int, RootDeathTally> previous = new Dictionary<int, RootDeathTally>();
+        IReadOnlyDictionary<int, int> previousBirths = new Dictionary<int, int>();
         foreach (var save in lineage.Saves
             .OrderBy(static item => item.Time)
             .ThenBy(static item => item.SaveId, StringComparer.Ordinal))
@@ -1004,6 +1007,8 @@ internal static class Program
                 var detail = living.GetValueOrDefault(root);
                 var tally = deaths.GetValueOrDefault(root);
                 var before = previous.GetValueOrDefault(root);
+                var beforeBirths = previousBirths.GetValueOrDefault(root);
+                var intervalBirths = saveBirths.GetValueOrDefault(root) - beforeBirths;
                 var interval = new RootDeathTally(
                     tally.Starvation - before.Starvation,
                     tally.Predation - before.Predation,
@@ -1051,10 +1056,15 @@ internal static class Program
                 var birthCount = saveBirths.GetValueOrDefault(root);
                 writer.Write(birthCount.ToString(CultureInfo.InvariantCulture));
                 writer.Write(',');
-                writer.WriteLine((birthCount - tally.Total).ToString(CultureInfo.InvariantCulture));
+                writer.Write((birthCount - tally.Total).ToString(CultureInfo.InvariantCulture));
+                writer.Write(',');
+                writer.Write(intervalBirths.ToString(CultureInfo.InvariantCulture));
+                writer.Write(',');
+                writer.WriteLine((intervalBirths - interval.Total).ToString(CultureInfo.InvariantCulture));
             }
 
             previous = deaths;
+            previousBirths = saveBirths;
         }
     }
 

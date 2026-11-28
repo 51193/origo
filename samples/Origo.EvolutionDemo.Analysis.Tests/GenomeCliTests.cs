@@ -249,6 +249,8 @@ public sealed class GenomeCliTests
         Assert.Equal("0", survivalRow[19]);
         Assert.Equal("0", survivalRow[20]);
         Assert.Equal("-20", survivalRow[21]);
+        Assert.Equal("0", survivalRow[22]);
+        Assert.Equal("-20", survivalRow[23]);
         using var json = JsonDocument.Parse(File.ReadAllText(metrics));
         Assert.True(json.RootElement.TryGetProperty("rootMortalitySequence", out var rootSequence), json.RootElement.ToString());
         Assert.True(rootSequence.TryGetProperty("counts", out var rootCounts), json.RootElement.ToString());
@@ -292,6 +294,8 @@ public sealed class GenomeCliTests
         Assert.Equal("2", root1Final[18]);
         Assert.Equal("9", root1Final[20]);
         Assert.Equal("0", root1Final[21]);
+        Assert.Equal("9", root1Final[22]);
+        Assert.Equal("7", root1Final[23]);
         Assert.Equal("1", root2Final[3]);
         Assert.Equal("1", root2Final[15]);
         Assert.Equal("7", root1First[14]);

@@ -31,6 +31,7 @@ public static class GenomeMetricsJson
         ArgumentNullException.ThrowIfNull(input.Lineage);
         ArgumentNullException.ThrowIfNull(input.Mortality);
         ArgumentNullException.ThrowIfNull(input.Births);
+        ArgumentNullException.ThrowIfNull(input.RootSurvival);
         ArgumentNullException.ThrowIfNull(input.Rows);
         ArgumentNullException.ThrowIfNull(input.RawColumns);
         ArgumentNullException.ThrowIfNull(input.DroppedColumns);
@@ -54,6 +55,7 @@ public static class GenomeMetricsJson
             WriteMortalitySequence(writer, input.Mortality.Sequence);
             WriteRootMortality(writer, input.Mortality, input.Lineage);
             WriteRootBirths(writer, input.Births, input.Lineage);
+            WriteRootSurvival(writer, input.RootSurvival);
             WriteSaves(writer, input);
             WriteFeatures(writer, input);
             WriteClustering(writer, input);
@@ -343,6 +345,39 @@ public static class GenomeMetricsJson
             }
 
         writer.WriteEndArray();
+    }
+
+    private static void WriteRootSurvival(Utf8JsonWriter writer, RootSurvivalAnalysis survival)
+    {
+        writer.WriteStartObject("rootSurvival");
+        var summary = survival.Summary;
+        writer.WriteStartObject("summary");
+        writer.WriteNumber("distinctRoots", summary.DistinctRoots);
+        writer.WriteNumber("initialLiving", summary.InitialLiving);
+        writer.WriteNumber("finalLiving", summary.FinalLiving);
+        writer.WriteNumber("extinctRoots", summary.ExtinctRoots);
+        writer.WriteNumber("extinctionShare", summary.ExtinctionShare);
+        WriteNullableNumber(writer, "medianExtinctLifetime", summary.MedianExtinctLifetime);
+        WriteNullableNumber(writer, "meanExtinctLifetime", summary.MeanExtinctLifetime);
+        WriteNullableNumber(writer, "meanHazard", summary.MeanHazard);
+        WriteNullableNumber(writer, "medianPositiveExtinctLifetime", summary.MedianPositiveExtinctLifetime);
+        writer.WriteEndObject();
+        writer.WriteStartArray("points");
+        foreach (var point in survival.Points)
+        {
+            writer.WriteStartObject();
+            writer.WriteString("saveId", point.SaveId);
+            writer.WriteNumber("time", point.Time);
+            writer.WriteNumber("livingRoots", point.LivingRoots);
+            writer.WriteNumber("newRoots", point.NewRoots);
+            writer.WriteNumber("lostRoots", point.LostRoots);
+            WriteNullableNumber(writer, "hazard", point.Hazard);
+            WriteNullableNumber(writer, "retention", point.Retention);
+            writer.WriteEndObject();
+        }
+
+        writer.WriteEndArray();
+        writer.WriteEndObject();
     }
 
     private static void WriteDeaths(Utf8JsonWriter writer, DeathCounts counts)
