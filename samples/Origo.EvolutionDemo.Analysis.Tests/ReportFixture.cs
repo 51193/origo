@@ -132,6 +132,7 @@ internal static class ReportFixture
             new MortalitySequenceSummary(new DeathCounts(6, 9, 3), 0.5d, 1 / 3d, 1 / 6d),
             rootDeaths,
             new RootMortalitySummary(1, new DeathCounts(6, 9, 3), 0.5d, 1 / 3d, 1 / 6d));
+        var rootSurvival = RootSurvivalAnalyzer.Analyze(lineage);
         var finalLabels = labels.ToArray();
         var clustering = new KMeans.Result(
             finalLabels,
@@ -158,6 +159,7 @@ internal static class ReportFixture
             lineage,
             mortality,
             births,
+            rootSurvival,
             rows,
             100,
             100,

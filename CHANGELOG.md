@@ -40,6 +40,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   overgrowth births are persisted per stable root; analysis emits
   `rootBirthsSequence`/`rootBirths`, adds births and net growth to root
   survival rows, and exposes them to manifest metrics.
+- **Evolution Demo analysis reports root survival hazard** — per-save
+  living/new/lost roots, interval hazard and retention, plus extinct-root
+  lifetime and extinction-share summaries. Root survival CSV also carries
+  interval births and interval net growth.
 - **Evolution Demo analysis compares runs by regime** — the new `batch`
   command reads per-run metrics JSON and writes a cross-run HTML/CSV/JSON
   comparison of high/low population regimes, root diversity, mortality shares,

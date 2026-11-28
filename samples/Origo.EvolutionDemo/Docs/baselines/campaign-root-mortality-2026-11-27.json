@@ -1187,5 +1187,42 @@
    "top_root_net_growth": 103,
    "top_root_final_births": 28859
   }
+ },
+ "root_survival_followup_2026-11-28": {
+  "resolution_seconds": 300,
+  "cells": {
+   "e1p0": {
+    "summary": {
+     "distinctRoots": 2113,
+     "initialLiving": 8,
+     "finalLiving": 407,
+     "extinctRoots": 1706,
+     "extinctionShare": 0.807382867960246,
+     "medianExtinctLifetime": 0,
+     "meanExtinctLifetime": 40.97220750293089,
+     "meanHazard": 0.43628306796587746,
+     "medianPositiveExtinctLifetime": 299.9926999999998
+    },
+    "final_hazard": 0.8177458033573142,
+    "final_retention": 0.18225419664268583,
+    "checkpoint_count": 12
+   },
+   "e1p1": {
+    "summary": {
+     "distinctRoots": 463,
+     "initialLiving": 8,
+     "finalLiving": 91,
+     "extinctRoots": 372,
+     "extinctionShare": 0.8034557235421166,
+     "medianExtinctLifetime": 0,
+     "meanExtinctLifetime": 34.677993817204296,
+     "meanHazard": 0.4364270989657987,
+     "medianPositiveExtinctLifetime": 299.9926999999998
+    },
+    "final_hazard": 0.9047619047619048,
+    "final_retention": 0.09523809523809523,
+    "checkpoint_count": 12
+   }
+  }
  }
 }

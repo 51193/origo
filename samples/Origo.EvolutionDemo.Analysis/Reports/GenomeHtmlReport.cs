@@ -34,6 +34,7 @@ public static class GenomeHtmlReport
         ArgumentNullException.ThrowIfNull(input.Lineage);
         ArgumentNullException.ThrowIfNull(input.Mortality);
         ArgumentNullException.ThrowIfNull(input.Births);
+        ArgumentNullException.ThrowIfNull(input.RootSurvival);
         ArgumentNullException.ThrowIfNull(input.Options);
         var rows = input.Rows;
         var clustering = input.Clustering;
@@ -60,6 +61,7 @@ th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.warn{color:#fca5a5}.no
         AppendLineage(html, input);
         AppendMortality(html, input);
         AppendBirths(html, input);
+        AppendRootSurvival(html, input);
         if (input.Candidates.Count > 0)
             AppendCandidates(html, input);
         html.Append("<h2>PCA scatter</h2>");
@@ -261,6 +263,27 @@ th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.warn{color:#fca5a5}.no
         {
             html.Append(CultureInfo.InvariantCulture,
                 $"<tr><td><code>{root}</code></td><td>{count}</td><td>{(living.Contains(root) ? "yes" : "no")}</td></tr>");
+        }
+
+        html.Append("</table>");
+    }
+
+    private static void AppendRootSurvival(StringBuilder html, GenomeReportInput input)
+    {
+        var survival = input.RootSurvival;
+        if (survival.Points.Count == 0)
+            return;
+        html.Append("<h2>Root survival</h2>");
+        html.Append(CultureInfo.InvariantCulture,
+            $"<p class=\"muted\">Distinct {survival.Summary.DistinctRoots}; extinct {survival.Summary.ExtinctRoots} ({survival.Summary.ExtinctionShare:0%}); median extinct lifespan {FormatMetric(survival.Summary.MedianExtinctLifetime, "0.0")}s; mean hazard {FormatMetric(survival.Summary.MeanHazard, "0.0%")}.</p>");
+        html.Append("<table><tr><th>save</th><th>time</th><th>living</th><th>new</th><th>lost</th>"
+            + "<th>hazard</th><th>retention</th></tr>");
+        foreach (var point in survival.Points)
+        {
+            html.Append(CultureInfo.InvariantCulture,
+                $"<tr><td><code>{Escape(point.SaveId)}</code></td><td>{point.Time:0.###}</td>"
+                + $"<td>{point.LivingRoots}</td><td>{point.NewRoots}</td><td>{point.LostRoots}</td>"
+                + $"<td>{FormatMetric(point.Hazard, "0.0%")}</td><td>{FormatMetric(point.Retention, "0.0%")}</td></tr>");
         }
 
         html.Append("</table>");

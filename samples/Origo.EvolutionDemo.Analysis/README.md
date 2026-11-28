@@ -147,8 +147,13 @@ per-save numeric `saves[].food` count remains unchanged; the typed inventory is
   still visible.
 - `rootBirthsSequence.totalBirths/topRootLineage/topRootBirths/topRootShare`:
   cumulative births by stable root, including ordinary and overgrowth births
-  but not founder injections. `--root-survival-csv` adds `births` and
-  `netGrowth` to every root row.
+  but not founder injections. `--root-survival-csv` adds `births`, `netGrowth`,
+  `intervalBirths`, and `intervalNetGrowth` to every root row.
+- `rootSurvival.summary`: distinct/initial/final/extinct roots, extinction
+  share, median/mean extinct-root lifetime, and mean interval hazard.
+  `rootSurvival.points` carries living/new/lost, hazard, and retention per save.
+  Hazard is lost roots divided by previous living roots; it is null for the
+  first save.
 
 `--lineages-csv` writes one row per living mutation lineage per save:
 `save,time,lineage,creatures,share,founderCreatures,minGeneration,maxGeneration,isNew,isNewGen0`.
