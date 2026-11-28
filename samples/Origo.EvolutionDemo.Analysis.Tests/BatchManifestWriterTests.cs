@@ -36,7 +36,7 @@ public sealed class BatchManifestWriterTests
         Assert.Equal("run-a", manifest.Runs[0].Labels["run"]);
         Assert.Equal("planned", manifest.Runs[0].Labels["policy"]);
         Assert.Equal("B", manifest.Runs[1].Labels["variant"]);
-        Assert.StartsWith("run-a/", manifest.Runs[0].MetricsPath, StringComparison.Ordinal);
+        Assert.Equal(Path.Combine("run-a", "metrics.json"), manifest.Runs[0].MetricsPath);
         BatchManifestWriter.Write(manifestPath, manifest);
         var report = BatchManifestAnalyzer.Read(manifestPath, ["policy", "variant"]);
         Assert.Equal(2, report.Groups.Count);
