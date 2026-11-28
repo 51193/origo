@@ -57,6 +57,21 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
     {
         ArgumentNullException.ThrowIfNull(entity);
         ArgumentNullException.ThrowIfNull(ctx);
+        var previous = DemoSettings.Current;
+        try
+        {
+            ProcessWithSettings(entity, delta, ctx);
+        }
+        finally
+        {
+            DemoSettings.Current = previous;
+        }
+    }
+
+    private static void ProcessWithSettings(ISndEntity entity, double delta, ISndContext ctx)
+    {
+        if (entity.TryGetData<string>(DemoKeys.ConfigJson) is { found: true, value: { Length: > 0 } config })
+            DemoSettings.Current = DemoSettings.FromJson(config);
         var phase = ReadString(entity, DemoKeys.Phase, DemoKeys.PhaseMenu);
         if (string.Equals(phase, DemoKeys.PhaseStarting, StringComparison.Ordinal))
         {
@@ -223,12 +238,13 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         var foodCap = Tuning.FoodCap;
         var startupFood = 0;
         var metas = new List<SndMetaData>();
-        var nextCreature = 1;
-        var nextFood = 1;
-        var nextCorpse = 1;
+        var nextCreature = ReadInt(controller, DemoKeys.NextCreatureId, 1);
+        var nextFood = ReadInt(controller, DemoKeys.NextFoodId, 1);
+        var nextCorpse = ReadInt(controller, DemoKeys.NextCorpseId, 1);
+        var arena = ReadBool(controller, DemoKeys.ArenaMode, false);
         const int founderLineages = 6;
 
-        for (var i = 0; i < Tuning.InitialPopulation; i++)
+        for (var i = 0; !arena && i < Tuning.InitialPopulation; i++)
         {
             var position = RandomPosition(rng);
             var genome = CreatureGenome.RandomFounder(rng, box.Runtime.GenomeGate);
@@ -282,7 +298,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         controller.SetData(DemoKeys.NextCreatureId, nextCreature);
         controller.SetData(DemoKeys.NextFoodId, nextFood);
         controller.SetData(DemoKeys.NextCorpseId, nextCorpse);
-        controller.SetData(DemoKeys.NextLineageId, founderLineages + 1);
+        controller.SetData(DemoKeys.NextLineageId,
+            Math.Max(ReadInt(controller, DemoKeys.NextLineageId, 1), founderLineages + 1));
         controller.SetData(DemoKeys.MaxGeneration, 0);
         controller.SetData(DemoKeys.Time, 0f);
         controller.SetData(DemoKeys.Tick, 0);
@@ -378,6 +395,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         var foodAlive = world.FoodAlive;
         var pendingChildren = 0;
         var pendingDeferredCreatures = ReadInt(controller, DemoKeys.PendingCreatureSpawns, 0);
+        var arena = ReadBool(controller, DemoKeys.ArenaMode, false);
         var pendingFood = world.PendingFood;
         var mutations = world.Mutations;
         var collisionBodies = world.CollisionBodies;
@@ -824,6 +842,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             }
 
             if (!ate
+                && !arena
                 && energy >= Tuning.ReproductionEnergy
                 && cooldown <= 0f
                 && creatures.Count + pendingChildren + pendingDeferredCreatures < Tuning.PopulationCap)

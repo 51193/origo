@@ -217,6 +217,11 @@ by benchmarks and mechanics experiments. The foreground pond and the background
 meadow are separate box sessions with separate runtimes, controllers, profiles,
 and save payloads.
 
+`ArenaMatch` creates an ephemeral all-enabled box, imports equal cohorts without
+removing their sources, disables reproduction and overgrowth, and reports
+survivors and a winner after a short fixed match. Arena settings are scoped to
+the arena controller, so they do not replace the foreground pond settings.
+
 `BoxMigration` can move a creature from one box to another. The destination
 profile must allow every expressed organ, action, and sensor; an incompatible
 destination rejects the migration instead of recompiling or disabling traits.

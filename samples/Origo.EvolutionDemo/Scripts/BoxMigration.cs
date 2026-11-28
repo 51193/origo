@@ -21,11 +21,13 @@ public static class BoxMigration
     /// <param name="sourceBoxId">Source box id.</param>
     /// <param name="creatureName">Source creature entity name.</param>
     /// <param name="destinationBoxId">Destination box id.</param>
+    /// <param name="removeSource">Whether to remove the source creature after the copy.</param>
     public static BoxMigrationResult Migrate(
         EvolutionGameSession host,
         string sourceBoxId,
         string creatureName,
-        string destinationBoxId)
+        string destinationBoxId,
+        bool removeSource = true)
     {
         ArgumentNullException.ThrowIfNull(host);
         ArgumentException.ThrowIfNullOrWhiteSpace(sourceBoxId);
@@ -86,11 +88,14 @@ public static class BoxMigration
         targetController.SetData(DemoKeys.NextCreatureId, targetId + 1);
         targetController.SetData(DemoKeys.MigrationsIn,
             ReadInt(targetController, DemoKeys.MigrationsIn, 0) + 1);
-        var sourceController = source.Controller;
-        if (sourceController is not null)
-            sourceController.SetData(DemoKeys.MigrationsOut,
-                ReadInt(sourceController, DemoKeys.MigrationsOut, 0) + 1);
-        source.Session.RequestKillEntity(sourceEntity.Name);
+        if (removeSource)
+        {
+            var sourceController = source.Controller;
+            if (sourceController is not null)
+                sourceController.SetData(DemoKeys.MigrationsOut,
+                    ReadInt(sourceController, DemoKeys.MigrationsOut, 0) + 1);
+            source.Session.RequestKillEntity(sourceEntity.Name);
+        }
         return new BoxMigrationResult(true, null, migrantName, sourceBoxId, destinationBoxId);
     }
 

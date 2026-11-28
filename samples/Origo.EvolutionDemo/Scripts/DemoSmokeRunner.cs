@@ -32,6 +32,9 @@ public partial class DemoSmokeRunner : Node
     private string? _migrationMigrantName;
     private string? _migrationGenome;
     private string? _migrationSourceBox;
+    private ArenaMatch? _arenaMatch;
+    private ArenaResult? _arenaResult;
+    private int _arenaPolls;
     private float _savedTime;
     private int _restoredCreatures;
     private int _restoredGeneration;
@@ -591,6 +594,8 @@ public partial class DemoSmokeRunner : Node
                 if (fastForwarded.time < _fastForwardStartTime + 2f)
                     throw new InvalidOperationException("Timed iteration did not advance simulation time.");
                 var expectedCheckpoints = VerifyIterateCheckpoints();
+                if (!TryFinishArenaSmoke())
+                    break;
                 if (!string.IsNullOrWhiteSpace(_benchmarkSaveSlot))
                 {
                     RunMigrationSmoke();
@@ -623,6 +628,8 @@ public partial class DemoSmokeRunner : Node
                 if (!_entry.Context.Save.ListSaves().Contains(_benchmarkSaveSlot, StringComparer.Ordinal))
                     throw new InvalidOperationException("Benchmark save is missing.");
                 AssertSaveWrittenByThisRun(_benchmarkSaveSlot);
+                if (!TryFinishArenaSmoke())
+                    break;
                 ValidateMigratedAfterLoad();
                 ValidateBoxTopology();
                 PrintCampaignSummary();
@@ -709,6 +716,29 @@ public partial class DemoSmokeRunner : Node
         }
 
         File.AppendAllText(path, line + System.Environment.NewLine);
+    }
+
+    private bool TryFinishArenaSmoke()
+    {
+        if (_arenaMatch is null)
+        {
+            _arenaMatch = ArenaMatch.Start(
+                _entry.Session, ["pond", "meadow"], perCohort: 6, _smokeSeed, durationSeconds: 0.5d);
+            _arenaPolls = 0;
+        }
+
+        _arenaPolls++;
+        if (_arenaPolls > StartupFrameLimit * 2)
+            throw new InvalidOperationException("Arena smoke did not finish.");
+        _arenaResult = _arenaMatch.Poll(_entry.Session);
+        if (_arenaResult is null)
+            return false;
+        GD.Print("DEMO_ARENA_OK " + string.Join(' ',
+            _arenaResult.Cohorts.Select(static cohort =>
+                $"{cohort.SourceBoxId}:{cohort.Started}->{cohort.Survived}")) +
+            $" winner={_arenaResult.Winner ?? "tie"} elapsed={_arenaResult.ElapsedSeconds:0.0}");
+        _arenaMatch = null;
+        return true;
     }
 
     private void RunMigrationSmoke()
