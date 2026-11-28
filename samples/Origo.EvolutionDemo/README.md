@@ -226,8 +226,9 @@ the arena controller, so they do not replace the foreground pond settings.
 profile must allow every expressed organ, action, and sensor; an incompatible
 destination rejects the migration instead of recompiling or disabling traits.
 A migrant keeps its genome, phenotype, energy, age, lineage, root lineage, and
-meal/kill counters. `evo.rootOriginBox` preserves the origin box namespace so
-root ids from different boxes do not collide.
+meal/kill counters. Each box persists a disjoint `box.rootBase`, so int root
+ids from different boxes do not collide; `evo.rootOriginBox` preserves the
+origin label for migration and reporting.
 
 A fresh box's first Campaign starts with:
 

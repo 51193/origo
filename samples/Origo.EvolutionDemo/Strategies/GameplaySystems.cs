@@ -18,7 +18,8 @@ internal sealed class EvolutionTickContext : IGameplayWorldContext
         double tickSeconds,
         EvolutionGameSession session,
         GameplayRuntime runtime,
-        string boxId)
+        string boxId,
+        int rootBase)
     {
         Controller = controller;
         SndContext = sndContext;
@@ -26,6 +27,7 @@ internal sealed class EvolutionTickContext : IGameplayWorldContext
         Session = session;
         Runtime = runtime;
         BoxId = boxId;
+        RootBase = rootBase;
     }
 
     public ISndEntity Controller { get; }
@@ -33,6 +35,7 @@ internal sealed class EvolutionTickContext : IGameplayWorldContext
     public EvolutionGameSession Session { get; }
     public GameplayRuntime Runtime { get; }
     public string BoxId { get; }
+    public int RootBase { get; }
     public double TickSeconds { get; }
     public double TimeSeconds => TickSeconds;
     public SensorGrid? SensorGrid { get; set; }

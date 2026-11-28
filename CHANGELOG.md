@@ -53,6 +53,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   multi-box save, mixed-box input is rejected, and metrics JSON carries a
   `box` object plus per-save `boxId`/`boxProfile`. `--pool` no longer merges
   distinct boxes.
+- **Evolution Demo gives each box an isolated root namespace** — every box
+  owns a persisted `box.rootBase`; founders and injected roots are allocated in
+  that namespace while descendants and migrants keep their source root id.
+  Root birth/death maps can therefore use int ids without cross-box collisions,
+  and the root origin box remains recorded alongside the id.
 - **Evolution Demo runs neutral arena matches** — `ArenaMatch` creates an
   ephemeral all-enabled arena session, imports fixed-size cohorts from two
   boxes without removing their sources, disables reproduction and overgrowth,

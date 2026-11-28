@@ -11,6 +11,7 @@ public static class BoxProfileCodec
     private const string ProfileKey = "box.profile";
     private const string UnlocksKey = "box.unlocks";
     private const string SeedKey = "box.seed";
+    private const string RootBaseKey = "box.rootBase";
 
     /// <summary>Persists the box profile on its session and controller.</summary>
     /// <param name="session">Mounted box session.</param>
@@ -23,11 +24,13 @@ public static class BoxProfileCodec
         session.SessionBlackboard.SetValue(ProfileKey, box.Profile.Id);
         session.SessionBlackboard.SetValue(UnlocksKey, string.Join(';', box.Profile.UnlockIds));
         session.SessionBlackboard.SetValue(SeedKey, box.Seed);
+        session.SessionBlackboard.SetValue(RootBaseKey, box.RootBase);
         if (box.Controller is { } controller)
         {
             controller.SetData(DemoKeys.BoxId, box.Id);
             controller.SetData(DemoKeys.BoxProfile, box.Profile.Id);
             controller.SetData(DemoKeys.BoxSeed, box.Seed);
+            controller.SetData(DemoKeys.BoxRootBase, box.RootBase);
         }
     }
 
@@ -41,21 +44,24 @@ public static class BoxProfileCodec
         ISessionRun session,
         out string id,
         out BoxUnlockProfile profile,
-        out int seed)
+        out int seed,
+        out int rootBase)
     {
         ArgumentNullException.ThrowIfNull(session);
-        if (TryReadBlackboard(session, out id, out profile, out seed))
+        if (TryReadBlackboard(session, out id, out profile, out seed, out rootBase))
             return true;
         if (session.FindByName(DemoEntry.ControllerName) is not { } controller)
             return false;
         if (controller.TryGetData<string>(DemoKeys.BoxId) is not { found: true, value: { } boxId }
             || controller.TryGetData<string>(DemoKeys.BoxProfile) is not { found: true, value: { } profileId }
             || controller.TryGetData<string>(DemoKeys.GameplayUnlocked) is not { found: true, value: { } unlocks }
-            || controller.TryGetData<int>(DemoKeys.BoxSeed) is not { found: true, value: var boxSeed })
+            || controller.TryGetData<int>(DemoKeys.BoxSeed) is not { found: true, value: var boxSeed }
+            || controller.TryGetData<int>(DemoKeys.BoxRootBase) is not { found: true, value: var boxRootBase })
             return false;
         id = boxId;
         profile = BoxUnlockProfile.Create(profileId, unlocks.Split(';', StringSplitOptions.RemoveEmptyEntries));
         seed = boxSeed;
+        rootBase = boxRootBase;
         return true;
     }
 
@@ -63,26 +69,30 @@ public static class BoxProfileCodec
         ISessionRun session,
         out string id,
         out BoxUnlockProfile profile,
-        out int seed)
+        out int seed,
+        out int rootBase)
     {
         var idValue = session.SessionBlackboard.TryGet<string>(IdKey);
         var profileId = session.SessionBlackboard.TryGet<string>(ProfileKey);
         var unlocks = session.SessionBlackboard.TryGet<string>(UnlocksKey);
         var seedValue = session.SessionBlackboard.TryGet<int>(SeedKey);
+        var rootBaseValue = session.SessionBlackboard.TryGet<int>(RootBaseKey);
         if (idValue.found && !string.IsNullOrWhiteSpace(idValue.value)
             && profileId.found && !string.IsNullOrWhiteSpace(profileId.value)
             && unlocks.found && !string.IsNullOrWhiteSpace(unlocks.value)
-            && seedValue.found)
+            && seedValue.found && rootBaseValue.found)
         {
             id = idValue.value!;
             profile = BoxUnlockProfile.Create(profileId.value!, unlocks.value!.Split(';', StringSplitOptions.RemoveEmptyEntries));
             seed = seedValue.value;
+            rootBase = rootBaseValue.value;
             return true;
         }
 
         id = string.Empty;
         profile = null!;
         seed = 0;
+        rootBase = 0;
         return false;
     }
 }

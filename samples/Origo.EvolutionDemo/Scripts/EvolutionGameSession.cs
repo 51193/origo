@@ -17,6 +17,7 @@ public sealed class EvolutionGameSession
     private readonly BoxUnlockProfile _defaultProfile;
     private readonly List<EcologyBox> _boxes = [];
     private EcologyBox? _foreground;
+    private int _nextRootBase = 1_000_000;
 
     /// <summary>Creates a host bound to the live session manager of its context.</summary>
     /// <param name="context">Owning SND context.</param>
@@ -91,7 +92,7 @@ public sealed class EvolutionGameSession
         ArgumentNullException.ThrowIfNull(profile);
         ArgumentNullException.ThrowIfNull(session);
         var runtime = GameplayRuntime.CreateForBox(profile, [new CoreEvolutionModule()]);
-        var box = new EcologyBox("pond", session.LevelId, profile, runtime, session, seed);
+        var box = new EcologyBox("pond", session.LevelId, profile, runtime, session, seed, NextRootBase());
         RegisterBox(box, foreground: true);
         if (box.Controller is { } controller)
         {
@@ -105,7 +106,7 @@ public sealed class EvolutionGameSession
     public EcologyBox AttachLoadedBox(ISessionRun session)
     {
         ArgumentNullException.ThrowIfNull(session);
-        if (!BoxProfileCodec.TryRead(session, out var id, out var profile, out var seed))
+        if (!BoxProfileCodec.TryRead(session, out var id, out var profile, out var seed, out var rootBase))
         {
             if (!session.IsFrontSession)
                 throw new InvalidOperationException($"Session '{session.LevelId}' has no valid box profile.");
@@ -113,10 +114,15 @@ public sealed class EvolutionGameSession
             profile = _defaultProfile;
             seed = session.FindByName(DemoEntry.ControllerName)?.TryGetData<int>(DemoKeys.Seed) is { found: true, value: var value }
                 ? value : 0;
+            rootBase = NextRootBase();
+        }
+        else
+        {
+            rootBase = UseRootBase(rootBase);
         }
 
         var runtime = GameplayRuntime.CreateForBox(profile, [new CoreEvolutionModule()]);
-        var box = new EcologyBox(id, session.LevelId, profile, runtime, session, seed);
+        var box = new EcologyBox(id, session.LevelId, profile, runtime, session, seed, rootBase);
         RegisterBox(box, foreground: session.IsFrontSession);
         if (box.Controller is { } controller)
         {
@@ -140,7 +146,7 @@ public sealed class EvolutionGameSession
             throw new InvalidOperationException($"Box session '{levelId}' already exists.");
         var session = LiveSessions.CreateBackgroundSession(levelId, levelId, syncProcess: true);
         var runtime = GameplayRuntime.CreateForBox(profile, [new CoreEvolutionModule()]);
-        var box = new EcologyBox(id, levelId, profile, runtime, session, seed);
+        var box = new EcologyBox(id, levelId, profile, runtime, session, seed, NextRootBase());
         RegisterBox(box, foreground: false);
         var controller = session.Spawn(EvolutionEntityFactory.Controller(seed));
         GameplayStateSync.Save(controller, runtime);
@@ -216,6 +222,21 @@ public sealed class EvolutionGameSession
         var box = BoxFor(foreground);
         _foreground = box;
         return box;
+    }
+
+    private int NextRootBase()
+    {
+        var value = _nextRootBase;
+        _nextRootBase += 1_000_000;
+        return value;
+    }
+
+    private int UseRootBase(int rootBase)
+    {
+        if (rootBase <= 0)
+            return NextRootBase();
+        _nextRootBase = Math.Max(_nextRootBase, rootBase + 1_000_000);
+        return rootBase;
     }
 
     private void RegisterBox(EcologyBox box, bool foreground)

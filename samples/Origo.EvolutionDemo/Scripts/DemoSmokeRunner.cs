@@ -32,6 +32,7 @@ public partial class DemoSmokeRunner : Node
     private string? _migrationMigrantName;
     private string? _migrationGenome;
     private string? _migrationSourceBox;
+    private int _migrationRootLineage;
     private ArenaMatch? _arenaMatch;
     private ArenaResult? _arenaResult;
     private int _arenaPolls;
@@ -754,6 +755,9 @@ public partial class DemoSmokeRunner : Node
         var genome = creature.TryGetData<string>(DemoKeys.BodyGenome) is { found: true } data
             ? data.value
             : throw new InvalidOperationException("Source creature has no genome.");
+        var rootLineage = creature.TryGetData<int>(DemoKeys.RootLineage) is { found: true } root
+            ? root.value
+            : throw new InvalidOperationException("Source creature has no root lineage.");
         var result = BoxMigration.Migrate(_entry.Session, source.Id, creature.Name, target.Id);
         if (!result.Success || result.MigrantName is null)
             throw new InvalidOperationException($"Migration failed: {result.Reason}.");
@@ -771,6 +775,7 @@ public partial class DemoSmokeRunner : Node
         _migrationMigrantName = result.MigrantName;
         _migrationGenome = genome;
         _migrationSourceBox = source.Id;
+        _migrationRootLineage = rootLineage;
         GD.Print($"DEMO_MIGRATION_OK from={source.Id} to={target.Id} name={result.MigrantName}");
     }
 
@@ -788,6 +793,9 @@ public partial class DemoSmokeRunner : Node
         if (migrant.TryGetData<string>(DemoKeys.RootOriginBox) is not { found: true } origin
             || !string.Equals(origin.value, _migrationSourceBox, StringComparison.Ordinal))
             throw new InvalidOperationException("Migrated root origin changed across save/load.");
+        if (migrant.TryGetData<int>(DemoKeys.RootLineage) is not { found: true } root
+            || root.value != _migrationRootLineage)
+            throw new InvalidOperationException("Migrated root lineage changed across save/load.");
         GD.Print($"DEMO_MIGRATION_RESTORED name={_migrationMigrantName}");
     }
 
@@ -804,6 +812,8 @@ public partial class DemoSmokeRunner : Node
                 $"Multi-box smoke expected 2 live boxes, found {boxes.Length}; " +
                 $"registered={string.Join(',', _entry.Session.Boxes.Select(box => box.LevelId))}; " +
                 $"sessions={string.Join(',', sessions.Keys)}.");
+        if (boxes.Select(static box => box.RootBase).Distinct().Count() != boxes.Length)
+            throw new InvalidOperationException("Ecology boxes share a root-lineage namespace.");
         foreach (var box in boxes)
         {
             var controller = box.Controller
@@ -814,7 +824,7 @@ public partial class DemoSmokeRunner : Node
         }
 
         GD.Print($"DEMO_BOXES count={boxes.Length} " + string.Join(' ', boxes.Select(box =>
-            $"{box.Id}:{box.Session.GetEntities().Count}")));
+            $"{box.Id}:{box.RootBase}:{box.Session.GetEntities().Count}")));
     }
 
     private void AssertSaveWrittenByThisRun(string slot)
