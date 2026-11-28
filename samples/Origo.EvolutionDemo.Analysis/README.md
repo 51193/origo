@@ -302,7 +302,8 @@ deaths, mortality shares, roots with deaths, and top-root share/living state.
 The HTML groups runs into high (>1,000 final creatures) and low regimes and
 shows medians for population, roots, predation, top-root share, and the share of
 runs whose top root is still alive. JSON also carries `runCount`, `highRuns`,
-`lowRuns`, and `highShare`.
+`lowRuns`, `highShare`, a 95% Wilson interval (`highShareLow`/`High`), and
+per-run roots-ever/extinct counts.
 
 ## Performance analysis
 
