@@ -33,6 +33,7 @@ public static class GenomeHtmlReport
         ArgumentNullException.ThrowIfNull(input.Enrichment);
         ArgumentNullException.ThrowIfNull(input.Lineage);
         ArgumentNullException.ThrowIfNull(input.Mortality);
+        ArgumentNullException.ThrowIfNull(input.Births);
         ArgumentNullException.ThrowIfNull(input.Options);
         var rows = input.Rows;
         var clustering = input.Clustering;
@@ -58,6 +59,7 @@ th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.warn{color:#fca5a5}.no
         AppendEcology(html, input);
         AppendLineage(html, input);
         AppendMortality(html, input);
+        AppendBirths(html, input);
         if (input.Candidates.Count > 0)
             AppendCandidates(html, input);
         html.Append("<h2>PCA scatter</h2>");
@@ -236,6 +238,29 @@ th{color:#93c5fd}code{color:#fbbf24}.muted{color:#94a3b8}.warn{color:#fca5a5}.no
                 $"<tr><td><code>{Escape(displayId)}</code></td><td>{lineage.Time:0.###}</td>"
                 + $"<td>{origin.Founders}</td><td>{origin.Children}</td><td>{origin.Enrichment}</td>"
                 + $"<td>{origin.Innovation}</td><td>{origin.Overgrowth}</td><td>{origin.Unknown}</td></tr>");
+        }
+
+        html.Append("</table>");
+    }
+
+    private static void AppendBirths(StringBuilder html, GenomeReportInput input)
+    {
+        if (input.Births.Latest is not { Count: > 0 } births)
+            return;
+        var finalPath = input.Lineage.Saves.Count == 0 ? null : input.Lineage.Saves[^1].Path;
+        var living = input.Lineage.RootDetails
+            .Where(item => string.Equals(item.Path, finalPath, StringComparison.Ordinal))
+            .Select(static item => item.RootLineage)
+            .ToHashSet();
+        html.Append("<h2>Births by root lineage</h2>");
+        html.Append("<p class=\"muted\">Cumulative births with at least one birth; living means the root is present in the final save. Only the ten largest roots are shown.</p>");
+        html.Append("<table><tr><th>root</th><th>births</th><th>living</th></tr>");
+        foreach (var (root, count) in births.OrderByDescending(static pair => pair.Value)
+            .ThenBy(static pair => pair.Key)
+            .Take(10))
+        {
+            html.Append(CultureInfo.InvariantCulture,
+                $"<tr><td><code>{root}</code></td><td>{count}</td><td>{(living.Contains(root) ? "yes" : "no")}</td></tr>");
         }
 
         html.Append("</table>");

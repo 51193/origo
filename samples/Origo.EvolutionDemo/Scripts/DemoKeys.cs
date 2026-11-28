@@ -134,6 +134,7 @@ internal static class DemoKeys
     public const string PredationDeaths = "evo.predationDeaths";
     public const string AgeDeaths = "evo.ageDeaths";
     public const string DeathByRoot = "evo.deathByRoot";
+    public const string BirthsByRoot = "evo.birthsByRoot";
     public const string Children = "evo.children";
     public const string Kills = "evo.kills";
     public const string ReproCooldown = "evo.reproCooldown";

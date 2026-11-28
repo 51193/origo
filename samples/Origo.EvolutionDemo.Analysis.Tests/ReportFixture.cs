@@ -121,6 +121,11 @@ internal static class ReportFixture
         {
             [1] = new(2, 3, 1),
         };
+        IReadOnlyDictionary<int, int> rootBirths = new Dictionary<int, int> { [1] = 100 };
+        var births = new BirthsAnalysis(
+            [.. saves.Select(save => new SaveBirths(save.Id, save.Path, save.Time, save.Tick, rootBirths))],
+            rootBirths,
+            new RootBirthsSummary(1, 100, 1, 100, 1d));
         var mortality = new MortalityAnalysis(
             [.. saves.Select(save => new SaveMortality(
                 save.Id, save.Path, save.Time, save.Tick, new DeathCounts(2, 3, 1), rootDeaths))],
@@ -152,6 +157,7 @@ internal static class ReportFixture
             ecology,
             lineage,
             mortality,
+            births,
             rows,
             100,
             100,

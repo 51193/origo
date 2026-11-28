@@ -210,6 +210,8 @@ public sealed class GenomeReportTests
         Assert.Equal(9, json.GetProperty("mortalitySequence").GetProperty("counts").GetProperty("predation").GetInt32());
         Assert.Contains("Lineages and founder cohorts", html, StringComparison.Ordinal);
         Assert.Contains("Death causes", html, StringComparison.Ordinal);
+        Assert.Contains("Births by root lineage", html, StringComparison.Ordinal);
+        Assert.Equal(100, json.GetProperty("rootBirthsSequence").GetProperty("totalBirths").GetInt32());
     }
 
     [Fact]

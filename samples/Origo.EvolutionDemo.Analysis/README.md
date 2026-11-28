@@ -145,6 +145,10 @@ per-save numeric `saves[].food` count remains unchanged; the typed inventory is
   with none of the counters leave these columns blank; if only part of the
   counter set exists, the missing causes are treated as zero so partial data is
   still visible.
+- `rootBirthsSequence.totalBirths/topRootLineage/topRootBirths/topRootShare`:
+  cumulative births by stable root, including ordinary and overgrowth births
+  but not founder injections. `--root-survival-csv` adds `births` and
+  `netGrowth` to every root row.
 
 `--lineages-csv` writes one row per living mutation lineage per save:
 `save,time,lineage,creatures,share,founderCreatures,minGeneration,maxGeneration,isNew,isNewGen0`.
@@ -160,9 +164,10 @@ consecutive saves; the first save's interval is its cumulative total.
 summaries are `lineageSequence` and `rootLineageSequence` (`distinctLineages`,
 `peakLivingLineages`, `finalLivingLineages`, `totalNewLineages`,
 `totalNewGen0Lineages`, `lostLineages`, `meanPriorLineageSurvival`,
-`meanLineageTurnover`), `spawnOrigins`, and `mortalitySequence` (latest
+`meanLineageTurnover`), `spawnOrigins`, `mortalitySequence` (latest
 cumulative counts and cause shares), `rootMortalitySequence` (latest
-per-root totals and shares), and `rootMortality` (latest root × cause rows).
+per-root totals and shares), `rootMortality` (latest root × cause rows),
+`rootBirthsSequence`, and `rootBirths` (latest births by root).
 
 The report contains:
 

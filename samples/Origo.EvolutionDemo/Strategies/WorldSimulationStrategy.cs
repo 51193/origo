@@ -142,6 +142,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             entity.SetData(DemoKeys.AgeDeaths, 0);
         if (!entity.TryGetData<string>(DemoKeys.DeathByRoot).found)
             entity.SetData(DemoKeys.DeathByRoot, string.Empty);
+        if (!entity.TryGetData<string>(DemoKeys.BirthsByRoot).found)
+            entity.SetData(DemoKeys.BirthsByRoot, string.Empty);
         if (!entity.TryGetData<float>(DemoKeys.Accumulator).found)
             entity.SetData(DemoKeys.Accumulator, 0f);
         if (!entity.TryGetData<float>(DemoKeys.FoodAccumulator).found)
@@ -292,6 +294,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         controller.SetData(DemoKeys.PredationDeaths, 0);
         controller.SetData(DemoKeys.AgeDeaths, 0);
         controller.SetData(DemoKeys.DeathByRoot, string.Empty);
+        controller.SetData(DemoKeys.BirthsByRoot, string.Empty);
         controller.SetData(DemoKeys.SpikeHits, 0);
         controller.SetData(DemoKeys.SpikeDrained, 0f);
         controller.SetData(DemoKeys.CorpsesCreated, 0);
@@ -349,6 +352,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         session.Profiler.End(world);
         if (world.DeathByRootDirty)
             controller.SetData(DemoKeys.DeathByRoot, RootDeathCodec.Serialize(world.DeathByRoot));
+        if (world.BirthsByRootDirty)
+            controller.SetData(DemoKeys.BirthsByRoot, RootBirthCodec.Serialize(world.BirthsByRoot));
     }
 
     /// <summary>Runs the core simulation system for one fixed tick.</summary>
@@ -863,6 +868,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     rootLineage,
                     "child",
                     0f));
+                world.BirthsByRoot[rootLineage] = world.BirthsByRoot.GetValueOrDefault(rootLineage) + 1;
+                world.BirthsByRootDirty = true;
                 entity.SetData(DemoKeys.Children, children);
                 controller.SetData(DemoKeys.Births, ReadInt(controller, DemoKeys.Births, 0) + 1);
                 pendingChildren++;

@@ -1151,5 +1151,41 @@
    "medianTopRootShare": 0.41079427850385086,
    "topRootLivingShare": 0.25
   }
- ]
+ ],
+ "births_followup_2026-11-28": {
+  "e1p0": {
+   "total_births": 71586,
+   "roots_with_births": 1589,
+   "top_root": 4,
+   "top_root_births": 34226,
+   "top_root_birth_share": 0.47811024501997595,
+   "top_root_living": true,
+   "deaths": {
+    "starvation": 68217,
+    "predation": 0,
+    "aging": 5554,
+    "total": 73771
+   },
+   "top_root_deaths": 33689,
+   "top_root_net_growth": 537,
+   "top_root_final_births": 34226
+  },
+  "e1p1": {
+   "total_births": 57225,
+   "roots_with_births": 2250,
+   "top_root": 4,
+   "top_root_births": 28859,
+   "top_root_birth_share": 0.5043075578855395,
+   "top_root_living": true,
+   "deaths": {
+    "starvation": 25496,
+    "predation": 33508,
+    "aging": 1828,
+    "total": 60832
+   },
+   "top_root_deaths": 28756,
+   "top_root_net_growth": 103,
+   "top_root_final_births": 28859
+  }
+ }
 }

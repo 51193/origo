@@ -30,6 +30,7 @@ public static class GenomeMetricsJson
         ArgumentNullException.ThrowIfNull(input.Saves);
         ArgumentNullException.ThrowIfNull(input.Lineage);
         ArgumentNullException.ThrowIfNull(input.Mortality);
+        ArgumentNullException.ThrowIfNull(input.Births);
         ArgumentNullException.ThrowIfNull(input.Rows);
         ArgumentNullException.ThrowIfNull(input.RawColumns);
         ArgumentNullException.ThrowIfNull(input.DroppedColumns);
@@ -52,6 +53,7 @@ public static class GenomeMetricsJson
             WriteOrigins(writer, input.Lineage.Origins);
             WriteMortalitySequence(writer, input.Mortality.Sequence);
             WriteRootMortality(writer, input.Mortality, input.Lineage);
+            WriteRootBirths(writer, input.Births, input.Lineage);
             WriteSaves(writer, input);
             WriteFeatures(writer, input);
             WriteClustering(writer, input);
@@ -297,6 +299,45 @@ public static class GenomeMetricsJson
                 writer.WriteNumber("predation", tally.Predation);
                 writer.WriteNumber("aging", tally.Aging);
                 writer.WriteNumber("total", tally.Total);
+                writer.WriteBoolean("living", livingRoots.Contains(root));
+                writer.WriteEndObject();
+            }
+
+        writer.WriteEndArray();
+    }
+
+    private static void WriteRootBirths(
+        Utf8JsonWriter writer, BirthsAnalysis births, LineageAnalysis lineage)
+    {
+        var finalPath = lineage.Saves.Count == 0 ? null : lineage.Saves[^1].Path;
+        var livingRoots = lineage.RootDetails
+            .Where(item => string.Equals(item.Path, finalPath, StringComparison.Ordinal))
+            .Select(static item => item.RootLineage)
+            .ToHashSet();
+        writer.WriteStartObject("rootBirthsSequence");
+        if (births.Summary is { } summary)
+        {
+            writer.WriteNumber("roots", summary.Roots);
+            writer.WriteNumber("totalBirths", summary.TotalBirths);
+            if (summary.TopRoot is { } topRoot) writer.WriteNumber("topRootLineage", topRoot); else writer.WriteNull("topRootLineage");
+            if (summary.TopRootBirths is { } topBirths) writer.WriteNumber("topRootBirths", topBirths); else writer.WriteNull("topRootBirths");
+            WriteNullableNumber(writer, "topRootShare", summary.TopRootShare);
+            if (summary.TopRoot is { } root) writer.WriteBoolean("topRootLiving", livingRoots.Contains(root));
+        }
+        else
+        {
+            writer.WriteNull("summary");
+        }
+
+        writer.WriteEndObject();
+        writer.WriteStartArray("rootBirths");
+        if (births.Latest is not null)
+            foreach (var (root, count) in births.Latest.OrderByDescending(static pair => pair.Value)
+                .ThenBy(static pair => pair.Key))
+            {
+                writer.WriteStartObject();
+                writer.WriteNumber("rootLineage", root);
+                writer.WriteNumber("births", count);
                 writer.WriteBoolean("living", livingRoots.Contains(root));
                 writer.WriteEndObject();
             }
