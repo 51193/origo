@@ -108,7 +108,9 @@ public interface ISaveStorageService
     ///     caller and must be disposed when no longer needed. A snapshot read
     ///     restores a complete interrupted `.bak` snapshot before reading; a
     ///     direct load therefore has the same recovery behavior as a
-    ///     list-then-load flow.
+    ///     list-then-load flow. A backup whose only defect is a legacy
+    ///     level-directory name fails with the actionable migration exception
+    ///     instead of being treated as a missing payload.
     /// </remarks>
     SaveGamePayload ReadSavePayloadFromSnapshot(
         string saveId,
@@ -117,7 +119,9 @@ public interface ISaveStorageService
     /// <summary>Reads only the Progress node from a save_* snapshot directory.</summary>
     /// <remarks>
     ///     The returned node is owned by the caller and must be disposed. A
-    ///     complete interrupted `.bak` snapshot is restored before reading.
+    ///     complete interrupted `.bak` snapshot is restored before reading. A
+    ///     backup whose only defect is a legacy level-directory name fails with
+    ///     the actionable migration exception instead of returning null.
     /// </remarks>
     DataSourceNode? ReadProgressNodeFromSnapshot(string saveId);
 
@@ -131,6 +135,8 @@ public interface ISaveStorageService
     /// <summary>Attempts to read the payload of the specified level from a save_* snapshot directory; returns null when not found.</summary>
     /// <remarks>
     ///     A complete interrupted `.bak` snapshot is restored before reading.
+    ///     A backup whose only defect is a legacy level-directory name fails
+    ///     with the actionable migration exception instead of returning null.
     ///     The returned payload and all of its node trees are owned by the
     ///     caller and must be disposed when no longer needed.
     /// </remarks>
@@ -146,10 +152,16 @@ public interface ISaveStorageService
     /// </summary>
     /// <param name="saveId">The current save slot ID (used to locate the save_* directory during snapshot fallback).</param>
     /// <param name="levelId">The target level ID.</param>
-    /// <returns>The resolved LevelPayload, or null if neither location has data.</returns>
+    /// <returns>
+    ///     The resolved LevelPayload, or null if neither location has data. A
+    ///     snapshot fallback whose only defect is a legacy level-directory name
+    ///     throws the actionable migration exception instead of returning null.
+    /// </returns>
     /// <remarks>
     ///     The returned payload and all of its node trees are owned by the
-    ///     caller and must be disposed when no longer needed.
+    ///     caller and must be disposed when no longer needed. The migration
+    ///     exception follows the snapshot level-read contract and names the
+    ///     legacy directory and the rename instruction.
     /// </remarks>
     LevelPayload? ResolveLevelPayload(string saveId, string levelId);
 

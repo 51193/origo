@@ -346,6 +346,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **Interrupted legacy backups report the migration error** — when the only
+  remaining copy of a save was a `save_{id}.bak/` backup whose level directory
+  used a legacy mixed-case or trailing-period name, loading it failed with
+  "Missing required progress.json": the backup was classified incomplete, never
+  promoted, and the strict read then looked for a slot that did not exist.
+  Snapshot reads now classify the backup and, when the legacy name is the only
+  defect, report the same actionable rename/topology migration error as a
+  strict read, naming the actual backup path and every offending directory
+  while leaving the backup untouched. Listing still does not expose or promote
+  that backup, and a backup that is incomplete for any other reason keeps the
+  generic missing-payload result. After renaming inside the backup and updating
+  the topology, the next read promotes and loads it.
 - **camera_view reports points in the near half of the frustum** — the
   projection helper clipped NDC Z against [0, 1], but Godot's CPU camera
   projection maps near to -1 and far to +1. Perspective points closer than the

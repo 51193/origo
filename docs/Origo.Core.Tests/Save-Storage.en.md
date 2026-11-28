@@ -10,7 +10,8 @@ Validates the storage layer contract of the Origo persistence system: "strict re
 Covers `.write_in_progress` marker, level three-file-set integrity, missing `progress.json`,
 snapshot creation/read round-trip, path policy customization, idempotent deduplication, Payload model defaults,
 WellKnownKeys constants, SaveFileHandle path resolution and traversal protection, the
-legacy mixed-case level-directory migration failure on read, and the
+legacy mixed-case level-directory migration failure on read (including an interrupted backup
+that is complete except for the legacy level name), and the
 format-compatibility promise of the in-repository golden v1 save loaded through the shell entry.
 
 ## Test File List
@@ -19,7 +20,7 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 |------|-------------------|
 | `SaveStorageContractTests.cs` | Storage contract: marker, three-file-set, two-phase write, snapshot, meta.map, path policy |
 | `SaveStorageAndPayloadTests.cs` | Storage and Payload integration: write/read round-trip, LevelPayload write/read, snapshot atomicity, error recovery |
-| `SaveLegacyLevelMigrationTests.cs` | Full shell load path: `RequestLoadGame` on a snapshot with a legacy mixed-case level directory fails with the actionable migration error (no partial `current/` restore) and loads normally after the lowercase rename + topology rewrite |
+| `SaveLegacyLevelMigrationTests.cs` | Full shell load path: `RequestLoadGame` on a snapshot with a legacy mixed-case level directory fails with the actionable migration error (no partial `current/` restore) and loads normally after the lowercase rename + topology rewrite; the same contract is verified when the only remaining copy is a `.bak` backup (mixed case, trailing period, case-variant suffix, retry, and listing inertness) |
 | `SaveIdempotencyTests.cs` | Idempotent deduplication: Payload SHA calculation, same/different payload write/skip, SHA file management |
 | `SavePathLayoutTests.cs` | Path layout: directory file path assembly under default policy and invalid parameter guards |
 | `SavePathPolicyContractTests.cs` | Path policy interface contract: ISavePathPolicy injection and policy-aware verification of all storage methods |
@@ -210,6 +211,15 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | `SaveStorageFacade_SnapshotCurrentToSave_MissingCurrentDirectory_Throws` | current/ directory missing | InvalidOperationException, no save directory written |
 | `SaveStorageFacade_SnapshotCurrentToSave_WhitespaceNewSaveId_Throws` | Whitespace save ID | ArgumentException |
 | `SaveStorageFacade_ReadSavePayloadFromSnapshot_WhitespaceSaveId_Throws` | Whitespace save ID | ArgumentException |
+| `SaveStorageFacade_ReadProgressFromSnapshot_LegacyLevelInOnlyBackup_ThrowsMigrationError` | Only `save_legacy.bak/` remains and its complete level directory is `level_Town/` | `InvalidOperationException` naming `level_Town` and the backup; the backup is neither promoted nor deleted |
+| `SaveStorageFacade_ReadSavePayloadFromSnapshot_LegacyLevelInOnlyBackup_ThrowsMigrationError` | Full payload read on the same legacy backup | `InvalidOperationException` with the migration error; backup untouched |
+| `SaveStorageFacade_TryReadLevelPayloadFromSnapshot_LegacyLevelInOnlyBackup_ThrowsMigrationError` | Level read on the same legacy backup | `InvalidOperationException` with the migration error instead of `null` |
+| `DefaultSaveStorageService_ReadSavePayloadFromSnapshot_LegacyLevelInOnlyBackup_ThrowsMigrationError` | Production default service full payload read on the same legacy backup | `InvalidOperationException` with the migration error |
+| `SaveStorageFacade_ReadProgressFromSnapshot_LegacyLevelBackupWithValidSibling_ThrowsMigrationError` | Complete backup with `level_default/` plus `level_Town/` | Migration error; the legacy name is the only blocker |
+| `SaveStorageFacade_ReadProgressFromSnapshot_MultipleLegacyLevelsInBackup_ThrowsMigrationErrorNamingAll` | Complete backup with `level_Town/` and `level_City/` | One migration error naming both directories with plural wording |
+| `SaveStorageFacade_ReadProgressFromSnapshot_DotOnlyLegacyLevelInOnlyBackup_ThrowsMigrationError` | Complete backup with `level_../` (dot-only legacy id, a valid POSIX directory) | Migration error naming `level_..`; no raw path-traversal `ArgumentException` on the in-memory host (a host that rejects `..` while enumerating is a separate adapter limitation) |
+| `SaveStorageFacade_ReadProgressFromSnapshot_TrailingDotsLegacyLevelInOnlyBackup_ThrowsMigrationError` | Complete backup with `level_room../` | Migration error naming the directory; no raw path-traversal `ArgumentException` on the in-memory host |
+| `DefaultSaveStorageService_ReadSavePayloadFromSnapshot_CustomLayoutLegacyLevelBackup_ThrowsMigrationError` | Custom policy with `custom_level_Town/` in `custom_save_recovered.bak/` | Migration error names the custom directory and the actual backup path |
 | `SaveStorageFacade_ReadCurrent_MissingProgressStateMachines_Throws` | progress_state_machines.json missing | InvalidOperationException |
 | `SaveStorageFacade_ReadCurrent_MissingSessionStateMachines_Throws` | session_state_machines.json missing | InvalidOperationException |
 | `WriteToCurrent_WhenActiveLevelMissing_ThrowsWithoutWritingCurrent` | LevelPayload for ActiveLevelId missing | InvalidOperationException, no residue in current/ |
@@ -259,6 +269,10 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | `DefaultSaveStorageService_ReadSavePayloadFromSnapshot_MissingRoot_ThrowsMissingProgress` | Full payload read on the same missing-root state | Fails fast with the missing-progress error, not a directory-enumeration error |
 | `SaveStorageFacade_DeleteSave_RemovesCaseVariantBackup` | Real slot plus both `.bak` and `.BAK` remnants | All are removed; neither remnant can resurrect the deleted slot on a later enumeration |
 | `SaveStorageFacade_EnumerateSaveIds_MalformedLevelInBackup_DoesNotThrow` | Complete backup with a malformed level directory name | The backup is treated as incomplete, left untouched, and does not break listing |
+| `SaveStorageFacade_ReadProgressFromSnapshot_IncompleteLegacyLevelBackup_ReturnsNull` | Legacy `level_Town/` missing `session.json` | Returns `null`; the generic incomplete-backup path is preserved, so a rename is not advertised as a fix |
+| `SaveStorageFacade_ReadProgressFromSnapshot_LegacyLevelWithIncompleteValidSibling_ReturnsNull` | Complete `level_Town/` plus `level_default/` missing `session.json` | Returns `null`; the legacy name is not the only defect |
+| `SaveStorageFacade_EnumerateSaveIds_LegacyLevelBackupWithValidSibling_DoesNotPromote` | The same backup seen through enumeration | Empty list; backup untouched and no fake slot created |
+| `SaveStorageFacade_EnumerateSaveIds_EmptyDotOnlyLevelBackup_DoesNotThrowOrPromote` | Root files plus an empty `level_../` directory | Listing and the progress probe stay inert (`[]` / `null`); no raw path-traversal error, backup untouched |
 | `SaveStorageFacade_EnumerateSaveIds_UsesPolicyRecovery` | Custom `ISavePathPolicy` layout (custom save prefix and custom level directory names) with a complete interrupted snapshot | `EnumerateInterruptedSnapshots` and `TryGetLevelIdFromDirectory` drive recovery; the custom real slot is restored and listed |
 | `DefaultSaveStorageService_ReadSavePayloadFromSnapshot_RecoversCustomLayout` | Direct full-payload read with the same custom policy, without a prior list; the snapshot also contains a non-active `bg` level under the custom level naming | The custom slot's backup is discovered through the policy and restored; `TryGetLevelIdFromDirectory` discovers the background level payload |
 | `DefaultSaveStorageService_WriteSavePayloadToCurrent_PrunesCustomLevelDirectories` | Custom level directory layout with a stale level under `current/` | Stale custom level directory is pruned; the live custom level remains |
@@ -272,6 +286,16 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
 | `RequestLoadGame_LegacyMixedCaseLevelDirectory_ThrowsMigrationError_ThenLoadsAfterRename` | A real `save_legacy_slot/` was produced by the normal save path and then converted to the legacy shape (`level_MainMenu/` plus `__foreground__=MainMenu=false` topology) | `RequestLoadGame` + `FlushFrame` throws `InvalidOperationException` naming `MainMenu`/`level_MainMenu` and the lowercase rename (never a raw path-validation `ArgumentException`); the failure happens before the restore write, so no partially restored `current/` payload/marker exists. After renaming to `level_mainmenu` and rewriting the topology id, the same load succeeds with foreground level `mainmenu` and a restored `current/` |
+| `RequestLoadGame_LegacyLevelInOnlyBackup_ThrowsMigrationError_ThenLoadsAfterRename` | The same legacy slot is the only remaining copy, renamed to `save_legacy_slot.bak/` (no real slot) | The load throws the actionable migration error naming `level_MainMenu` and the actual backup path (not "Missing required progress.json"); a retry reports the same error; the backup is neither promoted nor deleted. After renaming inside the backup and rewriting the topology, the next load promotes the backup, removes it, and restores `current/` |
+| `RequestLoadGame_LegacyTrailingPeriodLevelInOnlyBackup_ThrowsMigrationError` | Only `save_legacy_slot.bak/` remains with `level_mainmenu./` | Migration error naming the trailing-period directory; backup untouched |
+| `RequestLoadGame_LegacyLevelInCaseVariantBackup_ThrowsMigrationError` | Only `save_legacy_slot.BAK/` remains with `level_MainMenu/` | Migration error names the case-variant path actually discovered, not a reconstructed lowercase name |
+| `RequestLoadGame_IncompleteLegacyLevelInOnlyBackup_StillReportsMissingProgress` | Only `save_legacy_slot.bak/` remains, `level_MainMenu/` lacks `session.json` | The generic missing-`progress.json` error is preserved; the migration error must not claim a rename alone can fix an incomplete payload |
+
+### Boundary Path
+
+| Test Method | Boundary Condition | Expected Behavior |
+|-------------|-------------------|-------------------|
+| `ListSaves_LegacyLevelInOnlyBackup_DoesNotThrowOrPromote` | The only remaining copy is the legacy backup | Listing returns no slot, does not throw, leaves the backup untouched, and creates no fake `save_legacy_slot/` |
 
 ## SavePayloadReaderDisposalTests Details
 
@@ -504,6 +528,7 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 |----------------|--------|-----------|
 | Queuing behavior of concurrent requests during SaveStorageFacade write | Concurrency safety | — |
 | Performance of snapshot with many level files (deep directory tree recursive copy) | I/O behavior under extreme scenarios | — |
+| Godot host enumerating a `..`-suffixed legacy level directory | The adapter's path guard runs before save recovery; the in-memory test host does not model it | [#183](https://github.com/51193/origo/issues/183) |
 
 ## Design Decisions
 
