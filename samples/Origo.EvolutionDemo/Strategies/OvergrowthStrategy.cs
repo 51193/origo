@@ -55,7 +55,6 @@ public sealed class OvergrowthStrategy : LifecycleStrategyBase
         if (entity.TryGetData<string>(DemoKeys.ConfigJson) is { found: true, value: { Length: > 0 } config })
             DemoSettings.Current = DemoSettings.FromJson(config);
         if (!Tuning.OvergrowthEnabled
-            || ReadBool(entity, DemoKeys.ArenaMode, false)
             || !string.Equals(ReadString(entity, DemoKeys.Phase, string.Empty), DemoKeys.PhaseRunning, StringComparison.Ordinal)
             || ReadBool(entity, DemoKeys.Paused, false))
             return;

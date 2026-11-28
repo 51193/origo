@@ -217,20 +217,25 @@ by benchmarks and mechanics experiments. The foreground pond and the background
 meadow are separate box sessions with separate runtimes, controllers, profiles,
 and save payloads.
 
-`ArenaMatch` creates an ephemeral all-enabled box, imports equal cohorts without
-removing their sources, disables reproduction and overgrowth, and reports
-survivors and a winner after a short fixed match. Arena settings are scoped to
-the arena controller, so they do not replace the foreground pond settings.
+A 斗蛐蛐 arena is not a separate simulation type: it is a normal box created
+with the all-enabled profile and a manually seeded initial population. It uses
+the same reproduction, food, collision, migration, save, and analysis paths as
+every other box. Termination conditions are deliberately not implemented yet.
 
 While a pond is running:
 
 | Key | Action |
 |---|---|
+| `G` | open the ecology-box panel |
 | `B` | switch the foreground to the next ecology box |
 | `N` | create a new all-enabled box |
 | `Shift+N` | create a no-predation “forage” box |
 | `M` | migrate the selected creature to the next box |
-| `A` | run a 10-second arena between the foreground and next box |
+
+The box panel can switch foreground, pause/resume individual boxes, delete
+background boxes, create sandbox/forage boxes, and create an empty
+manual-start box. `Seed` copies the currently selected foreground creature
+into that box, so an arena can be seeded one side at a time.
 
 `BoxMigration` can move a creature from one box to another. The destination
 profile must allow every expressed organ, action, and sensor; an incompatible

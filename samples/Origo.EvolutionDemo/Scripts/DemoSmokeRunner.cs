@@ -33,9 +33,6 @@ public partial class DemoSmokeRunner : Node
     private string? _migrationGenome;
     private string? _migrationSourceBox;
     private int _migrationRootLineage;
-    private ArenaMatch? _arenaMatch;
-    private ArenaResult? _arenaResult;
-    private int _arenaPolls;
     private float _savedTime;
     private int _restoredCreatures;
     private int _restoredGeneration;
@@ -595,8 +592,7 @@ public partial class DemoSmokeRunner : Node
                 if (fastForwarded.time < _fastForwardStartTime + 2f)
                     throw new InvalidOperationException("Timed iteration did not advance simulation time.");
                 var expectedCheckpoints = VerifyIterateCheckpoints();
-                if (!TryFinishArenaSmoke())
-                    break;
+                RunManualBoxSmoke();
                 if (!string.IsNullOrWhiteSpace(_benchmarkSaveSlot))
                 {
                     RunMigrationSmoke();
@@ -629,8 +625,6 @@ public partial class DemoSmokeRunner : Node
                 if (!_entry.Context.Save.ListSaves().Contains(_benchmarkSaveSlot, StringComparer.Ordinal))
                     throw new InvalidOperationException("Benchmark save is missing.");
                 AssertSaveWrittenByThisRun(_benchmarkSaveSlot);
-                if (!TryFinishArenaSmoke())
-                    break;
                 ValidateMigratedAfterLoad();
                 ValidateBoxTopology();
                 PrintCampaignSummary();
@@ -719,27 +713,29 @@ public partial class DemoSmokeRunner : Node
         File.AppendAllText(path, line + System.Environment.NewLine);
     }
 
-    private bool TryFinishArenaSmoke()
+    private void RunManualBoxSmoke()
     {
-        if (_arenaMatch is null)
-        {
-            _arenaMatch = ArenaMatch.Start(
-                _entry.Session, ["pond", "meadow"], perCohort: 6, _smokeSeed, durationSeconds: 0.5d);
-            _arenaPolls = 0;
-        }
-
-        _arenaPolls++;
-        if (_arenaPolls > StartupFrameLimit * 2)
-            throw new InvalidOperationException("Arena smoke did not finish.");
-        _arenaResult = _arenaMatch.Poll(_entry.Session);
-        if (_arenaResult is null)
-            return false;
-        GD.Print("DEMO_ARENA_OK " + string.Join(' ',
-            _arenaResult.Cohorts.Select(static cohort =>
-                $"{cohort.SourceBoxId}:{cohort.Started}->{cohort.Survived}")) +
-            $" winner={_arenaResult.Winner ?? "tie"} elapsed={_arenaResult.ElapsedSeconds:0.0}");
-        _arenaMatch = null;
-        return true;
+        var source = _entry.Session.TryGetBox("pond")
+            ?? throw new InvalidOperationException("Manual-box smoke has no source box.");
+        var creature = source.Session.GetEntities().FirstOrDefault(entity =>
+            string.Equals(entity.TryGetData<string>(DemoKeys.Kind) is { found: true } kind ? kind.value : null,
+                DemoKeys.CreatureKind, StringComparison.Ordinal))
+            ?? throw new InvalidOperationException("Manual-box smoke has no source creature.");
+        var box = _entry.Session.CreateBackgroundBox(
+            "manual_smoke", _entry.Session.DefaultProfile, _smokeSeed + 17, manualInitialPopulation: true);
+        if (box.Controller is not { } controller
+            || controller.TryGetData<bool>(DemoKeys.BoxManualStart) is not { found: true, value: true })
+            throw new InvalidOperationException("Manual-start box did not record its seed mode.");
+        var copy = BoxMigration.Migrate(
+            _entry.Session, source.Id, creature.Name, box.Id, removeSource: false);
+        if (!copy.Success || copy.MigrantName is null)
+            throw new InvalidOperationException($"Manual box seed failed: {copy.Reason}.");
+        if (box.Session.FindByName(copy.MigrantName) is null)
+            throw new InvalidOperationException("Seeded creature is missing from the manual box.");
+        _entry.Session.RemoveBox(box.Id);
+        if (_entry.Session.TryGetBox(box.Id) is not null)
+            throw new InvalidOperationException("Manual box was not deleted.");
+        GD.Print("DEMO_MANUAL_BOX_OK");
     }
 
     private void RunMigrationSmoke()

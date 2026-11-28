@@ -44,21 +44,24 @@ This prevents “profile leaks” (a restricted box silently running a locked
 organ) and prevents “trait stripping” (the same genome behaving differently in
 the destination). New mutations in the destination use the destination gate.
 
-An arena box is the all-enabled neutral destination for 斗蛐蛐.
+A 斗蛐蛐 arena is an all-enabled box with a manually seeded initial population.
 
 ### 4. Arena
 
+An arena is a normal ecology box, not a separate simulation class:
+
 - all-enabled profile;
-- fixed seed, food, energy, radius, and start population;
-- imported cohorts keep traits;
-- optional reproduction;
-- metrics: survivors, biomass, descendants, root survival, gene prevalence.
+- the initial population is seeded manually from selected creatures;
+- normal reproduction, food, collision, migration, save, and analysis apply;
+- a termination rule can be added later without changing the box model;
+- there is no arena-specific analytics path; it is analyzed by `box.id` like
+  any other box.
 
 ### 5. Analytics
 
 Every save/metric must carry a box id. Per-box metrics reuse the existing root
 birth/death/survival/hazard/event-rate reports. Cross-box metrics add
-migration flows, origin box, compatibility rejects, and arena outcomes.
+migration flows, origin box, and compatibility rejects.
 
 ## Migration stages
 
@@ -70,13 +73,12 @@ migration flows, origin box, compatibility rejects, and arena outcomes.
 3. **Migration** — compatibility checks, queue at frame boundaries, stable
    entity transfer, origin box metrics. The core transfer and trait passport
    are implemented; queued/UI-driven migration remains.
-4. **Arena** — neutral all-enabled match rules and comparison output. The
-   ephemeral arena session, cohort import, reproduction/overgrowth suppression,
-   and survivor/winner result are implemented; UI/reporting remain.
+4. **Arena** — a manually seeded, all-enabled normal box. Termination rules
+   remain deferred.
 5. **UI and analytics migration** — box configuration, switch/foreground,
-   migration controls, box-aware saves and reports. Save selection and
-   metrics box identity are implemented; root-origin composite keys and arena
-   reporting remain.
+   migration controls, box-aware saves and reports. Save selection, metrics
+   box identity, the box panel, pause/resume, and deletion are implemented;
+   arbitrary profile editing and migration queues remain.
 
 ## Status
 
@@ -91,10 +93,11 @@ Stages 1–3 are implemented and tested.
 - `BoxMigration` applies the destination profile to every expressed trait,
   then transfers the stable genome/phenotype and life state without
   recompiling. `evo.rootOriginBox` preserves the origin namespace across boxes.
-- The demo smoke requires two live boxes whose controllers both advance,
-  migrates a creature across a save/load boundary, and runs a neutral
-  pond-vs-meadow arena match.
+- The demo smoke requires two live boxes whose controllers both advance and
+  migrates a creature across a save/load boundary.
 
-The foreground UI now exposes `B` box switching, `N` box creation, `M` selected
-creature migration, and `A` arena matches. Box profile editing, deletion,
-migration queues, and arena report persistence remain.
+The foreground UI exposes `G` box management, `B` switching, `N` creation,
+`Shift+N` no-predation creation, and `M` selected-creature migration. The box
+panel supports foreground switching, pause/resume, background deletion, and
+seeding a selected creature into another box; arbitrary profile editing and
+migration queues remain.

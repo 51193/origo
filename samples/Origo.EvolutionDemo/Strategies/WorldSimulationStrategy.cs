@@ -241,10 +241,10 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         var nextCreature = ReadInt(controller, DemoKeys.NextCreatureId, 1);
         var nextFood = ReadInt(controller, DemoKeys.NextFoodId, 1);
         var nextCorpse = ReadInt(controller, DemoKeys.NextCorpseId, 1);
-        var arena = ReadBool(controller, DemoKeys.ArenaMode, false);
+        var manualStart = ReadBool(controller, DemoKeys.BoxManualStart, false);
         const int founderLineages = 6;
 
-        for (var i = 0; !arena && i < Tuning.InitialPopulation; i++)
+        for (var i = 0; !manualStart && i < Tuning.InitialPopulation; i++)
         {
             var position = RandomPosition(rng);
             var genome = CreatureGenome.RandomFounder(rng, box.Runtime.GenomeGate);
@@ -395,7 +395,6 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         var foodAlive = world.FoodAlive;
         var pendingChildren = 0;
         var pendingDeferredCreatures = ReadInt(controller, DemoKeys.PendingCreatureSpawns, 0);
-        var arena = ReadBool(controller, DemoKeys.ArenaMode, false);
         var pendingFood = world.PendingFood;
         var mutations = world.Mutations;
         var collisionBodies = world.CollisionBodies;
@@ -842,7 +841,6 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             }
 
             if (!ate
-                && !arena
                 && energy >= Tuning.ReproductionEnergy
                 && cooldown <= 0f
                 && creatures.Count + pendingChildren + pendingDeferredCreatures < Tuning.PopulationCap)

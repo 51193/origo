@@ -82,7 +82,7 @@ public partial class DemoEntry : OrigoDefaultEntry
             Session.AttachLoadedBox(run);
         }
 
-        Session.EnsureTopology();
+        Session.EnsureTopology(createDefaultBackground: true);
         Persistence = new GameplayPersistence(Session);
 
         WorldView = new EvolutionWorldView(this);

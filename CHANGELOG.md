@@ -53,23 +53,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   multi-box save, mixed-box input is rejected, and metrics JSON carries a
   `box` object plus per-save `boxId`/`boxProfile`. `--pool` no longer merges
   distinct boxes.
-- **Evolution Demo exposes box, migration, and arena controls** — while a pond
-  runs, `B` switches foreground boxes, `N` creates an all-enabled box,
-  `Shift+N` creates a no-predation forage box, `M`
-  migrates the selected creature to the next box, and `A` runs a ten-second
-  arena between the foreground and next box. Migration rejects are shown in
-  the UI toast.
+- **Evolution Demo exposes box management** — `G` opens the ecology-box panel,
+  which lists every box, switches foreground, pauses or resumes a box, and
+  deletes background boxes. The panel and keyboard shortcuts create
+  all-enabled, no-predation, or empty manual-start boxes. `B` cycles the
+  foreground box and `M` migrates the selected creature to the next box.
+  Migration rejects are shown in the UI toast.
+- **Evolution Demo supports manually seeded boxes** — `box.manualStart` skips
+  default founders for a normal box; the caller seeds it through `Seed` or
+  `BoxMigration`. This is the arena model: a regular box with the all-enabled
+  profile and a hand-picked initial population, sharing reproduction, food,
+  collision, migration, save, and analysis paths.
 - **Evolution Demo gives each box an isolated root namespace** — every box
   owns a persisted `box.rootBase`; founders and injected roots are allocated in
   that namespace while descendants and migrants keep their source root id.
   Root birth/death maps can therefore use int ids without cross-box collisions,
   and the root origin box remains recorded alongside the id.
-- **Evolution Demo runs neutral arena matches** — `ArenaMatch` creates an
-  ephemeral all-enabled arena session, imports fixed-size cohorts from two
-  boxes without removing their sources, disables reproduction and overgrowth,
-  and reports survivors and a winner after the match duration. Per-controller
-  settings are scoped around simulation and overgrowth so an arena or
-  background box cannot replace the foreground world defaults.
 - **Evolution Demo migrates creatures between ecology boxes** — `BoxMigration`
   validates the destination profile against every expressed organ, action, and
   sensor, then transfers the genome, phenotype, energy, age, lineage, root
