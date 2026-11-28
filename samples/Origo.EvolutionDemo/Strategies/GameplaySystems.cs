@@ -68,6 +68,8 @@ internal sealed class EvolutionTickContext : IGameplayWorldContext
     public List<ISndEntity> CollisionEntities { get; } = [];
     public Dictionary<int, RootDeathTally> DeathByRoot { get; } = [];
     public bool DeathByRootDirty { get; set; }
+    public Dictionary<int, int> BirthsByRoot { get; } = [];
+    public bool BirthsByRootDirty { get; set; }
 }
 
 /// <summary>Builds the immutable entity/sensor snapshot for one tick.</summary>
@@ -92,6 +94,12 @@ internal sealed class SnapshotSimulationSystem : IGameplaySystem
         foreach (var (root, tally) in RootDeathCodec.Parse(encodedDeaths))
             world.DeathByRoot[root] = tally;
         world.DeathByRootDirty = false;
+        world.BirthsByRoot.Clear();
+        var encodedBirths = world.Controller.TryGetData<string>(DemoKeys.BirthsByRoot)
+            is { found: true, value: { } storedBirths } ? storedBirths : string.Empty;
+        foreach (var (root, births) in RootBirthCodec.Parse(encodedBirths))
+            world.BirthsByRoot[root] = births;
+        world.BirthsByRootDirty = false;
         world.NextFoodId = ReadInt(world.Controller, DemoKeys.NextFoodId, 1);
         world.Mutations.Clear();
         WorldSimulationStrategy.AddPendingFoodSources(world);

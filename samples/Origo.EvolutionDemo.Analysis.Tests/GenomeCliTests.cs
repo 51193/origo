@@ -247,6 +247,8 @@ public sealed class GenomeCliTests
         Assert.Equal("20", survivalRow[14]);
         Assert.Equal("20", survivalRow[18]);
         Assert.Equal("0", survivalRow[19]);
+        Assert.Equal("0", survivalRow[20]);
+        Assert.Equal("-20", survivalRow[21]);
         using var json = JsonDocument.Parse(File.ReadAllText(metrics));
         Assert.True(json.RootElement.TryGetProperty("rootMortalitySequence", out var rootSequence), json.RootElement.ToString());
         Assert.True(rootSequence.TryGetProperty("counts", out var rootCounts), json.RootElement.ToString());
@@ -268,7 +270,11 @@ public sealed class GenomeCliTests
             directory, "survival_2",
             SaveFixture.Creatures(SaveFixture.DefaultGenome(), 4),
             time: 20d, lineages: [2, 2, 3, 3],
-            extraControllerPairs: new Dictionary<string, object> { ["evo.deathByRoot"] = "1:9,0,0;2:1,0,0" });
+            extraControllerPairs: new Dictionary<string, object>
+            {
+                ["evo.deathByRoot"] = "1:9,0,0;2:1,0,0",
+                ["evo.birthsByRoot"] = "1:9",
+            });
         var survival = Path.Combine(directory.Path, "root-survival.csv");
 
         var (exitCode, _, error) = Run(
@@ -284,6 +290,8 @@ public sealed class GenomeCliTests
         Assert.Equal("0", root1Final[3]);
         Assert.Equal("1", root1Final[19]);
         Assert.Equal("2", root1Final[18]);
+        Assert.Equal("9", root1Final[20]);
+        Assert.Equal("0", root1Final[21]);
         Assert.Equal("1", root2Final[3]);
         Assert.Equal("1", root2Final[15]);
         Assert.Equal("7", root1First[14]);
@@ -689,6 +697,7 @@ public sealed class GenomeCliTests
                 ["evo.predationDeaths"] = 11d,
                 ["evo.ageDeaths"] = 2d,
                 ["evo.deathByRoot"] = "1:7,11,2",
+                ["evo.birthsByRoot"] = "1:100",
             });
     }
 

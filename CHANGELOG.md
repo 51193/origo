@@ -36,6 +36,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   and `rootMortality` expose root × cause data; interval columns and
   `--root-survival-csv` track living/extinct roots across saves, so a root can
   be followed from living ancestry to starvation, predation, or aging deaths.
+- **Evolution Demo records births by root lineage** — cumulative ordinary and
+  overgrowth births are persisted per stable root; analysis emits
+  `rootBirthsSequence`/`rootBirths`, adds births and net growth to root
+  survival rows, and exposes them to manifest metrics.
 - **Evolution Demo analysis compares runs by regime** — the new `batch`
   command reads per-run metrics JSON and writes a cross-run HTML/CSV/JSON
   comparison of high/low population regimes, root diversity, mortality shares,

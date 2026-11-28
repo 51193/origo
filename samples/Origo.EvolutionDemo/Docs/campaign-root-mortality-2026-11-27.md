@@ -109,6 +109,27 @@ The high seeds (20261303, 20261317, 20261404, 20261405) had no enrichment,
 extinct at final. This is a sharper regime difference than the first five-seed
 snapshot suggested.
 
+## Births and net growth
+
+The root birth follow-up on the same e1p0/e1p1 long runs:
+
+| Cell | Total births | Roots with births | Top root | Top-root births | Top-root death share | Top-root births − deaths | Top-root final |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| e1p0 | 71,586 | 1,589 | 4 | 34,226 (47.8%) | 45.7% | **+537** | alive |
+| e1p1 | 57,225 | 2,250 | 4 | 28,859 (50.4%) | 47.3% | **+103** | alive |
+
+Root 6 in e1p1:
+
+- births 6,648
+- deaths 6,652
+- net **−4**
+- extinct at final
+
+This changes the interpretation of dominance: root 4 is not low-turnover. It produces
+roughly half of all births **and** absorbs roughly half of all deaths. Its survival
+comes from a very thin net-positive balance (e1p0 +537, e1p1 +103), not from low
+mortality. A root can dominate while being almost exactly at replacement.
+
 ## Unbiased 20-seed per-root batch
 
 A fresh, unselected batch (20261501–20261520, 3,600 s):

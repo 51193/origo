@@ -5,6 +5,7 @@ using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Strategy;
 using Origo.EvolutionDemo.Logic;
+using Origo.EvolutionDemo.Logic.Gameplay;
 using Origo.EvolutionDemo.Logic.V4;
 
 namespace Origo.EvolutionDemo;
@@ -173,6 +174,12 @@ public sealed class OvergrowthStrategy : LifecycleStrategyBase
             rootLineage,
             "overgrowth",
             0f);
+
+        var encodedBirths = entity.TryGetData<string>(DemoKeys.BirthsByRoot)
+            is { found: true, value: { } storedBirths } ? storedBirths : string.Empty;
+        var birthsByRoot = new Dictionary<int, int>(RootBirthCodec.Parse(encodedBirths));
+        birthsByRoot[rootLineage] = birthsByRoot.GetValueOrDefault(rootLineage) + 1;
+        entity.SetData(DemoKeys.BirthsByRoot, RootBirthCodec.Serialize(birthsByRoot));
 
         for (var i = 0; i < foodCost; i++)
             session.RequestKillEntity(targetFoods[i].Name);
