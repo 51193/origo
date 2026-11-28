@@ -232,10 +232,12 @@ While a pond is running:
 | `Shift+N` | create a no-predation “forage” box |
 | `M` | migrate the selected creature to the next box |
 
-The box panel can switch foreground, pause/resume individual boxes, delete
-background boxes, create sandbox/forage boxes, and create an empty
-manual-start box. `Seed` copies the currently selected foreground creature
-into that box, so an arena can be seeded one side at a time.
+The box panel can switch foreground, pause/resume individual boxes, pause or
+resume all boxes, delete background boxes, create sandbox/forage boxes, and
+create an empty manual-start box. `Seed` copies the currently selected
+foreground creature into a box and `Move` transfers it. All box operations can
+be reached with the mouse through the `Boxes` HUD button; the keyboard shortcuts
+are optional accelerators.
 
 `BoxMigration` can move a creature from one box to another. The destination
 profile must allow every expressed organ, action, and sensor; an incompatible

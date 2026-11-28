@@ -307,6 +307,17 @@ public partial class DemoUi : CanvasLayer
         RefreshBoxes();
     }
 
+    private void CloseBoxes()
+    {
+        _boxPanel.Visible = false;
+        _shade.Visible = false;
+        _gameVisible = true;
+        _hud.Visible = true;
+        _hintLabel.Visible = true;
+        if (_selectedName is not null)
+            _inspector.Visible = true;
+    }
+
     private void RefreshBoxes()
     {
         foreach (var child in _boxList.GetChildren())
@@ -316,7 +327,8 @@ public partial class DemoUi : CanvasLayer
         }
 
         var boxes = _entry.Session.Boxes;
-        _boxPanelStatus.Text = $"{boxes.Count} box(es) · foreground {_entry.Session.ForegroundBox.Id}";
+        _boxPanelStatus.Text = $"{boxes.Count} box(es) · foreground {_entry.Session.ForegroundBox.Id}" +
+            $" · selected {_selectedName ?? "none"}";
         foreach (var box in boxes)
         {
             var controller = box.Controller;
@@ -347,6 +359,11 @@ public partial class DemoUi : CanvasLayer
                 seed.TooltipText = "Copy the selected foreground creature into this box.";
                 seed.Pressed += () => SeedBox(box);
                 row.AddChild(seed);
+                var move = MakeButton("Move", 74);
+                move.Disabled = _selectedName is null;
+                move.TooltipText = "Move the selected foreground creature into this box.";
+                move.Pressed += () => MoveToBox(box);
+                row.AddChild(move);
             }
 
             var pause = MakeButton(paused ? "Resume" : "Pause", 90);
@@ -372,8 +389,43 @@ public partial class DemoUi : CanvasLayer
 
     private void SwitchToBox(EcologyBox box)
     {
+        _selectedName = null;
+        _entry.WorldView.SelectedName = null;
+        _inspector.Visible = false;
         _entry.Context.Save.RequestSwitchForegroundLevel(box.LevelId);
         ShowToast($"Switching to {box.Id} [{box.Profile.Id}]");
+    }
+
+    private void MoveToBox(EcologyBox box)
+    {
+        if (_selectedName is null)
+        {
+            ShowToast("Select a creature first.", true);
+            return;
+        }
+
+        var source = _entry.Session.ForegroundBox;
+        var result = BoxMigration.Migrate(_entry.Session, source.Id, _selectedName, box.Id);
+        if (!result.Success)
+        {
+            ShowToast($"Move rejected: {result.Reason}", true);
+            return;
+        }
+
+        _selectedName = null;
+        _entry.WorldView.SelectedName = null;
+        FindController()?.SetData(DemoKeys.InspectTarget, string.Empty);
+        _inspector.Visible = false;
+        ShowToast($"Moved {result.MigrantName} to {box.Id}");
+        RefreshBoxes();
+    }
+
+    internal void SetAllBoxesPaused(bool paused)
+    {
+        foreach (var box in _entry.Session.Boxes)
+            box.Controller?.SetData(DemoKeys.Paused, paused);
+        ShowToast(paused ? "All boxes paused" : "All boxes resumed");
+        RefreshBoxes();
     }
 
     private void SeedBox(EcologyBox box)
@@ -654,6 +706,12 @@ public partial class DemoUi : CanvasLayer
 
     private void CloseModals()
     {
+        if (_boxPanel.Visible)
+        {
+            CloseBoxes();
+            return;
+        }
+
         if (_gameVisible)
         {
             ResumeGame();
