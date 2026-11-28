@@ -28,6 +28,7 @@ public sealed class BatchTests
         Assert.Equal(0.5d, report.Runs[0].TopRootShare!.Value, 9);
         Assert.True(report.Runs[0].TopRootLiving);
         Assert.False(report.Runs[1].TopRootLiving);
+        Assert.Equal(0.5d, report.Runs[0].TopRootShare!.Value, 9);
         var html = BatchAnalyzer.BuildHtml(report);
         Assert.Contains("Run comparison", html, StringComparison.Ordinal);
         Assert.Contains("By regime", html, StringComparison.Ordinal);

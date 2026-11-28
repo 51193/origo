@@ -21,6 +21,8 @@ namespace Origo.EvolutionDemo.Analysis.Batch;
 /// <param name="PredationShare">Predation share of deaths.</param>
 /// <param name="StarvationShare">Starvation share of deaths.</param>
 /// <param name="AgingShare">Aging share of deaths.</param>
+/// <param name="RootsEver">Distinct roots observed across saves.</param>
+/// <param name="ExtinctRoots">Roots absent from the final save.</param>
 /// <param name="RootsWithDeaths">Roots with at least one death.</param>
 /// <param name="TopRoot">Root with the most deaths.</param>
 /// <param name="TopRootDeaths">Deaths under the top root.</param>
@@ -39,6 +41,8 @@ public sealed record BatchRun(
     double? PredationShare,
     double? StarvationShare,
     double? AgingShare,
+    int RootsEver,
+    int ExtinctRoots,
     int RootsWithDeaths,
     int? TopRoot,
     int? TopRootDeaths,
@@ -78,6 +82,13 @@ public static class BatchAnalyzer
             var rootMortality = root.GetProperty("rootMortality");
             var rootsWithDeaths = root.TryGetProperty("rootMortalitySequence", out var sequence)
                 && sequence.TryGetProperty("roots", out var rootCount) ? rootCount.GetInt32() : 0;
+            var rootsEver = 0;
+            var extinctRoots = 0;
+            if (root.TryGetProperty("rootLineageSequence", out var rootSequence))
+            {
+                rootsEver = rootSequence.TryGetProperty("distinctLineages", out var distinct) ? distinct.GetInt32() : 0;
+                extinctRoots = rootSequence.TryGetProperty("lostLineages", out var lost) ? lost.GetInt32() : 0;
+            }
             int? topRoot = null;
             int? topDeaths = null;
             double? topShare = null;
@@ -104,6 +115,8 @@ public static class BatchAnalyzer
                 ReadShare(mortality, "predationShare"),
                 ReadShare(mortality, "starvationShare"),
                 ReadShare(mortality, "agingShare"),
+                rootsEver,
+                extinctRoots,
                 rootsWithDeaths,
                 topRoot,
                 topDeaths,
@@ -123,7 +136,7 @@ public static class BatchAnalyzer
         if (!string.IsNullOrEmpty(directory))
             Directory.CreateDirectory(directory);
         using var writer = new StreamWriter(path);
-        writer.WriteLine("source,seed,finalPopulation,regime,mutationLineages,rootLineages,rootGen0,enrichment,deaths,deathsPerLiving,predationShare,starvationShare,agingShare,rootsWithDeaths,topRoot,topRootDeaths,topRootShare,topRootLiving");
+        writer.WriteLine("source,seed,finalPopulation,regime,mutationLineages,rootLineages,rootGen0,enrichment,deaths,deathsPerLiving,predationShare,starvationShare,agingShare,rootsEver,extinctRoots,rootsWithDeaths,topRoot,topRootDeaths,topRootShare,topRootLiving");
         foreach (var run in report.Runs.OrderBy(static item => item.Seed).ThenBy(static item => item.Source, StringComparer.Ordinal))
         {
             writer.Write(Csv(run.Source));
@@ -151,6 +164,10 @@ public static class BatchAnalyzer
             writer.Write(Number(run.StarvationShare));
             writer.Write(',');
             writer.Write(Number(run.AgingShare));
+            writer.Write(',');
+            writer.Write(run.RootsEver.ToString(CultureInfo.InvariantCulture));
+            writer.Write(',');
+            writer.Write(run.ExtinctRoots.ToString(CultureInfo.InvariantCulture));
             writer.Write(',');
             writer.Write(run.RootsWithDeaths.ToString(CultureInfo.InvariantCulture));
             writer.Write(',');
@@ -191,6 +208,8 @@ public static class BatchAnalyzer
             WriteNullable(writer, "predationShare", run.PredationShare);
             WriteNullable(writer, "starvationShare", run.StarvationShare);
             WriteNullable(writer, "agingShare", run.AgingShare);
+            writer.WriteNumber("rootsEver", run.RootsEver);
+            writer.WriteNumber("extinctRoots", run.ExtinctRoots);
             writer.WriteNumber("rootsWithDeaths", run.RootsWithDeaths);
             if (run.TopRoot is { } root) writer.WriteNumber("topRoot", root); else writer.WriteNull("topRoot");
             if (run.TopRootDeaths is { } deaths) writer.WriteNumber("topRootDeaths", deaths); else writer.WriteNull("topRootDeaths");
@@ -208,6 +227,7 @@ public static class BatchAnalyzer
             writer.WriteNumber("runs", group.Count);
             writer.WriteNumber("medianPopulation", group.MedianPopulation);
             writer.WriteNumber("medianRoots", group.MedianRoots);
+            writer.WriteNumber("medianExtinctRoots", group.MedianExtinctRoots);
             WriteNullable(writer, "medianPredationShare", group.MedianPredationShare);
             WriteNullable(writer, "medianTopRootShare", group.MedianTopRootShare);
             writer.WriteNumber("topRootLivingShare", group.TopRootLivingShare);
@@ -220,6 +240,9 @@ public static class BatchAnalyzer
         writer.WriteNumber("highRuns", high);
         writer.WriteNumber("lowRuns", report.Runs.Count - high);
         writer.WriteNumber("highShare", report.Runs.Count > 0 ? high / (double)report.Runs.Count : 0d);
+        var (lowShare, highShare) = Wilson(high, report.Runs.Count);
+        writer.WriteNumber("highShareLow", lowShare);
+        writer.WriteNumber("highShareHigh", highShare);
         writer.WriteEndObject();
     }
 
@@ -231,25 +254,27 @@ public static class BatchAnalyzer
         var html = new StringBuilder();
         html.Append("<!doctype html><html><head><meta charset=\"utf-8\"><title>Run comparison</title></head><body>");
         var highCount = report.Runs.Count(static run => run.Regime == "high");
+        var (lowShare, highShare) = Wilson(highCount, report.Runs.Count);
         html.Append(CultureInfo.InvariantCulture,
-            $"<h1>Run comparison</h1><p>{highCount}/{report.Runs.Count} runs are high (above 1,000 final creatures). Top-root share uses tracked deaths.</p>");
-        html.Append("<h2>By regime</h2><table><tr><th>regime</th><th>runs</th><th>median population</th><th>median roots</th><th>median predation</th><th>median top-root share</th><th>top root alive</th></tr>");
+            $"<h1>Run comparison</h1><p>{highCount}/{report.Runs.Count} runs are high (above 1,000 final creatures); high share {highShare:0.0%} (95% Wilson {lowShare:0.0%}-{highShare:0.0%}). Top-root share uses tracked deaths.</p>");
+        html.Append("<h2>By regime</h2><table><tr><th>regime</th><th>runs</th><th>median population</th><th>median roots</th><th>median extinct roots</th><th>median predation</th><th>median top-root share</th><th>top root alive</th></tr>");
         foreach (var group in Group(report.Runs))
         {
             html.Append(CultureInfo.InvariantCulture,
                 $"<tr><td>{group.Regime}</td><td>{group.Count}</td><td>{group.MedianPopulation:0}</td>"
-                + $"<td>{group.MedianRoots:0}</td><td>{Percent(group.MedianPredationShare)}</td>"
+                + $"<td>{group.MedianRoots:0}</td><td>{group.MedianExtinctRoots:0}</td>"
+                + $"<td>{Percent(group.MedianPredationShare)}</td>"
                 + $"<td>{Percent(group.MedianTopRootShare)}</td><td>{group.TopRootLivingShare:0%}</td></tr>");
         }
 
         html.Append("</table><h2>Runs</h2><table><tr><th>seed</th><th>regime</th><th>population</th>"
-            + "<th>mutation lineages</th><th>roots</th><th>enrichment</th><th>deaths</th>"
+            + "<th>mutation lineages</th><th>roots</th><th>extinct roots</th><th>enrichment</th><th>deaths</th>"
             + "<th>predation</th><th>starvation</th><th>top root share</th><th>top root living</th></tr>");
         foreach (var run in report.Runs.OrderBy(static item => item.Seed).ThenBy(static item => item.Source, StringComparer.Ordinal))
         {
             html.Append(CultureInfo.InvariantCulture,
                 $"<tr><td>{run.Seed}</td><td>{run.Regime}</td><td>{run.FinalPopulation}</td>"
-                + $"<td>{run.MutationLineages}</td><td>{run.RootLineages}</td><td>{run.Enrichment}</td>"
+                + $"<td>{run.MutationLineages}</td><td>{run.RootLineages}</td><td>{run.ExtinctRoots}</td><td>{run.Enrichment}</td>"
                 + $"<td>{run.Deaths}</td><td>{Percent(run.PredationShare)}</td><td>{Percent(run.StarvationShare)}</td>"
                 + $"<td>{Percent(run.TopRootShare)}</td><td>{(run.TopRootLiving is { } living ? (living ? "yes" : "no") : "n/a")}</td></tr>");
         }
@@ -298,12 +323,25 @@ public static class BatchAnalyzer
                     items.Length,
                     Median(items.Select(static item => (double)item.FinalPopulation)),
                     Median(items.Select(static item => (double)item.RootLineages)),
+                    Median(items.Select(static item => (double)item.ExtinctRoots)),
                     Median(items.Where(static item => item.PredationShare is not null)
                         .Select(static item => item.PredationShare!.Value)),
                     Median(items.Where(static item => item.TopRootShare is not null)
                         .Select(static item => item.TopRootShare!.Value)),
                     items.Count(static item => item.TopRootLiving == true) / (double)items.Length);
             });
+
+    private static (double Low, double High) Wilson(int successes, int samples)
+    {
+        if (samples == 0)
+            return (0d, 0d);
+        const double z = 1.959963984540054;
+        var p = successes / (double)samples;
+        var denominator = 1d + ((z * z) / samples);
+        var center = (p + ((z * z) / (2d * samples))) / denominator;
+        var margin = z * System.Math.Sqrt(((p * (1d - p)) / samples) + ((z * z) / (4d * samples * samples))) / denominator;
+        return (System.Math.Max(0d, center - margin), System.Math.Min(1d, center + margin));
+    }
 
     private static double Median(IEnumerable<double> values)
     {
@@ -316,6 +354,6 @@ public static class BatchAnalyzer
     }
 
     private sealed record GroupSummary(
-        string Regime, int Count, double MedianPopulation, double MedianRoots,
+        string Regime, int Count, double MedianPopulation, double MedianRoots, double MedianExtinctRoots,
         double? MedianPredationShare, double? MedianTopRootShare, double TopRootLivingShare);
 }

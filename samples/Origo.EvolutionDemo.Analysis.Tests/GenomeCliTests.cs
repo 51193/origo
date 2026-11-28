@@ -315,6 +315,10 @@ public sealed class GenomeCliTests
         Assert.Equal(2, summary.RootElement.GetProperty("groups").GetArrayLength());
         Assert.Equal(1, summary.RootElement.GetProperty("highRuns").GetInt32());
         Assert.Equal(0.5d, summary.RootElement.GetProperty("highShare").GetDouble(), 9);
+        Assert.InRange(summary.RootElement.GetProperty("highShareLow").GetDouble(), 0.05d, 0.2d);
+        Assert.InRange(summary.RootElement.GetProperty("highShareHigh").GetDouble(), 0.5d, 0.95d);
+        Assert.Contains("rootsEver", File.ReadLines(csv).First(), StringComparison.Ordinal);
+        Assert.Contains("extinctRoots", File.ReadLines(csv).First(), StringComparison.Ordinal);
         Assert.Equal(1d, summary.RootElement.GetProperty("groups")[0].GetProperty("topRootLivingShare").GetDouble(), 9);
         Assert.Equal(0d, summary.RootElement.GetProperty("groups")[1].GetProperty("topRootLivingShare").GetDouble(), 9);
     }

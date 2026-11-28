@@ -109,23 +109,31 @@ The high seeds (20261303, 20261317, 20261404, 20261405) had no enrichment,
 extinct at final. This is a sharper regime difference than the first five-seed
 snapshot suggested.
 
-## Unbiased 10-seed per-root batch
+## Unbiased 20-seed per-root batch
 
-A fresh, unselected batch (20261501–20261510, 3,600 s):
+A fresh, unselected batch (20261501–20261520, 3,600 s):
 
-| Regime | Runs | Median pop | Median roots | Median predation | Median top-root share | Top root alive |
-|---|---:|---:|---:|---:|---:|---:|
-| high | 1/10 | 1,587 | 3 | 20.0% | 56.7% | 1/1 |
-| low | 9/10 | 320 | 92 | 49.0% | 35.9% | 4/9 |
+| Regime | Runs | Median pop | Median roots | Median extinct roots | Median predation | Median top-root share | Top root alive |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| high | 4/20 | 1,770 | 2.5 | 2 | 20.9% | 58.6% | 4/4 |
+| low | 16/20 | 307.5 | 88 | 87 | 49.2% | 41.1% | 4/16 |
 
-The high rate in this fresh batch is **10%**. The top root survived in the one
-high run and in 4 of 9 low runs, so top-root survival is not a clean binary
-regime marker on its own. What remains consistent is the high regime's much
-lower root count (3 versus median 92) and lower predation share (20% versus
-49%). Low-run top-root shares span 18–74%; high runs are a small sample.
+The high rate is **20%** with a 95% Wilson interval of **8.1–41.6%**; the
+20-seed sample is still wide. High runs are the four seeds 20261501,
+20261513, 20261518, and 20261519.
 
-The earlier five-seed batch happened to have all top roots extinct; this fresh
-batch corrects that overgeneralization.
+What survives the larger sample:
+
+- high runs keep 2–3 living roots and 0–3 extinct roots;
+- low runs keep 74–112 living roots but have a median 87 extinct roots;
+- high predation is about 21% versus 49% in low runs;
+- the top root survived in all 4 high runs but only 4 of 16 low runs.
+
+Top-root share remains variable in low runs (18–74%). The earlier 10-seed batch
+reported 1/10 high and a 4/9 low top-root survival rate; the larger batch raises
+the high rate to 4/20 and lowers low top-root survival to 4/16, so both remain
+small-sample-sensitive. The robust separation is **root number/extinction and
+predation**, not top-root share alone.
 
 ## Caveats
 
