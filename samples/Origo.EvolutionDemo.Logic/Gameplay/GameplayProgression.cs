@@ -17,7 +17,7 @@ public enum GameplayMode
     Profile = 2,
 }
 
-/// <summary>Persistent account-wide progression state.</summary>
+/// <summary>Progression state owned by one runtime/box.</summary>
 public sealed class GameplayProgression
 {
     /// <summary>Passive evolution points awarded per completed cycle.</summary>

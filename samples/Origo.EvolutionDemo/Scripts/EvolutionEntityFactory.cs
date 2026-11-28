@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using Origo.Core.Snd.Metadata;
 using Origo.EvolutionDemo.Logic;
+using Origo.EvolutionDemo.Logic.Gameplay;
 
 namespace Origo.EvolutionDemo;
 
@@ -23,6 +24,20 @@ internal static class EvolutionEntityFactory
 
     public static string CorpseName(int id) =>
         string.Create(CultureInfo.InvariantCulture, $"corpse_{id:000000}");
+
+    /// <summary>Creates a data-only world controller for an ecology box.</summary>
+    public static SndMetaData Controller(int seed) =>
+        new SndMetaFluentBuilder(DemoEntry.ControllerName)
+            .SetNode("main", "res://Origo/demo/WorldController.tscn")
+            .AddLifecycleStrategy("evolution.world")
+            .AddLifecycleStrategy("evolution.overgrowth")
+            .SetString(DemoKeys.Kind, DemoKeys.ControllerKind)
+            .SetString(DemoKeys.Phase, DemoKeys.PhaseStarting)
+            .SetInt(DemoKeys.Seed, seed)
+            .SetInt(DemoKeys.GameplayMode, (int)GameplayMode.Profile)
+            .SetBool(DemoKeys.Paused, false)
+            .SetBool(DemoKeys.Initialized, false)
+            .Build();
 
     public static SndMetaData Creature(
         string name,

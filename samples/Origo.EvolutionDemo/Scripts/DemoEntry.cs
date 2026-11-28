@@ -55,12 +55,35 @@ public partial class DemoEntry : OrigoDefaultEntry
         SystemBlackboardSaveRoot = "user://evolution_demo_system";
 
         base._Ready();
-        Session = new EvolutionGameSession(Context, gameplayRuntime);
+        Session = new EvolutionGameSession(Context, () => Runtime.SessionManager);
         EvolutionGameSession.Register(Session);
-        if (Runtime.SessionManager.ForegroundSession is { } foreground)
-            EvolutionGameSession.RegisterSession(foreground, Session);
+        if (Runtime.SessionManager.ForegroundSession is null)
+            Runtime.DriveFrame(0d);
+        var profile = BoxUnlockProfile.All(gameplayRuntime.Content);
+        var foreground = Runtime.SessionManager.ForegroundSession
+            ?? throw new InvalidOperationException("The demo has no foreground session.");
+        if (BoxProfileCodec.TryRead(foreground, out _, out _, out _))
+        {
+            Session.AttachLoadedBox(foreground);
+        }
+        else
+        {
+            var seed = foreground.FindByName(ControllerName) is { } controller
+                ? ReadInt(controller, DemoKeys.Seed)
+                : 0;
+            Session.RegisterForeground(profile, seed, foreground);
+        }
+
+        foreach (var key in Runtime.SessionManager.Keys)
+        {
+            var run = Runtime.SessionManager.TryGet(key);
+            if (run is null || run.IsFrontSession)
+                continue;
+            Session.AttachLoadedBox(run);
+        }
+
+        Session.EnsureTopology();
         Persistence = new GameplayPersistence(Session);
-        Persistence.TryLoadProfile();
 
         WorldView = new EvolutionWorldView(this);
         AddChild(WorldView);

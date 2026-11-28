@@ -230,7 +230,9 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         for (var i = 0; i < Tuning.InitialPopulation; i++)
         {
             var position = RandomPosition(rng);
-            var genome = CreatureGenome.RandomFounder(rng, EvolutionGameSession.For(ctx).Runtime.GenomeGate);
+            var genome = CreatureGenome.RandomFounder(
+                rng,
+                EvolutionGameSession.For(ctx).BoxFor(controller.OwningSession).Runtime.GenomeGate);
             var phenotype = genome.Phenotype;
             metas.Add(CreateCreatureMeta(
                 CreatureName(nextCreature++),
@@ -342,9 +344,11 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
     private static void SimulateTick(ISndEntity controller, ISndContext ctx)
     {
         var session = EvolutionGameSession.For(ctx);
-        var world = new EvolutionTickContext(controller, ctx, Tuning.SimulationTickSeconds, session);
+        var box = session.BoxFor(controller.OwningSession);
+        var world = new EvolutionTickContext(
+            controller, ctx, Tuning.SimulationTickSeconds, session, box.Runtime);
         session.Profiler.Begin();
-        session.Runtime.Pipeline.Tick(world, static _ => true,
+        box.Runtime.Pipeline.Tick(world, static _ => true,
             session.Profiler.Enabled
                 ? (system, milliseconds, allocated) =>
                     session.Profiler.RecordSystem(system.Id, milliseconds, allocated)
@@ -419,9 +423,9 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
 
         // A purchased organ unlock injects a few carriers immediately; waiting
         // for a random mutation can make a valid purchase look ineffective.
-        if (world.Session.Runtime.Progression.Mode == GameplayMode.Campaign)
+        if (world.Runtime.Progression.Mode == GameplayMode.Campaign)
         {
-            foreach (var unlockId in world.Session.Runtime.TakePendingInnovations())
+            foreach (var unlockId in world.Runtime.TakePendingInnovations())
             {
                 var organMask = CampaignProgressionRules.InnovationOrganMask(unlockId);
                 if (organMask is not { } mask)
@@ -433,7 +437,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                         break;
                     for (var attempt = 0; attempt < 200; attempt++)
                     {
-                        var candidate = CreatureGenome.RandomFounder(rng, world.Session.Runtime.GenomeGate);
+                        var candidate = CreatureGenome.RandomFounder(rng, world.Runtime.GenomeGate);
                         if ((candidate.Phenotype.OrganMask & mask) == 0)
                             continue;
                         var position = RandomPosition(rng);
@@ -841,7 +845,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     mutationProfile,
                     rng,
                     out var changes,
-                    world.Session.Runtime.GenomeGate);
+                    world.Runtime.GenomeGate);
                 if (changes >= Tuning.LineageMutationThreshold)
                     lineage = nextLineageId++;
                 var bodyLengthCost = Tuning.ReproductionParentCost
@@ -898,7 +902,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
 
             if (energy <= 0f || age >= creature.MaxAge)
             {
-                var deathVariant = world.Session.Runtime.Resolver.Resolve("death.handler")
+                var deathVariant = world.Runtime.Resolver.Resolve("death.handler")
                     ?? throw new InvalidOperationException("No enabled death.handler variant.");
                 var deathContext = new DeathHandlerContext
                 {

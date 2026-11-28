@@ -598,6 +598,7 @@ public partial class DemoSmokeRunner : Node
                     break;
                 }
 
+                ValidateBoxTopology();
                 PrintCampaignSummary();
                 GD.Print($"DEMO_SMOKE_OK population={_restoredCreatures} saved_population={_savedPopulation} " +
                     $"generation={_restoredGeneration} time={_restoredTime:0.0} food={_restoredFood} " +
@@ -616,6 +617,7 @@ public partial class DemoSmokeRunner : Node
                 if (!_entry.Context.Save.ListSaves().Contains(_benchmarkSaveSlot, StringComparer.Ordinal))
                     throw new InvalidOperationException("Benchmark save is missing.");
                 AssertSaveWrittenByThisRun(_benchmarkSaveSlot);
+                ValidateBoxTopology();
                 PrintCampaignSummary();
                 GD.Print($"DEMO_BENCHMARK_OK seed={_smokeSeed} population={_savedPopulation} time={_savedTime:0.0} " +
                     $"slot={_benchmarkSaveSlot} checkpoints={_verifiedCheckpoints} " +
@@ -700,6 +702,32 @@ public partial class DemoSmokeRunner : Node
         }
 
         File.AppendAllText(path, line + System.Environment.NewLine);
+    }
+
+    private void ValidateBoxTopology()
+    {
+        var sessions = _entry.Runtime.SessionManager;
+        var boxes = _entry.Session.Boxes
+            .Where(box => box.IsForeground
+                ? ReferenceEquals(sessions.ForegroundSession, box.Session)
+                : ReferenceEquals(sessions.TryGet(box.LevelId), box.Session))
+            .ToArray();
+        if (boxes.Length < 2)
+            throw new InvalidOperationException(
+                $"Multi-box smoke expected 2 live boxes, found {boxes.Length}; " +
+                $"registered={string.Join(',', _entry.Session.Boxes.Select(box => box.LevelId))}; " +
+                $"sessions={string.Join(',', sessions.Keys)}.");
+        foreach (var box in boxes)
+        {
+            var controller = box.Controller
+                ?? throw new InvalidOperationException($"Box '{box.Id}' has no controller.");
+            var time = controller.TryGetData<float>(DemoKeys.Time) is { found: true } value ? value.value : 0f;
+            if (time <= 0f)
+                throw new InvalidOperationException($"Box '{box.Id}' did not advance time.");
+        }
+
+        GD.Print($"DEMO_BOXES count={boxes.Length} " + string.Join(' ', boxes.Select(box =>
+            $"{box.Id}:{box.Session.GetEntities().Count}")));
     }
 
     private void AssertSaveWrittenByThisRun(string slot)

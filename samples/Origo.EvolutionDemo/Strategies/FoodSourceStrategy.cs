@@ -44,7 +44,7 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
         SensorGrid grid,
         int foodCount,
         int pendingFood,
-        EvolutionGameSession gameplaySession)
+        GameplayRuntime runtime)
     {
         ArgumentNullException.ThrowIfNull(controller);
         ArgumentNullException.ThrowIfNull(ctx);
@@ -57,7 +57,7 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
             var (found, kind) = source.TryGetData<string>(DemoKeys.Kind);
             if (!found || !string.Equals(kind, SourceKind, StringComparison.Ordinal))
                 continue;
-            TickSource(source, controller, ctx, grid, foodCount, pendingFood, gameplaySession);
+            TickSource(source, controller, ctx, grid, foodCount, pendingFood, runtime);
         }
     }
 
@@ -68,7 +68,7 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
         SensorGrid grid,
         int foodCount,
         int pendingFood,
-        EvolutionGameSession gameplaySession)
+        GameplayRuntime runtime)
     {
         var session = entity.OwningSession;
         var time = ReadFloat(controller, DemoKeys.Time, 0f);
@@ -156,7 +156,7 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
             }
 
             var (toughShare, toxicShare) = CampaignProgressionRules.FoodShares(
-                gameplaySession.Runtime.Progression, DemoSettings.Current);
+                runtime.Progression, DemoSettings.Current);
             var typeRoll = rng.NextDouble();
             var foodType = typeRoll < toughShare
                 ? FoodType.Tough
@@ -175,7 +175,7 @@ public sealed class FoodSourceStrategy : LifecycleStrategyBase
 
         var foodSpawned = metas.Count;
         var spawnedCreatures = 0;
-        var spawnVariant = gameplaySession.Runtime.Resolver.Resolve("spawn.policy");
+        var spawnVariant = runtime.Resolver.Resolve("spawn.policy");
         if (spawnVariant is not null)
         {
             var nextCreature = Math.Max(1, ReadInt(controller, DemoKeys.NextCreatureId, 1));

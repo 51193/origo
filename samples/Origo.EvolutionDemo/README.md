@@ -198,16 +198,12 @@ award points and unlock ids. Content is always registered before it is gated, so
 unlocked content share the same validation path.
 
 The controller mirrors progression as `game.points`, `game.unlocked`,
-`game.milestones`, and `game.lifetimeSeconds` for save snapshots. A separate
-`GameplayPersistence` is the single boundary for the account profile and the
-per-world controller mirror; UI/entry code no longer calls the two stores
-directly. `user://gameplay_profile.json` is the authoritative meta-progression store: it
-survives New Game and application restarts by design, because idle unlocks are
-account-wide. Profile writes use a temp file plus atomic move; unreadable
-profiles are warned and skipped, corrupt JSON is quarantined with a warning, and
-gameplay falls back to fresh defaults. Save version 7 rejects older saves.
-Evolution Points start at zero in Campaign, milestones and the passive
-trickle award them, and the unlock shop spends them.
+`game.milestones`, and `game.lifetimeSeconds` for save snapshots.
+`GameplayPersistence` is the single boundary for that per-box mirror; there is no
+process-wide profile file. Unlocks, points, and milestones belong to the box and
+its save, so New Game and a new box start from their own profile. Save version 7
+rejects older saves. Evolution Points start at zero in Campaign, milestones and
+the passive trickle award them, and the unlock shop spends them.
 
 Press `U` while a pond is running to open the generic unlock shop. Rows are
 generated from `UnlockDefinition` data, not from a hardcoded organ list. Buying
@@ -217,9 +213,11 @@ an unlock writes the progression back to the controller immediately.
 
 `New Pond` defaults to **Campaign — primordial start + unlocks**; choose
 **Sandbox — all genes and mechanics** to keep the unrestricted ecosystem used
-by benchmarks and mechanics experiments.
+by benchmarks and mechanics experiments. The foreground pond and the background
+meadow are separate box sessions with separate runtimes, controllers, profiles,
+and save payloads.
 
-A fresh account's first Campaign starts with:
+A fresh box's first Campaign starts with:
 
 - 24 founders in a 700-unit radius pond (population cap 64, three food patches);
 - only Vision, `FoodAhead/Left/Right`, `WallAhead`, `Energy`, `Move`, `Turn`, and
@@ -227,8 +225,8 @@ A fresh account's first Campaign starts with:
 - soft food only, instant-food death handling, no spike/armor/carrion/organ
   senses.
 
-Evolution Points (EP) come from account-wide milestones and a passive trickle
-(1 EP per 30 simulated seconds); they survive New Game and restarts. The unlock
+Evolution Points (EP) come from the box's milestones and a passive trickle
+(1 EP per 30 simulated seconds); they persist in the box save. The unlock
 tree is gated by prerequisites, milestone requirements, and EP cost:
 
 | Tier | Typical unlocks |

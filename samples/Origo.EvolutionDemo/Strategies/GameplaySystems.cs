@@ -16,17 +16,20 @@ internal sealed class EvolutionTickContext : IGameplayWorldContext
         ISndEntity controller,
         ISndContext sndContext,
         double tickSeconds,
-        EvolutionGameSession session)
+        EvolutionGameSession session,
+        GameplayRuntime runtime)
     {
         Controller = controller;
         SndContext = sndContext;
         TickSeconds = tickSeconds;
         Session = session;
+        Runtime = runtime;
     }
 
     public ISndEntity Controller { get; }
     public ISndContext SndContext { get; }
     public EvolutionGameSession Session { get; }
+    public GameplayRuntime Runtime { get; }
     public double TickSeconds { get; }
     public double TimeSeconds => TickSeconds;
     public SensorGrid? SensorGrid { get; set; }
@@ -365,7 +368,7 @@ internal sealed class FoodSourceSimulationSystem : IGameplaySystem
             throw new InvalidOperationException("FoodSourceSimulationSystem requires core tick state.");
         FoodSourceStrategy.TickAll(
             world.Controller, world.SndContext, world.SensorGrid, world.FoodCount,
-            world.PendingFood, world.Session);
+            world.PendingFood, world.Runtime);
     }
 }
 
@@ -381,8 +384,8 @@ internal sealed class ProgressionSimulationSystem : IGameplaySystem
         ArgumentNullException.ThrowIfNull(context);
         if (context is not EvolutionTickContext world)
             throw new InvalidOperationException("ProgressionSimulationSystem requires EvolutionTickContext.");
-        var runtime = world.Session.Runtime;
-        if (runtime.Progression.Mode == GameplayMode.Sandbox)
+        var runtime = world.Runtime;
+        if (runtime.Progression.Mode is not GameplayMode.Campaign)
             return;
         var controller = world.Controller;
         var hardDigest = 0;
