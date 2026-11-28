@@ -53,6 +53,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   multi-box save, mixed-box input is rejected, and metrics JSON carries a
   `box` object plus per-save `boxId`/`boxProfile`. `--pool` no longer merges
   distinct boxes.
+- **Evolution Demo exposes box, migration, and arena controls** — while a pond
+  runs, `B` switches foreground boxes, `N` creates an all-enabled box,
+  `Shift+N` creates a no-predation forage box, `M`
+  migrates the selected creature to the next box, and `A` runs a ten-second
+  arena between the foreground and next box. Migration rejects are shown in
+  the UI toast.
 - **Evolution Demo gives each box an isolated root namespace** — every box
   owns a persisted `box.rootBase`; founders and injected roots are allocated in
   that namespace while descendants and migrants keep their source root id.

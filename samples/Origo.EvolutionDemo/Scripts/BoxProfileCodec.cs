@@ -39,6 +39,7 @@ public static class BoxProfileCodec
     /// <param name="id">Stable box id when found.</param>
     /// <param name="profile">Box unlock profile when found.</param>
     /// <param name="seed">Simulation seed when found.</param>
+    /// <param name="rootBase">Root namespace base when found.</param>
     /// <returns><see langword="true" /> when a valid profile was found.</returns>
     public static bool TryRead(
         ISessionRun session,

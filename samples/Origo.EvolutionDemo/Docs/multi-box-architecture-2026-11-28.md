@@ -95,5 +95,6 @@ Stages 1–3 are implemented and tested.
   migrates a creature across a save/load boundary, and runs a neutral
   pond-vs-meadow arena match.
 
-The visible UI is still the foreground pond. Box switching, box creation,
-migration controls, arena controls/reporting, and UI-driven migration remain.
+The foreground UI now exposes `B` box switching, `N` box creation, `M` selected
+creature migration, and `A` arena matches. Box profile editing, deletion,
+migration queues, and arena report persistence remain.

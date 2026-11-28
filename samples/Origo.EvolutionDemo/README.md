@@ -222,6 +222,16 @@ removing their sources, disables reproduction and overgrowth, and reports
 survivors and a winner after a short fixed match. Arena settings are scoped to
 the arena controller, so they do not replace the foreground pond settings.
 
+While a pond is running:
+
+| Key | Action |
+|---|---|
+| `B` | switch the foreground to the next ecology box |
+| `N` | create a new all-enabled box |
+| `Shift+N` | create a no-predation “forage” box |
+| `M` | migrate the selected creature to the next box |
+| `A` | run a 10-second arena between the foreground and next box |
+
 `BoxMigration` can move a creature from one box to another. The destination
 profile must allow every expressed organ, action, and sensor; an incompatible
 destination rejects the migration instead of recompiling or disabling traits.
