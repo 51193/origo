@@ -90,6 +90,8 @@ Stages 1–3 are implemented and tested.
 - The profile is stored on the session blackboard and mirrored on the
   controller so a load can rebuild the box before strategies process it.
 - New-game and load reconcile the live session topology.
+- Foreground switches purge boxes whose sessions were destroyed, reset the
+  display context, and refresh the new foreground's settings.
 - `BoxMigration` applies the destination profile to every expressed trait,
   then transfers the stable genome/phenotype and life state without
   recompiling. `evo.rootOriginBox` preserves the origin namespace across boxes.

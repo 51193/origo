@@ -125,6 +125,7 @@ public partial class DemoUi : CanvasLayer
     private string? _selectedName;
     private string _pendingSaveSlot = string.Empty;
     private ISessionRun? _cachedSession;
+    private string? _contextBoxId;
     private ISndEntity? _cachedController;
     private ISessionRun? _cachedInspectSession;
     private string? _cachedInspectName;
@@ -146,7 +147,11 @@ public partial class DemoUi : CanvasLayer
     public override void _Process(double delta)
     {
         if (_ready)
+        {
             _entry.Session.EnsureTopology();
+            RefreshForegroundContext();
+        }
+
         if (_boxPanel is not null && _boxPanel.Visible)
         {
             _boxRefreshTimer -= delta;
@@ -296,9 +301,35 @@ public partial class DemoUi : CanvasLayer
         UpdateInspector();
     }
 
+    private void RefreshForegroundContext()
+    {
+        var session = _entry.Runtime.SessionManager.ForegroundSession;
+        if (session is null || ReferenceEquals(session, _cachedSession))
+            return;
+        _cachedSession = session;
+        _cachedController = null;
+        _selectedName = null;
+        _entry.WorldView.SelectedName = null;
+        _inspector.Visible = false;
+        var box = _entry.Session.ForegroundBox;
+        if (!string.Equals(box.Id, _contextBoxId, StringComparison.Ordinal))
+        {
+            _contextBoxId = box.Id;
+            var controller = session.FindByName(DemoEntry.ControllerName);
+            var config = controller is null ? string.Empty : ReadString(controller, DemoKeys.ConfigJson, string.Empty);
+            if (config.Length > 0)
+            {
+                DemoSettings.Current = DemoSettings.FromJson(config);
+                _settingsDraft = DemoSettings.Current.Clone();
+            }
+        }
+
+        _entry.WorldView.RefreshWorldBounds();
+    }
+
     private void OpenBoxes()
     {
-        if (_busy || !_gameVisible)
+        if (_busy || !_gameVisible || _entry.Runtime.SessionManager.ForegroundSession is null)
             return;
         HideAllPanels();
         _boxPanel.Visible = true;
@@ -320,10 +351,18 @@ public partial class DemoUi : CanvasLayer
 
     private void RefreshBoxes()
     {
+        _entry.Session.EnsureTopology();
         foreach (var child in _boxList.GetChildren())
         {
             _boxList.RemoveChild(child);
             child.QueueFree();
+        }
+
+        var foreground = _entry.Runtime.SessionManager.ForegroundSession;
+        if (foreground is null)
+        {
+            _boxPanelStatus.Text = "Switching foreground...";
+            return;
         }
 
         var boxes = _entry.Session.Boxes;
@@ -347,9 +386,9 @@ public partial class DemoUi : CanvasLayer
             row.AddChild(label);
             if (!box.IsForeground)
             {
-                var foreground = MakeButton("Foreground", 110);
-                foreground.Pressed += () => SwitchToBox(box);
-                row.AddChild(foreground);
+                var foregroundButton = MakeButton("Foreground", 110);
+                foregroundButton.Pressed += () => SwitchToBox(box);
+                row.AddChild(foregroundButton);
             }
 
             if (!box.IsForeground)

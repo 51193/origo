@@ -165,6 +165,7 @@ public sealed class EvolutionGameSession
     /// <param name="createDefaultBackground">Create the meadow when no background box is live.</param>
     public void EnsureTopology(bool createDefaultBackground = false)
     {
+        PurgeStaleBoxes();
         if (LiveSessions.ForegroundSession is null)
             return;
         _ = EnsureForegroundBox();
@@ -209,6 +210,20 @@ public sealed class EvolutionGameSession
 
     /// <summary>Finds a box registered for a session.</summary>
     /// <param name="session">Mounted session.</param>
+    private void PurgeStaleBoxes()
+    {
+        var foreground = LiveSessions.ForegroundSession;
+        for (var index = _boxes.Count - 1; index >= 0; index--)
+        {
+            var box = _boxes[index];
+            var live = foreground is not null && ReferenceEquals(box.Session, foreground)
+                || ReferenceEquals(LiveSessions.TryGet(box.LevelId), box.Session);
+            if (live)
+                continue;
+            _boxes.RemoveAt(index);
+        }
+    }
+
     public EcologyBox? TryGetBox(ISessionRun session)
     {
         ArgumentNullException.ThrowIfNull(session);
