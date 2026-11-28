@@ -48,6 +48,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   strategies resolve the owning box runtime; load/new-game reconciles the live
   session topology. The demo smoke requires two live boxes whose controllers
   both advance.
+- **Evolution Demo migrates creatures between ecology boxes** — `BoxMigration`
+  validates the destination profile against every expressed organ, action, and
+  sensor, then transfers the genome, phenotype, energy, age, lineage, root
+  lineage, meal/kill counters, and root-origin box. The source entity is removed;
+  root origin is preserved separately from the local root id to avoid cross-box
+  collisions. The smoke migrates a pond creature to the meadow, saves and loads
+  the result, and verifies the genome and root origin are unchanged.
 - **Evolution Demo records births by root lineage** — cumulative ordinary and
   overgrowth births are persisted per stable root; analysis emits
   `rootBirthsSequence`/`rootBirths`, adds births and net growth to root

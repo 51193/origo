@@ -29,6 +29,9 @@ public partial class DemoSmokeRunner : Node
     private int _state;
     private int _frame;
     private int _savedPopulation;
+    private string? _migrationMigrantName;
+    private string? _migrationGenome;
+    private string? _migrationSourceBox;
     private float _savedTime;
     private int _restoredCreatures;
     private int _restoredGeneration;
@@ -590,6 +593,7 @@ public partial class DemoSmokeRunner : Node
                 var expectedCheckpoints = VerifyIterateCheckpoints();
                 if (!string.IsNullOrWhiteSpace(_benchmarkSaveSlot))
                 {
+                    RunMigrationSmoke();
                     ui.SaveSmokeGame(_benchmarkSaveSlot);
                     _savedPopulation = fastForwarded.creatures;
                     _savedTime = fastForwarded.time;
@@ -598,6 +602,8 @@ public partial class DemoSmokeRunner : Node
                     break;
                 }
 
+                RunMigrationSmoke();
+                ValidateMigratedAfterLoad();
                 ValidateBoxTopology();
                 PrintCampaignSummary();
                 GD.Print($"DEMO_SMOKE_OK population={_restoredCreatures} saved_population={_savedPopulation} " +
@@ -617,6 +623,7 @@ public partial class DemoSmokeRunner : Node
                 if (!_entry.Context.Save.ListSaves().Contains(_benchmarkSaveSlot, StringComparer.Ordinal))
                     throw new InvalidOperationException("Benchmark save is missing.");
                 AssertSaveWrittenByThisRun(_benchmarkSaveSlot);
+                ValidateMigratedAfterLoad();
                 ValidateBoxTopology();
                 PrintCampaignSummary();
                 GD.Print($"DEMO_BENCHMARK_OK seed={_smokeSeed} population={_savedPopulation} time={_savedTime:0.0} " +
@@ -702,6 +709,56 @@ public partial class DemoSmokeRunner : Node
         }
 
         File.AppendAllText(path, line + System.Environment.NewLine);
+    }
+
+    private void RunMigrationSmoke()
+    {
+        var source = _entry.Session.TryGetBox("pond")
+            ?? throw new InvalidOperationException("Migration smoke has no source box.");
+        var target = _entry.Session.TryGetBox("meadow")
+            ?? throw new InvalidOperationException("Migration smoke has no destination box.");
+        var creature = source.Session.GetEntities().FirstOrDefault(entity =>
+            string.Equals(entity.TryGetData<string>(DemoKeys.Kind) is { found: true } kind ? kind.value : null,
+                DemoKeys.CreatureKind, StringComparison.Ordinal))
+            ?? throw new InvalidOperationException("Migration smoke has no source creature.");
+        var genome = creature.TryGetData<string>(DemoKeys.BodyGenome) is { found: true } data
+            ? data.value
+            : throw new InvalidOperationException("Source creature has no genome.");
+        var result = BoxMigration.Migrate(_entry.Session, source.Id, creature.Name, target.Id);
+        if (!result.Success || result.MigrantName is null)
+            throw new InvalidOperationException($"Migration failed: {result.Reason}.");
+        var migrant = target.Session.FindByName(result.MigrantName)
+            ?? throw new InvalidOperationException("Migrated creature is missing in the destination.");
+        if (migrant.TryGetData<string>(DemoKeys.BodyGenome) is not { found: true } migrated
+            || !string.Equals(migrated.value, genome, StringComparison.Ordinal))
+            throw new InvalidOperationException("Migrated genome changed in transit.");
+        if (migrant.TryGetData<string>(DemoKeys.RootOriginBox) is not { found: true } origin
+            || !string.Equals(origin.value, source.Id, StringComparison.Ordinal))
+            throw new InvalidOperationException("Migrated root origin was not preserved.");
+        var same = BoxMigration.Migrate(_entry.Session, source.Id, creature.Name, source.Id);
+        if (same.Success)
+            throw new InvalidOperationException("Same-box migration must be rejected.");
+        _migrationMigrantName = result.MigrantName;
+        _migrationGenome = genome;
+        _migrationSourceBox = source.Id;
+        GD.Print($"DEMO_MIGRATION_OK from={source.Id} to={target.Id} name={result.MigrantName}");
+    }
+
+    private void ValidateMigratedAfterLoad()
+    {
+        if (_migrationMigrantName is null || _migrationGenome is null || _migrationSourceBox is null)
+            throw new InvalidOperationException("Migration smoke state is missing.");
+        var target = _entry.Session.TryGetBox("meadow")
+            ?? throw new InvalidOperationException("Migration smoke lost the destination box.");
+        var migrant = target.Session.FindByName(_migrationMigrantName)
+            ?? throw new InvalidOperationException("Migrated creature did not survive save/load.");
+        if (migrant.TryGetData<string>(DemoKeys.BodyGenome) is not { found: true } genome
+            || !string.Equals(genome.value, _migrationGenome, StringComparison.Ordinal))
+            throw new InvalidOperationException("Migrated genome changed across save/load.");
+        if (migrant.TryGetData<string>(DemoKeys.RootOriginBox) is not { found: true } origin
+            || !string.Equals(origin.value, _migrationSourceBox, StringComparison.Ordinal))
+            throw new InvalidOperationException("Migrated root origin changed across save/load.");
+        GD.Print($"DEMO_MIGRATION_RESTORED name={_migrationMigrantName}");
     }
 
     private void ValidateBoxTopology()

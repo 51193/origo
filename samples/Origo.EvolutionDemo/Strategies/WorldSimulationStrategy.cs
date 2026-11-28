@@ -215,6 +215,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
     {
         var seed = ReadInt(controller, DemoKeys.Seed, 1);
         var rng = new Random(seed);
+        var box = EvolutionGameSession.For(ctx).BoxFor(controller.OwningSession);
         var foodPreset = Math.Clamp(ReadInt(controller, DemoKeys.FoodPreset, 1), 0, 2);
         var patchCount = Math.Clamp(ReadInt(controller, DemoKeys.FoodPatchCount, Tuning.FoodPatchCount), 0, 64);
         var bloomEnabled = ReadBool(controller, DemoKeys.BloomEnabled, Tuning.EarlyFoodBloomEnabled);
@@ -230,9 +231,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         for (var i = 0; i < Tuning.InitialPopulation; i++)
         {
             var position = RandomPosition(rng);
-            var genome = CreatureGenome.RandomFounder(
-                rng,
-                EvolutionGameSession.For(ctx).BoxFor(controller.OwningSession).Runtime.GenomeGate);
+            var genome = CreatureGenome.RandomFounder(rng, box.Runtime.GenomeGate);
             var phenotype = genome.Phenotype;
             metas.Add(CreateCreatureMeta(
                 CreatureName(nextCreature++),
@@ -246,7 +245,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                 (i % founderLineages) + 1,
                 (i % founderLineages) + 1,
                 "founder",
-                0f));
+                0f,
+                box.Id));
 
             // A few guaranteed starter nutrients near each founder prevent a
             // random-spawn drought from killing the initial generation before
@@ -346,7 +346,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         var session = EvolutionGameSession.For(ctx);
         var box = session.BoxFor(controller.OwningSession);
         var world = new EvolutionTickContext(
-            controller, ctx, Tuning.SimulationTickSeconds, session, box.Runtime);
+            controller, ctx, Tuning.SimulationTickSeconds, session, box.Runtime, box.Id);
         session.Profiler.Begin();
         box.Runtime.Pipeline.Tick(world, static _ => true,
             session.Profiler.Enabled
@@ -454,7 +454,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                             injectedLineage,
                             injectedLineage,
                             "innovation",
-                            0f));
+                            0f,
+                            world.BoxId));
                         pendingChildren++;
                         break;
                     }
@@ -860,6 +861,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     position + RandomOffset(rng),
                     childPhenotype.BodyRadius);
                 var rootLineage = ReadInt(entity, DemoKeys.RootLineage, lineage);
+                var rootOriginBox = ReadString(entity, DemoKeys.RootOriginBox, world.BoxId);
                 mutations.Add(CreateCreatureMeta(
                     CreatureName(nextCreatureId++),
                     childGenome,
@@ -872,7 +874,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     lineage,
                     rootLineage,
                     "child",
-                    0f));
+                    0f,
+                    rootOriginBox));
                 world.BirthsByRoot[rootLineage] = world.BirthsByRoot.GetValueOrDefault(rootLineage) + 1;
                 world.BirthsByRootDirty = true;
                 entity.SetData(DemoKeys.Children, children);
@@ -1044,7 +1047,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         int lineage,
         int rootLineage,
         string spawnOrigin,
-        float cooldown) =>
+        float cooldown,
+        string rootOriginBox) =>
         EvolutionEntityFactory.Creature(
             name,
             genome,
@@ -1057,7 +1061,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
             lineage,
             rootLineage,
             spawnOrigin,
-            cooldown);
+            cooldown,
+            rootOriginBox);
 
     private static SndMetaData CreateFoodMeta(
         string name,

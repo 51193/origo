@@ -155,6 +155,8 @@ public sealed class OvergrowthStrategy : LifecycleStrategyBase
             entity.SetData(DemoKeys.NextLineageId, lineage + 1);
         }
 
+        var box = EvolutionGameSession.ForSession(entity.OwningSession).BoxFor(entity.OwningSession);
+        var rootOriginBox = ReadString(parent, DemoKeys.RootOriginBox, box.Id);
         var nextCreatureId = ReadInt(entity, DemoKeys.NextCreatureId, 1);
         entity.SetData(DemoKeys.NextCreatureId, nextCreatureId + 1);
         var cellCenter = cells[selectedKey];
@@ -175,7 +177,8 @@ public sealed class OvergrowthStrategy : LifecycleStrategyBase
             lineage,
             rootLineage,
             "overgrowth",
-            0f);
+            0f,
+            rootOriginBox);
 
         var encodedBirths = entity.TryGetData<string>(DemoKeys.BirthsByRoot)
             is { found: true, value: { } storedBirths } ? storedBirths : string.Empty;
