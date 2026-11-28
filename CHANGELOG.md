@@ -49,6 +49,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   comparison of high/low population regimes, root diversity, mortality shares,
   top-root dominance, top-root survival, root extinction, and a Wilson
   interval for the high-density share.
+- **Evolution Demo analysis auto-discovers manifests and event rates** — a
+  `manifest` command scans run trees and sidecar labels to write a portable
+  experiment manifest; `--event-rates-csv` derives interval rates from any
+  selected cumulative controller counters.
 - **Evolution Demo analysis accepts versioned experiment manifests** — batch
   runs can carry arbitrary labels and select metrics by JSON paths, so future
   mechanics can be compared with `--group-by` without adding mechanism-specific

@@ -147,6 +147,20 @@ and lost entirely between checkpoints are invisible. The per-root death map,
 which has more roots, should be used for total extinct counts; the survival
 curve describes checkpoint-visible roots.
 
+## Interval event rates
+
+`--event-rates-csv` on the 300 s checkpoints:
+
+| Cell | Final births/s | Final starvation/s | Final predation/s | Peak predation/s |
+|---|---:|---:|---:|---:|
+| e1p0 | 29.3 | 30.2 | 0 | 0 |
+| e1p1 | 16.6 | 3.1 | 16.2 | 21.2 |
+
+The e1p1 final interval is a near-equal birth/predation race: births 16.6/s,
+predation 16.2/s, starvation only 3.1/s. e1p0 is a starvation-dominated
+replacement regime (births 29.3/s, starvation 30.2/s). Rates are cumulative-
+counter deltas over 300 s and are visible to any selected controller key.
+
 ## Unbiased 20-seed per-root batch
 
 A fresh, unselected batch (20261501–20261520, 3,600 s):
