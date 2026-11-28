@@ -41,6 +41,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `BoxUnlockProfile` and `GameplayMode.Profile` define fixed per-box unlock sets
   without process-global filter state. The demo call sites pass the owning box
   gate for founders and mutations.
+- **Evolution Demo runs ecology boxes as sessions** — the foreground pond and a
+  background meadow are separate `ISessionRun` instances with their own
+  `GameplayRuntime`, `EcologyBox`, unlock profile, controller, pipeline, and save
+  payload. Box profiles are stored on both the session blackboard and controller;
+  strategies resolve the owning box runtime; load/new-game reconciles the live
+  session topology. The demo smoke requires two live boxes whose controllers
+  both advance.
 - **Evolution Demo records births by root lineage** — cumulative ordinary and
   overgrowth births are persisted per stable root; analysis emits
   `rootBirthsSequence`/`rootBirths`, adds births and net growth to root
@@ -372,6 +379,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   destroy another (including the active slot). Rename any existing suffix-named
   slot before upgrading. The default atomic-write layout is unchanged.
 
+### Removed
+
+- **BREAKING: Evolution Demo account-wide progression profile removed** — the
+  demo no longer reads or writes `user://gameplay_profile.json`, and the public
+  `GameplayProfile`/`GameplayProfileCodec` API is removed. Progression and
+  unlock state are box-scoped and live in the box controller/save payload.
 ### Fixed
 
 - **camera_view reports points in the near half of the frustum** — the

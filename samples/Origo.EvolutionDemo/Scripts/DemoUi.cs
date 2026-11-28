@@ -141,6 +141,8 @@ public partial class DemoUi : CanvasLayer
 
     public override void _Process(double delta)
     {
+        if (_ready)
+            _entry.Session.EnsureTopology();
         if (!_ready)
         {
             TryInitialize();
@@ -174,7 +176,7 @@ public partial class DemoUi : CanvasLayer
             if (_gameplayProfileTimer >= 15d)
             {
                 _gameplayProfileTimer = 0d;
-                _entry.Persistence.FlushProfile();
+                PersistGameplayProgression();
             }
         }
 
@@ -587,6 +589,7 @@ public partial class DemoUi : CanvasLayer
         controller.SetData(DemoKeys.FastForwardActive, false);
         controller.SetData(DemoKeys.FastForwardProgress, 0f);
         FindController()?.SetData(DemoKeys.InspectTarget, string.Empty);
+        _entry.Session.EnsureTopology();
         ShowGame();
         _diversityChart.Clear();
         ShowToast("A new pond is alive.");
@@ -661,6 +664,7 @@ public partial class DemoUi : CanvasLayer
             _settingsDraft = DemoSettings.Current.Clone();
         }
 
+        _entry.Session.EnsureTopology();
         ShowGame();
         _diversityChart.Clear();
         ShowToast("Pond loaded.");

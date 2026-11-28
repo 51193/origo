@@ -135,6 +135,9 @@ internal static class DemoKeys
     public const string AgeDeaths = "evo.ageDeaths";
     public const string DeathByRoot = "evo.deathByRoot";
     public const string BirthsByRoot = "evo.birthsByRoot";
+    public const string BoxId = "box.id";
+    public const string BoxProfile = "box.profile";
+    public const string BoxSeed = "box.seed";
     public const string Children = "evo.children";
     public const string Kills = "evo.kills";
     public const string ReproCooldown = "evo.reproCooldown";

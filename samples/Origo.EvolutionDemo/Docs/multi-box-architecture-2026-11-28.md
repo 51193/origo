@@ -75,4 +75,15 @@ migration flows, origin box, compatibility rejects, and arena outcomes.
 
 ## Status
 
-Stage 1 is implemented and tested. Stages 2–5 remain.
+Stages 1 and 2 are implemented and tested.
+
+- The foreground pond and a background meadow run as separate sessions.
+- Each box owns a `GameplayRuntime`, `BoxUnlockProfile`, controller, and save
+  payload; strategies resolve the owning box.
+- The profile is stored on the session blackboard and mirrored on the
+  controller so a load can rebuild the box before strategies process it.
+- New-game and load reconcile the live session topology.
+- The demo smoke requires two live boxes whose controllers both advance.
+
+The visible UI is still the foreground pond. Box switching, box creation,
+migration, arenas, and box-aware analytics remain stages 3–5.
