@@ -122,7 +122,8 @@ internal sealed class FoodEnrichmentSpawnHandler : IGameplayHandler<SpawnPolicyC
         if (CountCreatures(session) + pending >= Tuning.PopulationCap
             || context.Rng.NextDouble() >= chance)
             return;
-        var gate = EvolutionGameSession.ForSession(session).BoxFor(session).Runtime.GenomeGate;
+        var box = EvolutionGameSession.ForSession(session).BoxFor(session);
+        var gate = box.Runtime.GenomeGate;
         var founder = CreatureGenome.RandomFounder(context.Rng, gate);
         var position = new NumericsVector2(
             ReadFloat(context.Source, DemoKeys.X, 0f),
@@ -140,7 +141,8 @@ internal sealed class FoodEnrichmentSpawnHandler : IGameplayHandler<SpawnPolicyC
             lineage,
             lineage,
             "enrichment",
-            0f));
+            0f,
+            box.Id));
         context.SpawnedCreatures++;
     }
 

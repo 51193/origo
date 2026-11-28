@@ -217,6 +217,13 @@ by benchmarks and mechanics experiments. The foreground pond and the background
 meadow are separate box sessions with separate runtimes, controllers, profiles,
 and save payloads.
 
+`BoxMigration` can move a creature from one box to another. The destination
+profile must allow every expressed organ, action, and sensor; an incompatible
+destination rejects the migration instead of recompiling or disabling traits.
+A migrant keeps its genome, phenotype, energy, age, lineage, root lineage, and
+meal/kill counters. `evo.rootOriginBox` preserves the origin box namespace so
+root ids from different boxes do not collide.
+
 A fresh box's first Campaign starts with:
 
 - 24 founders in a 700-unit radius pond (population cap 64, three food patches);

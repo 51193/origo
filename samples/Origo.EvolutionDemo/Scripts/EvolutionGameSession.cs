@@ -167,6 +167,16 @@ public sealed class EvolutionGameSession
 
     /// <summary>Finds a box registered for a session.</summary>
     /// <param name="session">Mounted session.</param>
+    /// <summary>Finds a box by stable id.</summary>
+    /// <param name="id">Box id.</param>
+    public EcologyBox? TryGetBox(string id)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(id);
+        return _boxes.FirstOrDefault(box => string.Equals(box.Id, id, StringComparison.Ordinal));
+    }
+
+    /// <summary>Finds a box registered for a session.</summary>
+    /// <param name="session">Mounted session.</param>
     public EcologyBox? TryGetBox(ISessionRun session)
     {
         ArgumentNullException.ThrowIfNull(session);
