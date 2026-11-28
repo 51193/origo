@@ -1276,7 +1276,6 @@ public partial class DemoUi : CanvasLayer
         var session = _entry.Runtime.SessionManager.ForegroundSession;
         var creatures = 0;
         var food = 0;
-        var lineages = new HashSet<int>();
         if (session is not null)
         {
             foreach (var entity in session.GetEntities())
@@ -1285,14 +1284,9 @@ public partial class DemoUi : CanvasLayer
                 if (!found)
                     continue;
                 if (string.Equals(kind, DemoKeys.CreatureKind, StringComparison.Ordinal))
-                {
                     creatures++;
-                    lineages.Add(ReadInt(entity, DemoKeys.Lineage, 1));
-                }
                 else if (string.Equals(kind, DemoKeys.FoodKind, StringComparison.Ordinal))
-                {
                     food++;
-                }
             }
         }
 
@@ -1300,14 +1294,10 @@ public partial class DemoUi : CanvasLayer
         var phase = ReadString(controller, DemoKeys.Phase, DemoKeys.PhaseMenu);
         var paused = ReadBool(controller, DemoKeys.Paused, false);
         var speed = ReadInt(controller, DemoKeys.Speed, 1);
-        var bloomEnabled = ReadBool(controller, DemoKeys.BloomEnabled, Tuning.EarlyFoodBloomEnabled);
-        var simSeconds = (int)MathF.Floor(time);
-        var realSeconds = (int)MathF.Floor((float)_wallSeconds);
-        var simClock = FormatClock(simSeconds);
-        var realClock = FormatClock(realSeconds);
+        var status = phase == DemoKeys.PhaseExtinct ? "EXTINCT" : paused ? "PAUSED" : $"x{speed}";
         _hudLabel.Text = string.Create(
             CultureInfo.InvariantCulture,
-            $"Sim {simClock}  Real {realClock}  Pop {creatures}/{Tuning.PopulationCap}  Gen {ReadInt(controller, DemoKeys.MaxGeneration, 0)}  Lines {lineages.Count}  Food {food}  Spikes {ReadInt(controller, DemoKeys.SpikeHits, 0)} (K {ReadInt(controller, DemoKeys.SpikeKills, 0)})  OG {ReadInt(controller, DemoKeys.OvergrowthCount, 0)}  Carc {ReadInt(controller, DemoKeys.CorpsesCreated, 0)}/{ReadInt(controller, DemoKeys.CarrionFoodReleased, 0)}  Scav {ReadInt(controller, DemoKeys.CorpseMeals, 0)}{BloomSuffix(time, bloomEnabled)}  {(phase == DemoKeys.PhaseExtinct ? "EXTINCT" : paused ? "PAUSED" : $"x{speed}")}");
+            $"Sim {FormatClock((int)MathF.Floor(time))} · Pop {creatures} · Gen {ReadInt(controller, DemoKeys.MaxGeneration, 0)} · Food {food} · {_entry.Session.ForegroundBox.Id} · {status}");
         _pauseButton.Text = paused ? "Resume" : "Pause";
         _feedButton.Disabled = _feedCooldown > 0d;
         _feedButton.Text = _feedCooldown > 0d
@@ -1323,8 +1313,8 @@ public partial class DemoUi : CanvasLayer
             : $"{totalSeconds / 60:00}:{totalSeconds % 60:00}";
     }
 
-    private static string BloomSuffix(float time, bool enabled) =>
-        enabled && time < Tuning.EarlyFoodRampSeconds ? " · bloom" : string.Empty;
+
+
 
     private void UpdateInspector()
     {

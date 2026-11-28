@@ -96,7 +96,7 @@ Stages 1–3 are implemented and tested.
 - The demo smoke requires two live boxes whose controllers both advance and
   migrates a creature across a save/load boundary.
 
-The foreground UI exposes `G` box management, `B` switching, `N` creation,
+The foreground UI exposes the HUD `Eco Boxes` button and `G` for box management, `B` switching, `N` creation,
 `Shift+N` no-predation creation, and `M` selected-creature migration. The box
 panel supports foreground switching, per-box/all pause and resume, background
 deletion, and seeding or moving a selected creature into a chosen box; every

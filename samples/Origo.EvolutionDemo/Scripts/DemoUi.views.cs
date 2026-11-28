@@ -123,39 +123,42 @@ public partial class DemoUi
         _hudLabel.AddThemeFontSizeOverride("font_size", 15);
         row.AddChild(_hudLabel);
 
+        var boxes = MakeButton("Eco Boxes", 112);
+        boxes.Pressed += OpenBoxes;
+        boxes.TooltipText = "Manage ecology boxes (G)";
+        boxes.AddThemeColorOverride("font_color", AccentColor);
+        row.AddChild(boxes);
+
         _pauseButton = MakeButton("Pause", 76);
         _pauseButton.Pressed += ToggleHudPause;
         row.AddChild(_pauseButton);
         foreach (var speed in new[] { 1, 2, 4, 8 })
         {
             var value = speed;
-            var button = MakeButton($"{speed}x", 48);
+            var button = MakeButton($"{speed}x", 44);
             button.Pressed += () => SetSpeed(value);
             row.AddChild(button);
         }
 
-        _feedButton = MakeButton("Feed", 120);
+        _feedButton = MakeButton("Feed", 100);
         _feedButton.Pressed += Feed;
         row.AddChild(_feedButton);
-        var boxes = MakeButton("Boxes", 90);
-        boxes.Pressed += OpenBoxes;
-        row.AddChild(boxes);
-        var diversity = MakeButton("Diversity", 110);
+        var diversity = MakeButton("Diversity", 100);
         diversity.Pressed += OpenDiversity;
         row.AddChild(diversity);
-        var iterate = MakeButton("Iterate", 92);
+        var iterate = MakeButton("Iterate", 84);
         iterate.Pressed += OpenFastForward;
         row.AddChild(iterate);
-        var save = MakeButton("Save", 74);
+        var save = MakeButton("Save", 68);
         save.Pressed += OpenSave;
         row.AddChild(save);
-        var menu = MakeButton("Menu", 74);
+        var menu = MakeButton("Menu", 68);
         menu.Pressed += OpenPause;
         row.AddChild(menu);
 
         _hintLabel = new Label
         {
-            Text = "Wheel zoom · right-drag pan · R reset view · click to inspect · G boxes · U unlocks.",
+            Text = "Wheel zoom · right-drag pan · click to inspect · Eco Boxes for boxes · U unlocks.",
             HorizontalAlignment = HorizontalAlignment.Center,
             MouseFilter = Control.MouseFilterEnum.Ignore,
         };

@@ -226,18 +226,18 @@ While a pond is running:
 
 | Key | Action |
 |---|---|
-| `G` | open the ecology-box panel |
+| `G` | open the ecology-box panel (optional; use `Eco Boxes`) |
 | `B` | switch the foreground to the next ecology box |
 | `N` | create a new all-enabled box |
 | `Shift+N` | create a no-predation “forage” box |
 | `M` | migrate the selected creature to the next box |
 
-The box panel can switch foreground, pause/resume individual boxes, pause or
+The HUD `Eco Boxes` button opens the panel. It can switch foreground, pause/resume individual boxes, pause or
 resume all boxes, delete background boxes, create sandbox/forage boxes, and
 create an empty manual-start box. `Seed` copies the currently selected
 foreground creature into a box and `Move` transfers it. All box operations can
-be reached with the mouse through the `Boxes` HUD button; the keyboard shortcuts
-are optional accelerators.
+be reached with the mouse through the `Eco Boxes` HUD button; the keyboard
+shortcuts are optional accelerators.
 
 `BoxMigration` can move a creature from one box to another. The destination
 profile must allow every expressed organ, action, and sensor; an incompatible
