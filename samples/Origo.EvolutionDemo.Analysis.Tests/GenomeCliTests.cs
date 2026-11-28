@@ -290,6 +290,32 @@ public sealed class GenomeCliTests
     }
 
     [Fact]
+    public void Batch_WritesRegimeComparisonOutputs()
+    {
+        using var directory = new TemporaryDirectory();
+        var high = Path.Combine(directory.Path, "high.json");
+        var low = Path.Combine(directory.Path, "low.json");
+        File.WriteAllText(high, BatchMetrics(seed: 1, population: 2497, roots: 407, enrichment: 335, total: 1000, predation: 0.1, topRoot: 4, topDeaths: 500, topLiving: true));
+        File.WriteAllText(low, BatchMetrics(seed: 2, population: 300, roots: 90, enrichment: 40, total: 800, predation: 0.5, topRoot: 6, topDeaths: 120, topLiving: false));
+        var html = Path.Combine(directory.Path, "batch.html");
+        var csv = Path.Combine(directory.Path, "batch.csv");
+        var json = Path.Combine(directory.Path, "batch.json");
+
+        var (exitCode, output, error) = Run(
+            "batch", "--metrics", high, "--metrics", low,
+            "--out", html, "--csv", csv, "--json", json);
+
+        Assert.True(exitCode == 0, output + error);
+        Assert.True(File.Exists(html));
+        Assert.Equal(3, File.ReadAllLines(csv).Length);
+        Assert.Contains("high", File.ReadAllLines(csv)[1], StringComparison.Ordinal);
+        Assert.Contains("By regime", File.ReadAllText(html), StringComparison.Ordinal);
+        using var summary = JsonDocument.Parse(File.ReadAllText(json));
+        Assert.Equal(2, summary.RootElement.GetProperty("runs").GetArrayLength());
+        Assert.Equal(2, summary.RootElement.GetProperty("groups").GetArrayLength());
+    }
+
+    [Fact]
     public void Genome_LineageCsvRowsAndDuplicateSaveIdsAreDisambiguated()
     {
         using var first = new TemporaryDirectory();
@@ -630,6 +656,33 @@ public sealed class GenomeCliTests
             ("good_2", SaveFixture.Encode(GenomeV4Factory.CreateDemoFounder(new Random(13)))),
         ]);
     }
+
+    private static string BatchMetrics(
+        int seed, int population, int roots, int enrichment,
+        int total, double predation, int topRoot, int topDeaths, bool topLiving) =>
+        JsonSerializer.Serialize(new
+        {
+            saves = new[]
+            {
+                new
+                {
+                    creatures = population,
+                    lineage = new { count = 100 },
+                    rootLineage = new { count = roots, newGen0 = 20 },
+                    spawnOrigins = new { enrichment },
+                    controller = new { numbers = new Dictionary<string, int> { ["evo.seed"] = seed } },
+                },
+            },
+            mortalitySequence = new
+            {
+                counts = new { total },
+                predationShare = predation,
+                starvationShare = 0.8,
+                agingShare = 0.2,
+            },
+            rootMortalitySequence = new { roots = 3 },
+            rootMortality = new[] { new { rootLineage = topRoot, total = topDeaths, living = topLiving } },
+        });
 
     private static (int ExitCode, string Output, string Error) Run(params string[] arguments)
     {

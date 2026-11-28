@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Origo.EvolutionDemo.Analysis.Genome;
+using Origo.EvolutionDemo.Analysis.Batch;
 using Origo.EvolutionDemo.Analysis.IO;
 using Origo.EvolutionDemo.Analysis.Math;
 using Origo.EvolutionDemo.Analysis.Perf;
@@ -31,6 +32,7 @@ internal static class Program
             {
                 "-h" or "--help" => PrintHelp(),
                 "genome" => GenomeCommand([.. args.Skip(1)]),
+                "batch" => BatchCommand([.. args.Skip(1)]),
                 "perf" => PerfCommand([.. args.Skip(1)]),
                 "compare" => CompareCommand([.. args.Skip(1)]),
                 _ => Unknown(args[0]),
@@ -411,6 +413,55 @@ internal static class Program
         WriteWarnings(warnings);
         var undefined = comparison.Rows.Count(static row => row.DeltaPercent is null);
         Console.WriteLine($"wrote {output} ({comparison.Rows.Count} metrics, {undefined} n/a)");
+        return 0;
+    }
+
+    private static int BatchCommand(string[] args)
+    {
+        var metrics = new List<string>();
+        var output = "batch-report.html";
+        string? csv = null;
+        string? json = null;
+        for (var i = 0; i < args.Length; i++)
+        {
+            switch (args[i])
+            {
+                case "-h" or "--help":
+                    PrintBatchUsage();
+                    return 0;
+                case "--metrics" when i + 1 < args.Length:
+                    metrics.Add(args[++i]);
+                    break;
+                case "--out" when i + 1 < args.Length:
+                    output = args[++i];
+                    break;
+                case "--csv" when i + 1 < args.Length:
+                    csv = args[++i];
+                    break;
+                case "--json" when i + 1 < args.Length:
+                    json = args[++i];
+                    break;
+                default:
+                    Console.Error.WriteLine($"Unknown batch option '{args[i]}'.");
+                    PrintBatchUsage();
+                    return 2;
+            }
+        }
+
+        if (metrics.Count == 0)
+        {
+            Console.Error.WriteLine("batch needs at least one --metrics <path>.");
+            return 2;
+        }
+
+        var report = BatchAnalyzer.Read(metrics);
+        WriteFile(output, BatchAnalyzer.BuildHtml(report));
+        if (!string.IsNullOrWhiteSpace(csv))
+            BatchAnalyzer.WriteCsv(csv, report);
+        if (!string.IsNullOrWhiteSpace(json))
+            BatchAnalyzer.WriteJson(json, report);
+        Console.WriteLine(string.Create(CultureInfo.InvariantCulture,
+            $"batch: {report.Runs.Count} runs; wrote {output}"));
         return 0;
     }
 
@@ -1132,7 +1183,19 @@ internal static class Program
         Console.WriteLine("  genome --save <save-dir-or-json> [--save ...] [--out report.html] [options]");
         Console.WriteLine("  perf --profile <profile.jsonl> [--out perf.html] [--segment all|last|<index>] [--from <simsec>] [--to <simsec>]");
         Console.WriteLine("  compare --baseline <baseline.jsonl> --current <current.jsonl> [--out compare.html] [options]");
-        Console.WriteLine("Run 'genome --help', 'perf --help', or 'compare --help' for the command options.");
+        Console.WriteLine("  batch --metrics <metrics.json> [--metrics ...] [--out batch.html] [--csv batch.csv] [--json batch.json]");
+        Console.WriteLine("Run 'genome --help', 'batch --help', 'perf --help', or 'compare --help' for the command options.");
+    }
+
+    private static void PrintBatchUsage()
+    {
+        Console.WriteLine("Usage: batch --metrics <metrics.json> [--metrics ...] [--out batch.html] [options]");
+        Console.WriteLine();
+        Console.WriteLine("  --metrics <path>  genome metrics JSON; repeat for each run.");
+        Console.WriteLine("  --out <path>      HTML comparison (default batch-report.html).");
+        Console.WriteLine("  --csv <path>      optional per-run CSV.");
+        Console.WriteLine("  --json <path>     optional per-run and grouped JSON.");
+        Console.WriteLine("  -h, --help        Show this help.");
     }
 
     private static void PrintPerfUsage()

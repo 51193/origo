@@ -285,6 +285,23 @@ The report contains:
   report lists reader warnings (ignored malformed/unknown entities, integrity
   markers).
 
+## Batch comparison
+
+`batch` reads per-run metrics JSON files and compares regimes without
+rerunning the simulation:
+
+```bash
+origo-analysis batch \
+  --metrics out/seed-1/metrics.json \
+  --metrics out/seed-2/metrics.json \
+  --out batch.html --csv batch.csv --json batch.json
+```
+
+It reports per-run population, mutation/root lineages, enrichment founders,
+deaths, mortality shares, roots with deaths, and top-root share/living state.
+The HTML groups runs into high (>1,000 final creatures) and low regimes and
+shows medians for population, roots, predation, and top-root share.
+
 ## Performance analysis
 
 Enable the in-game profiler with environment variables:

@@ -81,17 +81,33 @@ Five fresh seeds (20261411–20261415) with per-root death capture, 3,600 s:
 
 | Seed | Final pop | Living roots | Enrichment founders | Predation | Roots with deaths | Extinct roots | Top-root share |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| 20261411 | 505 | 117 | 71 | 51% | 4,201 | 4,114 | 14.3% |
-| 20261412 | 342 | 96 | 52 | 50% | 4,029 | 3,952 | 16.8% |
-| 20261413 | 278 | 86 | 46 | 44% | 3,481 | 3,412 | 9.3% |
-| 20261414 | 411 | 89 | 54 | 49% | 4,077 | 4,008 | 12.1% |
-| 20261415 | 237 | 80 | 42 | 36% | 2,302 | 2,231 | 15.9% |
+| 20261411 | 505 | 117 | 71 | 51% | 4,201 | 4,114 | 35.0% |
+| 20261412 | 342 | 96 | 52 | 50% | 4,029 | 3,952 | 37.6% |
+| 20261413 | 278 | 86 | 46 | 44% | 3,481 | 3,412 | 38.3% |
+| 20261414 | 411 | 89 | 54 | 49% | 4,077 | 4,008 | 32.8% |
+| 20261415 | 237 | 80 | 42 | 36% | 2,302 | 2,231 | 60.4% |
 
 All five were low-density, all five bought enrichment, and in every run the
-largest root was still alive at final. Unlike the seed-20261301 e1p1 run where
-root 4 absorbed 47% of deaths, the top-root share here is only **9–17%**. Root
-dominance is therefore variable, not a universal constant; the common result is
-a large pool of extinct short-lived roots with a surviving dominant root.
+largest root was **already extinct at final**. Unlike the seed-20261301 e1p1
+run where root 4 absorbed 47% of deaths and survived, the top-root share here is
+**32.8–60.4%** and the top root itself is gone. Root dominance is substantial
+but the identity of the dominant root does not persist in these low runs; the
+common result is a large pool of extinct roots, including the leading one.
+
+## High vs low: per-root batch
+
+The new `batch` command compares the per-root metrics:
+
+| Regime | Runs | Median population | Median roots | Median predation | Median top-root share | Top root alive |
+|---|---:|---:|---:|---:|---:|---:|
+| high (>1,000) | 4 | 1,641 | 3 | 19.3% | 64.8% | 4/4 |
+| low | 6 | 310 | 92.5 | 49.2% | 37.9% | 0/6 |
+
+The high seeds (20261303, 20261317, 20261404, 20261405) had no enrichment,
+1–5 living roots, and a top root that survived. All six low runs, including
+20261311 (the one high-nominal seed that collapsed), had a top root that was
+extinct at final. This is a sharper regime difference than the first five-seed
+snapshot suggested.
 
 ## Caveats
 
