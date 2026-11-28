@@ -108,6 +108,7 @@ public partial class DemoUi : CanvasLayer
     private double _realTimeWriteTimer;
     private double _gameplayProfileTimer;
     private bool _fastForwarding;
+    private ArenaMatch? _arenaMatch;
     private int _previousMaxFps = 60;
     private DisplayServer.VSyncMode _previousVsync = DisplayServer.VSyncMode.Enabled;
     private ulong _fastForwardStartWallMs;
@@ -143,6 +144,7 @@ public partial class DemoUi : CanvasLayer
     {
         if (_ready)
             _entry.Session.EnsureTopology();
+        PollArena();
         if (!_ready)
         {
             TryInitialize();
@@ -221,6 +223,25 @@ public partial class DemoUi : CanvasLayer
                 _entry.WorldView.ResetView();
                 return;
             }
+
+            if (_gameVisible && !AnyModalVisible())
+            {
+                switch (key.Keycode)
+                {
+                    case Key.B:
+                        SwitchBox();
+                        return;
+                    case Key.N:
+                        CreateBox(key.ShiftPressed);
+                        return;
+                    case Key.M:
+                        MigrateSelected();
+                        return;
+                    case Key.A:
+                        StartArena();
+                        return;
+                }
+            }
         }
 
         if (!_gameVisible || AnyModalVisible())
@@ -261,6 +282,108 @@ public partial class DemoUi : CanvasLayer
         else
             _inspector.Visible = true;
         UpdateInspector();
+    }
+
+    private void SwitchBox()
+    {
+        var boxes = _entry.Session.Boxes.Where(static box => !string.Equals(box.Id, ArenaMatch.ArenaBoxId, StringComparison.Ordinal))
+            .ToArray();
+        if (boxes.Length < 2)
+        {
+            ShowToast("No second ecology box is mounted.", true);
+            return;
+        }
+
+        var current = _entry.Session.ForegroundBox;
+        var index = Array.FindIndex(boxes, box => ReferenceEquals(box, current));
+        var next = boxes[(index + 1) % boxes.Length];
+        _entry.Context.Save.RequestSwitchForegroundLevel(next.LevelId);
+        ShowToast($"Switching to {next.Id} [{next.Profile.Id}]");
+    }
+
+    private void CreateBox(bool restricted)
+    {
+        var count = _entry.Session.Boxes.Count(box => !string.Equals(box.Id, ArenaMatch.ArenaBoxId, StringComparison.Ordinal));
+        var profile = _entry.Session.DefaultProfile;
+        var id = "box_" + (count + 1);
+        if (restricted)
+        {
+            id = "forage_" + (count + 1);
+            profile = BoxUnlockProfile.Create(
+                "forage",
+                profile.UnlockIds.Where(static unlock =>
+                    !unlock.Contains("predation", StringComparison.Ordinal)));
+        }
+
+        _entry.Session.CreateBackgroundBox(id, profile, Random.Shared.Next(1, int.MaxValue));
+        _entry.Session.EnsureTopology();
+        ShowToast($"Created {id} [{profile.Id}]");
+    }
+
+    private void MigrateSelected()
+    {
+        if (_selectedName is null)
+        {
+            ShowToast("Select a creature first.", true);
+            return;
+        }
+
+        var source = _entry.Session.ForegroundBox;
+        var target = _entry.Session.Boxes.FirstOrDefault(box =>
+            !ReferenceEquals(box, source) && !string.Equals(box.Id, ArenaMatch.ArenaBoxId, StringComparison.Ordinal));
+        if (target is null)
+        {
+            ShowToast("No destination box.", true);
+            return;
+        }
+
+        var result = BoxMigration.Migrate(_entry.Session, source.Id, _selectedName, target.Id);
+        if (!result.Success)
+        {
+            ShowToast($"Migration rejected: {result.Reason}", true);
+            return;
+        }
+
+        _selectedName = null;
+        _entry.WorldView.SelectedName = null;
+        FindController()?.SetData(DemoKeys.InspectTarget, string.Empty);
+        _inspector.Visible = false;
+        ShowToast($"Migrated {result.MigrantName} to {target.Id}");
+    }
+
+    private void StartArena()
+    {
+        if (_arenaMatch is not null)
+        {
+            ShowToast("Arena is already running.");
+            return;
+        }
+
+        var source = _entry.Session.ForegroundBox;
+        var rival = _entry.Session.Boxes.FirstOrDefault(box =>
+            !ReferenceEquals(box, source) && !string.Equals(box.Id, ArenaMatch.ArenaBoxId, StringComparison.Ordinal));
+        if (rival is null)
+        {
+            ShowToast("Arena needs a rival box.", true);
+            return;
+        }
+
+        _arenaMatch = ArenaMatch.Start(_entry.Session, [source.Id, rival.Id], perCohort: 8,
+            Random.Shared.Next(1, int.MaxValue), durationSeconds: 10d);
+        ShowToast($"Arena: {source.Id} vs {rival.Id}");
+    }
+
+    private void PollArena()
+    {
+        if (_arenaMatch is null)
+            return;
+        var result = _arenaMatch.Poll(_entry.Session);
+        if (result is null)
+            return;
+        _arenaMatch = null;
+        var score = string.Join("  ", result.Cohorts.Select(static cohort =>
+            $"{cohort.SourceBoxId} {cohort.Survived}/{cohort.Started}"));
+        ShowToast($"Arena winner: {result.Winner ?? "tie"}  {score}");
     }
 
     private void TryInitialize()
