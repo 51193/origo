@@ -305,6 +305,47 @@ runs whose top root is still alive. JSON also carries `runCount`, `highRuns`,
 `lowRuns`, `highShare`, a 95% Wilson interval (`highShareLow`/`High`), and
 per-run roots-ever/extinct counts.
 
+### Manifest-driven comparison
+
+For new mechanics, do not add another hardcoded comparison. Put the experiment
+axes in labels and the outcome columns in JSON paths:
+
+```json
+{
+  "schemaVersion": 1,
+  "name": "trait-policy-factorial",
+  "protocol": "3,600 s, fresh planned, 5 seeds per cell",
+  "metrics": [
+    {"name": "population", "path": "saves[-1].creatures"},
+    {"name": "roots", "path": "saves[-1].rootLineage.count"},
+    {"name": "topRootShare", "path": "rootMortalitySequence.topRootShare"},
+    {"name": "topRootLiving", "path": "rootMortalitySequence.topRootLiving", "kind": "boolean"}
+  ],
+  "runs": [
+    {
+      "metrics": "seed-1/metrics.json",
+      "labels": {"variant": "A", "trait": "slow", "seed": "1"}
+    }
+  ]
+}
+```
+
+```bash
+origo-analysis batch --manifest experiment.json --group-by variant,trait \
+  --out groups.html --csv groups.csv --json groups.json
+```
+
+- Metrics are addressed by a restricted JSON path: object keys plus `[n]`/`[-1]`
+  array indexes.
+- Labels are arbitrary strings; `--group-by` selects any subset. Missing labels
+  fail explicitly.
+- Numeric metrics report count/min/median/max. Boolean metrics report a
+  proportion with a 95% Wilson interval.
+- `schemaVersion` must be 1; the schema is
+  [manifest.schema.json](Batch/manifest.schema.json).
+- The legacy `--metrics` mode keeps the population high/low view as a
+  convenience; new mechanics should use manifests.
+
 ## Performance analysis
 
 Enable the in-game profiler with environment variables:
