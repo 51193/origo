@@ -7,7 +7,7 @@ using Xunit;
 namespace Origo.EvolutionDemo.Logic.Tests;
 
 /// <summary>Regression tests for campaign test-player purchase strategies.</summary>
-public sealed class CampaignPurchasePolicyTests : IDisposable
+public sealed class CampaignPurchasePolicyTests
 {
     [Fact]
     public void Planned_SavesForTheNextTargetAndDoesNotSpendOnSideGrades()
@@ -102,7 +102,7 @@ public sealed class CampaignPurchasePolicyTests : IDisposable
         runtime.Progression.Points = 100;
         runtime.Progression.UnlockedIds.Add(CampaignUnlockIds.ToughFood);
         runtime.Progression.PendingInnovationUnlocks.Add(CampaignUnlockIds.ToughFood);
-        Assert.True(GenomeContentGate.IsOrganAllowed(OrganKindV4.Vision));
+        Assert.True(runtime.GenomeGate.IsOrganAllowed(OrganKindV4.Vision));
 
         runtime.ResetCampaignProgression();
 
@@ -113,8 +113,8 @@ public sealed class CampaignPurchasePolicyTests : IDisposable
         Assert.Empty(runtime.Progression.CompletedMilestones);
         Assert.Empty(runtime.Progression.PendingInnovationUnlocks);
         Assert.Equal("unlock.core", Assert.Single(runtime.Progression.UnlockedIds));
-        Assert.True(GenomeContentGate.IsOrganAllowed(OrganKindV4.Vision));
-        Assert.False(GenomeContentGate.IsOrganAllowed(OrganKindV4.HardDigest));
+        Assert.True(runtime.GenomeGate.IsOrganAllowed(OrganKindV4.Vision));
+        Assert.False(runtime.GenomeGate.IsOrganAllowed(OrganKindV4.HardDigest));
     }
 
 
@@ -259,10 +259,4 @@ public sealed class CampaignPurchasePolicyTests : IDisposable
                 runtime.Progression.UnlockedIds.Add(unlockId);
     }
 
-    public void Dispose()
-    {
-        GenomeContentGate.OrganFilter = static _ => true;
-        GenomeContentGate.ActionFilter = static _ => true;
-        GenomeContentGate.SensorFilter = static _ => true;
-    }
 }

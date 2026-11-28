@@ -230,7 +230,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
         for (var i = 0; i < Tuning.InitialPopulation; i++)
         {
             var position = RandomPosition(rng);
-            var genome = CreatureGenome.RandomFounder(rng);
+            var genome = CreatureGenome.RandomFounder(rng, EvolutionGameSession.For(ctx).Runtime.GenomeGate);
             var phenotype = genome.Phenotype;
             metas.Add(CreateCreatureMeta(
                 CreatureName(nextCreature++),
@@ -433,7 +433,7 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                         break;
                     for (var attempt = 0; attempt < 200; attempt++)
                     {
-                        var candidate = CreatureGenome.RandomFounder(rng);
+                        var candidate = CreatureGenome.RandomFounder(rng, world.Session.Runtime.GenomeGate);
                         if ((candidate.Phenotype.OrganMask & mask) == 0)
                             continue;
                         var position = RandomPosition(rng);
@@ -840,7 +840,8 @@ public sealed class WorldSimulationStrategy : LifecycleStrategyBase
                     parentGenome,
                     mutationProfile,
                     rng,
-                    out var changes);
+                    out var changes,
+                    world.Session.Runtime.GenomeGate);
                 if (changes >= Tuning.LineageMutationThreshold)
                     lineage = nextLineageId++;
                 var bodyLengthCost = Tuning.ReproductionParentCost

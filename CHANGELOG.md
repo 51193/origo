@@ -36,6 +36,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   and `rootMortality` expose root × cause data; interval columns and
   `--root-survival-csv` track living/extinct roots across saves, so a root can
   be followed from living ancestry to starvation, predation, or aging deaths.
+- **Evolution Demo content gates are box-scoped** — genome founder/mutation gates
+  are now explicit `GenomeContentGate` instances owned by a `GameplayRuntime`;
+  `BoxUnlockProfile` and `GameplayMode.Profile` define fixed per-box unlock sets
+  without process-global filter state. The demo call sites pass the owning box
+  gate for founders and mutations.
 - **Evolution Demo records births by root lineage** — cumulative ordinary and
   overgrowth births are persisted per stable root; analysis emits
   `rootBirthsSequence`/`rootBirths`, adds births and net growth to root

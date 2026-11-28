@@ -6,7 +6,7 @@ using Xunit;
 
 namespace Origo.EvolutionDemo.Logic.Tests;
 
-public sealed class GameplayContentTests : System.IDisposable
+public sealed class GameplayContentTests
 {
     [Fact]
     public void UnlockService_RequiresPrerequisitesAndMilestones()
@@ -201,11 +201,5 @@ public sealed class GameplayContentTests : System.IDisposable
         public void Register(GameplayContentRegistry content, GameplayModuleServices services) { }
     }
 
-    public void Dispose()
-    {
-        Origo.EvolutionDemo.Logic.V4.GenomeContentGate.OrganFilter = static _ => true;
-        Origo.EvolutionDemo.Logic.V4.GenomeContentGate.ActionFilter = static _ => true;
-        Origo.EvolutionDemo.Logic.V4.GenomeContentGate.SensorFilter = static _ => true;
-    }
 
 }

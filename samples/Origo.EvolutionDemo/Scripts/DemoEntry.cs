@@ -57,6 +57,8 @@ public partial class DemoEntry : OrigoDefaultEntry
         base._Ready();
         Session = new EvolutionGameSession(Context, gameplayRuntime);
         EvolutionGameSession.Register(Session);
+        if (Runtime.SessionManager.ForegroundSession is { } foreground)
+            EvolutionGameSession.RegisterSession(foreground, Session);
         Persistence = new GameplayPersistence(Session);
         Persistence.TryLoadProfile();
 

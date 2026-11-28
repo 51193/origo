@@ -48,6 +48,7 @@ separate from the framework manual under `docs/`.
 | Enrichment × predation controls | [campaign-controls-2026-11-26](campaign-controls-2026-11-26.md) |
 | Root lineage and mortality, 10 seeds | [campaign-rooted-2026-11-27](campaign-rooted-2026-11-27.md) |
 | Root × death cause | [campaign-root-mortality-2026-11-27](campaign-root-mortality-2026-11-27.md) |
+| Multi-box architecture | [multi-box-architecture-2026-11-28](multi-box-architecture-2026-11-28.md) |
 | Genome v4 design baseline | [GENOME_V4_DESIGN](../GENOME_V4_DESIGN.md) |
 | Content pack notes | [Content](../Content/README.md) |
 | Genome v4 implementation reference | [Logic/V4](../../Origo.EvolutionDemo.Logic/V4/README.md) |
