@@ -75,6 +75,39 @@ public sealed class SaveSnapshotReaderTests
         Assert.DoesNotContain(snapshot.Warnings, warning => warning.Contains("without finite", StringComparison.Ordinal));
     }
 
+
+    [Fact]
+    public void Read_BoxFilterSelectsOneBoxAndRejectsMixedInput()
+    {
+        using var directory = new TemporaryDirectory();
+        var pond = SaveFixture.CreateV7Save(
+            directory, "save_pond", SaveFixture.Creatures(GenomeV4Factory.CreateSimpleReflex(), 2),
+            boxId: "pond", boxProfile: "all");
+        var meadow = SaveFixture.CreateV7Save(
+            directory, "save_meadow", SaveFixture.Creatures(GenomeV4Factory.CreateSimpleReflex(), 3),
+            boxId: "meadow", boxProfile: "all");
+
+        var snapshots = SaveSnapshotReader.Read([pond, meadow], allowPool: false, boxId: "meadow");
+        var snapshot = Assert.Single(snapshots);
+        Assert.Equal("meadow", snapshot.BoxId);
+
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => SaveSnapshotReader.Read([pond, meadow], allowPool: false, boxId: null));
+        Assert.Contains("mixes ecology boxes", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Read_SaveWithoutBoxProfile_ThrowsExplicitError()
+    {
+        using var directory = new TemporaryDirectory();
+        var save = SaveFixture.CreateV7Save(
+            directory, "save_no_box", SaveFixture.Creatures(GenomeV4Factory.CreateSimpleReflex(), 1),
+            includeBox: false);
+
+        var exception = Assert.Throws<InvalidDataException>(() => SaveSnapshotReader.Read(save));
+        Assert.Contains("box.id", exception.Message, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void Read_MultipleSavePaths_ArePathOrderedAndDeduplicated()
     {
@@ -232,6 +265,8 @@ public sealed class SaveSnapshotReaderTests
           {"name":"controller","data":{"pairs":{
             "evo.kind":{"data":"controller"},
             "evo.genomeVersion":{"data":7},
+            "box.id":{"data":"pond"},
+            "box.profile":{"data":"all"},
             "evo.time":{"data":10},
             "evo.tick":{"data":100},
             "demo.paused":{"data":true},
@@ -262,6 +297,8 @@ public sealed class SaveSnapshotReaderTests
           {"name":"controller","data":{"pairs":{
             "evo.kind":{"data":"controller"},
             "evo.genomeVersion":{"data":7},
+            "box.id":{"data":"pond"},
+            "box.profile":{"data":"all"},
             "evo.time":{"data":10},
             "evo.tick":{"data":100}
           }}},

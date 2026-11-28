@@ -62,10 +62,14 @@ internal static class SaveFixture
         string spawnOrigin = "child",
         IReadOnlyList<string>? spawnOrigins = null,
         bool includeRootLineage = true,
-        bool includeSpawnOrigin = true)
+        bool includeSpawnOrigin = true,
+        string boxId = "pond",
+        string boxProfile = "all",
+        string levelId = "pond",
+        bool includeBox = true)
     {
         var saveRoot = Path.Combine(directory.Path, slotName);
-        var sceneDirectory = Path.Combine(saveRoot, "level_pond");
+        var sceneDirectory = Path.Combine(saveRoot, "level_" + levelId);
         Directory.CreateDirectory(sceneDirectory);
         var entities = new List<Dictionary<string, object>>();
         if (includeController)
@@ -78,6 +82,11 @@ internal static class SaveFixture
                 ["evo.population"] = creatures.Count,
                 ["evo.spikeKills"] = 3d,
             };
+            if (includeBox)
+            {
+                controllerPairs["box.id"] = boxId;
+                controllerPairs["box.profile"] = boxProfile;
+            }
             if (includeTime)
                 controllerPairs["evo.time"] = time;
             if (includeVersion)

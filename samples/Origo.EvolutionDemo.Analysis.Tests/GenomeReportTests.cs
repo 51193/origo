@@ -130,6 +130,7 @@ public sealed class GenomeReportTests
 
         var html = GenomeHtmlReport.Build(dbscanInput);
         var json = JsonDocument.Parse(GenomeMetricsJson.Build(dbscanInput)).RootElement;
+        Assert.Equal("pond", json.GetProperty("box").GetProperty("id").GetString());
 
         Assert.Contains("noise <b>0", html, StringComparison.Ordinal);
         Assert.Contains("DBSCAN:", html, StringComparison.Ordinal);

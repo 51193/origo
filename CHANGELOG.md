@@ -48,6 +48,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   strategies resolve the owning box runtime; load/new-game reconciles the live
   session topology. The demo smoke requires two live boxes whose controllers
   both advance.
+- **Evolution Demo analysis is box-aware** — saves are read only with
+  `box.id`/`box.profile`, `genome --box <id>` selects one ecology box from a
+  multi-box save, mixed-box input is rejected, and metrics JSON carries a
+  `box` object plus per-save `boxId`/`boxProfile`. `--pool` no longer merges
+  distinct boxes.
 - **Evolution Demo migrates creatures between ecology boxes** — `BoxMigration`
   validates the destination profile against every expressed organ, action, and
   sensor, then transfers the genome, phenotype, energy, age, lineage, root

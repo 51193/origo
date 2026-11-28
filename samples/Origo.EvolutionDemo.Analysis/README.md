@@ -16,14 +16,16 @@ dotnet build samples/Origo.EvolutionDemo.Analysis/Origo.EvolutionDemo.Analysis.c
 
 The tool reads the current v7 SND save produced by the demo. It accepts either
 a save slot directory, a `level_<id>` directory, or the `snd_scene.json` file
-itself. A `--save` directory that resolves to several save scenes (for example
-the parent directory of all slots) is a hard error unless `--pool` is passed;
-`--pool` analyzes those scenes as one pooled input. The reader requires the
-demo controller with `evo.genomeVersion = 7`, `evo.time`, and `evo.tick`;
-missing metadata, malformed entities, and creatures without a usable
-`evo.bodyGenome` are reported instead of being silently defaulted. Saves whose
-slot lacks `.payload.sha`, or that contain a `.write_in_progress` marker, emit
-integrity warnings.
+itself. A multi-box save contains several `level_<id>` scenes; pass
+`--box <id>` to select one ecology box. Input that mixes different boxes is
+rejected with the box ids, and `--pool` never merges distinct boxes. A `--save`
+directory that resolves to several same-box save scenes (for example the parent
+directory of all slots) is a hard error unless `--pool` is passed. The reader
+requires the box-scoped controller: `evo.genomeVersion = 7`, `evo.time`,
+`evo.tick`, `box.id`, and `box.profile`. Missing metadata, malformed entities,
+and creatures without a usable `evo.bodyGenome` are reported instead of being
+silently defaulted. Saves whose slot lacks `.payload.sha`, or that contain a
+`.write_in_progress` marker, emit integrity warnings.
 
 ```bash
 dotnet run --project samples/Origo.EvolutionDemo.Analysis -c Release -- \
@@ -38,7 +40,8 @@ dotnet run --project samples/Origo.EvolutionDemo.Analysis -c Release -- \
 
 ```text
 --save <path>            v7 save slot, level directory, or snd_scene.json; repeat to pool
---pool                   allow one --save directory to expand to several save scenes
+--box <id>               select one ecology box from multi-box saves
+--pool                   allow one --save directory to expand to several same-box save scenes
 --out <path>             HTML report (default genome-report.html); a sibling .clusters.csv is always written
 --max <n>                per-save analyzed row cap; 0 analyzes every creature (default 5000)
 --seed <n>               seed for per-save sampling, k-means/Jaccard restarts, and bootstrap ARI (default 1)
