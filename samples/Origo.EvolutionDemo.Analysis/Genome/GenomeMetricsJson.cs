@@ -51,7 +51,7 @@ public static class GenomeMetricsJson
             WriteLineageSequence(writer, "rootLineageSequence", input.Lineage.RootSequence);
             WriteOrigins(writer, input.Lineage.Origins);
             WriteMortalitySequence(writer, input.Mortality.Sequence);
-            WriteRootMortality(writer, input.Mortality);
+            WriteRootMortality(writer, input.Mortality, input.Lineage);
             WriteSaves(writer, input);
             WriteFeatures(writer, input);
             WriteClustering(writer, input);
@@ -252,8 +252,14 @@ public static class GenomeMetricsJson
         writer.WriteEndObject();
     }
 
-    private static void WriteRootMortality(Utf8JsonWriter writer, MortalityAnalysis mortality)
+    private static void WriteRootMortality(
+        Utf8JsonWriter writer, MortalityAnalysis mortality, LineageAnalysis lineage)
     {
+        var finalPath = lineage.Saves.Count == 0 ? null : lineage.Saves[^1].Path;
+        var livingRoots = lineage.RootDetails
+            .Where(item => string.Equals(item.Path, finalPath, StringComparison.Ordinal))
+            .Select(static item => item.RootLineage)
+            .ToHashSet();
         writer.WriteStartObject("rootMortalitySequence");
         if (mortality.RootSummary is { } summary)
         {
@@ -264,6 +270,15 @@ public static class GenomeMetricsJson
             WriteNullableNumber(writer, "predationShare", summary.PredationShare);
             WriteNullableNumber(writer, "starvationShare", summary.StarvationShare);
             WriteNullableNumber(writer, "agingShare", summary.AgingShare);
+            if (mortality.RootDeaths is { Count: > 0 } top)
+            {
+                var (root, tally) = top.MaxBy(static pair => pair.Value.Total);
+                writer.WriteNumber("topRootLineage", root);
+                writer.WriteNumber("topRootDeaths", tally.Total);
+                writer.WriteNumber("topRootShare", tally.Total / (double)summary.Counts.Total);
+                writer.WriteNumber("topRootPredation", tally.Predation);
+                writer.WriteBoolean("topRootLiving", livingRoots.Contains(root));
+            }
         }
         else
         {
@@ -282,6 +297,7 @@ public static class GenomeMetricsJson
                 writer.WriteNumber("predation", tally.Predation);
                 writer.WriteNumber("aging", tally.Aging);
                 writer.WriteNumber("total", tally.Total);
+                writer.WriteBoolean("living", livingRoots.Contains(root));
                 writer.WriteEndObject();
             }
 

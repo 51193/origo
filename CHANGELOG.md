@@ -36,6 +36,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   and `rootMortality` expose root × cause data; interval columns and
   `--root-survival-csv` track living/extinct roots across saves, so a root can
   be followed from living ancestry to starvation, predation, or aging deaths.
+- **Evolution Demo analysis compares runs by regime** — the new `batch`
+  command reads per-run metrics JSON and writes a cross-run HTML/CSV/JSON
+  comparison of high/low population regimes, root diversity, mortality shares,
+  and top-root dominance.
 - **Evolution Demo campaign tests can isolate content controls** — planned,
   idle, cheapest, and greedy policies honor
   `ORIGO_DEMO_CAMPAIGN_ENRICHMENT=0` and
