@@ -98,6 +98,7 @@ Stages 1–3 are implemented and tested.
 
 The foreground UI exposes `G` box management, `B` switching, `N` creation,
 `Shift+N` no-predation creation, and `M` selected-creature migration. The box
-panel supports foreground switching, pause/resume, background deletion, and
-seeding a selected creature into another box; arbitrary profile editing and
-migration queues remain.
+panel supports foreground switching, per-box/all pause and resume, background
+deletion, and seeding or moving a selected creature into a chosen box; every
+operation is mouse-reachable. Arbitrary profile editing and migration queues
+remain.

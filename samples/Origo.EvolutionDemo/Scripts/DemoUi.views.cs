@@ -243,8 +243,14 @@ public partial class DemoUi
         var empty = MakeButton("Create empty", 130);
         empty.Pressed += () => CreateBox(restricted: false, manual: true);
         actions.AddChild(empty);
+        var pauseAll = MakeButton("Pause all", 95);
+        pauseAll.Pressed += () => SetAllBoxesPaused(true);
+        actions.AddChild(pauseAll);
+        var resumeAll = MakeButton("Resume all", 100);
+        resumeAll.Pressed += () => SetAllBoxesPaused(false);
+        actions.AddChild(resumeAll);
         var close = MakeButton("Close", 90);
-        close.Pressed += CloseModals;
+        close.Pressed += CloseBoxes;
         actions.AddChild(close);
         column.AddChild(actions);
     }

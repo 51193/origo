@@ -53,12 +53,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   multi-box save, mixed-box input is rejected, and metrics JSON carries a
   `box` object plus per-save `boxId`/`boxProfile`. `--pool` no longer merges
   distinct boxes.
-- **Evolution Demo exposes box management** — `G` opens the ecology-box panel,
-  which lists every box, switches foreground, pauses or resumes a box, and
-  deletes background boxes. The panel and keyboard shortcuts create
-  all-enabled, no-predation, or empty manual-start boxes. `B` cycles the
-  foreground box and `M` migrates the selected creature to the next box.
-  Migration rejects are shown in the UI toast.
+- **Evolution Demo exposes box management** — the `Boxes` HUD button and `G`
+  open the ecology-box panel, which lists every box, switches foreground,
+  pauses/resumes one or all boxes, deletes background boxes, creates
+  all-enabled, no-predation, or empty manual-start boxes, and seeds or moves
+  the selected creature into a chosen target. Keyboard shortcuts remain
+  optional accelerators.
 - **Evolution Demo supports manually seeded boxes** — `box.manualStart` skips
   default founders for a normal box; the caller seeds it through `Seed` or
   `BoxMigration`. This is the arena model: a regular box with the all-enabled
